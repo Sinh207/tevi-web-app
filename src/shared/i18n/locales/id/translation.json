@@ -1,0 +1,24 @@
+{
+  "common_continue": "Lanjutkan",
+  "common_loading": "Memuat…",
+  "common_retry": "Coba lagi",
+  "common_back_home": "Kembali ke beranda",
+
+  "home_tagline": "Fondasi baru — App Router · TypeScript · Tailwind · shadcn/ui.",
+
+  "auth_sign_in": "Masuk",
+  "auth_sign_in_to_continue": "Masuk untuk melanjutkan",
+  "auth_or": "atau",
+  "auth_email": "Email",
+  "auth_password": "Kata sandi",
+  "auth_signing_in": "Sedang masuk…",
+  "auth_email_invalid": "Email tidak valid",
+  "auth_password_min": "Kata sandi minimal 6 karakter",
+  "auth_google_failed": "Gagal masuk dengan Google",
+  "auth_sign_in_failed": "Gagal masuk",
+
+  "error_title": "Terjadi kesalahan",
+  "error_description": "Silakan coba lagi. Jika masalah berlanjut, hubungi dukungan.",
+
+  "notfound_message": "Halaman yang Anda minta tidak ditemukan."
+}

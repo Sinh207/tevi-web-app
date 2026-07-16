@@ -1,0 +1,24 @@
+{
+  "common_continue": "Teruskan",
+  "common_loading": "Memuatkan…",
+  "common_retry": "Cuba lagi",
+  "common_back_home": "Kembali ke laman utama",
+
+  "home_tagline": "Asas baharu — App Router · TypeScript · Tailwind · shadcn/ui.",
+
+  "auth_sign_in": "Log masuk",
+  "auth_sign_in_to_continue": "Log masuk untuk teruskan",
+  "auth_or": "atau",
+  "auth_email": "Emel",
+  "auth_password": "Kata laluan",
+  "auth_signing_in": "Sedang log masuk…",
+  "auth_email_invalid": "Emel tidak sah",
+  "auth_password_min": "Kata laluan sekurang-kurangnya 6 aksara",
+  "auth_google_failed": "Log masuk Google gagal",
+  "auth_sign_in_failed": "Log masuk gagal",
+
+  "error_title": "Sesuatu tidak kena",
+  "error_description": "Sila cuba lagi. Jika masalah berterusan, hubungi sokongan.",
+
+  "notfound_message": "Halaman yang anda minta tidak dijumpai."
+}

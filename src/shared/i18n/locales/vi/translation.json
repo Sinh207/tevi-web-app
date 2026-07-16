@@ -1,0 +1,24 @@
+{
+  "common_continue": "Tiếp tục",
+  "common_loading": "Đang tải…",
+  "common_retry": "Thử lại",
+  "common_back_home": "Về trang chủ",
+
+  "home_tagline": "Nền tảng mới — App Router · TypeScript · Tailwind · shadcn/ui.",
+
+  "auth_sign_in": "Đăng nhập",
+  "auth_sign_in_to_continue": "Đăng nhập để tiếp tục",
+  "auth_or": "hoặc",
+  "auth_email": "Email",
+  "auth_password": "Mật khẩu",
+  "auth_signing_in": "Đang đăng nhập…",
+  "auth_email_invalid": "Email không hợp lệ",
+  "auth_password_min": "Mật khẩu tối thiểu 6 ký tự",
+  "auth_google_failed": "Đăng nhập Google thất bại",
+  "auth_sign_in_failed": "Đăng nhập thất bại",
+
+  "error_title": "Đã có lỗi xảy ra",
+  "error_description": "Vui lòng thử lại. Nếu lỗi tiếp diễn, hãy liên hệ hỗ trợ.",
+
+  "notfound_message": "Không tìm thấy trang bạn yêu cầu."
+}

@@ -1,0 +1,24 @@
+{
+  "common_continue": "Continue",
+  "common_loading": "Loading…",
+  "common_retry": "Try again",
+  "common_back_home": "Back to home",
+
+  "home_tagline": "A new foundation — App Router · TypeScript · Tailwind · shadcn/ui.",
+
+  "auth_sign_in": "Sign in",
+  "auth_sign_in_to_continue": "Sign in to continue",
+  "auth_or": "or",
+  "auth_email": "Email",
+  "auth_password": "Password",
+  "auth_signing_in": "Signing in…",
+  "auth_email_invalid": "Invalid email",
+  "auth_password_min": "Password must be at least 6 characters",
+  "auth_google_failed": "Google sign-in failed",
+  "auth_sign_in_failed": "Sign-in failed",
+
+  "error_title": "Something went wrong",
+  "error_description": "Please try again. If the problem persists, contact support.",
+
+  "notfound_message": "The page you requested was not found."
+}

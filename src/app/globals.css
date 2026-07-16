@@ -1,0 +1,459 @@
+@import 'tailwindcss';
+
+/* next-themes toggles the `.dark` class on <html> */
+@custom-variant dark (&:is(.dark *));
+
+/* ==================================================================== *
+ * Design tokens — SOURCE OF TRUTH: Figma "Tevi Design system - Mobile"
+ * (file WVfz0MwBGyGt67LfNEY2pW), extracted via figma-console MCP.
+ * Colors have Light + Dark modes; spacing/radius are single-mode.
+ * Semantic tokens reference the scales, so redefining a scale in .dark
+ * cascades automatically.
+ * ==================================================================== */
+:root {
+    --white: #ffffff;
+    --black: #000000;
+
+    /* Zinc scale (light) */
+    --zinc-50: #fafafa;
+    --zinc-100: #f4f4f5;
+    --zinc-200: #e4e4e7;
+    --zinc-300: #d4d4d8;
+    --zinc-400: #a1a1aa;
+    --zinc-500: #71717a;
+    --zinc-600: #52525b;
+    --zinc-700: #3f3f46;
+    --zinc-800: #27272a;
+    --zinc-900: #18181b;
+    --zinc-950: #09090b;
+
+    /* Primary / brand scale (light). primary-500 = #501BC0 */
+    --primary-0: #ffffff;
+    --primary-50: #f6f2fe;
+    --primary-100: #ede4fd;
+    --primary-200: #d9c7fb;
+    --primary-300: #be9cf7;
+    --primary-400: #8a4fe3;
+    --primary-500: #501bc0;
+    --primary-600: #4316a0;
+    --primary-700: #371282;
+    --primary-800: #2c0e69;
+    --primary-900: #210b52;
+    --primary-950: #140735;
+    --primary-1000: #000000;
+
+    /* Accent — Indigo */
+    --indigo-active: #007aff;
+    --indigo-focus: #0062cc;
+    --indigo-bg-focus: #d6e8ff;
+    --indigo-disabled: #a3cfff;
+    --indigo-bg-disable: #f5f9ff;
+    --indigo-bg-active: #ebf4ff;
+    /* Accent — Error */
+    --error-active: #ff3636;
+    --error-focus: #d51818;
+    --error-disabled: #fca5a5;
+    --error-bg-active: #fef2f2;
+    --error-bg-disable: #fdf5f5;
+    --error-bg-focus: #fee2e2;
+    /* Accent — Success */
+    --success-active: #26bb26;
+    --success-focus: #1e941e;
+    --success-disabled: #9ce29c;
+    --success-bg-active: #e6f9e6;
+    --success-bg-focus: #cbf1cb;
+    --success-bg-disable: #f3fcf3;
+    /* Accent — Warning */
+    --warning-active: #ca8a04;
+    --warning-focus: #ea3d08;
+    --warning-disabled: #fde68a;
+    --warning-bg-active: #fefce8;
+    --warning-bg-focus: #fef9c3;
+    --warning-bg-disable: #fefce8;
+
+    /* Backgrounds */
+    --bg-default: #f5f5f5;
+    --bg-surface: #ffffff;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f4f4f5;
+    --bg-disabled: #f4f4f5;
+    --bg-overlay: #00000080;
+    --bg-message: #18181b;
+    --bg-reply-message: #27272a;
+    --bg-segment: #edeeef;
+    --bg-segment-focus: #ffffff;
+    --bg-tabbar: #ffffffcc;
+    --bg-listing: #ffffff;
+    --bg-topbar-action: #fcfcfbd9;
+
+    /* Text (reference scales where possible) */
+    --text-title: var(--zinc-950);
+    --text-body: var(--zinc-500);
+    --text-subtitle: var(--zinc-700);
+    --text-disabled: var(--zinc-300);
+    --text-link: var(--indigo-active);
+    --text-link-hover: var(--indigo-focus);
+    --text-on-primary: var(--white);
+    --text-on-accent: var(--white);
+    --text-placeholder: var(--zinc-400);
+    --text-error: #ff2525;
+    --text-success: #26bb26;
+    --text-warning: #ca8a04;
+
+    /* Icon */
+    --icon-default: var(--text-title);
+    --icon-secondary: var(--text-body);
+    --icon-disabled: var(--text-disabled);
+
+    /* Buttons — Primary (dark/near-black), Accent (brand purple) */
+    --btn-primary-bg: var(--zinc-950);
+    --btn-primary-bg-hover: var(--zinc-900);
+    --btn-primary-bg-disabled: var(--zinc-500);
+    --btn-primary-text: var(--text-on-primary);
+    --btn-primary-text-disabled: var(--zinc-400);
+    --btn-secondary-bg: var(--zinc-100);
+    --btn-secondary-bg-hover: var(--zinc-200);
+    --btn-secondary-bg-disabled: #f4f4f5;
+    --btn-secondary-text: var(--text-title);
+    --btn-secondary-text-disabled: var(--text-disabled);
+    --btn-secondary-border: var(--separator-strong);
+    --btn-ghost-bg: #ffffff00;
+    --btn-ghost-bg-hover: var(--zinc-200);
+    --btn-ghost-text: var(--text-title);
+    --btn-ghost-text-disabled: var(--text-disabled);
+    --btn-accent-bg: var(--primary-500);
+    --btn-accent-bg-hover: var(--primary-600);
+    --btn-accent-bg-disabled: var(--primary-100);
+    --btn-accent-text: var(--white);
+    --btn-accent-text-disabled: var(--primary-300);
+    --btn-destructive-bg: var(--error-active);
+    --btn-destructive-bg-hover: var(--error-focus);
+    --btn-destructive-bg-disabled: var(--error-bg-disable);
+    --btn-destructive-text: var(--white);
+    --btn-destructive-text-disabled: var(--error-disabled);
+    --topbar-border: #e0e0e0;
+
+    /* Separator / Input / Badge / Focus / Overlay */
+    --separator-default: var(--zinc-200);
+    --separator-strong: var(--zinc-300);
+    --input-bg: var(--zinc-50);
+    --input-bg-hover: var(--zinc-100);
+    --input-bg-disabled: var(--zinc-100);
+    --input-border: var(--zinc-200);
+    --input-border-hover: var(--zinc-300);
+    --input-border-focus: var(--zinc-500);
+    --input-border-error: var(--error-active);
+    --input-text: var(--text-title);
+    --input-placeholder: var(--zinc-400);
+    --badge-bg: #ff2525;
+    --badge-text: #ffffff;
+    --focus-ring: #0050ff;
+    --overlay-default: #000000bf;
+
+    /* Opacity utilities */
+    --opacity-labels-55: #3c3c438c;
+    --opacity-white-10: #ffffff1a;
+    --opacity-white-25: #ffffff40;
+    --opacity-white-50: #ffffff80;
+    --opacity-white-75: #ffffffbf;
+    --opacity-black-10: #0000001a;
+    --opacity-black-25: #00000040;
+    --opacity-black-50: #00000080;
+    --opacity-black-75: #000000bf;
+
+    /* Misc */
+    --nsfw: #f43fca;
+    --yellow: #ffe013;
+
+    /* Spacing (single mode) */
+    --spacing-0: 0px;
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-3: 12px;
+    --spacing-4: 16px;
+    --spacing-5: 24px;
+    --spacing-6: 32px;
+    --spacing-7: 40px;
+    --spacing-8: 48px;
+    --spacing-9: 64px;
+    --spacing-10: 80px;
+    --spacing-11: 96px;
+
+    /* Base radius for shadcn components (scale lives in @theme) */
+    --radius: 8px;
+
+    /* ── shadcn semantic mapping (resolves per-mode via the vars above) ── */
+    --background: var(--bg-default);
+    --foreground: var(--text-title);
+    --card: var(--bg-surface);
+    --card-foreground: var(--text-title);
+    --popover: var(--bg-elevated);
+    --popover-foreground: var(--text-title);
+    --primary: var(--btn-primary-bg);
+    --primary-foreground: var(--btn-primary-text);
+    --secondary: var(--btn-secondary-bg);
+    --secondary-foreground: var(--btn-secondary-text);
+    --muted: var(--bg-subtle);
+    --muted-foreground: var(--text-body);
+    --accent: var(--bg-subtle);
+    --accent-foreground: var(--text-title);
+    --destructive: var(--btn-destructive-bg);
+    --destructive-foreground: var(--btn-destructive-text);
+    --border: var(--separator-default);
+    --input: var(--input-border);
+    --ring: var(--focus-ring);
+    /* Brand purple (Figma "Accent" button) — exposed as `brand` utility */
+    --brand: var(--primary-500);
+}
+
+.dark {
+    /* Zinc scale (dark — inverted) */
+    --zinc-50: #09090b;
+    --zinc-100: #18181b;
+    --zinc-200: #27272a;
+    --zinc-300: #3f3f46;
+    --zinc-400: #52525b;
+    --zinc-500: #71717a;
+    --zinc-600: #a1a1aa;
+    --zinc-700: #d4d4d8;
+    --zinc-800: #e4e4e7;
+    --zinc-900: #f4f4f5;
+    --zinc-950: #fafafa;
+
+    /* Primary scale (dark) */
+    --primary-0: #000000;
+    --primary-50: #140735;
+    --primary-100: #210b52;
+    --primary-200: #2c0e69;
+    --primary-300: #371282;
+    --primary-400: #4316a0;
+    --primary-500: #501bc0;
+    --primary-600: #8a4fe3;
+    --primary-700: #be9cf7;
+    --primary-800: #d9c7fb;
+    --primary-900: #ede4fd;
+    --primary-950: #f6f2fe;
+    --primary-1000: #ffffff;
+
+    /* Accent — Indigo (dark) */
+    --indigo-focus: #53aaff;
+    --indigo-bg-focus: #003166;
+    --indigo-disabled: #004a99;
+    --indigo-bg-disable: #060b22;
+    --indigo-bg-active: #001933;
+    /* Accent — Error (dark) */
+    --error-focus: #ff5555;
+    --error-disabled: #7f1d1d;
+    --error-bg-active: #2d1515;
+    --error-bg-disable: #1f1212;
+    --error-bg-focus: #451a1a;
+    /* Accent — Success (dark) */
+    --success-focus: #5cd65c;
+    --success-disabled: #177217;
+    --success-bg-active: #082608;
+    --success-bg-focus: #104c10;
+    --success-bg-disable: #061d06;
+    /* Accent — Warning (dark) */
+    --warning-active: #ff6d1e;
+    --warning-focus: #ff5d22;
+    --warning-disabled: #713f12;
+    --warning-bg-active: #1f1c0d;
+    --warning-bg-focus: #422d0a;
+    --warning-bg-disable: #1a170a;
+
+    /* Backgrounds (dark) */
+    --bg-default: #000000;
+    --bg-surface: #18181b;
+    --bg-elevated: #222225;
+    --bg-subtle: #18181b;
+    --bg-disabled: #27272a;
+    --bg-overlay: #ffffff40;
+    --bg-message: #27272a;
+    --bg-reply-message: #3f3f46;
+    --bg-segment: #1e1e20;
+    --bg-segment-focus: #3d3d43;
+    --bg-tabbar: #000000cc;
+    --bg-listing: #000000;
+    --bg-topbar-action: #1d1d1dd9;
+
+    /* Text (dark) — refs that change */
+    --text-body: #a1a1aa;
+    --text-on-primary: var(--black);
+    --text-error: #ff3636;
+    --text-warning: #ff6d1e;
+    --icon-secondary: #a1a1aa;
+
+    /* Buttons (dark) — values that change */
+    --btn-secondary-bg-disabled: #1e1e22;
+    --btn-ghost-bg: #00000000;
+    --btn-accent-text-disabled: var(--primary-500);
+
+    /* Input / Badge / Focus / Topbar (dark) */
+    --input-bg-disabled: var(--zinc-200);
+    --input-border-focus: #a1a1aa;
+    --badge-bg: #ff3636;
+    --focus-ring: #3d7aff;
+    --topbar-border: #ffffff33;
+    --opacity-labels-55: #a5a5ad8c;
+
+    --nsfw: #ff5ed9;
+    --yellow: #ffe537;
+}
+
+@theme inline {
+    /* Fonts */
+    --font-cjk-thai:
+        'PingFang SC', 'PingFang TC', 'Hiragino Sans', 'Yu Gothic', 'Meiryo',
+        'Malgun Gothic', 'Microsoft YaHei', 'Microsoft JhengHei', 'Noto Sans CJK SC',
+        'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Leelawadee UI',
+        'Thonburi', 'Noto Sans Thai';
+    --font-sans: var(--font-inter), ui-sans-serif, system-ui, var(--font-cjk-thai), sans-serif;
+    --font-brand: var(--font-chella), var(--font-inter), sans-serif;
+
+    /* Typography scale (Figma text styles — all Inter, line-height 1.5).
+       Pair size + line-height + letter-spacing so one utility sets all three.
+       Weight is applied separately (font-medium/semibold/bold). */
+    --text-hero: 3rem; /* 48 */
+    --text-hero--line-height: 1.5;
+    --text-hero--letter-spacing: -0.02em;
+    --text-display: 2.5rem; /* 40 */
+    --text-display--line-height: 1.5;
+    --text-display--letter-spacing: -0.02em;
+    --text-h1: 2rem; /* 32 */
+    --text-h1--line-height: 1.5;
+    --text-h1--letter-spacing: -0.02em;
+    --text-t1: 1.5rem; /* 24 */
+    --text-t1--line-height: 1.5;
+    --text-t1--letter-spacing: -0.02em;
+    --text-t2: 1.25rem; /* 20 */
+    --text-t2--line-height: 1.5;
+    --text-t2--letter-spacing: -0.02em;
+    --text-subheading: 1.125rem; /* 18 */
+    --text-subheading--line-height: 1.5;
+    --text-subheading--letter-spacing: -0.02em;
+    --text-body: 1rem; /* 16 */
+    --text-body--line-height: 1.5;
+    --text-dense: 0.875rem; /* 14 */
+    --text-dense--line-height: 1.5;
+    --text-caption: 0.75rem; /* 12 */
+    --text-caption--line-height: 1.5;
+    --text-overline: 0.625rem; /* 10 */
+    --text-overline--line-height: 1.5;
+
+    /* Breakpoints — Tevi custom scale */
+    --breakpoint-sm: 612px;
+    --breakpoint-md: 900px;
+    --breakpoint-lg: 1040px;
+    --breakpoint-xl: 1440px;
+
+    /* shadcn semantic utilities */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-brand: var(--brand);
+
+    /* Zinc scale */
+    --color-zinc-50: var(--zinc-50);
+    --color-zinc-100: var(--zinc-100);
+    --color-zinc-200: var(--zinc-200);
+    --color-zinc-300: var(--zinc-300);
+    --color-zinc-400: var(--zinc-400);
+    --color-zinc-500: var(--zinc-500);
+    --color-zinc-600: var(--zinc-600);
+    --color-zinc-700: var(--zinc-700);
+    --color-zinc-800: var(--zinc-800);
+    --color-zinc-900: var(--zinc-900);
+    --color-zinc-950: var(--zinc-950);
+
+    /* Primary scale */
+    --color-primary-0: var(--primary-0);
+    --color-primary-50: var(--primary-50);
+    --color-primary-100: var(--primary-100);
+    --color-primary-200: var(--primary-200);
+    --color-primary-300: var(--primary-300);
+    --color-primary-400: var(--primary-400);
+    --color-primary-500: var(--primary-500);
+    --color-primary-600: var(--primary-600);
+    --color-primary-700: var(--primary-700);
+    --color-primary-800: var(--primary-800);
+    --color-primary-900: var(--primary-900);
+    --color-primary-950: var(--primary-950);
+    --color-primary-1000: var(--primary-1000);
+
+    /* Semantic — backgrounds */
+    --color-bg-default: var(--bg-default);
+    --color-bg-surface: var(--bg-surface);
+    --color-bg-elevated: var(--bg-elevated);
+    --color-bg-subtle: var(--bg-subtle);
+    --color-bg-overlay: var(--bg-overlay);
+    --color-bg-message: var(--bg-message);
+    --color-bg-segment: var(--bg-segment);
+    --color-bg-tabbar: var(--bg-tabbar);
+    --color-bg-listing: var(--bg-listing);
+
+    /* Semantic — text */
+    --color-text-title: var(--text-title);
+    --color-text-body: var(--text-body);
+    --color-text-subtitle: var(--text-subtitle);
+    --color-text-disabled: var(--text-disabled);
+    --color-text-link: var(--text-link);
+    --color-text-placeholder: var(--text-placeholder);
+    --color-text-on-primary: var(--text-on-primary);
+    --color-text-on-accent: var(--text-on-accent);
+    --color-text-error: var(--text-error);
+    --color-text-success: var(--text-success);
+    --color-text-warning: var(--text-warning);
+
+    /* Semantic — icon / separator / accents */
+    --color-icon-default: var(--icon-default);
+    --color-icon-secondary: var(--icon-secondary);
+    --color-separator-default: var(--separator-default);
+    --color-separator-strong: var(--separator-strong);
+    --color-indigo-active: var(--indigo-active);
+    --color-error-active: var(--error-active);
+    --color-success-active: var(--success-active);
+    --color-warning-active: var(--warning-active);
+    --color-badge-bg: var(--badge-bg);
+    --color-nsfw: var(--nsfw);
+    --color-yellow: var(--yellow);
+
+    /* Radius scale (Figma) */
+    --radius-none: 0px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 24px;
+    --radius-3xl: 32px;
+    --radius-fill: 9999px;
+}
+
+@layer base {
+    * {
+        border-color: var(--border);
+    }
+    html {
+        --window-height: 100dvh;
+    }
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+    }
+}
