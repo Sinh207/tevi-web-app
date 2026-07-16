@@ -66,8 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isAnonymous = Boolean(currentUser?.id && currentUser?.anonymous)
 
     const refreshUser = useCallback(async () => {
-        const res = await authApi.getMe()
-        const user = (res?.data ?? res) as AccountUser
+        // Envelope already unwrapped by the axios interceptor → this is the user.
+        const user = (await authApi.getMe()) as AccountUser
         setCurrentUser(user)
         const id = getActiveAccountId()
         if (id) updateAccountUser(id, user)

@@ -157,9 +157,19 @@ function sleep(ms: number) {
     return new Promise(r => setTimeout(r, ms))
 }
 
+/** Backend wraps every success body in `{ data: <payload>, ... }`; unwrap to
+ *  the payload so models/hooks work with flat DTOs (matches the legacy app). */
+export function unwrapEnvelope(body: unknown): unknown {
+    if (body && typeof body === 'object' && !Array.isArray(body) && 'data' in body) {
+        return (body as { data: unknown }).data
+    }
+    return body
+}
+
 apiClient.interceptors.response.use(
     (response: AxiosResponse) => {
-        // Store ETag on cacheable 200s
+        response.data = unwrapEnvelope(response.data)
+        // Store ETag on cacheable 200s (payload already unwrapped)
         const etag = response.headers?.etag
         const fullUrl = resolveFullUrl(response.config as InternalAxiosRequestConfig)
         if (etag && (response.config.method ?? 'get').toLowerCase() === 'get') {

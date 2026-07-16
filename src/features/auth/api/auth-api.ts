@@ -43,7 +43,7 @@ export const authApi = {
     },
 
     getMe() {
-        return api.get<{ data?: Record<string, unknown> }>('v1/me/')
+        return api.get<Record<string, unknown>>('v1/me/')
     },
     updateMe(payload: Record<string, unknown>) {
         return api.post('v1/me/', payload)
