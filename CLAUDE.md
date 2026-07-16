@@ -7,7 +7,9 @@ Guidance for Claude Code when working in this repository.
 **Tevi** — monetization platform for content creators (live streaming, posts, memberships, DMs).
 This is a **ground-up rewrite** of the legacy `tevi-web-app` (Next.js Pages Router / JS / MUI) into a
 modern stack. Migration strategy is **big-bang**: build to feature-parity by phase, then cut over.
-Token/cookie contract is kept identical to the legacy app so logged-in users survive the switch.
+Auth is Bearer-JWT via the Authorization header; tokens live in localStorage
+(`user_logged_list` / `user_id`) — same-origin cutover keeps sessions (migrate the stored
+account shape at switch-over if it drifts).
 
 **Phase 1 (current): foundation + authentication only.** No business features yet.
 
@@ -57,9 +59,9 @@ src/
 - `client.ts` — axios instance + interceptors: Bearer auth (+ proactive refresh), **HMAC WebCrypto
   signing** (`?verify=`, client-side), **ETag** `If-None-Match` (memory + IndexedDB per-account),
   **single-flight 401 refresh** (drops only the dead account), retry (5xx/429/network).
-- `token.ts` — multi-account store (max 10, `useSyncExternalStore`), persisted to cross-subdomain
-  cookies `t_uat/t_urt/t_uei/t_uid` (SSO) + `user_logged_list`. **Cookie keys are a backend contract —
-  do not rename.**
+- `token.ts` — multi-account store (max 10, `useSyncExternalStore`), **localStorage-only**
+  (`user_logged_list` + `user_id`; accepts the XSS trade-off — backend auths via the
+  Authorization header, not cookies). No SSR bearer → server fetches are public-only.
 - `model.ts` — `createApiModel({ apiBase })` factory. Two-file model pattern:
   `apiX = createApiModel(...)` then a domain file composes its methods.
 - `query-client.ts` — opt-in error toasts via `meta.showErrorToast`; never retries 4xx.

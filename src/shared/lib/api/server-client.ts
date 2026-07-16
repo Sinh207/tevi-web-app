@@ -1,18 +1,21 @@
 import 'server-only'
 import { env } from '@shared/config/env'
-import { cookies } from 'next/headers'
 import { ApiError } from './errors'
 import { shouldSignRequest, signUrl } from './interceptors/sign'
 
 /**
- * Server-side API access for RSC / server components (SEO pages).
- *
- * Unlike the browser client, there is no token store, ETag cache, or refresh
- * loop here — it reads the active account's bearer from the request cookie
- * (`t_uat`), HMAC-signs the URL (WebCrypto works in Node), and does a one-shot
- * `fetch`. Requests are uncached by default so SSR reflects fresh data.
+ * Server-side API access for RSC / server components — PUBLIC content only
+ * (SEO/landing pages). Auth is client-side (localStorage token store, not
+ * cookies), so there is no bearer available on the server. It HMAC-signs the
+ * URL (WebCrypto works in Node) and does one-shot uncached `fetch`es.
+ * For authenticated data, fetch from the client via the browser apiClient.
  */
-const CK_ACCESS = 't_uat' // SSO cookie contract (see token.ts)
+function unwrapEnvelope(body: unknown): unknown {
+    if (body && typeof body === 'object' && !Array.isArray(body) && 'data' in body) {
+        return (body as { data: unknown }).data
+    }
+    return body
+}
 
 async function buildUrl(absUrl: string, params?: Record<string, unknown>) {
     const url = new URL(absUrl)
@@ -34,13 +37,11 @@ async function request<T>(
     body?: unknown,
     init?: RequestInit,
 ): Promise<T> {
-    const token = (await cookies()).get(CK_ACCESS)?.value
     const res = await fetch(url, {
         method,
         headers: {
             Accept: 'application/json',
             ...(body ? { 'Content-Type': 'application/json' } : {}),
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: body ? JSON.stringify(body) : undefined,
         cache: 'no-store',
@@ -52,7 +53,7 @@ async function request<T>(
             status: res.status,
         })
     }
-    return (await res.json()) as T
+    return unwrapEnvelope(await res.json()) as T
 }
 
 /** Server-side counterpart of createApiModel (read-focused). */

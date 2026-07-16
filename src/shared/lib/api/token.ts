@@ -1,25 +1,17 @@
-import { getCookie, removeCookie, setCookie } from '@shared/lib/cookies'
-
 /**
  * Multi-account token store (Bearer JWT), shared infrastructure consumed by the
  * axios client and the auth feature.
  *
- * Persistence (matches the legacy backend/SSO contract):
- *   - Cross-subdomain cookies for the ACTIVE account: t_uat / t_urt / t_uei / t_uid
- *   - localStorage `user_logged_list`: map of every logged-in account (multi-account)
- *   - localStorage `user_id`: the active account id
+ * Persistence (localStorage-only — accepts the XSS trade-off; the backend
+ * authenticates via the Authorization header, not cookies):
+ *   - `user_logged_list`: map of every logged-in account (multi-account)
+ *   - `user_id`: the active account id
  *
- * Read priority on hydrate: `user_logged_list[user_id]` → cookies.
  * `useSyncExternalStore`-compatible (subscribe / getSnapshot).
  */
 
 export const MAX_ACCOUNTS = 10
 
-// Cookie keys (SSO contract — do not rename)
-const CK_ACCESS = 't_uat'
-const CK_REFRESH = 't_urt'
-const CK_EXPIRES = 't_uei'
-const CK_UID = 't_uid'
 // localStorage keys
 const LS_LIST = 'user_logged_list'
 const LS_ACTIVE = 'user_id'
@@ -84,21 +76,6 @@ function persist() {
     } catch {
         // ignore quota / disabled storage
     }
-    syncCookies()
-}
-
-/** Mirror the active account's tokens to cross-subdomain cookies (SSO). */
-function syncCookies() {
-    if (!isBrowser()) return
-    const active = accounts.find(a => a.id === activeId)
-    if (!active) {
-        for (const c of [CK_ACCESS, CK_REFRESH, CK_EXPIRES, CK_UID]) removeCookie(c)
-        return
-    }
-    setCookie(CK_ACCESS, active.access_token)
-    if (active.refresh_token) setCookie(CK_REFRESH, active.refresh_token)
-    if (active.expires_in != null) setCookie(CK_EXPIRES, String(active.expires_in))
-    setCookie(CK_UID, active.id)
 }
 
 function notify() {
@@ -113,26 +90,6 @@ function hydrate() {
         const map = readLS<Record<string, Account>>(LS_LIST)
         if (map) accounts = Object.values(map).filter(Boolean)
         activeId = window.localStorage.getItem(LS_ACTIVE)
-
-        // Fall back to cookies if LS is empty (e.g. session set by another property).
-        if (accounts.length === 0) {
-            const access = getCookie(CK_ACCESS)
-            const uid = getCookie(CK_UID)
-            if (access && uid) {
-                const expIn = getCookie(CK_EXPIRES)
-                accounts = [
-                    {
-                        id: uid,
-                        access_token: access,
-                        refresh_token: getCookie(CK_REFRESH) ?? null,
-                        expires_in: expIn ? Number(expIn) : null,
-                        expires_at: expIn ? Date.now() + Number(expIn) * 1000 : null,
-                        user: null,
-                    },
-                ]
-                activeId = uid
-            }
-        }
 
         if (activeId && !accounts.find(a => a.id === activeId)) {
             activeId = accounts[0]?.id ?? null
