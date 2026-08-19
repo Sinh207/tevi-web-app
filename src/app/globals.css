@@ -1,20 +1,27 @@
 @import 'tailwindcss';
 
-/* next-themes toggles the `.dark` class on <html> */
-@custom-variant dark (&:is(.dark *));
+/* next-themes toggles the `.dark` class on <html>; `[data-theme]` is accepted too
+   so markup copied straight out of the design system keeps working. */
+@custom-variant dark (&:is(.dark *, [data-theme='dark'] *));
 
 /* ==================================================================== *
- * Design tokens — SOURCE OF TRUTH: Figma "Tevi Design system - Mobile"
- * (file WVfz0MwBGyGt67LfNEY2pW), extracted via figma-console MCP.
- * Colors have Light + Dark modes; spacing/radius are single-mode.
- * Semantic tokens reference the scales, so redefining a scale in .dark
- * cascades automatically.
+ * DESIGN TOKENS — 1:1 with the Claude Design project
+ * "Tevi Design System — Figma 1:1" (5a7f74d2-2b0d-…), itself ported from
+ * Figma `Tevi Design system - Mobile` (WVfz0MwBGyGt67LfNEY2pW) and
+ * asserted 260/260 against the numbers the Figma API reports.
+ *
+ * Names and values match the DS `colors_and_type.css` VERBATIM, so markup
+ * copied out of the DS `preview/*.html` renders correctly here. Do not
+ * rename a token and do not "round" a value.
+ *
+ * Consume semantic tokens. The Zinc and Primary ramps INVERT between
+ * modes — `--zinc-950` is #09090b in light and #fafafa in dark.
  * ==================================================================== */
 :root {
+    /* ---- primitives ---- */
     --white: #ffffff;
     --black: #000000;
 
-    /* Zinc scale (light) */
     --zinc-50: #fafafa;
     --zinc-100: #f4f4f5;
     --zinc-200: #e4e4e7;
@@ -27,7 +34,6 @@
     --zinc-900: #18181b;
     --zinc-950: #09090b;
 
-    /* Primary / brand scale (light). primary-500 = #501BC0 */
     --primary-0: #ffffff;
     --primary-50: #f6f2fe;
     --primary-100: #ede4fd;
@@ -42,116 +48,33 @@
     --primary-950: #140735;
     --primary-1000: #000000;
 
-    /* Accent — Indigo */
-    --indigo-active: #007aff;
-    --indigo-focus: #0062cc;
-    --indigo-bg-focus: #d6e8ff;
-    --indigo-disabled: #a3cfff;
-    --indigo-bg-disable: #f5f9ff;
-    --indigo-bg-active: #ebf4ff;
-    /* Accent — Error */
-    --error-active: #ff3636;
-    --error-focus: #d51818;
-    --error-disabled: #fca5a5;
-    --error-bg-active: #fef2f2;
-    --error-bg-disable: #fdf5f5;
-    --error-bg-focus: #fee2e2;
-    /* Accent — Success */
-    --success-active: #26bb26;
-    --success-focus: #1e941e;
-    --success-disabled: #9ce29c;
-    --success-bg-active: #e6f9e6;
-    --success-bg-focus: #cbf1cb;
-    --success-bg-disable: #f3fcf3;
-    /* Accent — Warning */
-    --warning-active: #ca8a04;
-    --warning-focus: #ea3d08;
-    --warning-disabled: #fde68a;
-    --warning-bg-active: #fefce8;
-    --warning-bg-focus: #fef9c3;
-    --warning-bg-disable: #fefce8;
+    --accents-indigo-active: #007aff;
+    --accents-indigo-focus: #0062cc;
+    --accents-indigo-disabled: #a3cfff;
+    --accents-indigo-bg-active: #ebf4ff;
+    --accents-indigo-bg-focus: #d6e8ff;
+    --accents-indigo-bg-disabled: #f5f9ff;
+    --accents-error-active: #ff3636;
+    --accents-error-focus: #d51818;
+    --accents-error-disabled: #fca5a5;
+    --accents-error-bg-active: #fef2f2;
+    --accents-error-bg-focus: #fee2e2;
+    --accents-error-bg-disabled: #fdf5f5;
+    --accents-success-active: #26bb26;
+    --accents-success-focus: #1e941e;
+    --accents-success-disabled: #9ce29c;
+    --accents-success-bg-active: #e6f9e6;
+    --accents-success-bg-focus: #cbf1cb;
+    --accents-success-bg-disabled: #f3fcf3;
+    --accents-warning-active: #ca8a04;
+    --accents-warning-focus: #a26e03;
+    --accents-warning-disabled: #fde68a;
+    --accents-warning-bg-active: #fefce8;
+    --accents-warning-bg-focus: #fef9c3;
+    --accents-warning-bg-disabled: #fffdf4;
+    --accents-nsfw: #f43fca;
+    --accents-yellow: #ffe013;
 
-    /* Backgrounds */
-    --bg-default: #f5f5f5;
-    --bg-surface: #ffffff;
-    --bg-elevated: #ffffff;
-    --bg-subtle: #f4f4f5;
-    --bg-disabled: #f4f4f5;
-    --bg-overlay: #00000080;
-    --bg-message: #18181b;
-    --bg-reply-message: #27272a;
-    --bg-segment: #edeeef;
-    --bg-segment-focus: #ffffff;
-    --bg-tabbar: #ffffffcc;
-    --bg-listing: #ffffff;
-    --bg-topbar-action: #fcfcfbd9;
-
-    /* Text (reference scales where possible) */
-    --text-title: var(--zinc-950);
-    --text-body: var(--zinc-500);
-    --text-subtitle: var(--zinc-700);
-    --text-disabled: var(--zinc-300);
-    --text-link: var(--indigo-active);
-    --text-link-hover: var(--indigo-focus);
-    --text-on-primary: var(--white);
-    --text-on-accent: var(--white);
-    --text-placeholder: var(--zinc-400);
-    --text-error: #ff2525;
-    --text-success: #26bb26;
-    --text-warning: #ca8a04;
-
-    /* Icon */
-    --icon-default: var(--text-title);
-    --icon-secondary: var(--text-body);
-    --icon-disabled: var(--text-disabled);
-
-    /* Buttons — Primary (dark/near-black), Accent (brand purple) */
-    --btn-primary-bg: var(--zinc-950);
-    --btn-primary-bg-hover: var(--zinc-900);
-    --btn-primary-bg-disabled: var(--zinc-500);
-    --btn-primary-text: var(--text-on-primary);
-    --btn-primary-text-disabled: var(--zinc-400);
-    --btn-secondary-bg: var(--zinc-100);
-    --btn-secondary-bg-hover: var(--zinc-200);
-    --btn-secondary-bg-disabled: #f4f4f5;
-    --btn-secondary-text: var(--text-title);
-    --btn-secondary-text-disabled: var(--text-disabled);
-    --btn-secondary-border: var(--separator-strong);
-    --btn-ghost-bg: #ffffff00;
-    --btn-ghost-bg-hover: var(--zinc-200);
-    --btn-ghost-text: var(--text-title);
-    --btn-ghost-text-disabled: var(--text-disabled);
-    --btn-accent-bg: var(--primary-500);
-    --btn-accent-bg-hover: var(--primary-600);
-    --btn-accent-bg-disabled: var(--primary-100);
-    --btn-accent-text: var(--white);
-    --btn-accent-text-disabled: var(--primary-300);
-    --btn-destructive-bg: var(--error-active);
-    --btn-destructive-bg-hover: var(--error-focus);
-    --btn-destructive-bg-disabled: var(--error-bg-disable);
-    --btn-destructive-text: var(--white);
-    --btn-destructive-text-disabled: var(--error-disabled);
-    --topbar-border: #e0e0e0;
-
-    /* Separator / Input / Badge / Focus / Overlay */
-    --separator-default: var(--zinc-200);
-    --separator-strong: var(--zinc-300);
-    --input-bg: var(--zinc-50);
-    --input-bg-hover: var(--zinc-100);
-    --input-bg-disabled: var(--zinc-100);
-    --input-border: var(--zinc-200);
-    --input-border-hover: var(--zinc-300);
-    --input-border-focus: var(--zinc-500);
-    --input-border-error: var(--error-active);
-    --input-text: var(--text-title);
-    --input-placeholder: var(--zinc-400);
-    --badge-bg: #ff2525;
-    --badge-text: #ffffff;
-    --focus-ring: #0050ff;
-    --overlay-default: #000000bf;
-
-    /* Opacity utilities */
-    --opacity-labels-55: #3c3c438c;
     --opacity-white-10: #ffffff1a;
     --opacity-white-25: #ffffff40;
     --opacity-white-50: #ffffff80;
@@ -160,54 +83,127 @@
     --opacity-black-25: #00000040;
     --opacity-black-50: #00000080;
     --opacity-black-75: #000000bf;
+    --opacity-labels-55: #3c3c438c;
 
-    /* Misc */
-    --nsfw: #f43fca;
-    --yellow: #ffe013;
+    /* ---- semantic: background ---- */
+    --background: var(--zinc-100);
+    --background-surface: var(--white);
+    --background-elevated: var(--white);
+    --background-subtle: var(--zinc-100);
+    --background-disabled: var(--zinc-100);
+    --background-overlay: var(--opacity-black-50);
+    --background-message: var(--zinc-900);
+    --background-reply-message: var(--zinc-800);
+    --background-segment: #edeeef;
+    --background-segment-focus: var(--white);
+    --background-tabbar: #ffffffcc;
+    --background-listing: var(--white);
+    --background-topbar-action: #fcfcfbd9;
+    --overlay-default: var(--opacity-black-75);
 
-    /* Spacing (single mode) */
-    --spacing-0: 0px;
-    --spacing-1: 4px;
-    --spacing-2: 8px;
-    --spacing-3: 12px;
-    --spacing-4: 16px;
-    --spacing-5: 24px;
-    --spacing-6: 32px;
-    --spacing-7: 40px;
-    --spacing-8: 48px;
-    --spacing-9: 64px;
-    --spacing-10: 80px;
-    --spacing-11: 96px;
+    /* ---- semantic: text ---- */
+    --text-title: var(--zinc-950);
+    --text-body: var(--zinc-500);
+    --text-subtitle: var(--zinc-700);
+    --text-disabled: var(--zinc-300);
+    --text-placeholder: var(--zinc-400);
+    --text-link: var(--accents-indigo-active);
+    --text-link-hover: var(--accents-indigo-focus);
+    --text-on-primary: var(--white);
+    --text-on-accent: var(--white);
+    --text-error: var(--accents-error-active);
+    --text-success: var(--accents-success-active);
+    --text-warning: var(--accents-warning-active);
 
-    /* Base radius for shadcn components (scale lives in @theme) */
-    --radius: 8px;
+    /* ---- semantic: icon ---- */
+    --icon-default: var(--text-title);
+    --icon-secondary: var(--text-body);
+    --icon-disabled: var(--text-disabled);
 
-    /* ── shadcn semantic mapping (resolves per-mode via the vars above) ── */
-    --background: var(--bg-default);
-    --foreground: var(--text-title);
-    --card: var(--bg-surface);
-    --card-foreground: var(--text-title);
-    --popover: var(--bg-elevated);
-    --popover-foreground: var(--text-title);
-    --primary: var(--btn-primary-bg);
-    --primary-foreground: var(--btn-primary-text);
-    --secondary: var(--btn-secondary-bg);
-    --secondary-foreground: var(--btn-secondary-text);
-    --muted: var(--bg-subtle);
-    --muted-foreground: var(--text-body);
-    --accent: var(--bg-subtle);
-    --accent-foreground: var(--text-title);
-    --destructive: var(--btn-destructive-bg);
-    --destructive-foreground: var(--btn-destructive-text);
-    --border: var(--separator-default);
-    --input: var(--input-border);
-    --ring: var(--focus-ring);
-    /* Brand purple (Figma "Accent" button) — exposed as `brand` utility */
-    --brand: var(--primary-500);
+    /* ---- semantic: button ---- */
+    --button-primary-bg: var(--zinc-950);
+    --button-primary-bg-hover: var(--zinc-900);
+    --button-primary-bg-disabled: var(--zinc-500);
+    --button-primary-text: var(--text-on-primary);
+    --button-primary-text-disabled: var(--zinc-400);
+    --button-secondary-bg: var(--zinc-100);
+    --button-secondary-bg-hover: var(--zinc-200);
+    --button-secondary-bg-disabled: var(--zinc-100);
+    --button-secondary-text: var(--text-title);
+    --button-secondary-text-disabled: var(--text-disabled);
+    --button-secondary-border: var(--separator-strong);
+    --button-ghost-bg: #ffffff00;
+    --button-ghost-bg-hover: var(--zinc-200);
+    --button-ghost-text: var(--text-title);
+    --button-ghost-text-disabled: var(--text-disabled);
+    --button-accent-bg: var(--primary-500);
+    --button-accent-bg-hover: var(--primary-600);
+    --button-accent-bg-disabled: var(--primary-100);
+    --button-accent-text: var(--white);
+    --button-accent-text-disabled: var(--primary-300);
+    --button-destructive-bg: var(--accents-error-active);
+    --button-destructive-bg-hover: var(--accents-error-focus);
+    --button-destructive-bg-disabled: var(--accents-error-bg-disabled);
+    --button-destructive-text: var(--white);
+    --button-destructive-text-disabled: var(--accents-error-disabled);
+    --button-topbar-border: #e0e0e0;
+
+    /* ---- semantic: separator / input / badge / focus ---- */
+    --separator-default: var(--zinc-200);
+    --separator-strong: var(--zinc-300);
+    --input-bg: var(--zinc-50);
+    --input-bg-hover: var(--zinc-100);
+    --input-bg-disabled: var(--zinc-100);
+    --input-border: var(--zinc-200);
+    --input-border-hover: var(--zinc-300);
+    --input-border-focus: var(--zinc-500);
+    --input-border-error: var(--accents-error-active);
+    --input-text: var(--text-title);
+    --input-placeholder: var(--zinc-400);
+    --badge-bg: var(--accents-error-active);
+    --badge-text: var(--white);
+    --focus-ring: #0050ff;
+
+    /* ---- effects ----
+       Figma keeps separate Shadow/Light and Shadow/Dark ramps. `--elevation-*`
+       is the private mode-aware source (the .dark block below swaps it) and
+       `--shadow-*` is the DS-facing alias, so both `var(--shadow-md)` in copied
+       DS markup and Tailwind's `shadow-md` utility flip with the mode. Tailwind
+       inlines a literal shadow value into its utility, so a plain @theme entry
+       would freeze the light ramp — the indirection is what makes it work. */
+    --elevation-xs: 0 0 2px 0 rgba(24, 24, 27, 0.05);
+    --elevation-sm: 0 1px 3px 0 rgba(24, 24, 27, 0.1), 0 -1px 2px 0 rgba(24, 24, 27, 0.06);
+    --elevation-md: 0 4px 8px -2px rgba(24, 24, 27, 0.1), 0 -2px 4px -2px rgba(24, 24, 27, 0.06);
+    --elevation-lg: 0 8px 16px -4px rgba(24, 24, 27, 0.1), 0 -4px 16px -2px rgba(24, 24, 27, 0.1);
+    --elevation-xl: 0 12px 24px -6px rgba(24, 24, 27, 0.08), 0 -8px 8px -4px rgba(24, 24, 27, 0.03);
+    --elevation-2xl: 0 24px 48px -12px rgba(24, 24, 27, 0.18);
+    --elevation-3xl: 0 32px 54px -12px rgba(24, 24, 27, 0.14);
+    /* Label Shadow — mode-invariant in Figma */
+    --elevation-label: 0 8px 24px -4px rgba(68, 68, 68, 0.04),
+        0 -4px 24px -2px rgba(68, 68, 68, 0.1);
+
+    --shadow-xs: var(--elevation-xs);
+    --shadow-sm: var(--elevation-sm);
+    --shadow-md: var(--elevation-md);
+    --shadow-lg: var(--elevation-lg);
+    --shadow-xl: var(--elevation-xl);
+    --shadow-2xl: var(--elevation-2xl);
+    --shadow-3xl: var(--elevation-3xl);
+    --shadow-label: var(--elevation-label);
+
+    /* Derived, not a Figma variable — the premium display-name gradient, solved
+       once against the canonical 104x24 name box so List / Conversation List /
+       Card cannot drift apart. Both stops are bound variables, so it flips mode. */
+    --gradient-premium-name: linear-gradient(
+        143.49deg,
+        var(--primary-600) 6.44%,
+        var(--accents-indigo-active) 107.62%
+    );
 }
 
-.dark {
-    /* Zinc scale (dark — inverted) */
+/* Dark mode — only the tokens whose value differs from Light. */
+.dark,
+:root[data-theme='dark'] {
     --zinc-50: #09090b;
     --zinc-100: #18181b;
     --zinc-200: #27272a;
@@ -220,7 +216,6 @@
     --zinc-900: #f4f4f5;
     --zinc-950: #fafafa;
 
-    /* Primary scale (dark) */
     --primary-0: #000000;
     --primary-50: #140735;
     --primary-100: #210b52;
@@ -235,73 +230,172 @@
     --primary-950: #f6f2fe;
     --primary-1000: #ffffff;
 
-    /* Accent — Indigo (dark) */
-    --indigo-focus: #53aaff;
-    --indigo-bg-focus: #003166;
-    --indigo-disabled: #004a99;
-    --indigo-bg-disable: #060b22;
-    --indigo-bg-active: #001933;
-    /* Accent — Error (dark) */
-    --error-focus: #ff5555;
-    --error-disabled: #7f1d1d;
-    --error-bg-active: #2d1515;
-    --error-bg-disable: #1f1212;
-    --error-bg-focus: #451a1a;
-    /* Accent — Success (dark) */
-    --success-focus: #5cd65c;
-    --success-disabled: #177217;
-    --success-bg-active: #082608;
-    --success-bg-focus: #104c10;
-    --success-bg-disable: #061d06;
-    /* Accent — Warning (dark) */
-    --warning-active: #ff6d1e;
-    --warning-focus: #ff5d22;
-    --warning-disabled: #713f12;
-    --warning-bg-active: #1f1c0d;
-    --warning-bg-focus: #422d0a;
-    --warning-bg-disable: #1a170a;
+    --accents-indigo-focus: #53aaff;
+    --accents-indigo-disabled: #004a99;
+    --accents-indigo-bg-active: #001933;
+    --accents-indigo-bg-focus: #003166;
+    --accents-indigo-bg-disabled: #060b22;
+    --accents-error-focus: #ff5555;
+    --accents-error-disabled: #7f1d1d;
+    --accents-error-bg-active: #2d1515;
+    --accents-error-bg-focus: #451a1a;
+    --accents-error-bg-disabled: #1f1212;
+    --accents-success-focus: #5cd65c;
+    --accents-success-disabled: #177217;
+    --accents-success-bg-active: #082608;
+    --accents-success-bg-focus: #104c10;
+    --accents-success-bg-disabled: #061d06;
+    --accents-warning-focus: #fbbc37;
+    --accents-warning-disabled: #713f12;
+    --accents-warning-bg-active: #1f1c0d;
+    --accents-warning-bg-focus: #422d0a;
+    --accents-warning-bg-disabled: #1a170a;
+    --accents-nsfw: #ff5ed9;
+    --accents-yellow: #ffe537;
 
-    /* Backgrounds (dark) */
-    --bg-default: #000000;
-    --bg-surface: #18181b;
-    --bg-elevated: #222225;
-    --bg-subtle: #18181b;
-    --bg-disabled: #27272a;
-    --bg-overlay: #ffffff40;
-    --bg-message: #27272a;
-    --bg-reply-message: #3f3f46;
-    --bg-segment: #1e1e20;
-    --bg-segment-focus: #3d3d43;
-    --bg-tabbar: #000000cc;
-    --bg-listing: #000000;
-    --bg-topbar-action: #1d1d1dd9;
-
-    /* Text (dark) — refs that change */
-    --text-body: #a1a1aa;
-    --text-on-primary: var(--black);
-    --text-error: #ff3636;
-    --text-warning: #ff6d1e;
-    --icon-secondary: #a1a1aa;
-
-    /* Buttons (dark) — values that change */
-    --btn-secondary-bg-disabled: #1e1e22;
-    --btn-ghost-bg: #00000000;
-    --btn-accent-text-disabled: var(--primary-500);
-
-    /* Input / Badge / Focus / Topbar (dark) */
-    --input-bg-disabled: var(--zinc-200);
-    --input-border-focus: #a1a1aa;
-    --badge-bg: #ff3636;
-    --focus-ring: #3d7aff;
-    --topbar-border: #ffffff33;
     --opacity-labels-55: #a5a5ad8c;
 
-    --nsfw: #ff5ed9;
-    --yellow: #ffe537;
+    --background: var(--black);
+    --background-surface: var(--zinc-100);
+    --background-elevated: #222225;
+    --background-disabled: var(--zinc-200);
+    --background-overlay: var(--opacity-white-25);
+    --background-message: var(--zinc-200);
+    --background-reply-message: var(--zinc-300);
+    --background-segment: #1e1e20;
+    --background-segment-focus: #3d3d43;
+    --background-tabbar: #000000cc;
+    --background-listing: var(--black);
+    --background-topbar-action: #1d1d1dd9;
+
+    --text-title: var(--primary-1000);
+    --text-body: var(--zinc-600);
+    --text-on-primary: var(--black);
+
+    --icon-secondary: var(--zinc-600);
+
+    --button-secondary-bg-disabled: #1e1e22;
+    --button-ghost-bg: #00000000;
+    --button-accent-text-disabled: var(--primary-500);
+    --button-topbar-border: #ffffff33;
+
+    --input-bg-disabled: var(--zinc-200);
+    --input-border-focus: var(--zinc-600);
+
+    --focus-ring: #3d7aff;
+
+    /* Effects — Figma ships a separate Shadow/Dark ramp. */
+    --elevation-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --elevation-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 -1px 2px 0 rgba(0, 0, 0, 0.06);
+    --elevation-md: 0 4px 8px -2px rgba(0, 0, 0, 0.1), 0 -2px 4px -2px rgba(0, 0, 0, 0.06);
+    --elevation-lg: 0 8px 16px -4px rgba(0, 0, 0, 0.08), 0 -4px 6px -2px rgba(0, 0, 0, 0.03);
+    --elevation-xl: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 -8px 8px -4px rgba(0, 0, 0, 0.03);
+    --elevation-2xl: 0 24px 48px -12px rgba(0, 0, 0, 0.18);
+    --elevation-3xl: 0 32px 54px -12px rgba(0, 0, 0, 0.14);
+}
+
+/* ==================================================================== *
+ * Spacing — Figma collection "Spacing & radius".
+ *
+ * ⚠ The Figma ramp is NOT linear, so the Figma index and the Tailwind
+ * class number diverge from step 5 on. Use the Tailwind column.
+ *
+ *   Figma            px     Tailwind
+ *   --spacing-0       0     p-0
+ *   --spacing-1       4     p-1
+ *   --spacing-2       8     p-2
+ *   --spacing-3      12     p-3
+ *   --spacing-4      16     p-4
+ *   --spacing-5      24     p-6     ← NOT p-5 (20px)
+ *   --spacing-6      32     p-8
+ *   --spacing-7      40     p-10
+ *   --spacing-8      48     p-12
+ *   --spacing-9      64     p-16
+ *   --spacing-10     80     p-20
+ *   --spacing-11     96     p-24
+ *
+ * These vars exist so CSS copied out of the DS `preview/*.html` works.
+ * They are deliberately NOT registered in @theme — doing so would make
+ * `p-6` mean 32px and break every Tailwind habit in the codebase.
+ * ==================================================================== */
+:root {
+    --spacing-0: 0;
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-3: 12px;
+    --spacing-4: 16px;
+    --spacing-5: 24px;
+    --spacing-6: 32px;
+    --spacing-7: 40px;
+    --spacing-8: 48px;
+    --spacing-9: 64px;
+    --spacing-10: 80px;
+    --spacing-11: 96px;
+
+    /* Layout grids (Figma grid styles) */
+    --grid-mobile-columns: 4;
+    --grid-mobile-gutter: 16px;
+    --grid-tablet-columns: 8;
+    --grid-tablet-gutter: 24px;
+    --grid-desktop-columns: 12;
+    --grid-desktop-gutter: 24px;
+    --grid-wide-columns: 12;
+    --grid-wide-gutter: 32px;
+
+    /* Type primitives — the .type-* utilities below are the public API. */
+    --font-family-base: var(--font-sans);
+    --font-size-48: 48px;
+    --font-size-40: 40px;
+    --font-size-32: 32px;
+    --font-size-24: 24px;
+    --font-size-20: 20px;
+    --font-size-18: 18px;
+    --font-size-16: 16px;
+    --font-size-14: 14px;
+    --font-size-12: 12px;
+    --font-size-10: 10px;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --line-height-default: 1.5;
+    --line-height-tight: 1.2;
+    --letter-spacing-tight: -0.02em;
+    --letter-spacing-none: 0;
+
+    /* Base radius for shadcn primitives (full scale lives in @theme) */
+    --radius: 8px;
+}
+
+/* ==================================================================== *
+ * shadcn / base-nova semantic mapping — a thin alias layer on top of the
+ * Figma tokens above. Never give these their own hex.
+ * ==================================================================== */
+:root {
+    --foreground: var(--text-title);
+    --card: var(--background-surface);
+    --card-foreground: var(--text-title);
+    --popover: var(--background-elevated);
+    --popover-foreground: var(--text-title);
+    --primary: var(--button-primary-bg);
+    --primary-foreground: var(--button-primary-text);
+    --secondary: var(--button-secondary-bg);
+    --secondary-foreground: var(--button-secondary-text);
+    --muted: var(--background-subtle);
+    --muted-foreground: var(--text-body);
+    --accent: var(--background-subtle);
+    --accent-foreground: var(--text-title);
+    --destructive: var(--button-destructive-bg);
+    --destructive-foreground: var(--button-destructive-text);
+    --border: var(--separator-default);
+    --input: var(--input-border);
+    --ring: var(--focus-ring);
+    /* Brand purple (Figma "Accent" button) — exposed as the `brand` utility */
+    --brand: var(--primary-500);
 }
 
 @theme inline {
-    /* Fonts */
+    /* ---- fonts ---- */
     --font-cjk-thai:
         'PingFang SC', 'PingFang TC', 'Hiragino Sans', 'Yu Gothic', 'Meiryo',
         'Malgun Gothic', 'Microsoft YaHei', 'Microsoft JhengHei', 'Noto Sans CJK SC',
@@ -310,43 +404,13 @@
     --font-sans: var(--font-inter), ui-sans-serif, system-ui, var(--font-cjk-thai), sans-serif;
     --font-brand: var(--font-chella), var(--font-inter), sans-serif;
 
-    /* Typography scale (Figma text styles — all Inter, line-height 1.5).
-       Pair size + line-height + letter-spacing so one utility sets all three.
-       Weight is applied separately (font-medium/semibold/bold). */
-    --text-hero: 3rem; /* 48 */
-    --text-hero--line-height: 1.5;
-    --text-hero--letter-spacing: -0.02em;
-    --text-display: 2.5rem; /* 40 */
-    --text-display--line-height: 1.5;
-    --text-display--letter-spacing: -0.02em;
-    --text-h1: 2rem; /* 32 */
-    --text-h1--line-height: 1.5;
-    --text-h1--letter-spacing: -0.02em;
-    --text-t1: 1.5rem; /* 24 */
-    --text-t1--line-height: 1.5;
-    --text-t1--letter-spacing: -0.02em;
-    --text-t2: 1.25rem; /* 20 */
-    --text-t2--line-height: 1.5;
-    --text-t2--letter-spacing: -0.02em;
-    --text-subheading: 1.125rem; /* 18 */
-    --text-subheading--line-height: 1.5;
-    --text-subheading--letter-spacing: -0.02em;
-    --text-body: 1rem; /* 16 */
-    --text-body--line-height: 1.5;
-    --text-dense: 0.875rem; /* 14 */
-    --text-dense--line-height: 1.5;
-    --text-caption: 0.75rem; /* 12 */
-    --text-caption--line-height: 1.5;
-    --text-overline: 0.625rem; /* 10 */
-    --text-overline--line-height: 1.5;
-
-    /* Breakpoints — Tevi custom scale */
+    /* ---- breakpoints — Tevi custom scale ---- */
     --breakpoint-sm: 612px;
     --breakpoint-md: 900px;
     --breakpoint-lg: 1040px;
     --breakpoint-xl: 1440px;
 
-    /* shadcn semantic utilities */
+    /* ---- shadcn semantic utilities ---- */
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-card: var(--card);
@@ -367,7 +431,7 @@
     --color-ring: var(--ring);
     --color-brand: var(--brand);
 
-    /* Zinc scale */
+    /* ---- primitive ramps ---- */
     --color-zinc-50: var(--zinc-50);
     --color-zinc-100: var(--zinc-100);
     --color-zinc-200: var(--zinc-200);
@@ -379,8 +443,6 @@
     --color-zinc-800: var(--zinc-800);
     --color-zinc-900: var(--zinc-900);
     --color-zinc-950: var(--zinc-950);
-
-    /* Primary scale */
     --color-primary-0: var(--primary-0);
     --color-primary-50: var(--primary-50);
     --color-primary-100: var(--primary-100);
@@ -395,45 +457,62 @@
     --color-primary-950: var(--primary-950);
     --color-primary-1000: var(--primary-1000);
 
-    /* Semantic — backgrounds */
-    --color-bg-default: var(--bg-default);
-    --color-bg-surface: var(--bg-surface);
-    --color-bg-elevated: var(--bg-elevated);
-    --color-bg-subtle: var(--bg-subtle);
-    --color-bg-overlay: var(--bg-overlay);
-    --color-bg-message: var(--bg-message);
-    --color-bg-segment: var(--bg-segment);
-    --color-bg-tabbar: var(--bg-tabbar);
-    --color-bg-listing: var(--bg-listing);
+    /* ---- semantic: background ---- */
+    --color-background-surface: var(--background-surface);
+    --color-background-elevated: var(--background-elevated);
+    --color-background-subtle: var(--background-subtle);
+    --color-background-disabled: var(--background-disabled);
+    --color-background-overlay: var(--background-overlay);
+    --color-background-message: var(--background-message);
+    --color-background-reply-message: var(--background-reply-message);
+    --color-background-segment: var(--background-segment);
+    --color-background-segment-focus: var(--background-segment-focus);
+    --color-background-tabbar: var(--background-tabbar);
+    --color-background-listing: var(--background-listing);
+    --color-background-topbar-action: var(--background-topbar-action);
+    --color-overlay-default: var(--overlay-default);
 
-    /* Semantic — text */
+    /* ---- semantic: text ---- */
     --color-text-title: var(--text-title);
     --color-text-body: var(--text-body);
     --color-text-subtitle: var(--text-subtitle);
     --color-text-disabled: var(--text-disabled);
-    --color-text-link: var(--text-link);
     --color-text-placeholder: var(--text-placeholder);
+    --color-text-link: var(--text-link);
+    --color-text-link-hover: var(--text-link-hover);
     --color-text-on-primary: var(--text-on-primary);
     --color-text-on-accent: var(--text-on-accent);
     --color-text-error: var(--text-error);
     --color-text-success: var(--text-success);
     --color-text-warning: var(--text-warning);
 
-    /* Semantic — icon / separator / accents */
+    /* ---- semantic: icon / separator / badge ---- */
     --color-icon-default: var(--icon-default);
     --color-icon-secondary: var(--icon-secondary);
+    --color-icon-disabled: var(--icon-disabled);
     --color-separator-default: var(--separator-default);
     --color-separator-strong: var(--separator-strong);
-    --color-indigo-active: var(--indigo-active);
-    --color-error-active: var(--error-active);
-    --color-success-active: var(--success-active);
-    --color-warning-active: var(--warning-active);
     --color-badge-bg: var(--badge-bg);
-    --color-nsfw: var(--nsfw);
-    --color-yellow: var(--yellow);
+    --color-badge-text: var(--badge-text);
 
-    /* Radius scale (Figma) */
-    --radius-none: 0px;
+    /* ---- accents ---- */
+    --color-accents-indigo-active: var(--accents-indigo-active);
+    --color-accents-indigo-bg-active: var(--accents-indigo-bg-active);
+    --color-accents-error-active: var(--accents-error-active);
+    --color-accents-error-bg-active: var(--accents-error-bg-active);
+    --color-accents-success-active: var(--accents-success-active);
+    --color-accents-success-bg-active: var(--accents-success-bg-active);
+    --color-accents-warning-active: var(--accents-warning-active);
+    --color-accents-warning-bg-active: var(--accents-warning-bg-active);
+    --color-accents-nsfw: var(--accents-nsfw);
+    --color-accents-yellow: var(--accents-yellow);
+}
+
+/* Mode-invariant scales. Declared in a non-inline @theme so Tailwind emits the
+   custom properties themselves — `var(--radius-lg)` in DS markup and the
+   `rounded-lg` utility then resolve to the same Figma number. */
+@theme {
+    --radius-none: 0;
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
@@ -441,6 +520,126 @@
     --radius-2xl: 24px;
     --radius-3xl: 32px;
     --radius-fill: 9999px;
+
+    /* Background Blur/* — apply as backdrop-filter: blur(var(--blur-md)) */
+    --blur-sm: 16px;
+    --blur-md: 24px;
+    --blur-lg: 32px;
+
+    /* Width of the desktop nav rail (`Navbar (Web)`), from md up.
+       Three places have to agree on this number and nothing else forces them to:
+       the rail itself, the account panel that parks against its trailing edge, and
+       the trailing reserve that keeps the content column centred on the window
+       rather than on the space beside the rail. Before it was a token, changing the
+       rail meant remembering all three, with no failure if you didn't — the panel
+       would simply sit a few pixels off the rail and every page would drift off
+       centre by half the difference.
+       Not in the `--spacing-*` ramp on purpose: this is one component's geometry,
+       not a step anyone should reach for as padding. */
+    --rail-width: 88px;
+
+    /* The *end* rail — the promo column legacy calls "Trending"
+       (`components/layouts/common/trending`). Two numbers, and the second is derived
+       from the first, which is the whole reason they are tokens.
+
+       `--end-rail-width` is the column itself. `--end-rail-anchor` is how far its
+       outer edge sits from the centre of the window:
+
+           306   half of the 612 content column
+        +   22   the gutter between column and rail
+        +  318   --end-rail-width
+        = --------
+           646
+
+       So the rail is pinned at `calc(50vw - var(--end-rail-anchor))` on the inline-end
+       side, and it only fits when the window is at least **twice** the anchor — 1292px.
+       Legacy hardcodes the 646 with no such guard, which is why its rail slides off the
+       right edge and puts a horizontal scrollbar on every window narrower than that.
+       The `min-[1292px]:` gate in `app-end-rail.tsx` is that number, doubled.
+
+       **1292 excludes a 1280 laptop, and that is the decision, not an oversight.** A 13"
+       MacBook Air at default scaling is 12px short and gets no rail; the rail starts at
+       1366. It was weighed against narrowing the gutter to 16 (anchor 640, fits 1280 with
+       zero slack) and narrowing the rail to 306 (anchor 634, fits with 12 to spare), and
+       legacy's column width won. Don't "fix" the 12px without reopening that — see R1 in
+       docs/END_RAIL_OPEN_ITEMS.md.
+
+       `END_RAIL_MIN_WIDTH` in `shared/hooks/use-rail-visible.ts` is the same doubled number and
+       has to move with this one. Nothing enforces the pair; the gate is CSS and the constant
+       is JS, so neither can read the other. */
+    --end-rail-width: 318px;
+    --end-rail-anchor: 646px;
+}
+
+/* Shadows go through @theme inline so the utility emits `var(--elevation-*)`
+   rather than a frozen literal — see the note next to the ramp above. */
+@theme inline {
+    --shadow-xs: var(--elevation-xs);
+    --shadow-sm: var(--elevation-sm);
+    --shadow-md: var(--elevation-md);
+    --shadow-lg: var(--elevation-lg);
+    --shadow-xl: var(--elevation-xl);
+    --shadow-2xl: var(--elevation-2xl);
+    --shadow-3xl: var(--elevation-3xl);
+    --shadow-label: var(--elevation-label);
+}
+
+/* ==================================================================== *
+ * Typography — 25 utility classes, one per Figma text style.
+ * Use the class. Never set font-size / font-weight by hand.
+ * Line-height is 150% everywhere except Body/Message content (120%).
+ * Letter-spacing is -2% for size >= 18, 0 for size <= 16.
+ * ==================================================================== */
+@layer components {
+    [class^='type-'],
+    [class*=' type-'] {
+        font-family: var(--font-family-base);
+        font-style: normal;
+        text-decoration: none;
+    }
+
+    /* Display */
+    .type-display-hero-bold { font-size: var(--font-size-48); font-weight: var(--font-weight-bold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+    .type-display-large-bold { font-size: var(--font-size-40); font-weight: var(--font-weight-bold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+
+    /* Heading */
+    .type-heading-h1-bold { font-size: var(--font-size-32); font-weight: var(--font-weight-bold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+    .type-heading-h1-semibold { font-size: var(--font-size-32); font-weight: var(--font-weight-semibold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+
+    /* Title */
+    .type-title-t1-bold { font-size: var(--font-size-24); font-weight: var(--font-weight-bold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+    .type-title-t1-semibold { font-size: var(--font-size-24); font-weight: var(--font-weight-semibold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+    .type-title-t2-bold { font-size: var(--font-size-20); font-weight: var(--font-weight-bold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+    .type-title-t2-semibold { font-size: var(--font-size-20); font-weight: var(--font-weight-semibold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+
+    /* Subheading */
+    .type-subheading-strong { font-size: var(--font-size-18); font-weight: var(--font-weight-semibold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+    .type-subheading-default { font-size: var(--font-size-18); font-weight: var(--font-weight-medium); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-tight); }
+
+    /* Body — default (16) */
+    .type-body-strong { font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
+    .type-body-emphasis { font-size: var(--font-size-16); font-weight: var(--font-weight-medium); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
+    .type-body-default { font-size: var(--font-size-16); font-weight: var(--font-weight-regular); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
+    .type-body-message { font-size: var(--font-size-16); font-weight: var(--font-weight-regular); line-height: var(--line-height-tight); letter-spacing: var(--letter-spacing-none); }
+
+    /* Body — dense (14) */
+    .type-dense-strong { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
+    .type-dense-emphasis { font-size: var(--font-size-14); font-weight: var(--font-weight-medium); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
+    .type-dense-default { font-size: var(--font-size-14); font-weight: var(--font-weight-regular); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
+
+    /* Emphasis (italic) */
+    .type-body-italic { font-size: var(--font-size-16); font-weight: var(--font-weight-regular); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); font-style: italic; }
+    .type-dense-italic { font-size: var(--font-size-14); font-weight: var(--font-weight-regular); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); font-style: italic; }
+
+    /* Link (underlined) */
+    .type-link-body { font-size: var(--font-size-16); font-weight: var(--font-weight-regular); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); text-decoration: underline; }
+    .type-link-dense { font-size: var(--font-size-14); font-weight: var(--font-weight-regular); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); text-decoration: underline; }
+
+    /* Caption / Micro */
+    .type-caption-label-strong { font-size: var(--font-size-12); font-weight: var(--font-weight-semibold); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
+    .type-caption-label { font-size: var(--font-size-12); font-weight: var(--font-weight-medium); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
+    .type-caption-meta { font-size: var(--font-size-12); font-weight: var(--font-weight-regular); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
+    .type-micro-overline { font-size: var(--font-size-10); font-weight: var(--font-weight-medium); line-height: var(--line-height-default); letter-spacing: var(--letter-spacing-none); }
 }
 
 @layer base {
@@ -452,8 +651,351 @@
     }
     body {
         background-color: var(--background);
-        color: var(--foreground);
-        font-family: var(--font-sans);
+        color: var(--text-title);
+        font-family: var(--font-family-base);
         -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* ====================================================================
+ * Skeleton placeholder animation.
+ *
+ * The design system ships **no Skeleton component** — `.tevi-loader` is a
+ * three-dot walk and `.tevi-spinner` is an eight-bar ring; neither is a
+ * content placeholder. The only bar-shaped placeholder in the whole DS is
+ * `AI/Skeleton` (Figma 92:19340), scoped to the AI message bubble, and its
+ * tokens are what `shared/ui/skeleton.tsx` reuses verbatim: 12px tall,
+ * radius 4, `--opacity-labels-55` at opacity .4, breathing to .15 over
+ * 1600ms, with 160ms of stagger per sibling.
+ *
+ * Named after the DS rule so a future sync can find it. Reduced motion is
+ * handled on the utility, not here, so the keyframe stays a faithful copy.
+ * ==================================================================== */
+@keyframes tevi-msg-skeleton {
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.15;
+    }
+}
+
+/* ====================================================================
+ * Loader — `.tevi-loader__dot`, Figma "Loader" (31:3349).
+ *
+ * The lit dot walks left → middle → right, and the *only* thing the
+ * Step axis changes is opacity (1 vs 0.75), so the three frames are one
+ * keyframe plus a 400ms delay per sibling. `steps(1, end)` on the
+ * utility is what makes it a walk rather than a fade — Figma draws three
+ * discrete frames, not a crossfade.
+ *
+ * DEVIATION, and it is the DS stylesheet's own: Figma carries no timing.
+ * 1200ms / 3 steps is copied from there so the two cannot drift.
+ * ==================================================================== */
+@keyframes tevi-loader-dot {
+    0% {
+        opacity: 1;
+    }
+    33.34% {
+        opacity: 0.75;
+    }
+    100% {
+        opacity: 0.75;
+    }
+}
+
+/* ====================================================================
+ * `tevi-rise` — the app's entrance for a region that has just arrived:
+ * 8px up, fading in.
+ *
+ * **Not a port.** Figma has no motion layer at all, so every animation
+ * in this app is an addition; what makes this one consistent rather than
+ * invented is that it reuses the two values the app already moves by —
+ * the 240ms and the `cubic-bezier(0.32, 0.72, 0, 1)` of the menu
+ * drawer's screen push (`features/navigation`). One curve for "a screen
+ * changed", whether it slid or appeared.
+ *
+ * 8px, not 16 or 24: this plays on mount, often on several siblings at a
+ * stagger, and a longer travel reads as the layout settling — i.e. as
+ * jank — rather than as content arriving.
+ *
+ * `translate` rather than `transform`, because Tailwind v4's `translate-*`
+ * utilities set that property: a keyframe animating `transform` would be
+ * silently overridden by any `translate-*` class on the same element, and
+ * `scale-*` / `rotate-*` would no longer compose.
+ *
+ * Callers pair it with `motion-reduce:animate-none`, as the skeleton
+ * does — the element then simply appears, which is the correct reduced
+ * -motion outcome for an entrance (there is nothing to reveal).
+ * ==================================================================== */
+@keyframes tevi-rise {
+    from {
+        opacity: 0;
+        translate: 0 8px;
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+/* ====================================================================
+ * `tevi-pop` — the entrance for something that just became *true*: a
+ * password requirement ticking green, a success mark landing.
+ *
+ * **Not a port** either, and it shares `tevi-rise`'s 240ms and curve for
+ * the reason given above — one curve for "something arrived". What it
+ * does not share is the travel: a rise moves the element's box, and a
+ * checkmark that slides 8px inside a settled form makes the form look
+ * like it is re-laying-out on every keystroke. Scale says "that
+ * happened" without moving anything around it.
+ *
+ * 0.6, not 0 — starting from nothing reads as a card trick. And
+ * `scale` rather than `transform`, for the same Tailwind v4 reason
+ * `tevi-rise` uses `translate`: the utilities set the individual
+ * properties, so a keyframe on `transform` would be silently overridden
+ * by any `scale-*` / `translate-*` class on the same element.
+ *
+ * Callers pair it with `motion-reduce:animate-none` (see
+ * `shared/lib/motion.ts`), and must only put it on an element whose box
+ * is already reserved — it scales, so an unreserved one would reflow.
+ * ==================================================================== */
+@keyframes tevi-pop {
+    from {
+        opacity: 0;
+        scale: 0.6;
+    }
+    to {
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+/* ====================================================================
+ * `tevi-fade-out` — the splash overlay uncovering the app.
+ *
+ * **Not a port**, and — unlike the entrances — **not on the app's
+ * arrival curve either.** `cubic-bezier(0.32, 0.72, 0, 1)` is a strong
+ * ease-*out*: it is ~97% done at 46% of its duration, which is exactly
+ * right for something arriving and exactly wrong for something leaving.
+ * Measured on it, this layer was at opacity 0.03 after 110ms of a 240ms
+ * fade — it snapped off and then held an invisible frame for the rest,
+ * and the lock-up's swell underneath was spent entirely behind an
+ * already-transparent cover. `ease-in` over 320ms is the counterpart
+ * gesture: hold, then go.
+ *
+ * `tevi-row-collapse` is the precedent for an exit setting its own
+ * timing rather than borrowing the entrance's — the rule was always
+ * "one curve for *something arrived*", and an exit is not that.
+ *
+ * Opacity only. The splash is a full-viewport `fixed` layer over content
+ * that is already painted underneath, so there is nothing to travel from
+ * or scale toward — and moving it would drag the brand mark across live
+ * content on its way out.
+ *
+ * `both` matters here rather than being a formality: the caller unmounts
+ * the layer on a timer of the same length, and without the forwards fill
+ * the last frame would snap back to full opacity before that timer runs.
+ *
+ * Callers pair it with `motion-reduce:animate-none`, and the owning hook
+ * additionally drops the layer immediately under reduced motion — with
+ * the animation off, `opacity: 0` never applies, so a fade that is merely
+ * disabled would leave the splash sitting at full opacity for its whole
+ * 240ms. Same trap `tevi-row-collapse` documents.
+ * ==================================================================== */
+@keyframes tevi-fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* ====================================================================
+ * `tevi-splash-breath` — the brand lock-up staying alive while the
+ * session bootstraps.
+ *
+ * It exists because the splash lost its spinner. A `Loader` under the
+ * mark promised a wait long enough to need one, which a three-second
+ * ceiling is not; but with it gone the screen was completely still for
+ * up to three seconds, and a still screen reads as a frozen one. This is
+ * the smallest thing that says "running" without claiming progress.
+ *
+ * 2.5%, and 2800ms — deliberately below the threshold where it becomes
+ * a thing you watch. `tevi-live-breath` is the comparison: that one
+ * pulses opacity to 0.35 over 1600ms because it is *reporting* something
+ * (a stream is live) and wants to be noticed. This is only saying the
+ * page did not die, so it is slower and shallower by roughly half.
+ *
+ * `scale` rather than `transform`, for the reason `tevi-pop` gives. It
+ * is on the lock-up's wrapper while the entrances are on the mark and
+ * the lettering, so the two never contend for the `animation` property —
+ * they compound, which is why the amplitude has to stay this small.
+ *
+ * Reduced motion is handled on the utility, and it must be: this is a
+ * small repeating movement that never stops on its own, i.e. exactly
+ * what that setting exists to switch off.
+ * ==================================================================== */
+@keyframes tevi-splash-breath {
+    0%,
+    100% {
+        scale: 1;
+    }
+    50% {
+        scale: 1.025;
+    }
+}
+
+/* ====================================================================
+ * `tevi-splash-out` — the lock-up on its way out, played against the
+ * cover's `tevi-fade-out`.
+ *
+ * The two together are one gesture: the layer fades while the mark
+ * grows slightly past it, so the splash reads as *opening onto* the app
+ * rather than being switched off in front of it. Fading alone is what it
+ * did first, and a full-viewport brand layer that simply stops being
+ * there is the cheapest-looking moment in an app.
+ *
+ * 1.06 over 320ms on `ease-in`, matched to `tevi-fade-out` beat for
+ * beat — the swell only reads if it happens while the cover is still
+ * opaque, which is the whole argument in that keyframe's note. Larger
+ * than the breath by enough to be a different gesture rather than a
+ * louder one, and small enough that the mark does not visibly cross the
+ * viewport edge on a phone.
+ *
+ * Reduced motion never reaches this: `useSplashState` drops the cover
+ * straight to unmounted instead of playing an exit at all — see the note
+ * on `tevi-fade-out`.
+ * ==================================================================== */
+@keyframes tevi-splash-out {
+    from {
+        scale: 1;
+    }
+    to {
+        scale: 1.06;
+    }
+}
+
+/* ====================================================================
+ * `tevi-row-collapse` — the app's only *exit*: a list row leaving after
+ * the thing it represented stopped being true (unblocking an account).
+ *
+ * **Not a port** — Figma has no motion layer — and it is the one
+ * animation that does not reuse `tevi-rise`'s 240ms, because an exit has
+ * two beats where an entrance has one. The row fades and shrinks in
+ * place first, *then* the gap closes: reversing that order collapses the
+ * neighbours upward while the row is still legible, and the reader's eye
+ * follows the movement instead of the disappearance. 55% / 45% of 320ms
+ * is the split; the curve is the app's usual
+ * `cubic-bezier(0.32, 0.72, 0, 1)`.
+ *
+ * ⚠ **`height` is animated from a literal 80px**, which is only sound
+ * because the DS pins `List/User Item` at exactly that (`.tevi-list-user
+ * -item__preview { height: 80px }`). It is not a general-purpose row
+ * exit: on an auto-height row this animates from 80 rather than from the
+ * row's own height, and short rows would visibly grow before collapsing.
+ * `height: auto` cannot be interpolated, which is why the constant is
+ * here rather than a variable — a caller passing its own height would be
+ * passing a number this keyframe has no way to validate.
+ *
+ * `scale` rather than `transform`, for the reason `tevi-pop` gives.
+ *
+ * Reduced motion is handled on the utility — and it is `animate-none`
+ * **plus** `hidden`, not `animate-none` alone: with the animation off,
+ * `height: 0` never applies, so the row would sit at full height until
+ * the owning hook's timer drops it from the cache. See
+ * `use-blocked-accounts.ts`, which runs that timer either way.
+ * ==================================================================== */
+@keyframes tevi-row-collapse {
+    0% {
+        height: 80px;
+        opacity: 1;
+        scale: 1;
+    }
+    55% {
+        height: 80px;
+        opacity: 0;
+        scale: 0.96;
+    }
+    100% {
+        height: 0;
+        opacity: 0;
+        scale: 0.96;
+    }
+}
+
+/* ====================================================================
+ * `tevi-star-float` — the Star amount that drifts off the balance when it
+ * moves: `-120 ★` on a spend, `+500 ★` on a top-up.
+ *
+ * **The one animation in this app that is about something leaving.** It is
+ * therefore the second to break the 240ms "something arrived" curve
+ * (`tevi-live-breath` is the first, and its note says why): a departure
+ * wants `ease-out`, decelerating as it fades, not the drawer's
+ * arrival curve.
+ *
+ * Travel and fade are legacy's (`starSpendAnimation`: 20px → 60px, opacity
+ * 1 → 0). **2000ms, not legacy's stated 4000** — legacy's own state clears
+ * the element at 2s, so the last half of its four-second animation has
+ * never once played. Two seconds is what has always been on screen, and it
+ * is long enough to read a number without leaving one hanging over the
+ * balance.
+ *
+ * `translate` rather than `transform`, for the reason `tevi-rise` gives.
+ *
+ * Unlike every other keyframe here, its caller must **not** pair it with
+ * `motion-reduce:animate-none`. This is an exit, and the element that
+ * plays it removes itself on `animationend` — with no animation there is
+ * no end, so the flash would sit over the balance forever. `STAR_FLOAT`
+ * collapses the duration to 1ms instead; see the note there.
+ * ==================================================================== */
+@keyframes tevi-star-float {
+    from {
+        opacity: 1;
+        translate: 0 20px;
+    }
+    to {
+        opacity: 0;
+        translate: 0 60px;
+    }
+}
+
+/* ====================================================================
+ * `tevi-live-breath` — the app's only **ongoing** animation, and the
+ * only one that is not an entrance or an exit.
+ *
+ * Every other keyframe here fires once because something arrived,
+ * became true, or left. This one runs for as long as a thing is
+ * *happening*, which is a category the app had no need for until the
+ * Live tab: `LIVE` is the single status in the product that means "right
+ * now", and a static red chip says exactly what `ENDED` says.
+ *
+ * **Opacity only, on a dot inside the badge.** Not the badge itself and
+ * not its size: a chip that breathes drags the eye off the title beside
+ * it, and anything that scales inside a row of twelve is twelve things
+ * moving. A 6px dot at the leading edge is the smallest surface that
+ * still reads as a transmitter.
+ *
+ * 1600ms, deliberately not the 240 the entrances share. That curve is
+ * "something happened"; this is a heartbeat, and at 240 it would be a
+ * strobe. `ease-in-out` rather than the app's usual bezier for the same
+ * reason — a breath has no arrival to accelerate into.
+ *
+ * Floors at 0.35 rather than 0: a dot that vanishes reads as a rendering
+ * fault, and the pause at the bottom of the cycle is where that lands.
+ *
+ * Callers pair it with `motion-reduce:animate-none`, which leaves the dot
+ * solid — still a live indicator, just not a moving one.
+ * ==================================================================== */
+@keyframes tevi-live-breath {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
     }
 }

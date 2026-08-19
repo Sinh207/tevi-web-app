@@ -72,17 +72,38 @@ const clientValues = {
     NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
 } as const
 
+/**
+ * Parse, but never throw: `next build` runs without deployment env, and a throw here
+ * would take the whole build down over a value no build step reads.
+ *
+ * Two things this deliberately does *not* do:
+ *
+ * - **Stay quiet in production.** It used to gate the warning behind
+ *   `NODE_ENV !== 'production'`, which meant a misconfigured deployment — wrong API
+ *   domain, missing signing secret — booted in silence and surfaced later as unexplained
+ *   request failures. The whole point of validating is to say so. It is logged at
+ *   `error` level in production and `warn` elsewhere, and never includes a value, only
+ *   the key and why it failed: these are public by construction but the log may not be.
+ * - **Discard the schema's defaults.** The failure path returns the parsed output where
+ *   there is one, so `NEXT_PUBLIC_ENV` still falls back to `'development'` instead of
+ *   coming out `undefined` on a key unrelated to the failure.
+ */
 function parseClientEnv() {
     const parsed = clientSchema.safeParse(clientValues)
-    if (!parsed.success) {
-        // During `next build` env may be absent; fail loud in dev/runtime only.
-        const issues = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n')
-        if (process.env.NODE_ENV !== 'production') {
-            console.warn(`[env] invalid/missing client env:\n${issues}`)
-        }
-        return clientValues as unknown as z.infer<typeof clientSchema>
-    }
-    return parsed.data
+    if (parsed.success) return parsed.data
+
+    const issues = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n')
+    const message = `[env] invalid/missing client env:\n${issues}`
+    if (process.env.NODE_ENV === 'production') console.error(message)
+    else console.warn(message)
+
+    // Re-run in passthrough mode so valid keys keep their coerced values and defaults,
+    // and only the broken ones fall through as-is.
+    const salvaged = clientSchema.partial().safeParse(clientValues)
+    return {
+        ...clientValues,
+        ...(salvaged.success ? salvaged.data : {}),
+    } as unknown as z.infer<typeof clientSchema>
 }
 
 export const env = parseClientEnv()

@@ -20,8 +20,8 @@ export default function ErrorPage({
 
     return (
         <main className="mx-auto flex min-h-[var(--window-height)] max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
-            <h1 className="text-t2 font-semibold">{t('error_title')}</h1>
-            <p className="text-dense text-muted-foreground">{t('error_description')}</p>
+            <h1 className="type-title-t2-semibold">{t('error_title')}</h1>
+            <p className="type-dense-default text-text-body">{t('error_description')}</p>
             <Button onClick={reset}>{t('common_retry')}</Button>
         </main>
     )

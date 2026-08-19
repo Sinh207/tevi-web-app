@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+
+# A new push to the same branch makes the run in flight irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck · lint · test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The same four commands as the pre-PR gate in
+      # `.github/pull_request_template.md`. `--if-present` is deliberately not
+      # used: a script disappearing should fail the build, not skip silently.
+      - run: pnpm typecheck
+
+      - run: pnpm lint
+
+      - run: pnpm lint:rtl
+
+      - run: pnpm test
+
+  # `next build` is pinned to webpack and is far slower than the checks above, so
+  # it runs as its own job rather than holding up the fast feedback.
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # `env.ts` warns rather than throws on invalid env so a build can proceed,
+      # which means missing NEXT_PUBLIC_* values would sail through here and only
+      # surface at runtime. These are the placeholder values from
+      # `.env.local.example`, enough to exercise the real code paths.
+      - run: pnpm build
+        env:
+          NEXT_PUBLIC_ENV: development
+          NEXT_PUBLIC_BASE_URL: https://tevi.dev
+          NEXT_PUBLIC_W_API_DOMAIN: https://wapi.tevi.dev
+          NEXT_PUBLIC_DOORMAN_DOMAIN: https://doorman.tevi.dev
+          NEXT_PUBLIC_SIGN_SECRET: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_APP_ID: ci-placeholder
+
+  # Playwright covers what Vitest structurally cannot: server-rendered HTML, HTTP
+  # status codes and ARIA wiring (there is no component-render testing in this
+  # repo). It builds and starts the app itself — see `playwright.config.ts`, which
+  # uses `next build && next start` rather than `next dev` because
+  # `generateMetadata`, ISR and real 404s only behave correctly in a production
+  # build.
+  #
+  # `if` on the spec count, not `continue-on-error`: while `e2e/` holds no specs
+  # the job should be skipped honestly rather than reported as a green run that
+  # asserted nothing. Delete the guard once the first spec lands.
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - id: specs
+        run: |
+          count=$(find e2e -name '*.spec.ts' 2>/dev/null | wc -l | tr -d ' ')
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - if: steps.specs.outputs.count != '0'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - if: steps.specs.outputs.count != '0'
+        run: pnpm test:e2e
+        env:
+          NEXT_PUBLIC_ENV: development
+          NEXT_PUBLIC_BASE_URL: https://tevi.dev
+          NEXT_PUBLIC_W_API_DOMAIN: https://wapi.tevi.dev
+          NEXT_PUBLIC_DOORMAN_DOMAIN: https://doorman.tevi.dev
+          NEXT_PUBLIC_SIGN_SECRET: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_APP_ID: ci-placeholder
+
+      - if: failure() && steps.specs.outputs.count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

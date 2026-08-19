@@ -1,3 +1,4 @@
+import { readWebviewHeaders } from '@shared/config/webview'
 import { createInstance, type TFunction } from 'i18next'
 import { cookies, headers } from 'next/headers'
 import { resources } from './resources'
@@ -35,12 +36,22 @@ export async function getT(locale: string): Promise<TFunction> {
     return t
 }
 
-/** Resolve the request locale (cookie → Accept-Language) and return its `t`. */
+/**
+ * Resolve the request locale and return its `t`.
+ *
+ * Chain: the `/app/*` webview's `?lang=` (forwarded as a header by `proxy.ts`) → cookie
+ * → `Accept-Language` → English. Same order as `app/layout.tsx`, and it has to stay that
+ * way: this is what `generateMetadata` uses, so a mismatch would put an English `<title>`
+ * on a Vietnamese page.
+ */
 export async function getServerT(): Promise<TFunction> {
     const [cookieStore, headerStore] = await Promise.all([cookies(), headers()])
-    const locale = resolveInitialLocale({
-        cookieValue: cookieStore.get(COOKIE_NAME)?.value,
-        acceptLanguage: headerStore.get('accept-language'),
-    })
+    const webview = readWebviewHeaders(name => headerStore.get(name))
+    const locale =
+        webview.locale ??
+        resolveInitialLocale({
+            cookieValue: cookieStore.get(COOKIE_NAME)?.value,
+            acceptLanguage: headerStore.get('accept-language'),
+        })
     return getT(locale)
 }

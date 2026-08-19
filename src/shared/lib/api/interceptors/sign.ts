@@ -1,9 +1,25 @@
 import { env } from '@shared/config/env'
+import { isApiUrl } from '../origins'
 
 /**
  * HMAC-SHA256 request signing (client-side WebCrypto, ported from legacy app).
  * Signs `<pathname><unixTimestampSeconds>` and appends `?verify=<ts>-<base64mac>`
  * to requests hitting the W_API domain. The CryptoKey is imported once & cached.
+ *
+ * ## What this does and does not prove
+ *
+ * **Signed:** the path, and roughly when the request was made.
+ * **Not signed:** the method, the query string, the body, the host, the account.
+ *
+ * And the key is `NEXT_PUBLIC_SIGN_SECRET` — inlined into the client bundle by design
+ * (`env.ts`), so anyone who can read the page can mint a valid `verify`. Taken together
+ * this is a **bot speed bump, not an integrity control**: it raises the cost of casual
+ * scraping and proves nothing about authenticity. Never treat a valid signature as
+ * evidence a request was not tampered with; the CSP and the bearer are the real controls.
+ *
+ * Widening it (method + sorted query + body hash) is possible but is a coordinated
+ * backend change — the server recomputes the MAC over exactly this string, so changing it
+ * here alone 4xxs every signed request. Tracked as B6 in `docs/BACKEND_QUESTIONS.md`.
  */
 
 let cryptoKeyPromise: Promise<CryptoKey> | null = null
@@ -11,13 +27,21 @@ let cryptoKeyPromise: Promise<CryptoKey> | null = null
 function getCryptoKey(): Promise<CryptoKey> {
     if (cryptoKeyPromise) return cryptoKeyPromise
     const secret = env.NEXT_PUBLIC_SIGN_SECRET
-    cryptoKeyPromise = crypto.subtle.importKey(
-        'raw',
-        new TextEncoder().encode(secret),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign'],
-    )
+    cryptoKeyPromise = crypto.subtle
+        .importKey(
+            'raw',
+            new TextEncoder().encode(secret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign'],
+        )
+        // Cache the key, not a failure. Holding on to a rejected promise turns one
+        // bad import — a transient WebCrypto hiccup, an env that had not parsed yet —
+        // into every request going unsigned for the rest of the page's life.
+        .catch(error => {
+            cryptoKeyPromise = null
+            throw error
+        })
     return cryptoKeyPromise
 }
 
@@ -52,8 +76,7 @@ export async function signUrl(fullUrl: string): Promise<string | null> {
     }
 }
 
-/** True when the URL targets the signed W_API domain. */
+/** True when the URL targets the signed W_API domain (origin match, not prefix). */
 export function shouldSignRequest(fullUrl: string): boolean {
-    const domain = env.NEXT_PUBLIC_W_API_DOMAIN
-    return Boolean(domain) && fullUrl.startsWith(domain)
+    return isApiUrl(fullUrl)
 }

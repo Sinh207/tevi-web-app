@@ -12,6 +12,12 @@
 
 # testing
 /coverage
+# Playwright writes both on every run of `pnpm test:e2e` — traces, screenshots and the HTML
+# report. They are per-run artefacts of a local failure, not source.
+/test-results/
+/playwright-report/
+/blob-report/
+/.playwright/
 
 # next.js
 /.next/

@@ -14,8 +14,7 @@
             "*.mts",
             "*.mjs",
             "*.json",
-            "!src/shared/ui",
-            "!src/app/sw.ts"
+            "!src/shared/ui"
         ]
     },
     "formatter": {

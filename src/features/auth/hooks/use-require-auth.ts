@@ -10,17 +10,17 @@ import { useAuthStore } from '../store/auth-store'
  */
 export function useRequireAuth() {
     const { isAuthenticated } = useAuth()
-    const openDialog = useAuthStore(s => s.openDialog)
+    const openLoginDialog = useAuthStore(s => s.openLoginDialog)
 
     return useCallback(
         <A extends unknown[]>(cb: (...args: A) => void) =>
             (...args: A) => {
                 if (!isAuthenticated) {
-                    openDialog('login')
+                    openLoginDialog()
                     return
                 }
                 cb(...args)
             },
-        [isAuthenticated, openDialog],
+        [isAuthenticated, openLoginDialog],
     )
 }

@@ -29,6 +29,17 @@ export function getDeviceInfo(): DeviceInfo {
 export function setTurnstileTokens(t: TurnstileTokens) {
     turnstile = { ...turnstile, ...t }
 }
+
+/**
+ * Forget the challenge.
+ *
+ * A Turnstile token is single-use — once the backend has redeemed it, replaying it on
+ * the next request is at best noise and at worst a rejected call. Cleared after a
+ * sign-in resolves, and on sign-out.
+ */
+export function clearTurnstileTokens() {
+    turnstile = {}
+}
 export function getTurnstileHeaders(): Record<string, string> {
     const h: Record<string, string> = {}
     if (turnstile.token) h['X-Turnstile-Token'] = turnstile.token

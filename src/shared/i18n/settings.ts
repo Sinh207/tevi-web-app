@@ -1,9 +1,12 @@
 /**
  * i18n config — isomorphic (safe on server + client).
  *
- * Translations are SELF-MANAGED in-repo (no Crowdin) and statically bundled
- * from src/shared/i18n/locales/<lng>/translation.json via resources.ts.
- * The switcher surfaces UI_LOCALES; untranslated locales fall back to English.
+ * Translations are SELF-MANAGED in-repo (no Crowdin), one flat
+ * src/shared/i18n/locales/<lng>/translation.json per locale. The server holds all nine
+ * (resources.ts); the **client bundles English only** and is handed the request's locale as a
+ * prop, with a code-split chunk per locale behind the switcher (client.ts, locale-bundles.ts).
+ * The switcher surfaces UI_LOCALES; untranslated locales fall back to English — which is most of
+ * the app for most locales, so that fallback is load-bearing (see resources.test.ts).
  */
 
 export const SUPPORTED_LOCALES = [
@@ -29,9 +32,17 @@ export const FALLBACK_LNG = 'en'
 export const DEFAULT_NS = 'translation'
 export const NAMESPACES = ['translation'] as const
 export const COOKIE_NAME = 'tevi.locale'
-export const LS_KEY = 'lang_code'
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number]
+
+/**
+ * One locale's flat key → string map.
+ *
+ * Declared here, in the isomorphic module, and not next to the bundles themselves: `resources.ts`
+ * imports all nine locales, so a client file reaching for the *type* would be one careless
+ * `import type` → `import` away from downloading 135 KB of translations it cannot read.
+ */
+export type TranslationBundle = Record<string, string>
 
 export function isSupported(code: string): code is Locale {
     return (SUPPORTED_LOCALES as readonly string[]).includes(code)

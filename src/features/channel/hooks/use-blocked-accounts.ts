@@ -1,0 +1,300 @@
+'use client'
+
+import { useAuth } from '@features/auth'
+import { useTranslation } from '@shared/i18n/use-translation'
+import {
+    type InfiniteData,
+    useInfiniteQuery,
+    useMutation,
+    useQueryClient,
+} from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { channelApi, channelKeys } from '../api/channel-api'
+import { type BlockedAccount, blockedUserName } from '../api/types'
+import {
+    type BlockedAccountsPage,
+    nextBlockedCursor,
+    removeBlockedAccount,
+} from '../lib/blocked-accounts-page'
+import type { ThreadCursor } from '../lib/next-page-param'
+
+/**
+ * The blocked-accounts screen's whole state: the paginated list, the unblock, the undo, and
+ * the exit choreography that sits between the last two.
+ *
+ * ## Why the animation is in the hook and not the component
+ *
+ * Because it is not an animation — it is a two-phase removal, and the second phase is a
+ * *cache* write. The row has to stay mounted long enough to play its exit, then be dropped
+ * from `InfiniteData`; a component that owned only the CSS would have to reach back into the
+ * query cache to finish the job, and a component that owned both would lose the timers the
+ * moment the list re-renders under it. Keeping `exitingIds` beside the `setQueryData` that
+ * consumes it means there is exactly one place where a row can be half-removed.
+ *
+ * ## Timers, not `animationend`
+ *
+ * The removal is scheduled on a timer of the same length as the keyframe, and no listener is
+ * attached. `animationend` looks tidier and is a trap: it does not fire if the element is
+ * unmounted mid-animation (a refetch reorders the list), it does not fire under
+ * `prefers-reduced-motion: reduce` where the utility sets `animate-none`, and it fires
+ * *twice* if any descendant animation bubbles. Each of those leaves a row that is invisible,
+ * un-interactive and permanently in the cache. A timer has one failure mode — it fires — and
+ * `EXIT_MS` is the single number the CSS and the timer must agree on.
+ *
+ * ## Unblock is not optimistic. Undo is not either.
+ *
+ * `useChannelActions` explains the rule for the channel page: unblocking flips a page out of
+ * a terminal state, and an optimistic version rebuilds the wall in the reader's face when the
+ * request fails. The same holds one level up — a row that vanishes and comes back is worse
+ * than a button that spins for 300ms. So the row leaves *after* the server agrees, and the
+ * undo re-blocks and refetches rather than putting the old row back: a new block is a new
+ * record with a new id and its own position in the server's order, and re-inserting the old
+ * one would show a row whose Unblock button no longer refers to anything.
+ */
+
+/**
+ * The exit animation's length, in milliseconds. **Must match `tevi-row-collapse`'s duration
+ * in `globals.css`** — the CSS plays it and this schedules the cache write behind it.
+ */
+const EXIT_MS = 320
+
+export interface UseBlockedAccountsResult {
+    /** Every loaded row, flattened — the page structure never reaches the component. */
+    entries: BlockedAccount[]
+    /** The server's total, not the number loaded. `0` until the first page lands. */
+    total: number
+    isLoading: boolean
+    isError: boolean
+    /** `true` only once the first page came back **and** held nothing. */
+    isEmpty: boolean
+    /** The list needs a real account; an anonymous session has no blocks to show. */
+    isSignedOut: boolean
+    refetch: () => void
+    hasNextPage: boolean
+    isFetchingNextPage: boolean
+    loadMore: () => void
+    /** The row whose unblock is in flight, so its button can spin. */
+    unblockingId: string | null
+    /**
+     * Whether *any* unblock is in flight. The list is single-flight (see `unblock`), so every
+     * other row's button has to be disabled while this is true — otherwise pressing one does
+     * nothing and says nothing.
+     */
+    isUnblocking: boolean
+    /** Rows playing their exit. Still mounted, already gone as far as the reader is concerned. */
+    exitingIds: ReadonlySet<string>
+    unblock: (entry: BlockedAccount) => void
+}
+
+export function useBlockedAccounts(): UseBlockedAccountsResult {
+    const { activeId, isAuthenticated } = useAuth()
+    const queryClient = useQueryClient()
+    const { t } = useTranslation()
+
+    /**
+     * Memoised, and it is not a micro-optimisation: `channelKeys.blocks` builds a **new array**
+     * every call, so an un-memoised key would give `finalizeExit` a new identity on every
+     * render — and the effect below, which has to run its cleanup exactly once per account, is
+     * keyed on that identity. Derived from a primitive, so it changes only when the account does.
+     */
+    const queryKey = useMemo(() => channelKeys.blocks(activeId), [activeId])
+
+    const query = useInfiniteQuery({
+        queryKey,
+        initialPageParam: null as ThreadCursor | null,
+        queryFn: ({ pageParam, signal }) =>
+            channelApi.getBlockedAccounts({ cursor: pageParam, accountId: activeId, signal }),
+        getNextPageParam: (last, _pages, lastParam) => nextBlockedCursor(last, lastParam),
+        enabled: isAuthenticated,
+    })
+
+    const [exitingIds, setExitingIds] = useState<ReadonlySet<string>>(() => new Set())
+
+    /** One timer per exiting row, so a second unblock 100ms into the first's exit does not
+     *  cancel it. Flushed rather than cancelled — see the effect below. */
+    const exitTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
+
+    const finalizeExit = useCallback(
+        (id: string) => {
+            exitTimers.current.delete(id)
+            queryClient.setQueryData<InfiniteData<BlockedAccountsPage, ThreadCursor | null>>(
+                queryKey,
+                data => removeBlockedAccount(data, id),
+            )
+            setExitingIds(previous => {
+                if (!previous.has(id)) return previous
+                const next = new Set(previous)
+                next.delete(id)
+                return next
+            })
+        },
+        [queryClient, queryKey],
+    )
+
+    /**
+     * Leaving mid-animation **finishes** the removal rather than cancelling it.
+     *
+     * The row is already unblocked on the server by the time its timer is running — the exit is
+     * the last 320ms of an operation that has succeeded, not part of it. So navigating away (or
+     * switching accounts) inside that window has to write the removal into the cache anyway.
+     * Simply clearing the timers, which is the reflex, leaves the row in a cache with a 60s
+     * `staleTime`: come back within the minute and it is still listed, and its Unblock button
+     * now 404s.
+     *
+     * `setQueryData` is safe after unmount — it is a cache write, not a React state update — and
+     * the `setExitingIds` inside `finalizeExit` is a no-op on an unmounted component under React
+     * 18+, warning included. The cleanup depends on `finalizeExit`, which is stable per account,
+     * so it runs at exactly two moments: unmount, and an account switch (where the key it
+     * flushes into is still the departing account's — which is the correct one).
+     */
+    useEffect(() => {
+        const timers = exitTimers.current
+        return () => {
+            // Snapshot first: `finalizeExit` deletes from this very Map. Mutating a Map while a
+            // `for…of` walks it is defined behaviour, but "defined" is not the same as obvious,
+            // and the loop below is the one place where getting it wrong strands a row.
+            const pending = [...timers.entries()]
+            timers.clear()
+            for (const [id, timer] of pending) {
+                clearTimeout(timer)
+                finalizeExit(id)
+            }
+        }
+    }, [finalizeExit])
+
+    /**
+     * Put the account back.
+     *
+     * A separate mutation rather than a branch of the first, because it is a different
+     * request against a different endpoint with a different failure story: an unblock that
+     * fails leaves the row where it was, while an undo that fails means the person is *not*
+     * blocked and the toast that promised otherwise has already gone. Hence its own error
+     * toast, which is the only thing that can still say so.
+     */
+    const reblockMutation = useMutation({
+        mutationFn: (entry: BlockedAccount) => channelApi.blockUser(entry.user.id),
+        onSuccess: (_data, entry) => {
+            // Refetch rather than re-insert: the new block is a new record with a new id, and
+            // the server decides where it sits in the order.
+            queryClient.invalidateQueries({ queryKey })
+            if (entry.user.slug) {
+                queryClient.invalidateQueries({
+                    queryKey: channelKeys.detail(entry.user.slug, activeId),
+                })
+            }
+        },
+        meta: { showErrorToast: t('blocked_accounts_error_undo') },
+    })
+
+    const unblockMutation = useMutation({
+        mutationFn: (entry: BlockedAccount) => channelApi.unblockUser(entry.id),
+        onSuccess: (_data, entry) => {
+            setExitingIds(previous => new Set(previous).add(entry.id))
+            exitTimers.current.set(
+                entry.id,
+                setTimeout(() => finalizeExit(entry.id), EXIT_MS),
+            )
+
+            /*
+             * That person's channel page is now reachable again, so its cached `blocking_channel`
+             * is stale. Only *their* entry is dropped — a slug-wide prefix would also invalidate
+             * every other account's cached view of the same channel, and this changes what one
+             * account can see. A row whose payload carried no slug simply skips it: there is no
+             * key to invalidate, and the page fetches on its own when it is next opened.
+             */
+            if (entry.user.slug) {
+                queryClient.invalidateQueries({
+                    queryKey: channelKeys.detail(entry.user.slug, activeId),
+                })
+            }
+
+            const name = blockedUserName(entry.user) || entry.user.slug
+            toast.success(
+                name
+                    ? t('blocked_accounts_unblocked', { name })
+                    : t('blocked_accounts_unblocked_generic'),
+                {
+                    /*
+                     * One id for the whole screen, as `copy-hex-button.tsx` does: unblocking three
+                     * rows in a row replaces the toast instead of stacking three, and the Undo that
+                     * is on screen is always the last action's — which is the only one anybody
+                     * means by "undo".
+                     */
+                    id: 'blocked-accounts-undo',
+                    action: {
+                        label: t('blocked_accounts_undo'),
+                        onClick: () => reblockMutation.mutate(entry),
+                    },
+                },
+            )
+        },
+        meta: { showErrorToast: t('blocked_accounts_error_unblock') },
+    })
+
+    /**
+     * **One unblock at a time, for the whole list.**
+     *
+     * Not a limitation of `useMutation` so much as of what a *single* mutation can report:
+     * `isPending` and `variables` describe the most recent run, so two overlapping unblocks
+     * would leave `unblockingId` pointing at one of them and the other row spinning forever.
+     * Legacy is single-flight too (`unblockingUserId`).
+     *
+     * The consequence is the thing that has to be handled, not the rule: a press on *another*
+     * row while one is in flight would otherwise be swallowed with no feedback at all. So the
+     * hook publishes `isUnblocking` and the view disables every other row's button for the
+     * ~300ms it lasts — a control that cannot act must not look like one.
+     */
+    const unblock = useCallback(
+        (entry: BlockedAccount) => {
+            // Still guarded here as well as in the view: `disabled` is a rendered attribute and
+            // a second tap can land in the same frame as the first, before it exists.
+            if (unblockMutation.isPending || exitingIds.has(entry.id)) return
+            unblockMutation.mutate(entry)
+        },
+        [exitingIds, unblockMutation],
+    )
+
+    const entries = query.data?.pages.flatMap(page => page.results) ?? []
+
+    /**
+     * `fetchNextPage` guarded here rather than at the sentinel.
+     *
+     * `useInView` fires on every intersection change, and a sentinel 600px below the fold is
+     * intersecting for the whole time a page is loading — so an unguarded call site requests
+     * the same page several times. TanStack Query dedupes concurrent fetches for one key, but
+     * the guard is what keeps that from being the thing holding it together.
+     *
+     * ⚠ **The dependencies are the three values, not `query`.** The object `useInfiniteQuery`
+     * returns is new on every render, so depending on it makes `loadMore` a new function every
+     * render — and the caller's `useEffect(…, [inView, loadMore])` then re-runs on *every*
+     * render, firing `loadMore()` for the whole time the sentinel is on screen. The guard above
+     * turns that into a no-op rather than a request storm, which is exactly the "the guard is
+     * the thing holding it together" state this comment says it is not. `fetchNextPage` is
+     * stable across renders; the two booleans are what should change the identity.
+     */
+    const { fetchNextPage, hasNextPage, isFetchingNextPage } = query
+    const loadMore = useCallback(() => {
+        if (!hasNextPage || isFetchingNextPage) return
+        fetchNextPage()
+    }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+    return {
+        entries,
+        total: query.data?.pages[0]?.count ?? 0,
+        isLoading: query.isLoading,
+        isError: query.isError,
+        isEmpty: !query.isLoading && !query.isError && entries.length === 0,
+        isSignedOut: !isAuthenticated,
+        refetch: () => {
+            query.refetch()
+        },
+        hasNextPage,
+        isFetchingNextPage,
+        loadMore,
+        unblockingId: unblockMutation.isPending ? (unblockMutation.variables?.id ?? null) : null,
+        isUnblocking: unblockMutation.isPending,
+        exitingIds,
+        unblock,
+    }
+}

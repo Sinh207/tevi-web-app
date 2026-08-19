@@ -3,13 +3,26 @@ import type { AxiosRequestConfig } from 'axios'
 import { apiClient } from './client'
 
 /** Strip empty/null/undefined params (ported from legacy `filterParams`). */
-function filterParams<T extends Record<string, unknown> | undefined>(params: T): T {
-    if (!params) return params
+function filterParams(params: Record<string, unknown>): Record<string, unknown> {
     const out: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(params)) {
         if (v !== '' && v !== null && v !== undefined) out[k] = v
     }
-    return out as T
+    return out
+}
+
+/**
+ * Merge the `params` argument over anything the caller already put on `config`.
+ *
+ * Spreading `config` and then assigning `params` outright dropped `config.params`
+ * silently — including setting it to `undefined` on every call that passes a
+ * config but no params.
+ */
+function withParams(config?: AxiosRequestConfig, params?: Record<string, unknown>) {
+    return {
+        ...config,
+        params: filterParams({ ...(config?.params ?? {}), ...(params ?? {}) }),
+    }
 }
 
 /**
@@ -38,18 +51,19 @@ export function createApiModel({
             path: string,
             params?: Record<string, unknown>,
             config?: AxiosRequestConfig,
-        ) =>
-            apiClient
-                .get<T>(join(path), { ...config, params: filterParams(params) })
-                .then(r => r.data as T),
+        ) => apiClient.get<T>(join(path), withParams(config, params)).then(r => r.data as T),
         post: <T = unknown>(path: string, body?: unknown, config?: AxiosRequestConfig) =>
             apiClient.post<T>(join(path), body, config).then(r => r.data as T),
         put: <T = unknown>(path: string, body?: unknown, config?: AxiosRequestConfig) =>
             apiClient.put<T>(join(path), body, config).then(r => r.data as T),
         patch: <T = unknown>(path: string, body?: unknown, config?: AxiosRequestConfig) =>
             apiClient.patch<T>(join(path), body, config).then(r => r.data as T),
-        del: <T = unknown>(path: string, config?: AxiosRequestConfig) =>
-            apiClient.delete<T>(join(path), config).then(r => r.data as T),
+        /** DELETE takes params (and, via `config.data`, a body) like the others. */
+        del: <T = unknown>(
+            path: string,
+            params?: Record<string, unknown>,
+            config?: AxiosRequestConfig,
+        ) => apiClient.delete<T>(join(path), withParams(config, params)).then(r => r.data as T),
     }
 }
 

@@ -7,6 +7,10 @@ describe('shouldSignRequest', () => {
         expect(shouldSignRequest('https://storage.googleapis.com/x')).toBe(false)
         expect(shouldSignRequest('https://other.com/x')).toBe(false)
     })
+
+    it('matches the origin, not a string prefix', () => {
+        expect(shouldSignRequest('https://wapi.tevi.dev.attacker.example/x')).toBe(false)
+    })
 })
 
 describe('signUrl', () => {
