@@ -36,6 +36,29 @@ import { MENU_ITEM, MENU_ITEM_FILTER, MENU_POPUP, MENU_TRIGGER } from './channel
  * mode where the literals could not.
  *
  * The tick is `check-double`, in the brand purple legacy uses — two overlapping marks, not one.
+ *
+ * ## A filter that is on has to look on, and legacy's does not
+ *
+ * Legacy paints this trigger `#1a1a1a` whatever is selected — there is no active state to port. So
+ * the treatment is taken from the one place in this app that already solved it: `/my-wallet`'s
+ * transaction-history bar filter, which fills the disc with `--brand` and flips the glyph to
+ * `--text-on-accent`. Same problem, same answer, rather than a second visual language for "this
+ * control is applied".
+ *
+ * Three things make it hold rather than *look* like it holds:
+ *
+ * - **`hover:not-disabled:`, not `hover:`** — that is the specificity `buttonVariants`' own ghost
+ *   hover uses, and a plain `hover:` loses to it. The wallet filter carries the same note; without
+ *   it the disc flashes back to unfiltered under the pointer, which reads as the filter clearing.
+ * - **`data-[popup-open]:` too**, because `MENU_TRIGGER` repaints both fill and glyph while the
+ *   panel is open. Left out, opening the menu of an applied filter makes it look unapplied.
+ * - **The name says which filter is on** (`channel_live_filter_active`), because the fill is
+ *   invisible to a screen reader and `sliders-simple` ships in one weight, so there is no filled
+ *   glyph to swap to. The heading beside it already prints the state as text, so the *visible* UI
+ *   never relied on colour alone; the accessible name is what closes the gap for the control.
+ *
+ * `data-filtered` publishes the state for a spec — `docs/TEST_IDS.md`: state goes in an attribute,
+ * never in the id, and the accessible name here is one of nine translations.
  */
 export function ChannelLiveFilter({
     value,
@@ -46,14 +69,29 @@ export function ChannelLiveFilter({
 }) {
     const { t } = useTranslation()
 
+    /** `''` is *All*, which is the absence of a filter rather than one of the choices. */
+    const isFiltered = value !== ''
+
     return (
         <Menu.Root>
             {/*
              * Same trigger skin as the event kebab — see `MENU_TRIGGER`. These two sit in the same
              * tab, a heading apart, so letting only one of them recede would read as a bug rather
-             * than a hierarchy.
+             * than a hierarchy. The applied fill is this control's alone: a kebab has no "on".
              */}
-            <Menu.Trigger aria-label={t('channel_live_filter')} className={MENU_TRIGGER}>
+            <Menu.Trigger
+                aria-label={
+                    isFiltered
+                        ? t('channel_live_filter_active', { value: t(EVENT_STATES[value]) })
+                        : t('channel_live_filter')
+                }
+                data-filtered={isFiltered || undefined}
+                className={cn(
+                    MENU_TRIGGER,
+                    isFiltered &&
+                        'bg-(--brand) text-(--text-on-accent) hover:not-disabled:bg-(--brand) hover:text-(--text-on-accent) data-[popup-open]:bg-(--brand) data-[popup-open]:text-(--text-on-accent)',
+                )}
+            >
                 <Icon name="sliders-simple" size={20} className="size-5" />
             </Menu.Trigger>
             <Menu.Portal>
@@ -67,11 +105,14 @@ export function ChannelLiveFilter({
                     {/* Shell shared with the event menu — see `channel-menu.tsx`. */}
                     <Menu.Popup className={cn('min-w-[160px]', MENU_POPUP)}>
                         <Menu.RadioGroup
+                            data-testid="channel-live-filter"
                             value={value}
                             onValueChange={next => onChange(next as EventState)}
                         >
                             {Object.entries(EVENT_STATES).map(([state, labelKey]) => (
                                 <Menu.RadioItem
+                                    data-testid="channel-live-filter-option"
+                                    data-option-value={state}
                                     key={state}
                                     value={state}
                                     className={cn(MENU_ITEM, MENU_ITEM_FILTER)}

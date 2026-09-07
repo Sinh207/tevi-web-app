@@ -1,6 +1,7 @@
 'use client'
 
 import { accountDob, accountEmail, useAuth, useRequireAuth } from '@features/auth'
+import { DateField } from '@shared/components/date-field'
 import { TextAreaField, TextField } from '@shared/components/field'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { RISE } from '@shared/lib/motion'
@@ -23,7 +24,7 @@ import type { PendingUploads } from '../../hooks/use-save-profile'
 import { useSaveProfile } from '../../hooks/use-save-profile'
 import { useSlugCheck } from '../../hooks/use-slug-check'
 import { toChannelPath } from '../../lib/channel-slug'
-import { CHANNEL_SETTINGS_CONTAINER, PROFILE_PANEL } from '../../lib/container'
+import { CHANNEL_SETTINGS_CONTAINER, PROFILE_PANEL, PROFILE_SCREEN } from '../../lib/container'
 import {
     DESCRIPTION_MAX,
     isProfileDirty,
@@ -38,7 +39,6 @@ import {
 import { useMyChannel } from '../../providers/my-channel-provider'
 import { ChannelEmptyState } from '../channel-empty-state'
 import { ProfileCategoriesField } from './profile-categories-field'
-import { ProfileDateField } from './profile-date-field'
 import { ProfileMediaFields } from './profile-media-fields'
 import { ProfileSocialLinksField } from './profile-social-links-field'
 import { ProfileTopBar } from './profile-top-bar'
@@ -220,7 +220,9 @@ export function EditProfileView() {
         <>
             {/* Opaque, or the form scrolls through the bar — `AppBar` deliberately paints no
                 background of its own (it is drawn over a screen in Figma). */}
-            <div className="sticky top-0 z-20 bg-(--background)">
+            {/* The screen colour, not the page colour — the form scrolls under this bar, and below `md`
+                both are the surface. See `PROFILE_SCREEN`. */}
+            <div className={cn('sticky top-0 z-20', PROFILE_SCREEN)}>
                 <ProfileTopBar saveLabel={save?.label} canSave={save?.canSave} onSave={submit} />
             </div>
             <div className={cn(CHANNEL_SETTINGS_CONTAINER, 'flex flex-1 flex-col')}>{body}</div>
@@ -242,7 +244,12 @@ export function EditProfileView() {
                 // and from md that space is the panel rather than the bare column.
                 className={cn('flex-1', PROFILE_PANEL, RISE)}
                 action={
-                    <Button variant="primary" size="large" onClick={requireAuth(() => {})}>
+                    <Button
+                        data-testid="channel-profile-sign-in"
+                        variant="primary"
+                        size="large"
+                        onClick={requireAuth(() => {})}
+                    >
                         {t('auth_sign_in')}
                     </Button>
                 }
@@ -259,7 +266,12 @@ export function EditProfileView() {
                         <AlertTitle>{t('channel_error_title')}</AlertTitle>
                         <AlertSubtitle>{t('channel_error_body')}</AlertSubtitle>
                         <AlertActions>
-                            <Button variant="secondary" size="small" onClick={() => refresh()}>
+                            <Button
+                                data-testid="channel-profile-refresh"
+                                variant="secondary"
+                                size="small"
+                                onClick={() => refresh()}
+                            >
                                 <Icon name="arrow-rotate-right" size={20} />
                                 {t('common_retry')}
                             </Button>
@@ -284,7 +296,12 @@ export function EditProfileView() {
                 body={t('channel_no_channel_body')}
                 className={cn('flex-1', PROFILE_PANEL, RISE)}
                 action={
-                    <Button variant="secondary" size="large" onClick={() => refresh()}>
+                    <Button
+                        data-testid="channel-profile-retry"
+                        variant="secondary"
+                        size="large"
+                        onClick={() => refresh()}
+                    >
                         <Icon name="arrow-rotate-right" size={20} />
                         {t('common_retry')}
                     </Button>
@@ -301,6 +318,7 @@ export function EditProfileView() {
 
     return shell(
         <form
+            data-testid="channel-profile-form"
             className="flex flex-1 flex-col pb-6"
             onSubmit={event => {
                 event.preventDefault()
@@ -370,6 +388,7 @@ export function EditProfileView() {
                     )}
 
                     <TextField
+                        data-testid="channel-profile-name"
                         label={t('profile_name')}
                         placeholder={t('profile_name_placeholder')}
                         value={values.name}
@@ -440,6 +459,7 @@ export function EditProfileView() {
                     />
 
                     <TextField
+                        data-testid="channel-profile-username"
                         label={t('profile_username')}
                         placeholder={t('profile_username_placeholder')}
                         prefix="@"
@@ -482,6 +502,7 @@ export function EditProfileView() {
                     />
 
                     <TextAreaField
+                        data-testid="channel-profile-about"
                         label={t('profile_about')}
                         placeholder={t('profile_about_placeholder')}
                         value={values.description}
@@ -506,21 +527,32 @@ export function EditProfileView() {
                      * says nothing.
                      */}
                     {email && (
-                        <TextField label={t('profile_email')} value={email} readOnly disabled />
+                        <TextField
+                            data-testid="channel-profile-email"
+                            label={t('profile_email')}
+                            value={email}
+                            readOnly
+                            disabled
+                        />
                     )}
 
                     {/*
-                     * The browser's date picker, styled to this form — see `ProfileDateField` for
-                     * what was wrong with the bare control and why a calendar of our own would be
-                     * an invented component. `max` is the 18-year rule, as a hint the picker can
-                     * enforce; `dateOfBirthError` still checks it, because a hint is not a rule.
+                     * The app's own calendar in a popover — see `shared/components/date-field.tsx`
+                     * for what replacing `<input type="date">` costs (typing) and buys (one control
+                     * on every platform, in our tokens, mirrored in RTL).
+                     *
+                     * `max` is the 18-year rule and the calendar now **enforces** it — the days after
+                     * it cannot be pressed, where the native attribute was advice a typist could
+                     * ignore. `dateOfBirthError` still checks it: the value can also arrive from the
+                     * API, and a client-side rule is never the rule.
                      */}
-                    <ProfileDateField
+                    <DateField
+                        testId="channel-profile-dob"
                         label={t('profile_dob')}
                         value={values.dateOfBirth}
                         max={maxDateOfBirth()}
                         disabled={isSaving}
-                        onChange={event => patch({ dateOfBirth: event.target.value })}
+                        onValueChange={(dateOfBirth: string) => patch({ dateOfBirth })}
                         error={localErrors.dateOfBirth ? t(localErrors.dateOfBirth) : null}
                         hint={t('profile_dob_hint')}
                     />
@@ -554,6 +586,7 @@ export function EditProfileView() {
                                 {t('profile_income_show')}
                             </span>
                             <Toggle
+                                data-testid="channel-profile-income-toggle"
                                 checked={values.showIncome}
                                 disabled={isSaving}
                                 onCheckedChange={showIncome => patch({ showIncome })}
@@ -611,6 +644,7 @@ export function EditProfileView() {
                     )}
                 >
                     <Button
+                        data-testid="channel-profile-cancel"
                         type="button"
                         variant="secondary"
                         size="large"
@@ -629,6 +663,7 @@ export function EditProfileView() {
                      * made the same action two different colours at two widths.
                      */}
                     <Button
+                        data-testid="channel-profile-save"
                         type="submit"
                         variant="accent"
                         size="large"

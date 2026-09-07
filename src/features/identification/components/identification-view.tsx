@@ -164,7 +164,12 @@ export function IdentificationView() {
                     <AlertContent>
                         <AlertTitle>{t('identification_load_failed')}</AlertTitle>
                         <AlertActions>
-                            <Button variant="secondary" size="small" onClick={() => refetch()}>
+                            <Button
+                                data-testid="identification-retry"
+                                variant="secondary"
+                                size="small"
+                                onClick={() => refetch()}
+                            >
                                 {t('common_retry')}
                             </Button>
                         </AlertActions>

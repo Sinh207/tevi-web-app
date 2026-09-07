@@ -50,6 +50,31 @@ export const MenuRadioGroup = BaseMenu.RadioGroup
  * section header, so the menu grows *from* it. In RTL `align="end"` follows the writing
  * direction on its own — base-ui reads `dir` — which is the whole reason the placement is
  * expressed as start/end rather than left/right.
+ *
+ * ## Reconciled against the DS preview, which does draw the shell after all
+ *
+ * The note at the top of this file says the popover shell is not in the design system and cites
+ * the handoff README. That is still true of Figma, but `preview/dropdown.html` **renders one** —
+ * `width: 264px; padding: 8px 0; border-radius: 16px; background: var(--background-elevated);
+ * box-shadow: var(--shadow-lg)` — so three of these values are no longer app-authored guesses:
+ *
+ * | | was | DS preview |
+ * |---|---|---|
+ * | radius | `rounded-lg` (12px) | **16px** → `rounded-xl` |
+ * | shadow | `--shadow-xl` | **`--shadow-lg`** |
+ * | width / padding | 264 / `py-2` | same — already right |
+ *
+ * ## The hairline is the one thing still app-authored, and it fixes a real defect
+ *
+ * `border-(--separator-default)`, which the preview does not draw. In Light it is barely
+ * perceptible against the shadow; in **Dark** it is the difference between a panel and no panel at
+ * all — `--background-elevated` is `#222225` on a `--background` of pure black, and a shadow cast
+ * onto black is invisible, so the popup had no edge on any side. Measured by screenshotting both
+ * themes rather than by reading, which is the only way an edgeless panel shows up.
+ *
+ * The DS does stroke its other elevated surfaces for exactly this reason — `Dialog` 50:15797 is
+ * "1px inside stroke", and `dialog.tsx` ports it — so this is the family's own answer rather than
+ * an invention. `box-sizing: border-box` is global, so the popup is still 264 wide overall.
  */
 export function MenuContent({
     className,
@@ -72,7 +97,7 @@ export function MenuContent({
                     className={cn(
                         'flex w-[264px] max-w-[calc(100vw-2rem)] flex-col',
                         'max-h-[min(60vh,420px)] overflow-y-auto overscroll-contain',
-                        'rounded-lg bg-(--background-elevated) py-2 shadow-[var(--shadow-xl)]',
+                        'rounded-xl border border-(--separator-default) bg-(--background-elevated) py-2 shadow-[var(--shadow-lg)]',
                         'origin-(--transform-origin) outline-none',
                         'transition-[opacity,transform] duration-[160ms] ease-out',
                         'data-[starting-style]:scale-95 data-[starting-style]:opacity-0',

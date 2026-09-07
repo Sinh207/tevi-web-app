@@ -58,8 +58,13 @@ export function EmailSignInForm({ onForgotPassword }: { onForgotPassword?: () =>
     const busy = isSubmitting || isSigningIn
 
     return (
-        <form onSubmit={onSubmit} className="flex w-full flex-col gap-3">
+        <form
+            data-testid="auth-email-form"
+            onSubmit={onSubmit}
+            className="flex w-full flex-col gap-3"
+        >
             <AuthTextField
+                data-testid="auth-email-form-email"
                 {...register('email')}
                 label={t('auth_email')}
                 type="email"
@@ -74,6 +79,7 @@ export function EmailSignInForm({ onForgotPassword }: { onForgotPassword?: () =>
             />
 
             <PasswordField
+                data-testid="auth-email-form-password"
                 {...register('password')}
                 label={t('auth_password')}
                 placeholder={t('auth_password_placeholder')}
@@ -83,6 +89,7 @@ export function EmailSignInForm({ onForgotPassword }: { onForgotPassword?: () =>
 
             {onForgotPassword && (
                 <button
+                    data-testid="auth-email-form-forgot"
                     type="button"
                     onClick={onForgotPassword}
                     className="type-caption-meta cursor-pointer self-start text-text-link underline underline-offset-2 hover:no-underline"
@@ -96,7 +103,14 @@ export function EmailSignInForm({ onForgotPassword }: { onForgotPassword?: () =>
                 away from where the user was looking. */}
             <AuthErrorMessage forMethod="email" />
 
-            <Button type="submit" variant="accent" size="large" fullWidth disabled={busy}>
+            <Button
+                data-testid="auth-email-form-submit"
+                type="submit"
+                variant="accent"
+                size="large"
+                fullWidth
+                disabled={busy}
+            >
                 {busy ? t('auth_signing_in') : t('auth_sign_in')}
             </Button>
         </form>

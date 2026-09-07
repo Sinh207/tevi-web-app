@@ -1,4 +1,4 @@
-import { EditProfileView } from '@features/channel'
+import { EditProfileView, PROFILE_SCREEN } from '@features/channel'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -40,7 +40,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function CustomProfilePage() {
     return (
-        <main className="flex flex-1 flex-col">
+        // `PROFILE_SCREEN` — a single-panel screen, see that constant and `docs/DESIGN_SYSTEM.md` §6.
+        <main className={`flex flex-1 flex-col ${PROFILE_SCREEN}`}>
             <EditProfileView />
         </main>
     )

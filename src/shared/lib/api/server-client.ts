@@ -32,7 +32,21 @@ async function buildUrl(absUrl: string, params?: Record<string, unknown>) {
     const url = new URL(absUrl)
     if (params) {
         for (const [k, v] of Object.entries(params)) {
-            if (v != null && v !== '') url.searchParams.set(k, String(v))
+            if (v == null || v === '') continue
+            /*
+             * An array **repeats the key**, matching what `apiClient`'s
+             * `paramsSerializer: { indexes: null }` emits — `String(['image','video'])` is
+             * `"image,video"`, a single value DRF reads as one nonsense choice rather than two.
+             * No server-rendered call passes an array today; this is here so the two clients cannot
+             * disagree about what a repeatable param means the day one does.
+             */
+            if (Array.isArray(v)) {
+                for (const item of v) {
+                    if (item != null && item !== '') url.searchParams.append(k, String(item))
+                }
+                continue
+            }
+            url.searchParams.set(k, String(v))
         }
     }
     if (shouldSignRequest(url.toString())) {

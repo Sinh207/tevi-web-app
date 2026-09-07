@@ -6,6 +6,8 @@ import {
     accountEmail,
     accountNsfwSettings,
     accountShowSensitive,
+    accountTwoFaPasscode,
+    accountUserId,
 } from './account-profile'
 
 describe('accountAvatarUrl', () => {
@@ -98,5 +100,43 @@ describe('accountShowSensitive', () => {
         expect(accountShowSensitive({ id: '1', nsfw_settings: { show_sensitive: 1 } })).toBe(false)
         expect(accountShowSensitive({ id: '1', nsfw_settings: {} })).toBe(false)
         expect(accountShowSensitive({ id: '1' })).toBe(false)
+    })
+})
+
+describe('accountUserId', () => {
+    it('stringifies the number `/me` actually returns', () => {
+        expect(accountUserId({ id: 7929477724 })).toBe('7929477724')
+        expect(accountUserId({ id: '7929477724' })).toBe('7929477724')
+    })
+
+    it('is null for an id there is nothing to copy from', () => {
+        expect(accountUserId({ id: '   ' })).toBeNull()
+        expect(accountUserId({ id: Number.NaN })).toBeNull()
+        expect(accountUserId(null)).toBeNull()
+        expect(accountUserId(undefined)).toBeNull()
+    })
+})
+
+describe('accountTwoFaPasscode', () => {
+    it('reads the flag', () => {
+        expect(accountTwoFaPasscode({ id: '1', two_fa_passcode: true })).toBe(true)
+        expect(accountTwoFaPasscode({ id: '1', two_fa_passcode: false })).toBe(false)
+    })
+
+    /**
+     * **A missing or truthy-but-not-`true` value reads as off**, and the direction is load-bearing in
+     * the opposite way to `accountAutoFollow`'s.
+     *
+     * Defaulting to *on* would put a passcode prompt in front of every account that has never set one,
+     * with nothing they could type to get past it. Off costs at most one round trip: the server refuses
+     * a withdrawal that needs a code, and `payoutRequestOutcome`'s `passcode-required` raises the same
+     * step a moment later.
+     */
+    it('is off for anything that is not exactly true', () => {
+        expect(accountTwoFaPasscode({ id: '1' })).toBe(false)
+        expect(accountTwoFaPasscode(null)).toBe(false)
+        expect(accountTwoFaPasscode(undefined)).toBe(false)
+        expect(accountTwoFaPasscode({ id: '1', two_fa_passcode: 'true' })).toBe(false)
+        expect(accountTwoFaPasscode({ id: '1', two_fa_passcode: 1 })).toBe(false)
     })
 })

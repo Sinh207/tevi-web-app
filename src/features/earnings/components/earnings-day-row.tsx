@@ -94,12 +94,21 @@ export function EarningsDayRow({
     /** Scroll this row into view once, when the URL named it. */
     autoFocusRow = false,
     locale,
+    testId,
+    rowKey,
 }: {
     day: EarningsDay
     expanded: boolean
     onToggle: () => void
     autoFocusRow?: boolean
     locale: string
+    /**
+     * The element's own `data-testid`, plus its identity in a companion attribute. Passed as props
+     * rather than spread: this component has a closed prop list, so a `data-testid` handed to it
+     * would be dropped silently — see docs/TEST_IDS.md.
+     */
+    testId?: string
+    rowKey?: string
 }) {
     const { t } = useTranslation()
     const panelId = useId()
@@ -126,6 +135,8 @@ export function EarningsDayRow({
     return (
         <div
             ref={rowRef}
+            data-testid={testId}
+            data-row-key={rowKey}
             /*
              * The card around the DS row — `--background-surface`, not the `--background-listing`
              * the DS row would paint. `list.tsx` carries the warning: Listing is `--black` in Dark,
@@ -136,6 +147,7 @@ export function EarningsDayRow({
             className="overflow-hidden rounded-[var(--radius-xl)] border border-(--separator-default) bg-(--background-surface)"
         >
             <ListRow
+                data-testid="earnings-day-toggle"
                 as="button"
                 rightAction
                 onClick={onToggle}
@@ -232,6 +244,7 @@ export function EarningsDayRow({
                                     {t('earnings_detail_error')}
                                 </p>
                                 <button
+                                    data-testid="earnings-day-retry"
                                     type="button"
                                     onClick={refetch}
                                     className="cursor-pointer rounded-(--radius-sm) type-link-dense text-(--text-link) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
@@ -245,7 +258,11 @@ export function EarningsDayRow({
                             </p>
                         ) : (
                             rows.map((row, index) => (
-                                <ListInfo key={row.key}>
+                                <ListInfo
+                                    data-testid="earnings-day-line"
+                                    data-row-key={row.key}
+                                    key={row.key}
+                                >
                                     <ListInfoContent>
                                         {/* Every row but the first, as `ListRowRule` is drawn. */}
                                         {index > 0 && <ListRowRule />}

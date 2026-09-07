@@ -105,6 +105,7 @@ export function ChannelEventCard({ event, slug }: { event: ChannelEvent; slug: s
         >
             {href && (
                 <a
+                    data-testid="channel-event-link"
                     href={href}
                     // `inset-0` under everything, so the row reads as one target to a pointer while
                     // the menu keeps its own. `z-0` against the menu's `z-10` is the whole trick.

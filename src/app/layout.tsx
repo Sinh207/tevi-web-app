@@ -1,4 +1,5 @@
 import { NONCE_HEADER } from '@shared/config/csp'
+import { BASE_URL } from '@shared/config/env'
 import { chella, inter } from '@shared/config/fonts'
 import { STARTUP_IMAGES } from '@shared/config/startup-images'
 import { readWebviewHeaders } from '@shared/config/webview'
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
         template: '%s · Tevi',
     },
     description: 'Tevi — a monetization platform for content creators.',
-    metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'https://tevi.com'),
+    metadataBase: new URL(BASE_URL),
     // iOS launch images. Android gets its splash from the manifest's `background_color`;
     // iOS ignores that and needs a bitmap per screen size, or it launches to white — see
     // `shared/config/startup-images.ts`. Declaring `appleWebApp` at all also emits

@@ -1,4 +1,5 @@
 import { cn } from '@shared/lib/utils'
+import Link from 'next/link'
 import type { CSSProperties, ComponentPropsWithoutRef, HTMLAttributes, ReactNode } from 'react'
 import { Icon, type IconProps } from './icon'
 import {
@@ -175,27 +176,54 @@ function LeftBarBalanceActions({ className, ...props }: ComponentPropsWithoutRef
  * cornerless — the card is Radius XL with `overflow: hidden`, so it clips the two outer
  * corners to 16 and the visible shape is the card's, which is the one Figma draws.
  */
-function LeftBarBalanceAction({ className, ...props }: ComponentPropsWithoutRef<'button'>) {
-    return (
-        <button
-            type="button"
-            data-slot="left-bar-balance-action"
-            className={cn(
-                'type-body-strong m-0 h-[48px] min-w-0 flex-1 cursor-pointer rounded-none border-0 bg-(--button-ghost-bg) px-6 py-2 text-(--text-link)',
-                'hover:bg-(--button-ghost-bg-hover) focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-(--focus-ring)',
-                /*
-                 * The DS draws no disabled state for this button — it is a bespoke half-card
-                 * segment, not a `Button` instance — so the treatment is the app's own, matching
-                 * what `BalanceActionRows` uses for a control whose destination is not built yet:
-                 * 40% and no pointer. Kept here rather than passed in by the one caller, so the
-                 * next screen to use this segment cannot invent a second version of it.
-                 */
-                'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-(--button-ghost-bg)',
-                className,
-            )}
-            {...props}
-        />
-    )
+function LeftBarBalanceAction({
+    className,
+    href,
+    disabled,
+    ...props
+}: ComponentPropsWithoutRef<'button'> & {
+    /**
+     * Render an `<a>` instead, for a half that is a **destination** — *Get Star* is `/get-star`.
+     *
+     * A prop rather than a `<Link>` wrapped around the call site, for the reason `Button`'s own
+     * `rendersLink` note gives at length: wrapping would put a `<button>` inside an `<a>`, which is
+     * invalid and un-focusable in the way that matters. Same fork, and the same order of checks, as
+     * `AppBarButton`.
+     *
+     * `disabled` wins over `href`. A destination that is not built yet stays a dimmed `<button>`,
+     * because an `<a>` has no disabled state — it would still be middle-clickable into a 404.
+     */
+    href?: string
+}) {
+    /*
+     * `flex items-center justify-center` rather than leaning on the `<button>`'s own centring: an
+     * `<a>` does not centre its text or fill its height the way a button does, and without this the
+     * link half would sit top-left against a 48px cell while the button half stayed centred. For a
+     * single text child a centred flex box and a centred button render identically, so the
+     * `<button>` path is unchanged.
+     */
+    const shared = {
+        'data-slot': 'left-bar-balance-action',
+        className: cn(
+            'type-body-strong m-0 flex h-[48px] min-w-0 flex-1 cursor-pointer items-center justify-center rounded-none border-0 bg-(--button-ghost-bg) px-6 py-2 text-(--text-link)',
+            'hover:bg-(--button-ghost-bg-hover) focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-(--focus-ring)',
+            /*
+             * The DS draws no disabled state for this button — it is a bespoke half-card
+             * segment, not a `Button` instance — so the treatment is the app's own, matching
+             * what `BalanceActionRows` uses for a control whose destination is not built yet:
+             * 40% and no pointer. Kept here rather than passed in by the one caller, so the
+             * next screen to use this segment cannot invent a second version of it.
+             */
+            'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-(--button-ghost-bg)',
+            className,
+        ),
+    }
+
+    if (href && !disabled) {
+        return <Link href={href} {...shared} {...(props as ComponentPropsWithoutRef<'a'>)} />
+    }
+
+    return <button type="button" disabled={disabled} {...shared} {...props} />
 }
 
 /**

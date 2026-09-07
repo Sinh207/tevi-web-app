@@ -1,13 +1,14 @@
 'use client'
 
 import { useAuth } from '@features/auth'
-import { formatLedgerAmount, isStarEntry } from '@features/balance'
+import { formatLedgerAmount, isStarEntry, type LedgerEntry } from '@features/balance'
 import type { LedgerGroupModel } from '@shared/components/ledger'
+import { TEVI_STAR_SRC } from '@shared/components/star-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatLedgerDateTime, formatLedgerMonth, ledgerMonthKey } from '@shared/lib/ledger-time'
 import { DEFAULT_CURRENCY } from '@shared/lib/money'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { STAR_LEDGER_PAGE_SIZE, starLedgerApi, starLedgerKeys } from '../api/star-ledger-api'
 import {
     ALL_STAR_TRANSACTIONS,
@@ -18,6 +19,14 @@ import {
 
 export interface UseStarLedgerResult {
     groups: LedgerGroupModel[]
+    /**
+     * The rows behind `groups`, unformatted — what the detail sheet needs.
+     *
+     * `groups` holds finished strings, because `shared/components/ledger` takes finished strings; the
+     * sheet needs the DTO (the id, the raw amount, the type slug). Rather than parse the display row
+     * back, the hook hands out both views of the same page cache.
+     */
+    entries: LedgerEntry[]
     /** The active filter slug. `''` is "All transaction". */
     filter: string
     setFilter: (type: string) => void
@@ -97,8 +106,28 @@ export function useStarLedger(): UseStarLedgerResult {
          */
         getNextPageParam: (lastPage, _pages, lastPageParam) =>
             lastPage.length === STAR_LEDGER_PAGE_SIZE ? lastPageParam + 1 : undefined,
+        /*
+         * Five minutes, not the 60s default, and the socket is why. Every movement of Star or money
+         * emits `balance_change`, which invalidates `balanceKeys.all` — and this list's key is
+         * *under* that, so it refetches the moment the figure it explains moves. A `staleTime` here
+         * buys no freshness the socket does not already provide; all it does is re-request on a
+         * remount, and this is an infinite list, so that costs **every page the reader scrolled**.
+         */
+        staleTime: 5 * 60_000,
         enabled: isAuthenticated && Boolean(activeId),
     })
+
+    /*
+     * A synchronous latch beside the query's own flag, because that flag is **last render's**.
+     * `isFetchingNextPage` only becomes true after a re-render, so two calls in the *same* tick both
+     * read `false` and both fetch — which is exactly what an intersection observer does when it
+     * reports several entries for one crossing. Measured before this latch: three calls in one act
+     * produced three requests for page 2.
+     *
+     * A ref rather than state: it must be true for the next caller *now*, and it must not cause a
+     * render of its own.
+     */
+    const isAdvancing = useRef(false)
 
     const entries = useMemo(() => query.data?.pages.flat() ?? [], [query.data])
 
@@ -124,10 +153,10 @@ export function useStarLedger(): UseStarLedgerResult {
                     locale: currentLanguage,
                 }),
                 isCredit: entry.amount >= 0,
-                icon: starTransactionIcon(entry.type),
+                icon: starTransactionIcon(entry.type, isStarEntry(entry.currency)),
                 // The gold mark, on Star rows only — a fiat row must not be labelled with it.
                 amountMark: isStarEntry(entry.currency)
-                    ? { src: '/tevi-star.png', size: 20 }
+                    ? { src: TEVI_STAR_SRC, size: 20 }
                     : undefined,
             }
             /*
@@ -159,6 +188,7 @@ export function useStarLedger(): UseStarLedgerResult {
 
     return {
         groups,
+        entries,
         filter,
         setFilter,
         isLoading,
@@ -174,9 +204,11 @@ export function useStarLedger(): UseStarLedgerResult {
         hasNextPage: query.hasNextPage,
         isFetchingNextPage: query.isFetchingNextPage,
         fetchNextPage: () => {
-            // Guarded so the sentinel can call it freely: an intersection observer fires more than once
-            // for one crossing, and TanStack would otherwise queue a duplicate.
-            if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage()
+            if (!query.hasNextPage || query.isFetchingNextPage || isAdvancing.current) return
+            isAdvancing.current = true
+            query.fetchNextPage().finally(() => {
+                isAdvancing.current = false
+            })
         },
         refetch: () => {
             query.refetch()

@@ -1,5 +1,6 @@
+import type { TranslationKey } from '@shared/i18n/settings'
 import type { IconProps } from '@shared/ui/icon'
-import { CHANNEL_PRIVACY, type ChannelPrivacy } from '../api/types'
+import type { ChannelPrivacy } from '../api/types'
 
 /**
  * The three space-visibility choices, as data — `/settings/space-visibility`.
@@ -37,6 +38,14 @@ export interface SpaceVisibilityOption {
     bulletKeys: readonly string[]
 }
 
+/**
+ * Every value of the privacy enum has exactly one option here, in enum order — asserted by
+ * `space-visibility.test.ts` against `CHANNEL_PRIVACY` rather than at runtime.
+ *
+ * It matters because the screen renders this table and nothing else, so a value the backend can
+ * return that is missing from it would be un-selectable *and* invisible: the person's own space
+ * would sit in a mode the settings screen does not admit exists.
+ */
 export const SPACE_VISIBILITY_OPTIONS: readonly SpaceVisibilityOption[] = [
     {
         value: 'public',
@@ -93,7 +102,7 @@ export const SPACE_VISIBILITY_OPTIONS: readonly SpaceVisibilityOption[] = [
  * out, so a future fourth value cannot be added to the confirm set without also being given
  * a sentence.
  */
-export function spaceVisibilityConfirmKey(next: ChannelPrivacy): string | null {
+export function spaceVisibilityConfirmKey(next: ChannelPrivacy): TranslationKey | null {
     switch (next) {
         case 'protected':
             return 'space_visibility_confirm_protected'
@@ -120,13 +129,3 @@ export function isSpaceVisibilityChange(
     if (!current) return false
     return current !== next
 }
-
-/**
- * Every value in the enum has exactly one option, in enum order.
- *
- * Not an assertion at runtime — the test asserts it. It is stated here because the screen
- * renders `SPACE_VISIBILITY_OPTIONS` and nothing else, so a value the backend can return
- * that is missing from this table would be un-selectable *and* invisible: the person's own
- * space would sit in a mode the settings screen does not admit exists.
- */
-export const SPACE_VISIBILITY_ORDER = CHANNEL_PRIVACY

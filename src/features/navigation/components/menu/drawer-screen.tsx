@@ -1,16 +1,20 @@
 'use client'
 
-import { AppBar, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
+import { AppBar, AppBarCluster, AppBarTitleText } from '@shared/ui/app-bar'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
-import { LeftBar, LeftBarList, LeftBarRow } from '@shared/ui/left-bar'
-import { type KeyboardEvent, type ReactNode, useEffect, useRef } from 'react'
+import { LeftBar } from '@shared/ui/left-bar'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { useMenu } from '../../providers/menu-state'
 
 /**
- * The drawer's screen-stack machinery: one layer, the shell a pushed layer wears, and the
- * pick-one list two of those layers hold. Nothing here knows what the drawer's rows *are* —
- * that is `lib/menu-rows.ts` — or which screen is showing, which is `providers/menu-state.tsx`.
+ * The drawer's screen-stack machinery: one layer, and the shell a pushed layer wears. Nothing here
+ * knows what the drawer's rows *are* — that is `lib/menu-rows.ts` — or which screen is showing,
+ * which is `providers/menu-state.tsx`.
+ *
+ * The pick-one list two of those layers hold used to be here as well; it is
+ * `shared/components/picker-list.tsx` now, because `/my-wallet` offers the same currency choice and
+ * a screen feature cannot import the shell's.
  */
 
 /**
@@ -147,151 +151,87 @@ export function DrawerSubScreen({
         >
             {/*
              * The DS `title-center` App Bar rather than a hand-stacked row: leading
-             * action on the edge, title absolutely centred on the bar at Title T1 —
-             * which is what `AppBarTitle` does with no `flow`. Full-bleed (`-mx-4`,
-             * cancelling the drawer's own 16) and sticky, so the header holds while
-             * the list scrolls under it; the opaque background is what keeps the
+             * action on the edge, title centred on the bar at a Title weight. Full-bleed
+             * (`-mx-4`, cancelling the drawer's own 16) and sticky, so the header holds
+             * while the list scrolls under it; the opaque background is what keeps the
              * list from showing through, since there is no hairline.
+             *
+             * ## Centred by flex, not by `AppBarTitle`'s absolute centring
+             *
+             * `AppBarTitle` with no `flow` is `position: absolute` on the bar's own centre,
+             * which means **nothing pushes it aside**: a title wider than the bar runs
+             * straight under the back button. That is not an edge case here — the panel is
+             * 372 on desktop and the phone's own width when pushed, and
+             * `menu_privacy_security` is 296px of Vietnamese at T1.
+             *
+             * So the three parts sit in flow instead. The two `flex-1 basis-0` sides share
+             * the free space, which puts the title on the bar's centre exactly as the
+             * absolute version did while it fits; when it does not, the empty end side
+             * gives its share up — the leading one cannot shrink past its button — and the
+             * title takes that room rather than overlapping. `min-w-0` is what lets it
+             * shrink at all and `truncate` is the floor: a phone under ~330 still
+             * ellipsises, which is the honest outcome for a 60px bar.
+             *
+             * `PageBackBar` answers the same overlap with a `max-w` reserve because its bar
+             * carries a trailing cluster of its own. This one is a lone back button, and a
+             * symmetric reserve would spend 64px holding an edge that stays empty — which
+             * is exactly the 64px the long locales need.
              */}
             <AppBar className="sticky top-0 z-10 -mx-4 w-auto bg-(--background-surface)">
+                <AppBarCluster className="flex-1 basis-0">
+                    {/*
+                     * A ghost Button, not `App Bar/Button`. The App Bar action's fill is
+                     * `--background-topbar-action` — 85% of a near-white, made to sit on
+                     * content or media, where it reads as a raised frosted disc. On the
+                     * drawer's white surface the fill vanishes and only its faint
+                     * `#e0e0e0` ring survives, so the control reads as an empty outline
+                     * next to a bold title. Ghost is the surface control:
+                     * `--button-ghost-bg` is `#ffffff00`, so nothing paints until hover,
+                     * and the glyph runs at Text - Title, matching the title's weight.
+                     * Kept circular so it still speaks the same shape language as the
+                     * rail and the top bar.
+                     */}
+                    <Button
+                        data-testid="navigation-menu-back"
+                        variant="ghost"
+                        size="large"
+                        iconOnly
+                        aria-label={backLabel}
+                        onClick={onBack}
+                        className="rounded-full"
+                    >
+                        <Icon name="arrow-left" size={20} className="rtl:-scale-x-100" />
+                    </Button>
+                </AppBarCluster>
                 {/*
-                 * A ghost Button, not `App Bar/Button`. The App Bar action's fill is
-                 * `--background-topbar-action` — 85% of a near-white, made to sit on
-                 * content or media, where it reads as a raised frosted disc. On the
-                 * drawer's white surface the fill vanishes and only its faint
-                 * `#e0e0e0` ring survives, so the control reads as an empty outline
-                 * next to a 24px bold title. Ghost is the surface control:
-                 * `--button-ghost-bg` is `#ffffff00`, so nothing paints until hover,
-                 * and the glyph runs at Text - Title, matching the title's weight.
-                 * Kept circular so it still speaks the same shape language as the
-                 * rail and the top bar.
+                 * `AppBarTitleText` on its own, without the `AppBarTitle` box around it:
+                 * that box exists to stack a title over a subtitle and to do the absolute
+                 * centring this bar has just given up, and it is `flex-none` with 16 of
+                 * padding — both of which fight the layout above.
+                 *
+                 * T2 (20) rather than the `large` size's T1 (24). Legacy's own header for
+                 * these screens is 18 on a phone and 21 on desktop, and T1 does not fit the
+                 * 372 panel in half the locales — Vietnamese wants 296 where the bar can
+                 * offer 272, so the screen would open on an ellipsis every time. `size`
+                 * stays `large` because the override has to outrank *some* size class, and
+                 * T1 is the one `type-title-t2-bold` follows in `globals.css`.
                  */}
-                <Button
-                    variant="ghost"
+                <AppBarTitleText
+                    as="h1"
                     size="large"
-                    iconOnly
-                    aria-label={backLabel}
-                    onClick={onBack}
-                    className="rounded-full"
+                    className="type-title-t2-bold min-w-0 truncate text-center"
                 >
-                    <Icon name="arrow-left" size={20} className="rtl:-scale-x-100" />
-                </Button>
-                <AppBarTitle size="large">
-                    <AppBarTitleText as="h1" size="large">
-                        {title}
-                    </AppBarTitleText>
-                </AppBarTitle>
+                    {title}
+                </AppBarTitleText>
+                {/*
+                 * The end side of the balance: empty, and `aria-hidden` so it is nothing to
+                 * a screen reader. It exists only so the title's two neighbours weigh the
+                 * same, which is what centres the title on the *bar* rather than on the
+                 * free space beside the button.
+                 */}
+                <div aria-hidden className="flex-1 basis-0" />
             </AppBar>
             {children}
         </LeftBar>
-    )
-}
-
-export type PickerOption = {
-    value: string
-    label: string
-    /**
-     * The 32px mark in the leading slot — a flag, a glyph. Never a coloured DS tile: a
-     * picker row is a choice, not a destination, and the tiles are the drawer's way of
-     * telling its destinations apart.
-     */
-    mark: ReactNode
-}
-
-/**
- * One choice out of a list, applied on press — Appearance and Language are both this.
- *
- * It is a real `radiogroup`, which is a promise about the keyboard as much as about the
- * announcement: arrow keys move within the group, Home/End jump to its ends, and only one
- * row is in the tab order at a time (the checked one, or the first when nothing is
- * checked) so Tab steps *over* the group rather than through every option. Declaring the
- * roles without that behaviour is worse than not declaring them — a screen reader would
- * say "use the arrow keys" about arrows that do nothing.
- *
- * **Arrows move focus without selecting**, which is the variant the APG allows when
- * activating an option has side effects, and here it has: the language picker closes the
- * drawer on pick, so a selection-follows-focus group would shut itself the moment you
- * pressed Down. Space and Enter select, via the row's own `<button>`.
- *
- * Up/Down only, not Left/Right: the list runs vertically, and the horizontal pair would
- * have to flip under RTL for the eight-language screen that is the most likely place to
- * meet Arabic.
- *
- * `LeftBarRow` renders a `<button>` and the roles are layered on top rather than swapping
- * in a native `<input type="radio">` — that would bring its own hit target and focus ring
- * into a row whose geometry is the design system's.
- */
-export function PickerList({
-    label,
-    options,
-    value,
-    onSelect,
-}: {
-    label: string
-    options: readonly PickerOption[]
-    /** Undefined until the choice is known — the roving tab stop falls to the first row. */
-    value: string | undefined
-    onSelect: (value: string) => void
-}) {
-    const checked = options.findIndex(option => option.value === value)
-    const tabStop = checked === -1 ? 0 : checked
-
-    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        // `currentTarget` is the list, so the rows come from the DOM rather than from a
-        // ref array — `LeftBarRow` is a plain function component and forwards no ref.
-        const rows = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]'))
-        const from = rows.indexOf(document.activeElement as HTMLElement)
-        if (from === -1) return
-
-        let to: number
-        switch (event.key) {
-            case 'ArrowDown':
-                to = (from + 1) % rows.length
-                break
-            case 'ArrowUp':
-                to = (from - 1 + rows.length) % rows.length
-                break
-            case 'Home':
-                to = 0
-                break
-            case 'End':
-                to = rows.length - 1
-                break
-            default:
-                return
-        }
-        // Only once a key we handle has matched, so the drawer's own scrolling and the
-        // rest of the page keep theirs.
-        event.preventDefault()
-        rows[to]?.focus()
-    }
-
-    return (
-        <LeftBarList bordered role="radiogroup" aria-label={label} onKeyDown={handleKeyDown}>
-            {options.map((option, i) => {
-                const active = option.value === value
-                return (
-                    <LeftBarRow
-                        key={option.value}
-                        role="radio"
-                        aria-checked={active}
-                        tabIndex={i === tabStop ? 0 : -1}
-                        // The same Primary 50 wash the drawer uses for "you are here"; the
-                        // ramp inverts, so one tint works in both modes.
-                        className="aria-checked:bg-(--primary-50)"
-                        rule={i > 0}
-                        title={option.label}
-                        brand={option.mark}
-                        chevron={false}
-                        trailing={
-                            active ? (
-                                <Icon name="check" size={20} className="text-(--text-link)" />
-                            ) : undefined
-                        }
-                        onClick={() => onSelect(option.value)}
-                    />
-                )
-            })}
-        </LeftBarList>
     )
 }

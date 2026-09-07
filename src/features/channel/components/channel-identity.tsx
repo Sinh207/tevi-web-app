@@ -1,7 +1,8 @@
 'use client'
 
+import { PREMIUM_PATH } from '@features/premium/routes'
+import { PremiumBadge } from '@shared/components/premium-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
-import { AppBarBadge } from '@shared/ui/app-bar'
 import {
     CardUserHeader,
     CardUserHeaderHint,
@@ -36,7 +37,6 @@ export function ChannelIdentity({ channel }: { channel: Channel }) {
     const { t } = useTranslation()
 
     const isHidden = channel.privacy === 'protected' || channel.privacy === 'unpublished'
-    const _verifiedImage = channel.verified_tick_badge?.image ?? null
     /**
      * Falls back to the handle, and the row always renders.
      *
@@ -76,15 +76,47 @@ export function ChannelIdentity({ channel }: { channel: Channel }) {
 
                 {/*
                  * Shared with the top bar, which now writes the same name — see
-                 * `channel-verified-mark.tsx` for the image-else-DS-mark rule and why the fallback
-                 * exists at all.
+                 * `channel-verified-mark.tsx` for why the badge *image*, not the payload object,
+                 * is what decides whether a tick is drawn.
                  */}
-                <ChannelVerifiedMark channel={channel} size={18} />
+                {/*
+                 * **Interactive here, and only here.** The tick is a control on this row: pressing
+                 * it opens the panel explaining what a verified space is — which is the screenshot
+                 * the native app already ships, and the one surface where the mark is the reader's
+                 * own target rather than a glyph inside somebody's link. `ChannelVerifiedMark`
+                 * supplies the *Learn more* address; `VerifiedBadge` owns the target size and the
+                 * dialog.
+                 */}
+                <ChannelVerifiedMark
+                    channel={channel}
+                    size={24}
+                    interactive
+                    testId="channel-verified-badge"
+                />
 
+                {/*
+                 * **The crown is a link, as legacy's is.** `BadgePremium` pushes `/premium` from
+                 * every surface it appears on — posts, comments, DMs and this row — and it is the
+                 * entry point into the offer that sits closest to somebody actually being premium.
+                 * Of legacy's call sites this row is the only one this app has built, so it is the
+                 * only one that gets it.
+                 *
+                 * `@features/premium/routes` and not `@features/premium`: that barrel imports this
+                 * feature (`useMyChannel`, in three of its components), so the main barrel would
+                 * close a cycle — the import-free route module is what exists to be imported from
+                 * here. `PremiumBadge` owns the link's behaviour and target size; this owns where it
+                 * goes.
+                 *
+                 * The label is the badge's own, because as a link it needs a name of its own: the
+                 * heading beside it names the *channel*, not the destination.
+                 */}
                 {channel.is_premium && (
-                    <AppBarBadge size={18} aria-label={t('channel_premium')} role="img">
-                        <Icon name="premium" weight="filled" size={24} />
-                    </AppBarBadge>
+                    <PremiumBadge
+                        data-testid="channel-premium-badge"
+                        size={18}
+                        href={PREMIUM_PATH}
+                        label={t('channel_premium')}
+                    />
                 )}
 
                 {/*

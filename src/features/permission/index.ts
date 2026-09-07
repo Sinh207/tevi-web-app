@@ -39,14 +39,16 @@
  *
  * | capability | surface | feature |
  * |---|---|---|
- * | `star-transfer` | `/star-transfer` + its drawer row | not built yet |
+ * | `star-transfer` | `/star-transfer` + the drawer's SERVICES row | `features/star-transfer` |
  * | `payout-agency` | `/payout` agency console + its drawer row | not built yet |
  *
- * Both are un-migrated legacy screens (`containers/starTransfer`, `containers/payout`), which is why
- * this feature ships ahead of its consumers: the gate is the part that has to be right before either
- * screen exists, and both screens need it on their first commit. The drawer has no Services section
- * yet (`features/navigation/lib/menu-rows.ts`); when it gets one, the two rows are
- * `can('star-transfer')` and `can('payout-agency')`.
+ * `/star-transfer` is the screen this feature was written ahead of, and it uses both halves of the
+ * contract: `useCapability` for the screen (four states — its denial panel is legacy's bug, written
+ * down) and `can()` for the drawer row, which is hidden when the grant is missing so the section
+ * disappears with it (`features/navigation/lib/menu-rows.ts`, `menu-drawer.tsx`).
+ *
+ * Payout is still an un-migrated legacy screen (`containers/payout`), so its row is deliberately absent
+ * rather than pointing at a 404 — it is one entry in the same SERVICES section when that screen lands.
  *
  * ## Not exported: `permissionApi`
  *

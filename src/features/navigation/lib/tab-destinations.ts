@@ -30,11 +30,15 @@
 /**
  * The tab destinations that are plain URLs.
  *
- * Following and Messages are absent because their routes do not exist yet — `AppTabBar`
- * renders them as gated no-ops. Each becomes a line here on the day it gets an `href`, and
- * the bar will follow it without anything else changing.
+ * Messages is absent because its route does not exist yet — `AppTabBar` renders it as a gated
+ * no-op. It becomes a line here on the day it gets an `href`, and the bar will follow it without
+ * anything else changing.
+ *
+ * `/following` is a literal rather than `features/channel`'s `FOLLOWING_PATH`, which is the same
+ * string: a feature may not import another feature's internals, and the barrel that exports it is
+ * `features/channel`'s. `FOLLOWING_PATH`'s own note records the other side of this.
  */
-export const TAB_PATHS: readonly string[] = ['/', '/my-space']
+export const TAB_PATHS: readonly string[] = ['/', '/following', '/my-space']
 
 /**
  * Whether the tab bar belongs on this screen.

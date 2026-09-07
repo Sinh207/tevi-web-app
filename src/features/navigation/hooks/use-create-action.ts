@@ -1,0 +1,131 @@
+'use client'
+
+import { useRequireAuth } from '@features/auth'
+import { useTranslation } from '@shared/i18n/use-translation'
+import type { TeviIconName } from '@shared/ui/icon-names'
+import { useState } from 'react'
+import { TILE } from '../lib/menu-tiles'
+
+/** One row of the Create list. `undefined` `onSelect` is what "not ready" means — see below. */
+export interface CreateOption {
+    key: 'post' | 'event'
+    label: string
+    /** The second line — what the option is for. `ListRow` is a two-line shape; legacy's create
+     *  rows carry the same. */
+    hint: string
+    icon: TeviIconName
+    /** The 32px tile colour, for the surfaces that draw `List/Action` rows. */
+    tile: string
+    /** Omitted while the flow does not exist — the row is then `disabled`, behind a badge. */
+    onSelect?: () => void
+}
+
+/**
+ * The shell's **Create** affordance — the rail's accent `+` and the tab bar's FAB. It offers a
+ * choice of two, and only one of them is app-only.
+ *
+ * ## The two options are not the same kind of "not on the web"
+ *
+ * - **Create a post** is something the web can do: legacy has a full composer (`PostForm`, ~8.7k
+ *   LOC) and posting has never been app-only. It is simply **not ported yet** — `features/post`
+ *   does not exist; `channel-thread-placeholder.tsx` stands in for the post card "until
+ *   `features/post` lands". So the row carries no `onSelect` and every surface renders it
+ *   `disabled` behind a "Coming soon" badge (`CreateOptionRow`), which is this repo's own rule for
+ *   a row whose destination is not built (`shared/components/action-rows.tsx`: a button that
+ *   navigates to a 404 is worse than one that is visibly not ready, and a silently inert one is
+ *   worse than both). Giving it the app prompt instead would be a *false* statement about where
+ *   posting happens.
+ * - **Create event** is genuinely app-only, permanently as far as this client is concerned: the
+ *   web has never been able to broadcast, and legacy's own Go Live row opens a QR saying so. So
+ *   this is the one option that raises `GetAppDialog`.
+ *
+ * When the composer lands, `post` gets an `onSelect` and nothing else here changes.
+ *
+ * ## Why the options live in a hook and the rendering does not
+ *
+ * Two surfaces draw this list and they are different objects: above `md` the rail opens an
+ * `ActionMenu` popover beside itself, below `md` the FAB opens a dialog (there is no bottom sheet
+ * in this app — the DS draws none). Both are the same two choices with the same two meanings, so
+ * the list is data and each shell renders it, the way `features/navigation/lib/menu-rows.ts`
+ * already treats the drawer's rows. What must not be duplicated is which option is app-only.
+ *
+ * The **`data-testid` is each shell's**, not this hook's: both navigation shells are in the DOM at
+ * once (`docs/TEST_IDS.md` §5) and a leaf name reused across two of them is a lookup that silently
+ * takes whichever comes first in document order.
+ *
+ * ## The gate is on the trigger, not on the rows
+ *
+ * Legacy opens its create menu for anybody and raises the login prompt from the *row* inside it
+ * (`iconBtnCreate/createPost/index.js`), so a guest gets a menu, picks something, and is only then
+ * told to sign in. `requestOpen` gates the surface instead: one prompt at the press, and never a
+ * menu whose rows are all dead ends. It is what every other gated rail entry does.
+ *
+ * An anonymous session is not an account — `isAuthenticated` is `id && !anonymous` — so the
+ * visitor every page silently carries still gets the prompt.
+ */
+export function useCreateAction() {
+    const { t } = useTranslation()
+    const requireAuth = useRequireAuth()
+    /** The options surface: the rail's popover, or the tab bar's dialog. */
+    const [open, setOpen] = useState(false)
+    /** The app-only prompt, raised by the `event` option. */
+    const [appPromptOpen, setAppPromptOpen] = useState(false)
+
+    const requestOpen = requireAuth(() => setOpen(true))
+
+    const options: CreateOption[] = [
+        {
+            key: 'post',
+            label: t('nav_create_post'),
+            hint: t('nav_create_post_hint'),
+            icon: 'memo-pen',
+            tile: TILE.indigo,
+            // No `onSelect`: see the note above. This is the line that changes when the composer lands.
+        },
+        {
+            key: 'event',
+            label: t('nav_create_event'),
+            /*
+             * Legacy's own second line is "Create a broadcast Live", which under a title already
+             * reading *Create event* repeats the verb twice — it works there because legacy titles
+             * that row "Go Live". Reworded rather than copied, and flagged here because legacy is
+             * otherwise the spec: its numbers and behaviour are ported as they stand, and a
+             * divergence is stated at the call site rather than left to be noticed in a diff.
+             */
+            hint: t('nav_create_event_hint'),
+            icon: 'signal-stream',
+            tile: TILE.error,
+            onSelect: () => {
+                /*
+                 * Closes the options surface **and** opens the prompt. In the popover the first
+                 * call is redundant — base-ui closes a menu on item press — but the tab bar's
+                 * dialog does not close itself, and two stacked dialogs is the one outcome to
+                 * avoid: the prompt's own backdrop would land on the list behind it.
+                 */
+                setOpen(false)
+                setAppPromptOpen(true)
+            },
+        },
+    ]
+
+    return {
+        options,
+        /** Title for the surface that needs one — the dialog has a header, the popover does not. */
+        title: t('nav_create_title'),
+        /** The badge beside the title on a row with no action yet — visible, not `sr-only`. */
+        unavailableLabel: t('nav_create_post_unavailable'),
+        open,
+        /**
+         * For the controlled `open` of a `Menu` or `Dialog` root. Opening runs through the auth
+         * gate, so a guest sees the login dialog and the surface stays shut; closing always works.
+         */
+        onOpenChange: (next: boolean) => (next ? requestOpen() : setOpen(false)),
+        /** Spread onto `GetAppDialog`, which takes `open` / `onOpenChange` / `title` / `body`. */
+        appPrompt: {
+            open: appPromptOpen,
+            onOpenChange: setAppPromptOpen,
+            title: t('nav_create_event_app_title'),
+            body: t('nav_create_event_app_body'),
+        },
+    }
+}

@@ -82,12 +82,25 @@ const GOOGLE_ACCOUNTS_ORIGIN = 'https://accounts.google.com'
  */
 const GCS_UPLOAD_ORIGIN = 'https://storage.googleapis.com'
 /**
- * Firebase Auth's REST hosts, used for the anonymous session (`shared/lib/firebase.ts`).
- * The SDK is bundled, so these are XHR targets only — nothing is loaded as script.
+ * Firebase's REST hosts. The SDK is bundled, so these are XHR targets only — nothing is
+ * loaded as script.
+ *
+ * The first two are **Auth**, for the anonymous session (`shared/lib/firebase.ts`). The other
+ * two are **Remote Config** (`shared/lib/remote-config`), and they were missing — which is a
+ * failure nothing reports, by design: reading config never rejects, it resolves to the code
+ * defaults with `isRemote: false`. So every price, limit and kill switch the team can change
+ * without a deploy was silently pinned to whatever the schema's fallback said, in production
+ * as much as in dev, and the app looked entirely healthy.
+ *
+ * Two hosts, not one: `installations` mints the Firebase installation id that
+ * `firebaseremoteconfig` requires before it will hand over a template, so blocking either
+ * blocks the feature.
  */
 const FIREBASE_ORIGINS = [
     'https://identitytoolkit.googleapis.com',
     'https://securetoken.googleapis.com',
+    'https://firebaseinstallations.googleapis.com',
+    'https://firebaseremoteconfig.googleapis.com',
 ]
 /**
  * Sumsub — the identity-verification flow (`features/identification`). The whole flow is
@@ -101,6 +114,75 @@ const FIREBASE_ORIGINS = [
  * blocked frame is silent everywhere except the console.
  */
 const SUMSUB_ORIGIN = 'https://in.sumsub.com'
+
+/**
+ * Stripe — `features/payment`.
+ *
+ * **Two directives, and deliberately not `script-src`.** `loadStripe` injects
+ * `js.stripe.com` (today `/dahlia/stripe.js`, yesterday `/v3` — the path is Stripe's business, not
+ * ours) with a `<script>` tag created by our own already-trusted bundle, so
+ * `'strict-dynamic'` covers it exactly as it covers Google Identity Services and Turnstile (see the
+ * note at the top of this file). Adding a host expression for it would be decoration on a CSP3
+ * browser and a weakening on any browser that falls back to hosts.
+ *
+ * What Stripe genuinely needs from *this* document:
+ *
+ * - **`frame-src`** — Elements draws every card field in an iframe on `js.stripe.com`, and a 3DS
+ *   challenge opens a second one on `hooks.stripe.com`. Without both, the card form renders as an
+ *   empty box and a challenge silently never appears — a blocked frame reports nowhere but the
+ *   console, which is how this class of bug reaches production (see `SUMSUB_ORIGIN` above, same
+ *   failure mode).
+ * - **`connect-src`** — Elements talks to `api.stripe.com` directly from the page (tokenisation,
+ *   `confirmPayment`). Blocked, it looks like the payment failed for network reasons.
+ *
+ * `checkout.stripe.com` is **not** here and does not need to be: a hosted checkout page is a
+ * top-level navigation, which no CSP directive governs. `form-action 'self'` is likewise untouched —
+ * the redirect is `location.assign`, not a form submission.
+ */
+const STRIPE_FRAME_ORIGINS = ['https://js.stripe.com', 'https://hooks.stripe.com']
+const STRIPE_API_ORIGIN = 'https://api.stripe.com'
+
+/**
+ * Mini apps — `features/mini-app` frames third-party applications a creator attaches to their space.
+ *
+ * ## Why this cannot be an allow-list of origins
+ *
+ * The URL comes from the API (`channel.mini_app_url`), is set per creator in the backoffice, and
+ * points at whatever host the app's publisher uses. There is no list to write: a partner signed
+ * tomorrow needs no web deploy today, and an unlisted origin does not degrade — the frame is blocked
+ * and paints nothing, reporting only to the console, which is the exact failure mode `SUMSUB_ORIGIN`
+ * and Stripe's `frame-src` note above describe reaching production twice already.
+ *
+ * So the default is `https:` for **`frame-src` only**, and it is a deliberate, bounded trade rather
+ * than a shrug:
+ *
+ * - It widens *framing*, not scripting. `script-src` stays nonce + `'strict-dynamic'`, so an
+ *   injected `<iframe>` still cannot run script in this document — a framed page is its own origin
+ *   with its own everything.
+ * - The frame itself is sandboxed without `allow-top-navigation` and, for a same-origin URL, without
+ *   `allow-same-origin` (`features/mini-app/lib/frame-url.ts` states each token). So the worst a
+ *   frame can do is draw inside its box.
+ * - `frame-ancestors 'self'` is untouched: this policy is about what *we* may embed, not who may
+ *   embed us.
+ *
+ * ## Narrowing it without a deploy
+ *
+ * `NEXT_PUBLIC_MINIAPP_FRAME_ORIGINS` takes a space- or comma-separated list of CSP source
+ * expressions (`https://*.miniapp.tevi.so https://center.miniapp.tevi.so`) and **replaces** the
+ * wildcard. Set it in any environment whose mini-app hosts are known and curated; leave it unset
+ * where partners are onboarded without one. Read through `process.env` directly rather than
+ * `shared/config/env.ts` for the reason every value in this file is: the policy is built in
+ * `proxy.ts`, on the edge runtime, before the app's env module exists.
+ */
+const MINIAPP_FRAME_SOURCES = (() => {
+    const configured = process.env.NEXT_PUBLIC_MINIAPP_FRAME_ORIGINS
+    if (!configured) return ['https:']
+    const entries = configured
+        .split(/[\s,]+/)
+        .map(entry => entry.trim())
+        .filter(Boolean)
+    return entries.length > 0 ? entries : ['https:']
+})()
 
 /** `https://wapi.tevi.dev` → `wss://wapi.tevi.dev`, for the socket adapter in a later phase. */
 function toWebSocketOrigin(origin?: string): string | undefined {
@@ -194,11 +276,24 @@ export function buildCsp({ nonce, isDev = false }: { nonce: string; isDev?: bool
                 toWebSocketOrigin(W_API),
                 GCS_UPLOAD_ORIGIN,
                 GOOGLE_ACCOUNTS_ORIGIN,
+                STRIPE_API_ORIGIN,
                 ...FIREBASE_ORIGINS,
                 isDev ? 'ws:' : undefined,
             ),
         ],
-        ['frame-src', sources("'self'", TURNSTILE_ORIGIN, GOOGLE_ACCOUNTS_ORIGIN, SUMSUB_ORIGIN)],
+        [
+            'frame-src',
+            sources(
+                "'self'",
+                TURNSTILE_ORIGIN,
+                GOOGLE_ACCOUNTS_ORIGIN,
+                SUMSUB_ORIGIN,
+                ...STRIPE_FRAME_ORIGINS,
+                // Mini apps. Widest entry in the policy, and the only directive it touches — see
+                // `MINIAPP_FRAME_SOURCES` for the trade and how to narrow it per environment.
+                ...MINIAPP_FRAME_SOURCES,
+            ),
+        ],
         // Matches the `X-Frame-Options: SAMEORIGIN` already set in `next.config.ts`.
         // `/app/*` is unaffected: a WebView renders it as the top-level document, not a
         // frame, so no ancestor check applies.

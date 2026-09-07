@@ -98,8 +98,10 @@ describe('useUserLogin', () => {
         expect(read().hasCredentials).toBe(false)
     })
 
+    // `phone_number`, not `phone` — the spelling this hook read for a while and the endpoint has
+    // never sent, which made a phone-only account look like it had no credentials at all.
     it('counts a phone as credentials too', async () => {
-        getUserLogin.mockResolvedValue({ phone: '+84900000000' })
+        getUserLogin.mockResolvedValue({ phone_number: '+84900000000' })
         const { read } = renderHook()
 
         await waitFor(() => expect(read().isLoading).toBe(false))

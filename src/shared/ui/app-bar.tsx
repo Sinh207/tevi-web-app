@@ -1,5 +1,6 @@
 import { cn } from '@shared/lib/utils'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { ComponentPropsWithoutRef, CSSProperties, HTMLAttributes, ReactNode } from 'react'
 
 /**
@@ -21,6 +22,13 @@ import type { ComponentPropsWithoutRef, CSSProperties, HTMLAttributes, ReactNode
  * not a Spacing token), padding 8/16, and **no background of its own** — in the app it
  * sits over a screen. A sticky host has to supply one or the page scrolls through it.
  */
+
+/**
+ * The bar's height in px, for a page that has to offset something against it — a sticky panel
+ * header parking *below* the bar rather than under it. Must stay in step with `h-[60px]` below;
+ * the class stays the source of truth for what is drawn, this is the same number readable from JS.
+ */
+export const APP_BAR_HEIGHT = 60
 
 function AppBar({ className, ...props }: ComponentPropsWithoutRef<'header'>) {
     return (
@@ -124,6 +132,22 @@ export type AppBarButtonProps = HTMLAttributes<HTMLElement> & {
     type?: AppBarButtonType
     theme?: AppBarTheme
     disabled?: boolean
+    /**
+     * Navigate: renders an `<a>` via `next/link` instead of a `<button>`.
+     *
+     * The same escape `NavbarItem` carries, for the same reason and with the same rule: an
+     * action that *navigates* has to be a real anchor — a button that calls `router.push`
+     * loses middle-click, ⌘-click, the status-bar preview and "open in new tab", and reports
+     * itself to a screen reader as a button rather than a link. `href` + `disabled` renders
+     * the button instead, which is the honest affordance for a destination that exists but is
+     * unavailable.
+     *
+     * ⚠ **Not the star pill's pattern.** `AppBarStarBalance` is wrapped in a `Link` by its
+     * caller, because it is a plain `div` — wrapping *this* would put a `<button>` inside an
+     * `<a>`, which is invalid and un-focusable in the way that matters. Hence the prop rather
+     * than a wrapper at the call site.
+     */
+    href?: string
 }
 
 function AppBarButton({
@@ -131,34 +155,40 @@ function AppBarButton({
     type = '1-icon',
     theme = 'light',
     disabled,
+    href,
     ...props
 }: AppBarButtonProps) {
     const overlayReset =
         theme === 'overlay' && (type === '1-icon-active' || type === 'text-primary')
-    return (
-        <button
-            type="button"
-            data-slot="app-bar-button"
-            data-type={type}
-            data-theme={theme}
-            disabled={disabled}
-            className={cn(
-                BUTTON_BASE,
-                BUTTON_GAP[type],
-                BUTTON_PAD[type],
-                BUTTON_TYPE[type],
-                theme === 'overlay' && BUTTON_OVERLAY,
-                overlayReset && BUTTON_OVERLAY_RESET,
-                overlayReset && type === 'text-primary' && '[--topbar-label:var(--button-accent-text)]',
-                theme === 'overlay' && type === 'back' && 'gap-2',
-                theme === 'overlay' &&
-                    (type === 'back' || type === 'text-primary' || type === 'text-secondary') &&
-                    'p-1',
-                className,
-            )}
-            {...props}
-        />
-    )
+
+    const shared = {
+        'data-slot': 'app-bar-button',
+        'data-type': type,
+        'data-theme': theme,
+        className: cn(
+            BUTTON_BASE,
+            BUTTON_GAP[type],
+            BUTTON_PAD[type],
+            BUTTON_TYPE[type],
+            theme === 'overlay' && BUTTON_OVERLAY,
+            overlayReset && BUTTON_OVERLAY_RESET,
+            overlayReset && type === 'text-primary' && '[--topbar-label:var(--button-accent-text)]',
+            theme === 'overlay' && type === 'back' && 'gap-2',
+            theme === 'overlay' &&
+                (type === 'back' || type === 'text-primary' || type === 'text-secondary') &&
+                'p-1',
+            className,
+        ),
+    }
+
+    /*
+     * `shared` above rather than the class list twice: the two branches must paint identically,
+     * and a duplicated eleven-line `cn()` is a duplicate that drifts the next time a variant is
+     * added. Same construction `NavbarItem` uses for the same fork.
+     */
+    if (href && !disabled) return <Link href={href} {...shared} {...props} />
+
+    return <button type="button" disabled={disabled} {...shared} {...props} />
 }
 
 /** The 36×36 glyph slot inside a button. Put a 22px `<Icon>` in it. */

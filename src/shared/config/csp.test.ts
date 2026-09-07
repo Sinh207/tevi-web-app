@@ -52,6 +52,20 @@ describe('buildCsp', () => {
         expect(directive(csp, 'style-src')).toContain('https://accounts.google.com')
     })
 
+    it('frames Stripe Elements and the 3DS challenge — a blocked frame is a silent empty box', () => {
+        const frameSrc = directive(csp, 'frame-src')
+        expect(frameSrc).toContain('https://js.stripe.com')
+        expect(frameSrc).toContain('https://hooks.stripe.com')
+    })
+
+    it('lets Elements reach the Stripe API, and adds no host for its script', () => {
+        // `loadStripe` injects the script from our own nonce'd bundle, so 'strict-dynamic'
+        // covers it; a host expression here would only weaken the policy for a browser that
+        // falls back to hosts.
+        expect(directive(csp, 'connect-src')).toContain('https://api.stripe.com')
+        expect(directive(csp, 'script-src')).not.toContain('stripe.com')
+    })
+
     it('frames the Turnstile and Google sign-in widgets, which render in iframes', () => {
         const frameSrc = directive(csp, 'frame-src')
         expect(frameSrc).toContain('https://challenges.cloudflare.com')
@@ -137,5 +151,19 @@ describe('CSP_REPORT_ONLY', () => {
 
     it('names no policies yet — that belongs with enforcement', () => {
         expect(CSP_REPORT_ONLY).not.toContain('trusted-types ')
+    })
+})
+
+describe('Firebase Remote Config', () => {
+    /*
+     * Both hosts, because the failure is silent: `useWebConfig()` resolves to the code defaults
+     * when the fetch is refused, so a blocked policy looks exactly like a healthy app running on
+     * fallbacks. This is the only place that can notice.
+     */
+    it('may reach the two hosts a template needs', () => {
+        const connect = directive(buildCsp({ nonce: 'n' }), 'connect-src')
+
+        expect(connect).toContain('https://firebaseinstallations.googleapis.com')
+        expect(connect).toContain('https://firebaseremoteconfig.googleapis.com')
     })
 })

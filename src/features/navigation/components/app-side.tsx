@@ -106,10 +106,21 @@ export function AppSide() {
 
     return (
         <>
-            {/* Above the drawer (z-30): the closed panel is parked at `--rail-width - 372`, so
-                its trailing edge lands exactly on the rail's — without the rail on top,
-                a panel-width slab of surface would sit over the rail at rest. */}
-            <div className="sticky top-0 z-40 hidden h-[var(--window-height)] shrink-0 md:flex print:md:hidden">
+            {/*
+             * Above the drawer (z-30), so the panel passes behind the rail on its way in and out.
+             *
+             * `self-start` is not decoration. This is a `sticky` **flex item**, and a flex item with
+             * `align-items: stretch` above it is the arrangement engines disagree about — its used
+             * height comes from the container rather than from itself, and a sticky box with no room
+             * of its own inside its containing block is a box that quietly scrolls away. Chrome
+             * honours the explicit `h-[var(--window-height)]` here and pins it; pinning it to the
+             * start of the cross axis makes the height its own in every engine, and changes nothing
+             * about the layout (measured: same 88 × window-height box either way).
+             */}
+            <div
+                data-viewport="md-up"
+                className="sticky top-0 z-40 hidden h-[var(--window-height)] shrink-0 self-start md:flex print:md:hidden"
+            >
                 <AppNavbar />
             </div>
 
@@ -163,7 +174,35 @@ export function AppSide() {
                      * page, the policies included.
                      */
                     'print:hidden',
-                    open ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full',
+                    /*
+                     * ## The closed panel parks **off the screen**, not behind the rail
+                     *
+                     * On desktop it starts at `--rail-width`, so `-translate-x-full` alone left its
+                     * trailing edge at exactly 88 — the rail's own edge. That looked identical and was
+                     * only ever hidden because the rail *painted over it*, which is a a bet on two
+                     * unrelated boxes staying aligned. They came apart on
+                     * `/dashboard-analytics`: the rail is `sticky` and the panel is `fixed`, so the
+                     * moment the rail is not pinned at the top of the viewport, 88px of parked panel
+                     * shows down the left edge of the page — rows, chevrons, a wedge of the Premium
+                     * card. Reported from a real session; reproduced by taking the rail out of sticky
+                     * and scrolling.
+                     *
+                     * Translating by the panel's width **plus the rail's** puts its trailing edge at 0
+                     * in the closed state, so there is nothing to reveal and nothing to align with.
+                     * The slide travels 88px further over the same 240ms, which is imperceptible and
+                     * arguably more correct: a drawer should come from outside the window, not from
+                     * behind a sibling.
+                     *
+                     * Below `md` the panel already starts at 0, so `-translate-x-full` is exactly
+                     * off-screen there and the override is `md:` only.
+                     */
+                    open
+                        ? 'translate-x-0'
+                        : [
+                              '-translate-x-full rtl:translate-x-full',
+                              'md:-translate-x-[calc(100%+var(--rail-width))]',
+                              'md:rtl:translate-x-[calc(100%+var(--rail-width))]',
+                          ].join(' '),
                 ].join(' ')}
             >
                 <MenuDrawer />

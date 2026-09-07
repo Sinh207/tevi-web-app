@@ -81,20 +81,98 @@ an app that already has the session. Measured on the dev server, the webview scr
 four cross-origin requests (two Firebase, `auth/v1/token/`, `auth/v1/me/`) to none, and from 56
 script chunks to 28.
 
-A screen that genuinely needs the account opts in **for its own subtree**:
+A screen that genuinely needs the account opts in **for its own subtree**, and mounts the
+**smallest** thing that answers its question. `/app/privacy-settings` — the app's account privacy
+screen, the three `nsfw_settings` switches and a way out — is the one that exists today, and it
+needs `/me` and nothing else:
 
 ```tsx
-// src/app/app/wallet/layout.tsx
-import { SessionProviders } from '@app/session-providers'
+// src/app/app/privacy-settings/layout.tsx
+import { AuthProvider } from '@features/auth'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-    // No splash: the native app has already shown its own.
-    return <SessionProviders showSplash={false}>{children}</SessionProviders>
+    return <AuthProvider>{children}</AuthProvider>
 }
 ```
 
+No `LoginDialog`, `AccountSwitcherDialog` or `SplashGate` either, and the first of those is the
+interesting omission. A signed-out webview screen does not raise a dialog — it renders the sign-in
+**in place of itself**, `<LoginScreen webview />`, because a modal is for interrupting something and
+there is nothing behind it to protect. That flag is what makes `/login`'s own screen safe inside
+this namespace: it takes its height from the shell rather than the viewport (see the safe-area note
+above), and it points the consent line's two links at `/app/terms` and `/app/privacy` instead of the
+website's, so the app never lands its user on the public site with the full web shell around it. A
+webview screen that renders **any** of the website's chrome should be read the same way: check
+where its links go.
+
+**Not `SessionProviders`.** That is the website's stack — Realtime, Permission, Balance, Payment
+and MyChannel on top of Auth — and each layer is a request or a socket a webview would open and
+never read: a user-room websocket, `permission/v3/…`, the balance, `my-channel/`. Measured on the
+dev server, the signed-in privacy screen touches exactly one W_API path (`GET /auth/v1/me/`) with
+`AuthProvider` alone. Reach for a second provider when a screen actually reads it — a wallet
+webview wants `BalanceProvider`, and a screen that must show the space's slug or verified badge
+wants `MyChannelProvider`, because those are channel fields and `/me` does not carry them.
+
+If a screen does need most of the stack, `SessionProviders` still takes `showSplash={false}` — the
+native app has already shown its own splash.
+
 Never for the whole namespace, and never by moving it back up: the legal screens are the
 majority of `/app/*` and they must stay free.
+
+### The screen that opts in to **nothing**: `/app/[channelSlug]/membership/[packageId]`
+
+The app's **card checkout** for a membership tier — and the counter-example to this whole section. It
+mounts no provider at all, not even `AuthProvider`, because on that integration point **the host owns
+the session**. The native app opens the webview to charge *its* account, having already shown its
+tier picker; the page is a renderer, not a client. So the account-scoped operations are asked of the
+app over the JS bridge (`shared/lib/native-bridge.ts`):
+
+```
+TeviJS.membershipCheckout({ packageId, priceInfo })  → the PaymentIntent
+TeviJS.myPaymentMethods({})                          → the saved cards
+TeviJS.createStripeCallback({ clientSecret })        → has it settled?
+TeviJS.membershipResult({ status })                  → dismiss me
+```
+
+Two things follow, and both are easy to get wrong in the other direction:
+
+- **Public reads stay on HTTP.** The tier (`billy/v3/subscription/channel/{slug}/packages/{id}/`) and
+  the Stripe publishable key need no session, and routing them through another process to fetch what
+  anyone can fetch buys nothing. Legacy makes the same split.
+- **Almost nothing else changes.** The state machine, the settle schedule, the payload parsers, the
+  Stripe loader and the card panel all come from `features/payment` unchanged — only the transport
+  differs. What that screen cannot use is `useCheckout`, `useSavedCards` and `useCheckoutCallback`,
+  each for one mechanical reason: they call `useAuth()`, which throws outside `AuthProvider`.
+
+This is **not** evidence that a webview has no session in general — `/app/privacy-settings` reads and
+writes `/me` through the same-origin token store and works. It is a statement about one integration:
+that flow was designed app-first, and the app is the client of record for it.
+
+#### Testing it without a device: `/app/dev-checkout`
+
+The screen is gated on a host being present, so in a browser it correctly draws `unsupported` and
+stops — which is right, and untestable. `app/app/dev-checkout/` supplies the missing half: a
+`TeviJSInterface` stub that answers the four messages by making **the same backend calls the app
+would**, as whatever account this browser is signed in as. Real tier, real cards, a real
+PaymentIntent, real Stripe Elements, a real settle including the `PM0003` branch. Give it a slug and
+a package id and press Run; every message that crosses the bridge is logged under the frame.
+
+Two things worth knowing about it:
+
+- **It is under `/app/`, not `/dev/`, and that is deliberate.** It was at `/dev/membership-checkout`
+  first, where the website's `PaymentProvider` sits above the page and its `useCheckoutCallback` won
+  the returning-3DS callback every time — settling it over HTTP and stripping the parameters before
+  the screen could look. Three attempts to win that race each lost to a different part of React's and
+  Next's ordering, and the deeper point is that a harness rendering this screen inside providers the
+  real route does not have is not testing the real screen.
+- **It does not prove the app's reply envelope.** The stub answers in the shape this client expects.
+  Whether a real host sends `data` as a JSON string, what its refusal codes look like, and which
+  fields of `priceInfo` it reads are **B85** — only a device answers those.
+
+It has already earned its keep: it is what surfaced the resume deadlock under React's development
+double-mount (the teardown aborted the settle and a once-flag declined to restart it, leaving
+*Processing your payment* on screen with no request in flight). No unit test had reached it; there is
+one now.
 
 You may not even need it. The token store hydrates itself on first read (`getAccessToken()` →
 `hydrate()`), so a screen that only *reads* with the session the app already has gets its bearer
@@ -104,12 +182,16 @@ gives it. What `AuthProvider` adds, and what you are choosing to go without, is:
 - **the device id.** `primeDeviceInfo()` / `initDeviceInfo()` run in its bootstrap and nowhere
   else, and every token-minting call carries `device_id` — including the **refresh**, whose body
   is `{ refresh_token, ...getDeviceInfo() }`. So reads work and then stop working the moment the
-  access token needs renewing. Mount `SessionProviders`, or prime the device yourself.
+  access token needs renewing. Mount `AuthProvider`, or prime the device yourself.
 - **the only listener for `auth:session-expired`.** The axios client still drops the dead account
   and emits; with no provider mounted, nothing clears the query cache or re-establishes an
   anonymous session, so the request simply fails. Inside a webview that is usually right — the
   native app owns re-auth — but it should be a decision, not a surprise.
-- the anonymous session itself, which a webview should not be minting: the app has one.
+- the anonymous session itself, which a webview should not be minting: the app has one. Note that
+  mounting `AuthProvider` **does** mint one on a cold device with no token in the same-origin store
+  — `/app/privacy-settings` accepts that (the anonymous account lands in its sign-in state, which
+  offers `LoginDialog`) because it *writes* `/me` and cannot go without the device id the refresh
+  needs. A read-only screen should prefer `primeDeviceInfo()` to a whole bootstrap.
 
 Two more notes for the opt-in path: the onboarding gate exempts `/app` by path
 ([`onboarding-gate.ts`](../src/features/channel/lib/onboarding-gate.ts)), so a creator without a

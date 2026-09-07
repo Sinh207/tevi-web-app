@@ -36,6 +36,10 @@ export default defineConfig({
             // `LoginForm` bails out of rendering the Google button without this
             // (login-form.tsx), so a component test would silently assert nothing.
             NEXT_PUBLIC_GOOGLE_CLIENT_ID: 'test-google-client-id',
+            // Same shape of silence one level along: the share sheet's Messenger row and the
+            // Facebook sign-in button both hide themselves without an app id, so a test that
+            // did not set one would assert against a list with a row quietly missing.
+            NEXT_PUBLIC_FACEBOOK_CLIENT_ID: 'fb-app-1',
         },
     },
 })

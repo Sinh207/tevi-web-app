@@ -58,8 +58,11 @@ export async function LegalPageView({
     document: LegalDocument
     /** Translation key for the document's name — the same one the host's bar shows. */
     titleKey: string
-    /** Translation key for the "last updated" line; interpolates `{{date}}`. */
-    lastUpdatedKey: string
+    /**
+     * Translation key for the "last updated" line; interpolates `{{date}}`. Omitted for a
+     * document that states no effective date — see `LegalDocument.effectiveDate`.
+     */
+    lastUpdatedKey?: string
     className?: string
     /** `from-md` when a mobile bar above already carries the title. */
     heading?: 'always' | 'from-md'
@@ -113,9 +116,13 @@ export async function LegalPageView({
                 >
                     {t(titleKey)}
                 </h1>
-                <p className="type-caption-meta text-center text-(--text-subtitle) md:type-body-default md:text-start md:text-(--text-body)">
-                    {t(lastUpdatedKey, { date: document.effectiveDate })}
-                </p>
+                {/* No date, no line: the mini app documents carry none, and `t()` would
+                    otherwise print "…effective from " with nothing after it. */}
+                {lastUpdatedKey && document.effectiveDate ? (
+                    <p className="type-caption-meta text-center text-(--text-subtitle) md:type-body-default md:text-start md:text-(--text-body)">
+                        {t(lastUpdatedKey, { date: document.effectiveDate })}
+                    </p>
+                ) : null}
             </header>
 
             {/* Mobile: chips above the copy, sticky under the host's bar. */}
@@ -150,6 +157,7 @@ export async function LegalPageView({
                 {/* Legal documents are long and read top to bottom; the rail is pinned for
                     desktop, and this is the phone's way out of the last section. */}
                 <a
+                    data-testid="legal-back-to-top"
                     href={`#${TOP_ID}`}
                     className="type-dense-emphasis mt-8 inline-flex items-center gap-2 rounded-(--radius-md) text-(--text-body) no-underline transition-colors hover:text-(--text-title) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring) print:hidden"
                 >

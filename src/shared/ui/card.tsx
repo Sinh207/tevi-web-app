@@ -29,9 +29,26 @@ export type CardType = 'basic' | 'premium' | 'balance-overview' | 'balance' | 'b
  * The Dark-pin tokens the premium card restates locally. `--text-subtitle` is the
  * one Figma left out of its own list: without it a premium card carrying a subtitle
  * paints Zinc 700 dark-on-purple in Light mode.
+ *
+ * ## Three more, added here rather than copied from the DS
+ *
+ * The DS's list stops at the tokens the *Figma node's own text* happened to use, so it is
+ * incomplete for a card that carries anything else. The gradient runs #4316a0 → #371282 →
+ * #501bc0, so anything painted on it has to be measured against all three stops (WCAG 1.4.11
+ * wants 3:1 for a glyph that means something):
+ *
+ * - `--text-body` and `--icon-secondary` are the chevron and the secondary glyphs. Light Zinc
+ *   500 (#71717a) on that gradient is **1.9–2.8:1** — the drawer's premium account row had a
+ *   drilldown chevron nobody could see. Both are `--zinc-600` under the Dark pin, i.e. #a1a1aa,
+ *   which is 3.6–5.2:1. Verbatim from the Dark block, exactly as the six above are.
+ * - `--text-link` is the odd one out and the reason this comment is long: it maps to
+ *   Accents/Indigo/Active, which is **#007aff in both modes**, so the Dark pin cannot fix it —
+ *   2.3–3.3:1, and the Left Bar's copy-ID affordance is the one glyph in the card the DS says
+ *   must stay blue. The value used is Accents/Indigo/**Focus** as the Dark ramp defines it
+ *   (#53aaff, 3.8–5.5:1) — the library's own blue for a dark surface, not a new colour.
  */
 const PREMIUM_TOKENS =
-    '[--primary-300:#371282] [--primary-400:#4316a0] [--primary-500:#501bc0] [--accents-yellow:#ffe537] [--text-title:#ffffff] [--text-subtitle:#d4d4d8]'
+    '[--primary-300:#371282] [--primary-400:#4316a0] [--primary-500:#501bc0] [--accents-yellow:#ffe537] [--text-title:#ffffff] [--text-subtitle:#d4d4d8] [--text-body:#a1a1aa] [--icon-secondary:#a1a1aa] [--text-link:#53aaff]'
 
 /**
  * The same technique, for the same reason, on the balance card — and here it is
@@ -50,6 +67,13 @@ const PREMIUM_TOKENS =
  * take them from the Dark block of the DS's own `colors_and_type.css`. This is a pinned
  * *surface*, not a themed one — the money card is black on purpose, the way a bank app's
  * is.
+ *
+ * ⚠ **Anything placed in this card must use one of the six.** A token that is not pinned still
+ * follows the theme, and on a surface that does not, that means it inverts *against* its own
+ * background. `--text-on-primary` is the one that has actually bitten: `--white` in Light and
+ * `--black` in Dark, so `/my-wallet`'s help glyph rendered black-on-black in Dark and looked
+ * correct in Light only by coincidence (see `balance-help-button.tsx`). If a child needs an ink
+ * the six do not cover, pin a seventh here rather than reaching for a themed token.
  */
 const BALANCE_TOKENS =
     '[--zinc-50:#09090b] [--zinc-200:#27272a] [--text-title:#ffffff] [--text-subtitle:#a1a1aa] [--icon-default:#ffffff] [--button-secondary-border:#ffffff1a]'

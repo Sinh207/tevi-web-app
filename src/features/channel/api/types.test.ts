@@ -1,11 +1,15 @@
+import { miniAppFromChannel } from '@features/mini-app'
 import { describe, expect, it } from 'vitest'
 import {
-    blockedUserName,
+    isFollowedChannelMuted,
+    listUserName,
     normalizeBlockedAccounts,
     normalizeCategoryNames,
     normalizeChannel,
     normalizeChannelActivity,
     normalizeChannelStats,
+    normalizeFollowedChannels,
+    normalizeFollowedLives,
     normalizeSocialPlatforms,
     parseApiMessage,
     parseChannelFieldErrors,
@@ -185,13 +189,13 @@ describe('normalizeBlockedAccounts', () => {
     })
 })
 
-describe('blockedUserName', () => {
+describe('listUserName', () => {
     const base = normalizeBlockedAccounts([{ id: 'b', user: { id: 'u' } }])[0].user
 
     it('prefers display_name, falls back to name, then to empty', () => {
-        expect(blockedUserName({ ...base, display_name: 'Ada', name: 'ada' })).toBe('Ada')
-        expect(blockedUserName({ ...base, display_name: null, name: 'ada' })).toBe('ada')
-        expect(blockedUserName(base)).toBe('')
+        expect(listUserName({ ...base, display_name: 'Ada', name: 'ada' })).toBe('Ada')
+        expect(listUserName({ ...base, display_name: null, name: 'ada' })).toBe('ada')
+        expect(listUserName(base)).toBe('')
     })
 })
 
@@ -430,5 +434,168 @@ describe('parseApiMessage', () => {
         expect(parseApiMessage({ message: '   ' }, 400)).toBeNull()
         expect(parseApiMessage({ message: 42 }, 400)).toBeNull()
         expect(parseApiMessage(null, 400)).toBeNull()
+    })
+})
+
+/**
+ * The followed list's rows, and the two filters that decide whether a row can be *acted on*
+ * rather than merely displayed.
+ */
+describe('normalizeFollowedChannels', () => {
+    const ok = {
+        id: 7,
+        slug: 'ada',
+        name: 'Ada',
+        images: { thumb: 'https://cdn/a.png' },
+        last_activity_at: 1_755_000_000,
+        pin: true,
+    }
+
+    it('parses a row and normalises the id to a string', () => {
+        const [row] = normalizeFollowedChannels([ok])
+        expect(row?.id).toBe('7')
+        expect(row?.slug).toBe('ada')
+        expect(row?.pin).toBe(true)
+        expect(row?.images.thumb).toBe('https://cdn/a.png')
+    })
+
+    /**
+     * The slug is what every action on the row addresses — pin, unpin, mute, unfollow and the link
+     * are all `.../{slug}/...`. A row without one is a name with four menu items that must fail.
+     */
+    it('drops a row with no slug, which nothing could act on', () => {
+        expect(normalizeFollowedChannels([{ ...ok, slug: '' }])).toEqual([])
+        expect(normalizeFollowedChannels([{ ...ok, slug: null }])).toEqual([])
+    })
+
+    /** One odd row must not become an empty list — the `.catch([])` trapdoor `categories` fell
+     *  through. */
+    it('keeps the usable rows beside an unusable one', () => {
+        expect(normalizeFollowedChannels([ok, null, { ...ok, slug: 'grace' }])).toHaveLength(2)
+    })
+
+    it('answers an empty list for anything that is not an array', () => {
+        expect(normalizeFollowedChannels(undefined)).toEqual([])
+        expect(normalizeFollowedChannels({ results: [] })).toEqual([])
+    })
+
+    /** Epoch seconds are what this endpoint sends; the schema's shared normaliser turns them into
+     *  something `new Date()` agrees with. */
+    it('normalises the activity timestamp', () => {
+        const [row] = normalizeFollowedChannels([ok])
+        expect(Number.isNaN(new Date(row?.last_activity_at ?? '').getTime())).toBe(false)
+    })
+})
+
+/**
+ * The tri-state that the UI is not. Getting this backwards paints a mute glyph on every row, which
+ * is what legacy ships — see the field's own note.
+ */
+describe('isFollowedChannelMuted', () => {
+    const [base] = normalizeFollowedChannels([{ id: '1', slug: 'ada' }])
+
+    it('is muted only when the flag is explicitly false', () => {
+        const [muted] = normalizeFollowedChannels([
+            { id: '1', slug: 'ada', notification_settings: { notification: false } },
+        ])
+        expect(muted && isFollowedChannelMuted(muted)).toBe(true)
+    })
+
+    it('is not muted when the block is absent — muting is opt-in', () => {
+        expect(base && isFollowedChannelMuted(base)).toBe(false)
+    })
+
+    it('is not muted when the flag is true', () => {
+        const [on] = normalizeFollowedChannels([
+            { id: '1', slug: 'ada', notification_settings: { notification: true } },
+        ])
+        expect(on && isFollowedChannelMuted(on)).toBe(false)
+    })
+})
+
+/** The Live now strip's rows — dropped when the card could be drawn but not navigated to. */
+describe('normalizeFollowedLives', () => {
+    const live = {
+        code: 'abc123',
+        title: 'Morning stream',
+        start_at: 1_755_000_000,
+        images: { banner: 'https://cdn/b.png' },
+        channel: { slug: 'ada', name: 'Ada', images: { thumb: 'https://cdn/a.png' } },
+    }
+
+    it('parses a row with its nested channel', () => {
+        const [row] = normalizeFollowedLives([live])
+        expect(row?.code).toBe('abc123')
+        expect(row?.channel?.slug).toBe('ada')
+        expect(row?.images.banner).toBe('https://cdn/b.png')
+    })
+
+    /** No code, no `/@{slug}/event/{code}` — the card would be a banner that does nothing. */
+    it('drops a row with no code', () => {
+        expect(normalizeFollowedLives([{ ...live, code: null }])).toEqual([])
+    })
+
+    /** Nothing to attribute the stream to and no space to link the avatar at. */
+    it('drops a row whose channel is missing or slugless', () => {
+        expect(normalizeFollowedLives([{ ...live, channel: null }])).toEqual([])
+        expect(normalizeFollowedLives([{ ...live, channel: { slug: '' } }])).toEqual([])
+    })
+
+    /**
+     * The event fields have to survive the extend, or `liveAccess` reads `undefined` and every
+     * gated stream renders as open.
+     */
+    it('keeps the gating fields the shared access rules read', () => {
+        const [row] = normalizeFollowedLives([
+            { ...live, price: '3.00', required_packages: ['pkg'], purchased: false },
+        ])
+        expect(row?.price).toBe('3.00')
+        expect(row?.required_packages).toEqual(['pkg'])
+        expect(row?.purchased).toBe(false)
+    })
+})
+
+/**
+ * The **structural contract** between a followed row and `features/mini-app`, which is the thing
+ * that would break silently: `followedChannelSchema` is a `looseObject`, so the mini-app fields
+ * survive the parse whether or not they are declared — they just arrive typed `unknown`, and a
+ * missing declaration makes the structural match fail with nothing on screen to say why.
+ *
+ * So this asserts the whole path a real row takes: parsed by this feature, handed to the other
+ * feature's own rule, and turned into a config the player would accept.
+ */
+describe('a followed row satisfies MiniAppChannelLike', () => {
+    const parse = (fields: Record<string, unknown>) =>
+        normalizeFollowedChannels([{ id: '1', slug: 'lin', name: 'Lin', ...fields }])[0]
+
+    it('builds a config for a space that has an app', () => {
+        const row = parse({
+            has_mini_app: true,
+            mini_app_url: 'https://example.com/app',
+            mini_app_id: 'app-1',
+            shareable_url: 'https://tevi.com/@lin',
+            images: { thumb: 'https://cdn/a.png' },
+        })
+        expect(miniAppFromChannel(row, 'Mini app')).toMatchObject({
+            id: 'app-1',
+            name: 'Lin',
+            url: 'https://example.com/app',
+        })
+    })
+
+    /**
+     * `has_mini_app` alone is not the question. It has been seen true with an empty `mini_app_url`,
+     * and the row must draw no button for it — the flag with nothing behind it would open a blank
+     * frame. The rule lives in `miniAppFromChannel`; this pins that the parsed row reaches it intact.
+     */
+    it('builds nothing from the flag alone', () => {
+        expect(miniAppFromChannel(parse({ has_mini_app: true }), 'Mini app')).toBeNull()
+        expect(
+            miniAppFromChannel(parse({ has_mini_app: true, mini_app_url: '' }), 'Mini app'),
+        ).toBeNull()
+    })
+
+    it('builds nothing for the ordinary space', () => {
+        expect(miniAppFromChannel(parse({}), 'Mini app')).toBeNull()
     })
 })

@@ -79,6 +79,7 @@ export function IdentityOutcome({ state }: { state: 'pending' | 'verified' }) {
              * the DS's own wide buttons sit at.
              */}
             <Button
+                data-testid="identification-back-to-home"
                 id="identification-back-to-home-btn"
                 size="large"
                 className={cn('mt-2 min-w-[200px] active:not-disabled:scale-[0.99]', RISE)}

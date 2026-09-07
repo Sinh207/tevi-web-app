@@ -1,6 +1,7 @@
 'use client'
 
 import { toChannelPath, useMyChannel } from '@features/channel'
+import { useMiniAppCoversScreen } from '@features/mini-app'
 import { cn } from '@shared/lib/utils'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
@@ -33,7 +34,21 @@ export function TabBarShell({ children }: { children: ReactNode }) {
      * treats as no.
      */
     const { myChannel } = useMyChannel()
-    const show = isTabDestination(pathname, myChannel ? toChannelPath(myChannel.slug) : null)
+    /*
+     * A mini app is running full-screen over this route, so the bar stands down — both the bar and
+     * the 84px it reserves. The player is `z-40` (below every dialog it can raise) and this bar is
+     * `z-50`, so without this the app's navigation would sit on top of a third-party application
+     * that has covered the screen. `useMiniAppCoversScreen` carries the full reasoning; the short
+     * version is that the two z-indices cannot both be right and this is the one that yields.
+     *
+     * Reserving no space is the other half: the player is `fixed`, so the page underneath is not
+     * being read, and leaving 84px of padding under it would show as a gap the moment the player
+     * closes and the bar comes back — which happens in the same commit.
+     */
+    const coveredByMiniApp = useMiniAppCoversScreen()
+    const show =
+        !coveredByMiniApp &&
+        isTabDestination(pathname, myChannel ? toChannelPath(myChannel.slug) : null)
 
     return (
         <>
@@ -83,7 +98,10 @@ export function TabBarShell({ children }: { children: ReactNode }) {
                 {children}
             </div>
             {show && (
-                <div className="fixed inset-x-0 bottom-0 z-50 md:hidden print:hidden">
+                <div
+                    data-viewport="md-down"
+                    className="fixed inset-x-0 bottom-0 z-50 md:hidden print:hidden"
+                >
                     <AppTabBar />
                 </div>
             )}

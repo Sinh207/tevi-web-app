@@ -10,9 +10,12 @@ import {
  *
  * Two things happen here and both matter:
  *
- * - **The fold keeps `anonymous` alive.** The backend does not always restate it, and
- *   `mergeAccountUser` is what stops a refresh from silently promoting an anonymous
- *   session to a real one (which used to bounce the visitor off `/login`).
+ * - **The fold keeps `anonymous` alive.** `GET v1/me/` does echo `anonymous: true`
+ *   (B1, answered), so on the read path this is now belt *and* braces. It stays because
+ *   the other caller is the **write** path — `POST v1/me/` answers with its own body, and
+ *   nothing has confirmed that one restates the flag. `mergeAccountUser` is what stops
+ *   either from silently promoting an anonymous session to a real one, which used to let
+ *   guarded actions through and bounce the visitor off `/login`.
  * - **The write-back is what lets the account switcher and `purgeAnonymousAccounts`
  *   work without a request** — they read the stored snapshot, not the query cache.
  *

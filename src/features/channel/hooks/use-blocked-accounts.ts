@@ -2,6 +2,7 @@
 
 import { useAuth } from '@features/auth'
 import { useTranslation } from '@shared/i18n/use-translation'
+import type { PageCursor } from '@shared/lib/api/page-cursor'
 import {
     type InfiniteData,
     useInfiniteQuery,
@@ -11,13 +12,12 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { channelApi, channelKeys } from '../api/channel-api'
-import { type BlockedAccount, blockedUserName } from '../api/types'
+import { type BlockedAccount, listUserName } from '../api/types'
 import {
     type BlockedAccountsPage,
     nextBlockedCursor,
     removeBlockedAccount,
 } from '../lib/blocked-accounts-page'
-import type { ThreadCursor } from '../lib/next-page-param'
 
 /**
  * The blocked-accounts screen's whole state: the paginated list, the unblock, the undo, and
@@ -51,6 +51,21 @@ import type { ThreadCursor } from '../lib/next-page-param'
  * undo re-blocks and refetches rather than putting the old row back: a new block is a new
  * record with a new id and its own position in the server's order, and re-inserting the old
  * one would show a row whose Unblock button no longer refers to anything.
+ *
+ * ## The search is the server's, and the debounce is here
+ *
+ * `q` goes on the request (B76) rather than filtering `entries` in the browser, because the
+ * list is paginated: a client-side filter can only search the pages that happen to be loaded,
+ * so a name on page four is missing until the reader scrolls past it — which reads as the
+ * field being broken rather than as pagination.
+ *
+ * The debounce is in the hook and not in the field for the reason `useMyMemberships` states:
+ * the term is **in the query key**, so a key minted per keystroke is a request per keystroke
+ * plus a cache entry per prefix. `SearchBar` is a controlled input with no timing of its own;
+ * this hook holds the raw value it renders and the settled value the key uses. No character
+ * floor — the debounce is the throttle, and a floor would silently show the *unfiltered* list
+ * until the third character (and is unusable for the CJK locales this app ships, where a
+ * display name is frequently one or two characters).
  */
 
 /**
@@ -59,15 +74,38 @@ import type { ThreadCursor } from '../lib/next-page-param'
  */
 const EXIT_MS = 320
 
+/** Long enough that a typed word is one request, short enough to feel like the list follows. */
+const SEARCH_DEBOUNCE_MS = 400
+
 export interface UseBlockedAccountsResult {
     /** Every loaded row, flattened — the page structure never reaches the component. */
     entries: BlockedAccount[]
     /** The server's total, not the number loaded. `0` until the first page lands. */
     total: number
+    /** What the field shows — updated on every keystroke, unlike the term the request carries. */
+    search: string
+    setSearch: (value: string) => void
+    /**
+     * Whether the field is worth rendering at all.
+     *
+     * The hook decides it because the hook is what knows which state the screen is in: a
+     * search box above a sign-in prompt, above "you have blocked nobody", or above a list
+     * that failed to load with nothing typed is a control with nothing to act on. It stays
+     * `true` through the *initial* load (the field is part of the layout the skeleton stands
+     * in for) and through a search that matched nothing — which is the state that most needs
+     * it, since clearing the field is the way out.
+     */
+    canSearch: boolean
     isLoading: boolean
     isError: boolean
-    /** `true` only once the first page came back **and** held nothing. */
+    /**
+     * `true` only once the first page came back **and** held nothing **and** nothing was
+     * typed. A search that matched nothing is `isSearchEmpty`: they read differently and
+     * offering "you have not blocked anyone yet" over a filtered list is simply wrong.
+     */
     isEmpty: boolean
+    /** Nothing matched the search term. */
+    isSearchEmpty: boolean
     /** The list needs a real account; an anonymous session has no blocks to show. */
     isSignedOut: boolean
     refetch: () => void
@@ -92,19 +130,40 @@ export function useBlockedAccounts(): UseBlockedAccountsResult {
     const queryClient = useQueryClient()
     const { t } = useTranslation()
 
+    /** What the field renders. */
+    const [search, setSearch] = useState('')
+    /** The settled term — what the query key and the request carry. */
+    const [q, setQ] = useState('')
+
+    /*
+     * Clearing applies **at once**: there is no request to save (the unfiltered list is
+     * already in the cache under its own key), and 400ms of stale filtered rows after
+     * pressing cancel reads as the button not working.
+     */
+    useEffect(() => {
+        const next = search.trim()
+        if (next === '') {
+            setQ('')
+            return
+        }
+        const timer = setTimeout(() => setQ(next), SEARCH_DEBOUNCE_MS)
+        return () => clearTimeout(timer)
+    }, [search])
+
     /**
      * Memoised, and it is not a micro-optimisation: `channelKeys.blocks` builds a **new array**
      * every call, so an un-memoised key would give `finalizeExit` a new identity on every
      * render — and the effect below, which has to run its cleanup exactly once per account, is
-     * keyed on that identity. Derived from a primitive, so it changes only when the account does.
+     * keyed on that identity. Derived from primitives, so it changes only when the account or
+     * the settled term does.
      */
-    const queryKey = useMemo(() => channelKeys.blocks(activeId), [activeId])
+    const queryKey = useMemo(() => channelKeys.blocks(activeId, q), [activeId, q])
 
     const query = useInfiniteQuery({
         queryKey,
-        initialPageParam: null as ThreadCursor | null,
+        initialPageParam: null as PageCursor | null,
         queryFn: ({ pageParam, signal }) =>
-            channelApi.getBlockedAccounts({ cursor: pageParam, accountId: activeId, signal }),
+            channelApi.getBlockedAccounts({ cursor: pageParam, q, accountId: activeId, signal }),
         getNextPageParam: (last, _pages, lastParam) => nextBlockedCursor(last, lastParam),
         enabled: isAuthenticated,
     })
@@ -118,10 +177,26 @@ export function useBlockedAccounts(): UseBlockedAccountsResult {
     const finalizeExit = useCallback(
         (id: string) => {
             exitTimers.current.delete(id)
-            queryClient.setQueryData<InfiniteData<BlockedAccountsPage, ThreadCursor | null>>(
+            queryClient.setQueryData<InfiniteData<BlockedAccountsPage, PageCursor | null>>(
                 queryKey,
                 data => removeBlockedAccount(data, id),
             )
+            /*
+             * The surgery above is for the list on screen; this is for the *other* search
+             * terms' lists, which still hold the row. `refetchType: 'none'` is what keeps it
+             * from undoing the removal it just made: it marks the entries stale so each is
+             * refetched the next time it is mounted, rather than refetching the mounted one
+             * now and replacing the surgically-corrected pages with the server's — which,
+             * mid-exit, would put the row back for a frame.
+             *
+             * Cheaper than the alternative of walking every cached term and editing it: the
+             * only entry a reader can see is the one they are looking at, and it is already
+             * exact.
+             */
+            queryClient.invalidateQueries({
+                queryKey: channelKeys.blocksAll(activeId),
+                refetchType: 'none',
+            })
             setExitingIds(previous => {
                 if (!previous.has(id)) return previous
                 const next = new Set(previous)
@@ -129,7 +204,7 @@ export function useBlockedAccounts(): UseBlockedAccountsResult {
                 return next
             })
         },
-        [queryClient, queryKey],
+        [activeId, queryClient, queryKey],
     )
 
     /**
@@ -144,9 +219,10 @@ export function useBlockedAccounts(): UseBlockedAccountsResult {
      *
      * `setQueryData` is safe after unmount — it is a cache write, not a React state update — and
      * the `setExitingIds` inside `finalizeExit` is a no-op on an unmounted component under React
-     * 18+, warning included. The cleanup depends on `finalizeExit`, which is stable per account,
-     * so it runs at exactly two moments: unmount, and an account switch (where the key it
-     * flushes into is still the departing account's — which is the correct one).
+     * 18+, warning included. The cleanup depends on `finalizeExit`, which is stable per account
+     * **and per search term**, so it runs at exactly three moments: unmount, an account switch,
+     * and a settled search change. In all three the key it flushes into is the *departing* one —
+     * which is the correct one, since that is the list the row was in.
      */
     useEffect(() => {
         const timers = exitTimers.current
@@ -176,8 +252,9 @@ export function useBlockedAccounts(): UseBlockedAccountsResult {
         mutationFn: (entry: BlockedAccount) => channelApi.blockUser(entry.user.id),
         onSuccess: (_data, entry) => {
             // Refetch rather than re-insert: the new block is a new record with a new id, and
-            // the server decides where it sits in the order.
-            queryClient.invalidateQueries({ queryKey })
+            // the server decides where it sits in the order. Every term's list, not just the
+            // one on screen — the account is back in all of them that match it.
+            queryClient.invalidateQueries({ queryKey: channelKeys.blocksAll(activeId) })
             if (entry.user.slug) {
                 queryClient.invalidateQueries({
                     queryKey: channelKeys.detail(entry.user.slug, activeId),
@@ -209,7 +286,7 @@ export function useBlockedAccounts(): UseBlockedAccountsResult {
                 })
             }
 
-            const name = blockedUserName(entry.user) || entry.user.slug
+            const name = listUserName(entry.user) || entry.user.slug
             toast.success(
                 name
                     ? t('blocked_accounts_unblocked', { name })
@@ -279,12 +356,28 @@ export function useBlockedAccounts(): UseBlockedAccountsResult {
         fetchNextPage()
     }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
+    const settledEmpty = !query.isLoading && !query.isError && entries.length === 0
+
     return {
         entries,
         total: query.data?.pages[0]?.count ?? 0,
+        search,
+        setSearch,
+        /*
+         * Three terminal states hide the field, and each is a control with nothing to act on:
+         * no account, nothing blocked at all, or a first load that failed with nothing typed.
+         * The error case is qualified by `search` rather than by `q`, so a failed *search*
+         * keeps the field — otherwise the request that failed is also the one the reader
+         * cannot undo.
+         */
+        canSearch:
+            isAuthenticated &&
+            !(settledEmpty && q === '') &&
+            !(query.isError && search.trim() === ''),
         isLoading: query.isLoading,
         isError: query.isError,
-        isEmpty: !query.isLoading && !query.isError && entries.length === 0,
+        isEmpty: settledEmpty && q === '',
+        isSearchEmpty: settledEmpty && q !== '',
         isSignedOut: !isAuthenticated,
         refetch: () => {
             query.refetch()

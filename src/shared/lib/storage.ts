@@ -30,12 +30,15 @@ export const STORAGE_KEYS = {
     /** theme (next-themes storageKey) */
     theme: `${NS}.theme`,
     /**
-     * Channels whose sensitive content the viewer has agreed to see — a JSON map of
-     * `accountId -> slug[]`, so one account's choice is not another's.
+     * Spaces whose sensitive content a viewer has agreed to see — a JSON map of
+     * `accountId -> { slug: confirmedAtMs }`. Written by `shared/lib/nsfw-consent.ts`,
+     * which owns the pruning and is what `AuthProvider.forgetAccount` calls to drop an
+     * account's answers with the rest of its traces.
      *
-     * Declared here rather than built at the call site: legacy composes its key by concatenation
-     * (`${currentUser?.id}_nsfw_confirmed_list`), which means it is not in any registry, cannot be
-     * migrated, and produces a literal `undefined_…` key for an anonymous visitor.
+     * One registered key for everybody, rather than legacy's one key per account
+     * (`${currentUser?.id}_nsfw_confirmed_list`), which is not in any registry, cannot
+     * be migrated, and produces a literal `undefined_…` key an anonymous visitor
+     * shares with every other guest on the device.
      */
     nsfwConfirmed: `${NS}.channel.nsfw_confirmed`,
     /**
@@ -51,6 +54,29 @@ export const STORAGE_KEYS = {
      * `decimal_digits` changed upstream would keep formatting with the old one forever.
      */
     walletCurrency: `${NS}.wallet.currency`,
+    /**
+     * What each account has searched for — a JSON map of `accountId -> { term, at }[]`, one
+     * registered key for everybody, for exactly the reason `nsfwConfirmed` above is one.
+     *
+     * Legacy writes `` `${currentUser.id}_recent_searches` ``: unregistered, unmigratable, and a
+     * silent no-op for anyone without a real account, so an anonymous visitor's recents never
+     * save at all. `shared/lib/search-recents.ts` owns the shape, the cap and the de-duplication,
+     * and `AuthProvider.forgetAccount` drops an account's history with the rest of its traces —
+     * which is the whole reason it is `shared/` and not `features/search`.
+     */
+    searchRecents: `${NS}.search.recents`,
+    /**
+     * The version each mini app last reported — a JSON map of `appId -> { version, at }`.
+     *
+     * Not per account, and deliberately: this is the **device's** cache state, the same thing the
+     * native hosts keep in UserDefaults / SharedPreferences under `miniapp_{appId}_version`
+     * (`docs/MINI_APP.md` §9). Which of the ten signed-in accounts is looking at the app has no
+     * bearing on whether the browser is holding a stale copy of its document.
+     *
+     * `at` is what expires a record: an app nobody has opened in a month should not pin a `v` in
+     * its URL forever. `features/mini-app/lib/app-version.ts` owns the shape, the TTL and the cap.
+     */
+    miniAppVersions: `${NS}.miniapp.versions`,
 } as const
 
 export const storage = {

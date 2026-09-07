@@ -39,7 +39,7 @@ export default async function MyWalletPage() {
             <div className="sticky top-0 z-20 bg-(--background)">
                 <PageBackBar title={t('balance_wallet_title')} className={MY_WALLET_CONTAINER} />
             </div>
-            <div className={`${MY_WALLET_CONTAINER} flex flex-1 flex-col pt-2 pb-6`}>
+            <div className={`${MY_WALLET_CONTAINER} flex flex-1 flex-col pb-6`}>
                 <MyWalletView />
             </div>
         </main>

@@ -91,20 +91,33 @@ describe('walletTransactionLabelKey', () => {
 })
 
 describe('walletTransactionIcon', () => {
-    it('gives every known type its own glyph', () => {
+    /*
+     * The five types `web-app` has no glyph for — they fall through to its `USDIcon`, and so must fall
+     * through here. Pinned because the previous version of this table gave each of them a glyph of its
+     * own, which read as a richer ledger and was simply a different app's.
+     */
+    const UNLISTED = ['charge', 'commission', 'payout', 'payout_failure', 'platform_earning']
+
+    it('gives every type web-app draws a glyph for one of its own', () => {
         for (const filter of walletTransactionFilters()) {
             if (filter.key === ALL_WALLET_TRANSACTIONS) continue
-            expect(walletTransactionIcon(filter.key)).not.toBe('document-list')
+            if (UNLISTED.includes(filter.key)) continue
+            expect(walletTransactionIcon(filter.key)).not.toBe('dollar-circle')
         }
     })
 
-    // A payout and a failed payout are the pair a reader most needs to tell apart.
-    it('distinguishes a payout from a failed one', () => {
-        expect(walletTransactionIcon('payout')).not.toBe(walletTransactionIcon('payout_failure'))
+    it('falls back by unit, as legacy dispatches on currency', () => {
+        for (const type of [...UNLISTED, 'space_tier_bonus', '']) {
+            expect(walletTransactionIcon(type)).toBe('dollar-circle')
+            expect(walletTransactionIcon(type, true)).toBe('star')
+        }
     })
 
-    it('falls back to a neutral glyph for an unknown type', () => {
-        expect(walletTransactionIcon('space_tier_bonus')).toBe('document-list')
-        expect(walletTransactionIcon('')).toBe('document-list')
+    /*
+     * A listed type keeps its glyph whatever the row's unit is: a `conversion` has a leg in each, and
+     * the type is what the row *is* — the unit only decides the fallback.
+     */
+    it('does not let the unit override a listed type', () => {
+        expect(walletTransactionIcon('refund', true)).toBe(walletTransactionIcon('refund', false))
     })
 })

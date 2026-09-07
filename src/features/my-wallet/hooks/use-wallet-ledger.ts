@@ -1,13 +1,16 @@
 'use client'
 
 import { useAuth } from '@features/auth'
-import { formatLedgerAmount, isStarEntry } from '@features/balance'
+import { formatLedgerAmount, isStarEntry, type LedgerEntry } from '@features/balance'
 import type { LedgerGroupModel } from '@shared/components/ledger'
+import { TEVI_STAR_SRC } from '@shared/components/star-mark'
+import { TEVI_COIN_SRC } from '@shared/components/tevi-coin-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatLedgerDateTime, formatLedgerMonth, ledgerMonthKey } from '@shared/lib/ledger-time'
-import type { Currency } from '@shared/lib/money'
+import { type Currency, formatPlainAmount } from '@shared/lib/money'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import type { TeviCoinBonus } from '../api/tevi-coin-api'
 import {
     WALLET_LEDGER_PAGE_SIZE,
     walletLedgerApi,
@@ -19,9 +22,27 @@ import {
     walletTransactionIcon,
     walletTransactionLabelKey,
 } from '../lib/wallet-transaction-types'
+import { useLedgerBonuses } from './use-ledger-bonuses'
 
 export interface UseWalletLedgerResult {
     groups: LedgerGroupModel[]
+    /**
+     * The rows behind `groups`, unformatted — what the detail sheet needs.
+     *
+     * `groups` holds finished strings, because `shared/components/ledger` takes finished strings; the
+     * sheet needs the DTO (the id, the raw amount, the type slug). Rather than parse the display row
+     * back, the hook hands out both views of the same page cache.
+     */
+    entries: LedgerEntry[]
+    /**
+     * `billyTxId → Tevi Coin bonus`, for the rows currently loaded — **B83**.
+     *
+     * Handed out as well as applied to `groups`, because the **detail sheet** needs it too and asking
+     * for it a second time there would be a second request per page. Empty until the lookup answers,
+     * and empty for good if it fails: the bonus is an annotation, so its absence costs a figure and
+     * never the history.
+     */
+    bonuses: Map<string, TeviCoinBonus>
     /** The active filter slug. `''` is "All transaction". */
     filter: string
     setFilter: (type: string) => void
@@ -99,10 +120,56 @@ export function useWalletLedger({
          */
         getNextPageParam: (lastPage, _pages, lastPageParam) =>
             lastPage.length === WALLET_LEDGER_PAGE_SIZE ? lastPageParam + 1 : undefined,
+        /*
+         * Five minutes, not the 60s default, and the socket is why. Every movement of Star or money
+         * emits `balance_change`, which invalidates `balanceKeys.all` — and this list's key is
+         * *under* that, so it refetches the moment the figure it explains moves. A `staleTime` here
+         * buys no freshness the socket does not already provide; all it does is re-request on a
+         * remount, and this is an infinite list, so that costs **every page the reader scrolled**.
+         */
+        staleTime: 5 * 60_000,
         enabled: isAuthenticated && Boolean(activeId),
     })
 
+    /*
+     * A synchronous latch beside the query's own flag, because that flag is **last render's**.
+     * `isFetchingNextPage` only becomes true after a re-render, so two calls in the *same* tick both
+     * read `false` and both fetch — which is exactly what an intersection observer does when it
+     * reports several entries for one crossing. Measured before this latch: three calls in one act
+     * produced three requests for page 2.
+     *
+     * A ref rather than state: it must be true for the next caller *now*, and it must not cause a
+     * render of its own.
+     */
+    const isAdvancing = useRef(false)
+
     const entries = useMemo(() => query.data?.pages.flat() ?? [], [query.data])
+
+    /*
+     * The Tevi Coin bonus on each loaded row — **B83**, answered. A separate query on purpose: it is an
+     * annotation, so a dApp outage must cost the reader the figure and not their history. See
+     * `use-ledger-bonuses.ts`, which also explains why the ids are re-asked as pages accumulate.
+     */
+    /*
+     * The ids to ask the bonus lookup about, **grouped by page and never flattened**.
+     *
+     * One request per page is what `web-app` sends, and sending the accumulated set instead is what
+     * stopped the bonuses appearing at all — see `useLedgerBonuses`. `InfiniteData.pages` already has
+     * the grouping; flattening it here would throw away the only thing that mattered.
+     *
+     * **`txId`, never `id`.** `id` is the list key and falls back to `type + timestamp` when billy sent
+     * none, so mapping it put a fabricated id into `?billy_tx_id=` — a lookup for a transaction that
+     * does not exist. `filter(Boolean)` drops rows with no real id: they cannot carry a bonus, and
+     * asking about them is asking about nothing.
+     */
+    const billyTxIdPages = useMemo(
+        () =>
+            (query.data?.pages ?? []).map(page =>
+                page.map(entry => entry.txId).filter((id): id is string => Boolean(id)),
+            ),
+        [query.data],
+    )
+    const { bonuses } = useLedgerBonuses(billyTxIdPages)
 
     const groups = useMemo(() => {
         const out: LedgerGroupModel[] = []
@@ -131,10 +198,35 @@ export function useWalletLedger({
                     locale: currentLanguage,
                 }),
                 isCredit: entry.amount >= 0,
-                icon: walletTransactionIcon(entry.type),
+                icon: walletTransactionIcon(entry.type, isStarEntry(entry.currency)),
                 amountMark: isStarEntry(entry.currency)
-                    ? { src: '/tevi-star.png', size: 20 }
+                    ? { src: TEVI_STAR_SRC, size: 20 }
                     : undefined,
+                /*
+                 * `undefined` for the rows without one, which is most of them — see `LedgerRowModel`.
+                 *
+                 * The figure is formatted **here** rather than in the row, for the reason the whole
+                 * mapping step exists: this is the only place with the payload, the locale and the
+                 * vocabulary at once. `+` is prepended because a bonus is only ever a credit — the
+                 * endpoint's rows are all `type: 'deposit'` — so unlike `amount` the sign is not in
+                 * the number.
+                 */
+                bonus: (() => {
+                    /*
+                     * `bonuses` is already filtered by `isDisplayableBonus` — the `amount === null`
+                     * check here is only what narrows the type for the template below.
+                     */
+                    const bonus = entry.txId ? bonuses.get(entry.txId) : undefined
+                    if (!bonus || bonus.amount === null) return undefined
+                    return {
+                        label: t('balance_txn_bonus_label'),
+                        // `formatPlainAmount`: up to two decimals and **no minimum**, so a whole
+                        // bonus stays `+10` rather than becoming `+10.00`. Legacy formats it with a
+                        // bare `formatNumber` and the same effect.
+                        amount: `+${formatPlainAmount(bonus.amount, currentLanguage)}`,
+                        mark: { src: TEVI_COIN_SRC, size: 14 },
+                    }
+                })(),
             }
             /*
              * Appended to the last group rather than looked up in a map, which is what keeps the server's
@@ -152,7 +244,7 @@ export function useWalletLedger({
                 })
         }
         return out
-    }, [entries, currentLanguage, displayCurrency, rate, t])
+    }, [entries, bonuses, currentLanguage, displayCurrency, rate, t])
 
     const setFilter = useCallback((type: string) => {
         // Sanitised against this ledger's own vocabulary — see `isWalletTransactionFilter`.
@@ -165,6 +257,8 @@ export function useWalletLedger({
 
     return {
         groups,
+        entries,
+        bonuses,
         filter,
         setFilter,
         isLoading,
@@ -180,8 +274,11 @@ export function useWalletLedger({
         hasNextPage: query.hasNextPage,
         isFetchingNextPage: query.isFetchingNextPage,
         fetchNextPage: () => {
-            // Guarded so the sentinel can call it freely: an observer fires more than once per crossing.
-            if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage()
+            if (!query.hasNextPage || query.isFetchingNextPage || isAdvancing.current) return
+            isAdvancing.current = true
+            query.fetchNextPage().finally(() => {
+                isAdvancing.current = false
+            })
         },
         refetch: () => {
             query.refetch()

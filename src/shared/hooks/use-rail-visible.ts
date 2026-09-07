@@ -21,8 +21,7 @@ export const END_RAIL_MIN_WIDTH = 1292
  * viewport. That costs nothing visible: the campaign cards need a round trip regardless, so they
  * could never have been in the first paint.
  *
- * Same shape as `use-mobile.ts` beside it — `matchMedia` in an effect, seeded so the first client
- * render matches the server's.
+ * `matchMedia` in an effect, seeded so the first client render matches the server's.
  *
  * ## Why it is in `shared/` and not with the rail it is named after
  *

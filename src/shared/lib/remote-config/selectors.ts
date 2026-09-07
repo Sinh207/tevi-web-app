@@ -16,9 +16,13 @@ import type {
  * 1. Precedence is where the bugs are (all three of legacy's are below), and a pure function is
  *    the only form in which "the device whitelist beats the country rule" can be *stated* in a
  *    test rather than described in a comment.
- * 2. **This app has no country code yet.** Legacy reads `countryCode` from a `generalConfig`
- *    context; nothing here provides one. So the country is a parameter, and the feature does
- *    not have to invent a provider to ship — whoever adds geo-detection passes it in.
+ * 2. **The country is a parameter, not a lookup.** There *is* a source now —
+ *    `useCountry()` (`shared/lib/geo-provider.tsx`) reports the edge's country header, read during
+ *    the document render — and these stay pure functions over it rather than reaching for it: a rule
+ *    that decides whether Datadog initialises has to be testable against a country the test names.
+ *    A caller that wants geo behaviour passes `useCountry().country` in.
+ *    ⚠ It is a spoofable **hint** (`shared/lib/geo.ts`), so it may steer sampling and must never
+ *    decide an entitlement.
  */
 
 /* ============================== datadog ============================== */

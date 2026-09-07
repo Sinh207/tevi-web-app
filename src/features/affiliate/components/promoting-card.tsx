@@ -60,6 +60,7 @@ export function PromotingCard({
             </header>
 
             <button
+                data-testid="affiliate-promoting-card"
                 type="button"
                 onClick={onPress}
                 disabled={disabled}

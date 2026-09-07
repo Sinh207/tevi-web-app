@@ -1,6 +1,13 @@
 'use client'
 
-import { accountDisplayName, useAuth, useUpdateMe, validateDisplayName } from '@features/auth'
+import {
+    accountDisplayName,
+    firstBrokenRule,
+    useAuth,
+    useDisplayNameRules,
+    useUpdateMe,
+    validateDisplayName,
+} from '@features/auth'
 import { ApiError } from '@shared/lib/api/errors'
 import { uploadApi } from '@shared/lib/api/upload-api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -127,10 +134,30 @@ export function useCreateChannel({
         [avatar],
     )
 
+    /**
+     * The platform's own rules, for the half of this check that needs no request. Empty until they
+     * load, and empty forever if they cannot be — in which case this behaves exactly as it did.
+     */
+    const nameRules = useDisplayNameRules()
+
     const checkName = useCallback(
         (value: string, { immediate = false }: { immediate?: boolean } = {}) => {
             nameRun.current?.abort()
             if (!value.trim()) return setName({ value, error: null, checking: false })
+
+            /*
+             * A rule the backend published, broken by what is on screen right now — so say so
+             * now, with no debounce and no request. This is the answer the reader used to wait a
+             * second for, and it is the *same* answer: the sentence is the rule's own, which is
+             * where `validate-display-name/`'s 400 was already getting its wording.
+             *
+             * ⚠ Passing every rule is **not** approval, so there is no matching early success:
+             * the server checks more than a regex can, and it still runs below. This branch only
+             * ever short-circuits a rejection.
+             */
+            const broken = firstBrokenRule(value, nameRules)
+            if (broken) return setName({ value, error: broken.message, checking: false })
+
             const run = new AbortController()
             nameRun.current = run
             setName({ value, error: null, checking: true })
@@ -176,7 +203,7 @@ export function useCreateChannel({
             )
             run.signal.addEventListener('abort', () => clearTimeout(timer))
         },
-        [fallbackError],
+        [fallbackError, nameRules],
     )
 
     const checkSlug = useCallback(

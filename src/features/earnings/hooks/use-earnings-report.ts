@@ -2,6 +2,7 @@
 
 import { useAuth } from '@features/auth'
 import { useMyChannel } from '@features/channel'
+import { keepFor } from '@shared/lib/api/query-client'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { earningsApi, earningsKeys } from '../api/earnings-api'
@@ -81,6 +82,16 @@ export function useEarningsReport(slug: string): UseEarningsReportResult {
     const query = useQuery({
         queryKey: earningsKeys.daily(activeId),
         queryFn: ({ signal }) => earningsApi.getDailyRevenue({ accountId: activeId, signal }),
+        /*
+         * Fifteen minutes, and this one is a judgement rather than a consequence.
+         *
+         * `earningsKeys` is the one money key **not** nested under `balanceKeys.all`, so no socket
+         * refreshes it and this `staleTime` is the only freshness mechanism the screen has. The data
+         * is daily buckets, of which only today's is still moving — a creator opening the report
+         * twice in a quarter of an hour is asking the same question, not a newer one. Shorten it if
+         * the report is ever expected to read as live.
+         */
+        ...keepFor(15 * 60_000),
         enabled: access === 'allowed',
     })
 

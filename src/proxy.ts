@@ -40,20 +40,57 @@ const REDIRECTS: { pattern: RegExp; action: string }[] = [
  * What moved is the *Star* half:
  *
  * - legacy's Star ledger lived at `/my-wallet/transaction-history?currency=tvs`, and the currency
- *   ledger at the same path without the parameter. Neither exists as its own route now — both
- *   ledgers are on the screen they belong to — so the pair split by that query parameter.
- * - `/get-star` and the payout screens are **not** redirected: they have no destination yet, so a
+ *   ledger at the same path without the parameter. **Only the Star half still moves**: the currency
+ *   ledger has its own route again (`/my-wallet` shows recent movements under a *View all* link, and
+ *   that path shows all of them with the filter), so a redirect there would now shadow a real page.
+ *   The Star ledger has no page of its own — it is on `/my-star` — so that half is still a move.
+ * - `/get-star` needs no entry at all: this app serves that **same path**, so there is nothing to
+ *   move. The payout screens are still **not** redirected — they have no destination yet, and a
  *   redirect would send somebody from a URL that used to work to a 404. They 404 on their own until
- *   those passes land, which is at least the truth.
+ *   that pass lands, which is at least the truth.
  *
  * The search string is dropped on redirect (`url.search = ''`), because the parameter that chose
  * the ledger is exactly what the new address encodes.
  */
-const PATH_REDIRECTS: { from: RegExp; to: (search: URLSearchParams) => string }[] = [
+const PATH_REDIRECTS: {
+    from: RegExp
+    to: (search: URLSearchParams) => string
+    /**
+     * Only redirect when this says so. Omitted means "always", which is what a plain path move
+     * is; the one entry that needs it shares its path with a page this app serves.
+     */
+    when?: (search: URLSearchParams) => boolean
+    /**
+     * Keep the query string. Off by default, because the Star entry below *is* the query: the
+     * parameter that chose the ledger is exactly what the new address encodes, so carrying
+     * it forward would leave a `?currency=tvs` on a URL where it means nothing. A plain
+     * path move has no such story — the params belong to the reader, not to the old path.
+     */
+    keepSearch?: boolean
+}[] = [
+    /*
+     * Note the `when`: without it this entry matched the bare path too and redirected
+     * `/my-wallet/transaction-history` — a **real route** — to `/my-wallet`. A redirect that
+     * shadows a page is invisible from the code that renders it: the page compiles, the URL
+     * answers 200, and what comes back is a different screen.
+     */
     {
         from: /^\/my-wallet\/transaction-history\/?$/,
-        to: search => (search.get('currency')?.toLowerCase() === 'tvs' ? '/my-star' : '/my-wallet'),
+        when: search => search.get('currency')?.toLowerCase() === 'tvs',
+        to: () => '/my-star',
     },
+    /*
+     * The two mini app legal documents. These paths are the *webview* app's
+     * (`tevi-web-view`, which served them at `/privacy/miniapp` and `/tos/miniapp`), not
+     * this site's, and shipped app builds still hold them. They keep their query on the way
+     * over: an app opens a legal screen with `?lang=&theme=`, and that context is the
+     * reader's regardless of which spelling of the path they arrived on.
+     *
+     * Only the slug is hyphenated — `/tos` stays `/tos`. That namespace is the mini app
+     * terms' own on both legacy sites, and `/terms` is this site's terms of use.
+     */
+    { from: /^\/privacy\/miniapp\/?$/, to: () => '/privacy/mini-app', keepSearch: true },
+    { from: /^\/tos\/miniapp\/?$/, to: () => '/tos/mini-app', keepSearch: true },
 ]
 
 /** A year — the app re-sends the params on every open, so this is only a fallback. */
@@ -126,13 +163,12 @@ export function proxy(request: NextRequest) {
         }
     }
 
-    for (const { from, to } of PATH_REDIRECTS) {
+    for (const { from, to, when, keepSearch } of PATH_REDIRECTS) {
         if (!from.test(pathname)) continue
+        if (when && !when(request.nextUrl.searchParams)) continue
         const url = request.nextUrl.clone()
         url.pathname = to(request.nextUrl.searchParams)
-        // The query is what the new path encodes; carrying it forward would leave a
-        // `?currency=tvs` on a URL where it means nothing.
-        url.search = ''
+        if (!keepSearch) url.search = ''
         return NextResponse.redirect(url)
     }
 

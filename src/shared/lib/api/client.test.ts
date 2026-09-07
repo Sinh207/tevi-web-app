@@ -111,6 +111,28 @@ describe('credentials', () => {
         expect(seen[0].headers.get('device-id')).toBeFalsy()
     })
 
+    it('leaves a W_API body alone when the caller says it is not enveloped', async () => {
+        signIn()
+        /*
+         * The real `payment/v3/stripe/callback/` body: flat, and carrying a `data` field of its own.
+         * Unwrapped by origin it becomes `null` — a settled donation with no `type`, which the success
+         * dialog printed as the Star copy. `enveloped: false` is how an endpoint that does not wrap
+         * says so.
+         */
+        const body = { code: '7147573649', type: 'direct_donation', data: null }
+        useAdapter([{ data: body, headers: {} }])
+
+        const res = await apiClient.post(
+            `${API}/paymee/payment/v3/stripe/callback/`,
+            {},
+            {
+                enveloped: false,
+            },
+        )
+
+        expect(res.data).toEqual(body)
+    })
+
     it('does not sign or unwrap a foreign response', async () => {
         signIn()
         // A body that *looks* like a Tevi envelope but belongs to someone else.
@@ -120,6 +142,47 @@ describe('credentials', () => {
 
         expect(res.data).toEqual({ data: [1, 2], cursor: 'next' })
         expect(res.config.params?.verify).toBeUndefined()
+    })
+})
+
+/**
+ * The one serialiser decision the instance makes, and it is load-bearing for every paginated list
+ * in the app.
+ *
+ * `PageCursor` is `Record<string, string[]>` by design, so a repeatable param survives a cursor
+ * round-trip — which means axios receives array-valued params on **every** list request. Its
+ * default emits `page[]=1`; DRF reads `query_params.get('page')`, gets `None`, and serves page 1
+ * with the paginator's default size. Nothing errors: `nextPagedCursor` counts up, gets a full page
+ * back every time, and the list appends the same twenty rows on every scroll forever.
+ *
+ * Asserted on the built URI rather than on a mocked serialiser, because the failure is in the bytes
+ * that leave the process.
+ */
+describe('query params', () => {
+    it('repeats an array key instead of bracketing it', async () => {
+        const script = useAdapter([{ status: 200 }])
+        await apiClient.get(`${API}/core/v3/list/`, {
+            params: { page: ['2'], page_size: ['20'], media_type: ['image', 'video'] },
+        })
+        const uri = apiClient.getUri(script.seen[0])
+        expect(uri).toContain('page=2')
+        expect(uri).toContain('page_size=20')
+        expect(uri).toContain('media_type=image')
+        expect(uri).toContain('media_type=video')
+        expect(uri).not.toContain('%5B%5D')
+        expect(uri).not.toContain('[]')
+    })
+
+    /** A scalar is untouched — `false` in particular, which `filterParams` keeps and the unread
+     *  count depends on (`read=false`). */
+    it('leaves scalars alone', async () => {
+        const script = useAdapter([{ status: 200 }])
+        await apiClient.get(`${API}/notification/v1/inbox/messages/`, {
+            params: { page: '1', read: false },
+        })
+        const uri = apiClient.getUri(script.seen[0])
+        expect(uri).toContain('page=1')
+        expect(uri).toContain('read=false')
     })
 })
 
@@ -311,6 +374,37 @@ describe('ETag round trip', () => {
         // Same URL, different account → b must not inherit a's validator, or the
         // server would answer 304 and b would be shown a's body.
         expect(seen[0].headers.get('If-None-Match')).toBeFalsy()
+    })
+
+    /**
+     * The inverse of the test above, and the reason it needs its own flag rather than riding on
+     * `persist`: a body the backend does not vary by bearer should be fetched once per device, not
+     * once per account. Without `shared`, two accounts on one device each paid for the same 18KB
+     * country list — the query layer had already keyed that data globally while this layer had not.
+     */
+    it('serves a shared body across an account switch, and only when asked', async () => {
+        signIn('a')
+        useAdapter([{ data: { data: { list: ['VN'] } }, headers: { etag: 'W/"c"' } }])
+        await apiClient.get(`${API}/billy/v5/countries/`, { cache: { shared: true } })
+
+        signIn('b')
+        const asB = useAdapter([{ status: 304 }])
+        const res = await apiClient.get(`${API}/billy/v5/countries/`, { cache: { shared: true } })
+
+        expect(asB.seen[0].headers.get('If-None-Match')).toBe('W/"c"')
+        expect(res.data).toEqual({ list: ['VN'] })
+    })
+
+    it('does not share a body the caller did not mark shared', async () => {
+        signIn('a')
+        useAdapter([{ data: { data: { who: 'a' } }, headers: { etag: 'W/"a"' } }])
+        await apiClient.get(`${API}/billy/v5/ledger/`)
+
+        signIn('b')
+        const asB = useAdapter([{ data: { data: { who: 'b' } } }])
+        await apiClient.get(`${API}/billy/v5/ledger/`)
+
+        expect(asB.seen[0].headers.get('If-None-Match')).toBeFalsy()
     })
 
     it('files the response under the account that made the request, not the active one', async () => {

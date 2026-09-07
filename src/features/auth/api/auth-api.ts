@@ -1,4 +1,5 @@
 import { env } from '@shared/config/env'
+import { CACHE_TTL } from '@shared/lib/api/interceptors/etag'
 import { createApiModel } from '@shared/lib/api/model'
 import { getDeviceInfo } from '@shared/lib/api/request-context'
 import type { AxiosRequestConfig } from 'axios'
@@ -23,6 +24,14 @@ export const authKeys = {
      * offer the wrong screen (change vs. create) to the next user.
      */
     userLogin: (accountId: string | null) => ['auth', 'user-login', accountId ?? 'anon'] as const,
+    /**
+     * `GET v1/me/display-name-validation-rule/` — the rules, not an answer about a name.
+     *
+     * **Not** keyed per account, unlike everything else here: these are platform rules, the same
+     * for everybody, and the endpoint needs a bearer only because it lives under `me/`. Keying
+     * them per account would refetch a constant on every switch.
+     */
+    displayNameRules: () => ['auth', 'display-name-rules'] as const,
 }
 
 export interface TokenResponse {
@@ -49,9 +58,19 @@ type Provider =
  * shape covers both and adding a third kind does not change the endpoint. Sending
  * a bare `email` field (which this client used to do) is simply not a request the
  * API recognises.
+ *
+ * ⚠ **`kind` is a closed two-value set and the phone spelling is `phone_number`**, not
+ * `phone` — anything else is a `400 validation_error` (auth contract). This client declared
+ * `'phone'` for a while and never noticed, because every call site sends `'email'`; the day
+ * a phone flow is built, that typo is a rejected request on the first screen of it.
+ *
+ * `value` is **normalised by the server**, and the normalisation is lossy on purpose: one
+ * inbox is one account, so Gmail's dots are stripped and `googlemail.com` folds onto
+ * `gmail.com`. `a.b@gmail.com` and `ab@gmail.com` are the same account — no screen may
+ * promise otherwise, and nothing may compare a typed address against a stored one.
  */
 export interface Username {
-    kind: 'email' | 'phone'
+    kind: 'email' | 'phone_number'
     value: string
 }
 
@@ -62,27 +81,37 @@ export interface Username {
  * has only ever used a social provider — that is the case the password settings screen
  * exists to fix. Nothing beyond these two is modelled because nothing beyond them is used;
  * the client reads presence, never the value's shape.
+ *
+ * ⚠ **An account with no credentials answers `200` with two empty strings**, not a 404 and
+ * not an empty object (auth contract; B7). So presence must be read as *truthiness* —
+ * `Boolean(email)` — and never as `'email' in userLogin`, which is true for every account
+ * alive. `useUserLogin` still tolerates a 404 because tolerating one costs nothing.
+ *
+ * ⚠ The phone field is **`phone_number`**, matching `Username['kind']` above. It was
+ * declared `phone` here, which reads as `undefined` on every response — an account that
+ * signs in with a number only would have been offered *create a password* forever.
  */
 export interface UserLogin {
     email?: string
-    phone?: string
+    phone_number?: string
 }
 
 /**
  * Why an OTP was requested. The backend scopes the code to its purpose, so the
  * same digits cannot be replayed against a different flow.
  *
- * The three values are what legacy actually sends, not a guess:
+ * **Two values, and the set is closed** (B7, answered):
  *
  * - `reset` — forgot password (`containers/loginWithEmail`).
  * - `verify` — proving an address before a **first** password is set
  *   (`containers/settingPassword/hooks/useConnectEmail.js`, and again on verify).
- * - `setup` — never sent by legacy anywhere. It was inferred from the endpoint name
- *   `setup-credentials/` when this file was first written, and is kept only so the
- *   guess is visible rather than silently corrected; the settings flow uses `verify`.
- *   See B7 in `docs/BACKEND_QUESTIONS.md`.
+ *
+ * A third value `setup` was once declared here, inferred from the endpoint name
+ * `setup-credentials/`. It is **not real** — the API team confirmed it, and no legacy path
+ * ever sent it. Note that `setup-credentials/` itself carries no `purpose` at all: only the
+ * two OTP endpoints do, which is why `verify` is the one the settings flow pairs with it.
  */
-export type OtpPurpose = 'reset' | 'verify' | 'setup'
+export type OtpPurpose = 'reset' | 'verify'
 
 const withDevice = <T extends Record<string, unknown>>(payload: T) => ({
     ...payload,
@@ -91,8 +120,15 @@ const withDevice = <T extends Record<string, unknown>>(payload: T) => ({
 
 /**
  * Endpoints that can answer **406 = "solve a Turnstile first"**, and so are the
- * only ones that should carry a solved challenge. The token is single-use; see
- * `turnstile` in `client.ts` for what broadcasting it cost.
+ * only ones that should carry a solved challenge.
+ *
+ * **The set is confirmed and closed** (B2, answered): `v1/token/`,
+ * `v1/connect/<provider>/`, `v1/user-login/login/` and `v1/user-login/verify-otp/`.
+ * Legacy instead put the headers on the whole auth model's defaults, and the token is
+ * **single-use** — so an unrelated background request could spend it before a parked
+ * sign-in replayed, which the person experiences as an endless loop of challenges. See
+ * `turnstile` in `client.ts`. Adding a fifth endpoint here needs the backend to say it
+ * reads them.
  */
 const CHALLENGEABLE: AxiosRequestConfig = { turnstile: true }
 
@@ -115,6 +151,33 @@ export const authApi = {
             { display_name: displayName },
             { signal },
         )
+    },
+
+    /**
+     * The rules a display name has to satisfy — `GET v1/me/display-name-validation-rule/`.
+     *
+     * The backend's own answer to "don't hardcode a regex in the app": a list of
+     * `{ code, type, message, metadata: { regex } }`, one per rule, so the same rules the
+     * server enforces can be applied while somebody is still typing.
+     *
+     * ⚠ **This can only ever *reject*.** A name that passes every rule here is not thereby
+     * valid — `validate-display-name/` also checks things no regex can (a reserved word list
+     * that changes, uniqueness), so it stays the gate before submit. Using this to skip that
+     * call is how a name gets accepted locally and refused on save.
+     *
+     * The `message` is English in all nine locales, exactly like the sentence
+     * `validate-display-name/`'s 400 already puts on screen (`use-create-channel.ts`). That is
+     * the trade in `docs/API_ERRORS.md` — the API is the only party that knows why *this* name
+     * was refused — and it is why a rule with no usable `regex` or `message` is dropped rather
+     * than half-applied.
+     */
+    getDisplayNameRules(signal?: AbortSignal) {
+        return api.get<unknown>('v1/me/display-name-validation-rule/', undefined, {
+            signal,
+            // The rules themselves, not a verdict on a name — platform-wide, and read while
+            // somebody is typing, which is the case a round trip is worth avoiding.
+            cache: { persist: true, shared: true, ttlMs: CACHE_TTL.day },
+        })
     },
 
     /** Anonymous session — Firebase anon accessToken exchanged for a Tevi token. */
@@ -234,9 +297,39 @@ export const authApi = {
         return api.get<{ site_key: string; challenge_id?: string }>('v1/turnstile/')
     },
 
-    /** QR device-link login. */
-    createDeviceLink() {
-        return api.post<{ token: string; ws_channel: string }>('v1/device-links/', withDevice({}))
+    /**
+     * Open a QR sign-in: mint a one-time device-link token and the socket room its approval
+     * will arrive in.
+     *
+     * Called by a **signed-out** browser — `device_id` is the only thing identifying it, which
+     * is why `withDevice` is not optional here.
+     *
+     * ⚠ The token is nested under `payload`, which no other endpoint in this file does. That is
+     * not a guess: legacy destructures `{ payload, ws_channel }` and reads `payload?.token`
+     * (`components/auth/btnQR`), and this client's interceptor has already removed the outer
+     * `{ data }` envelope — so `payload` is a second level the backend really sends.
+     *
+     * ✅ **The nesting is deliberate and `payload` carries more than the token** (auth contract,
+     * B80): it is the whole link record — `token`, the three device fields this call sent back
+     * as the server stored them, and **`ip` / `location` as the server saw them**. `ip` is why
+     * this type is wider than `{ token }`: the QR text prints an address so the phone can check
+     * where the session it is approving would come from, and the *server's* view of it is the
+     * one worth printing — `useQrSignIn` used to fetch `/api/client-ip` in parallel to get a
+     * second-hand answer to a question this response had already answered.
+     *
+     * Both are **display** values, on the same footing as `/api/client-ip`'s: they come from
+     * headers the caller can set, so nothing may be authorised, priced or hidden on either.
+     * Every field but `token` is optional here because only `token` and `ws_channel` are load-
+     * bearing — a body without them fails the panel; a body without `ip` prints no address.
+     *
+     * The link **expires** (`422 AU006` on redeem), though the contract does not say when — the
+     * panel still shows a code indefinitely. See B80.
+     */
+    createDeviceLink(signal?: AbortSignal) {
+        return api.post<{
+            payload: { token: string; ip?: string | null; location?: string | null }
+            ws_channel: string
+        }>('v1/device-links/', withDevice({}), { signal })
     },
 
     // ── Email / credential flow ─────────────────────────────────────────────
@@ -265,17 +358,37 @@ export const authApi = {
     sendOtp(payload: { username: Username; purpose: OtpPurpose }) {
         return api.post<{ sid: string }>('v1/user-login/send-otp/', payload)
     },
+    /**
+     * Check a code **without spending it** — `POST v1/user-login/verify-otp/`.
+     *
+     * ⚠ **It answers `{}`, not a token.** This was typed `TokenResponse` on the theory that
+     * verifying an address is a way in; it is not, and the difference is load-bearing rather
+     * than cosmetic. The endpoint exists so a flow can light up *Continue* before asking the
+     * reader to choose a password — the code stays live and is re-presented to
+     * `setup-credentials/` or `reset-password/`, which are what actually redeem it. Both of
+     * this client's callers already `await` it and read nothing, which is why the wrong type
+     * never cost anything; a third caller reaching for `.access_token` would get `undefined`.
+     *
+     * ⚠ `purpose: 'verify'` **requires a bearer** (`422 auth_required` without one) — the
+     * backend has to know whose address is being proved. `purpose: 'reset'` does not, which
+     * is the whole point of a password reset.
+     */
     verifyOtp(payload: { username: Username; otp: string; purpose: OtpPurpose; sid: string }) {
-        return api.post<TokenResponse>(
-            'v1/user-login/verify-otp/',
-            withDevice(payload),
-            CHALLENGEABLE,
-        )
+        return api.post<unknown>('v1/user-login/verify-otp/', withDevice(payload), CHALLENGEABLE)
     },
-    resetPassword(payload: { username: Username; otp: string; password: string; sid: string }) {
+    /**
+     * ⚠ The new password goes in **`new_password`** here and in **`password`** on
+     * `setup-credentials/` below — the two endpoints spell the same value differently,
+     * confirmed by the API team (B7). A wrong name is a 400 on the last screen of the
+     * flow, so both are pinned by `auth-api.test.ts` rather than left to the caller.
+     */
+    resetPassword(payload: { username: Username; otp: string; new_password: string; sid: string }) {
         return api.post('v1/user-login/reset-password/', payload)
     },
-    /** First password for an account that only ever signed in through a provider. */
+    /**
+     * First password for an account that only ever signed in through a provider.
+     * Takes `password`, not `new_password` — see `resetPassword` above.
+     */
     setupCredentials(payload: { username: Username; otp: string; password: string; sid: string }) {
         return api.post('v1/user-login/setup-credentials/', payload)
     },

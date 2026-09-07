@@ -3,15 +3,19 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
 /**
- * The sub-screens the account drawer pushes. Other settings, Appearance, Language, Data
+ * The sub-screens the account drawer pushes. Other settings, Appearance, Language, Currency, Data
  * and storage and Privacy and Security have one; the pattern generalises to the rest of
  * the rows as their content arrives.
+ *
+ * `currency` is the only one that is not reached from a settings row — the balance card's own
+ * `USD` control pushes it, the way legacy's `BtnCurrency` opens a dialog from that exact spot.
  */
 export type DrawerView =
     | 'root'
     | 'other-settings'
     | 'appearance'
     | 'language'
+    | 'currency'
     | 'data-storage'
     | 'privacy-security'
 

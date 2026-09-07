@@ -1,6 +1,7 @@
 'use client'
 
 import { useInView } from '@shared/hooks/use-in-view'
+import { useMayAnimate } from '@shared/hooks/use-may-animate'
 import { type AvatarSourceInput, resolveAvatarSource } from '@shared/lib/avatar-source'
 import { cn } from '@shared/lib/utils'
 import {
@@ -71,36 +72,6 @@ const SIZE_PX: Record<AvatarSize, number> = {
     large: 48,
     xl: 64,
     '2xl': 80,
-}
-
-/**
- * `true` once the client has decided the clip may play at all.
- *
- * Starts `false` **on the server and on the first client render**, which is what keeps hydration
- * honest: the server cannot know either of these answers, so both sides render the still and the
- * video is an upgrade applied in an effect. Reading `matchMedia` during render would produce a
- * server/client mismatch instead.
- */
-function useMayAnimate(): boolean {
-    const [mayAnimate, setMayAnimate] = useState(false)
-
-    useEffect(() => {
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-        // `saveData` is non-standard and absent on Safari/Firefox; absent means "no preference
-        // expressed", which is not the same as "wants to save data".
-        const saveData =
-            (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
-                ?.saveData === true
-
-        const update = () => setMayAnimate(!reduceMotion.matches && !saveData)
-        update()
-        // The setting can change while the page is open, and an avatar that keeps looping after
-        // someone turns reduced-motion on has ignored them.
-        reduceMotion.addEventListener('change', update)
-        return () => reduceMotion.removeEventListener('change', update)
-    }, [])
-
-    return mayAnimate
 }
 
 export function AnimatedAvatar({

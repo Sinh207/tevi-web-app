@@ -108,3 +108,15 @@ function parseClientEnv() {
 
 export const env = parseClientEnv()
 export type ClientEnv = z.infer<typeof clientSchema>
+
+/**
+ * Our own origin, with the last-resort fallback in **one** place.
+ *
+ * The schema keeps `NEXT_PUBLIC_BASE_URL` required so a deployment missing it still says so on boot
+ * (above), but the salvage path lets `undefined` through — and three of its readers are `robots.ts`,
+ * `sitemap.ts` and the root `metadataBase`, where `new URL(undefined)` would take the whole render
+ * down over a value every deployment of this app shares. They each carried their own
+ * `?? 'https://tevi.com'`, which is three copies of a production domain free to drift; this is the
+ * copy.
+ */
+export const BASE_URL = env.NEXT_PUBLIC_BASE_URL || 'https://tevi.com'

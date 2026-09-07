@@ -5,7 +5,7 @@ import { useSocketEvent } from '@features/realtime'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo } from 'react'
-import { channelApi, channelKeys } from '../api/channel-api'
+import { channelApi, channelKeys, forgetMyChannelCache } from '../api/channel-api'
 import type { Channel } from '../api/types'
 import { CreateChannelGate } from '../components/create-channel-gate'
 import { isOnboardingExemptPath, onboardingGate } from '../lib/onboarding-gate'
@@ -96,15 +96,30 @@ export function MyChannelProvider({ children }: { children: React.ReactNode }) {
      * The server says this account's Premium state changed — it was bought, gifted or lapsed.
      *
      * The payload is ignored for the reason `BalanceProvider` gives about its own event: a socket frame
-     * is a signal, not a source. `refresh()` re-reads `my-channel`, which is what `isPremium` and the
-     * animated avatar are derived from, so the ring and the badge follow without either of them
-     * knowing a socket exists.
+     * is a signal, not a source. The re-read of `my-channel` is what `isPremium` and the animated
+     * avatar are derived from, so the ring, the crown and the drawer's gold card follow without any of
+     * them knowing a socket exists.
+     *
+     * ⚠ **The ETag is evicted first, and `refresh()` alone was not enough.** This handler used to call
+     * it directly, which sends a conditional GET: the service answers `304` because *its* validator
+     * has not moved, `apiClient` replays the body it already had, and `is_premium` stays `false` for an
+     * account that has just paid. `forgetMyChannelCache` carries the whole argument and **B72** is
+     * where the shape was first found — on two other endpoints, which is why this one was missed.
+     * `usePremiumSync` does the same thing for the expiry date; this is the same news about the same
+     * purchase, read from a different body.
+     *
+     * The eviction is **awaited before** the invalidate, because `invalidateQueries` starts the
+     * request synchronously — evicting afterwards would drop the record the request had already read
+     * on its way out.
      *
      * Legacy patches `myChannel.is_premium` in place from the payload, which is why its verified badge
      * and avatar ring can disagree with the rest of the channel body until the next fetch.
      */
     useSocketEvent('premium_info', () => {
-        void refresh()
+        void (async () => {
+            await forgetMyChannelCache(activeId)
+            await refresh()
+        })()
     })
 
     const value = useMemo<MyChannelValue>(

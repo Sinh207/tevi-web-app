@@ -14,3 +14,13 @@
 
 /** `/my-wallet` — withdrawable earnings and their ledger. */
 export const MY_WALLET_PATH = '/my-wallet'
+
+/**
+ * `/my-wallet/transaction-history` — the full currency ledger, with the type filter.
+ *
+ * Legacy's address, kept. The split is legacy's too: `/my-wallet` shows the history under a **View
+ * all** link and no filter, and this page is where the filter lives. So the wallet screen stays a
+ * summary — balance, the payout rows, recent movements — and the one control that only makes sense
+ * against the *whole* ledger is on the page that shows the whole ledger.
+ */
+export const MY_WALLET_TRANSACTION_HISTORY_PATH = '/my-wallet/transaction-history'

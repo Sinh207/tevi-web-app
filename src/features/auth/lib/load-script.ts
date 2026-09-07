@@ -44,8 +44,3 @@ export function loadScript(src: string): Promise<void> {
     pending.set(src, promise)
     return promise
 }
-
-/** Test seam — the module cache would otherwise leak between cases. */
-export function resetLoadedScripts() {
-    pending.clear()
-}

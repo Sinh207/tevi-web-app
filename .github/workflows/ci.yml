@@ -37,6 +37,11 @@ jobs:
 
       - run: pnpm lint:rtl
 
+      # Before `pnpm test`, deliberately: the grammar linter is the cheap, unambiguous
+      # check, and the catalog-drift test inside `pnpm test` writes a message that assumes
+      # the ids are already well-formed. Report the typo before the drift it caused.
+      - run: pnpm lint:testids
+
       - run: pnpm test
 
   # `next build` is pinned to webpack and is far slower than the checks above, so
@@ -74,16 +79,15 @@ jobs:
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-placeholder
           NEXT_PUBLIC_FIREBASE_APP_ID: ci-placeholder
 
-  # Playwright covers what Vitest structurally cannot: server-rendered HTML, HTTP
-  # status codes and ARIA wiring (there is no component-render testing in this
-  # repo). It builds and starts the app itself — see `playwright.config.ts`, which
-  # uses `next build && next start` rather than `next dev` because
-  # `generateMetadata`, ISR and real 404s only behave correctly in a production
-  # build.
+  # Playwright covers what Vitest structurally cannot: a real server render, a real
+  # HTTP status code, and a browser. (Vitest does render components where the
+  # assertion needs the tree — it is the *server* half it cannot reach.) It builds
+  # and starts the app itself — see `playwright.config.ts`, which uses
+  # `next build && next start` rather than `next dev` because `generateMetadata`,
+  # ISR and real 404s only behave correctly in a production build.
   #
-  # `if` on the spec count, not `continue-on-error`: while `e2e/` holds no specs
-  # the job should be skipped honestly rather than reported as a green run that
-  # asserted nothing. Delete the guard once the first spec lands.
+  # The spec-count guard that used to sit here is gone: `e2e/` holds specs now, so
+  # the condition was always true and only read as though the job might skip.
   e2e:
     name: e2e
     runs-on: ubuntu-latest
@@ -101,16 +105,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - id: specs
-        run: |
-          count=$(find e2e -name '*.spec.ts' 2>/dev/null | wc -l | tr -d ' ')
-          echo "count=$count" >> "$GITHUB_OUTPUT"
+      - run: pnpm exec playwright install --with-deps chromium
 
-      - if: steps.specs.outputs.count != '0'
-        run: pnpm exec playwright install --with-deps chromium
-
-      - if: steps.specs.outputs.count != '0'
-        run: pnpm test:e2e
+      - run: pnpm test:e2e
         env:
           NEXT_PUBLIC_ENV: development
           NEXT_PUBLIC_BASE_URL: https://tevi.dev
@@ -122,7 +119,7 @@ jobs:
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-placeholder
           NEXT_PUBLIC_FIREBASE_APP_ID: ci-placeholder
 
-      - if: failure() && steps.specs.outputs.count != '0'
+      - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report

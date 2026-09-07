@@ -1,8 +1,8 @@
 'use client'
 
+import { StarMark } from '@shared/components/star-mark'
 import { cn } from '@shared/lib/utils'
 import { Card, CardItem, CardItemMeta, CardItemTitle, CardMeta } from '@shared/ui/card'
-import Image from 'next/image'
 import type { ReactNode } from 'react'
 
 /**
@@ -45,14 +45,7 @@ export function StarBalanceCard({
                 <CardItemMeta>{label}</CardItemMeta>
             </CardItem>
             <CardMeta gap="4" justify="start" className="items-center">
-                <Image
-                    src="/tevi-star.png"
-                    alt=""
-                    aria-hidden
-                    width={36}
-                    height={36}
-                    className="block flex-none"
-                />
+                <StarMark size={36} className="block" />
                 <CardItem type="title-subtitle" titleSize="32" subtitleLines={1} className="flex-1">
                     <CardItemTitle>{value}</CardItemTitle>
                 </CardItem>

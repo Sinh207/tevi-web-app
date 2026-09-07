@@ -175,3 +175,125 @@ export function formatActivityDateTime(value: string | null | undefined, locale 
         return new Intl.DateTimeFormat('en', options).format(date)
     }
 }
+
+/**
+ * `2 days ago`, `last month`, `in 3 hours` — a coarse relative stamp, localised.
+ *
+ * ## Why this exists when `formatActivityDateTime` deliberately refused to
+ *
+ * That function's note argues against relative time and the argument still holds *there*: its rows
+ * are payments, the block spans months, and a receipt whose date drifts as the tab sits open is
+ * worse than an absolute one. Two screens want the opposite, and for the same reason as each other
+ * — the **recency is the information**. "Last activity 2 days ago" is what tells a reader whether a
+ * space they follow is alive; the exact date is trivia. Legacy uses `fDistance` in both places, and
+ * the DS draws the `/following` row's third line as exactly this.
+ *
+ * ## `numeric: 'auto'`, which is what makes it read like a sentence
+ *
+ * With `'always'` every value is a count — "1 day ago", "0 days ago". With `'auto'` the locales'
+ * own idioms come through: `yesterday`, `last month`, `hôm qua`, `上个月`. `Intl` knows those and a
+ * hand-rolled `days + ' days ago'` does not, which is the whole reason this is not arithmetic plus
+ * a translation key.
+ *
+ * ## The unit ladder is the same one legacy's `fDistance` walks
+ *
+ * Seconds under a minute, then minutes, hours, days, months, years — the largest unit whose rounded
+ * count is at least 1 and has not overflowed into the next one. Weeks are **skipped**:
+ * `RelativeTimeFormat` supports the unit, but "3 weeks ago" and "last month" carry the same
+ * information and having both makes the ladder read unevenly around the 4–5 week mark. Months are
+ * 30 days and years 365, which is wrong by up to a day and a half — irrelevant at a resolution
+ * whose whole point is that it is coarse.
+ *
+ * ## `now` is a parameter, and it must stay one
+ *
+ * Two reasons, one of them a correctness rule rather than a testing convenience:
+ *
+ * - **This must not run during SSR.** It reads the clock, so a server render and a client render
+ *   minutes apart produce different text — a hydration mismatch. Every caller today is behind a
+ *   client-only query with no server seed (`/following`, the channel activity feed), which is the
+ *   same constraint `formatActivityDateTime` documents. A caller that *does* render on the server
+ *   has to pass a fixed `now` or not use this.
+ * - A default of `Date.now()` evaluated per call makes the output untestable without faking timers.
+ *
+ * `''` for a value that is absent or unparseable, so the caller drops the whole line rather than
+ * printing `Invalid Date` — the rule `formatJoinedDate` sets.
+ */
+export function formatRelativeTime(
+    value: string | null | undefined,
+    locale = 'en',
+    now: number = Date.now(),
+): string {
+    if (!value) return ''
+    const then = new Date(value).getTime()
+    if (Number.isNaN(then)) return ''
+
+    const seconds = Math.round((then - now) / 1000)
+
+    /**
+     * The ladder, largest unit first, each with the number of seconds in it and the count at which
+     * it overflows into the one above.
+     *
+     * The overflow check is the part that is easy to leave out, and it shows: rounding inside a
+     * branch can reach the *next* unit's threshold, so a value 23.99 hours old renders
+     * "24 hours ago", one 59.6 minutes old renders "60 minutes ago", and one 11.9 months old
+     * renders "12 months ago". All three are reachable from a real timestamp, all three read as a
+     * bug, and none of them is caught by testing a value in the middle of a branch.
+     */
+    const LADDER: [Intl.RelativeTimeFormatUnit, number, number][] = [
+        ['year', 31_536_000, Number.POSITIVE_INFINITY],
+        ['month', 2_592_000, 12],
+        ['day', 86_400, 30],
+        ['hour', 3600, 24],
+        ['minute', 60, 60],
+        ['second', 1, 60],
+    ]
+
+    let amount = seconds
+    let unit: Intl.RelativeTimeFormatUnit = 'second'
+    for (const [candidate, size, overflow] of LADDER) {
+        const rounded = Math.round(seconds / size)
+        if (Math.abs(rounded) >= 1 && Math.abs(rounded) < overflow) {
+            amount = rounded
+            unit = candidate
+            break
+        }
+    }
+
+    try {
+        return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(amount, unit)
+    } catch {
+        // An unrecognised locale tag must not take the row down — same guard as every formatter here.
+        return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(amount, unit)
+    }
+}
+
+/** What a space's bio may show on the profile. The editor stores more; this is the preview. */
+export const DESCRIPTION_MAX = 200
+
+/**
+ * The bio, cut to `DESCRIPTION_MAX` **characters as a reader counts them**.
+ *
+ * ## Code points, not UTF-16 units
+ *
+ * `String.prototype.slice` counts UTF-16 code units, so it cuts an emoji in half — a bio ending in a
+ * flag or a skin-toned hand becomes a lone surrogate, which renders as `�`. `Array.from` iterates by
+ * code point, so the count matches what somebody typing the bio would count. (A grapheme cluster can
+ * still be more than one code point — a family emoji — so this is closer, not perfect; the failure
+ * mode there is cutting a few characters early, not producing a broken glyph.)
+ *
+ * ## Cut at a word, and only when a word is near
+ *
+ * Trimming mid-word reads as a rendering fault ("passionate about pho…tography"). So the cut backs
+ * up to the last space **if there is one in the last fifth of the allowance** — otherwise the text
+ * is one long unbroken run (a URL, a language that does not space its words) and backing up to a
+ * space three lines earlier would throw away most of the bio.
+ */
+export function truncateDescription(text: string, max = DESCRIPTION_MAX): string {
+    const chars = Array.from(text)
+    if (chars.length <= max) return text
+
+    const cut = chars.slice(0, max).join('')
+    const lastSpace = cut.lastIndexOf(' ')
+    const keep = lastSpace > max * 0.8 ? cut.slice(0, lastSpace) : cut
+    return `${keep.trimEnd()}…`
+}

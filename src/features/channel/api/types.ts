@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { channelEventSchema } from './events-api'
 
 /**
  * The channel (a creator's "space") as this client understands it.
@@ -53,6 +54,24 @@ const nullableText = z
 
 /** Ids arrive as either a string or a number depending on the service. Normalise to string. */
 const id = z.union([z.string(), z.number()]).transform(String).catch('')
+
+/**
+ * The same normalisation as `id`, but **absence stays absent**: `null` rather than `''`.
+ *
+ * `id` is for a field that identifies the object it is on — a channel always has one, so `''` is a
+ * body that could not be parsed and the caller has bigger problems. This is for an id *pointing at
+ * something else* (`mcn.identifier`), where "not sent" is an ordinary answer and the caller has to
+ * be able to see it: `''` would become a request against `…/media-space//`.
+ */
+const nullableId = z
+    .unknown()
+    .transform(value => {
+        if (typeof value === 'number') return Number.isFinite(value) ? String(value) : null
+        if (typeof value !== 'string') return null
+        const trimmed = value.trim()
+        return trimmed === '' ? null : trimmed
+    })
+    .catch(null)
 
 /**
  * A moment in time, normalised to an ISO 8601 string — or `null`.
@@ -241,12 +260,52 @@ export const channelSchema = z.looseObject({
             is_owner: boolish,
             creator_rate: nullable(z.number()),
             mcn_revenue_rate: nullable(z.number()),
+            /**
+             * The network's **organization id** — what `GET /business/v1/organization/media-space/{id}/`
+             * takes, and the only handle this body carries to the network's own profile (its logo,
+             * its slug, the address a creator can write to). Legacy reads exactly this field for
+             * exactly that call (`mcnPartnership/hook`: `myChannel?.mcn?.identifier`).
+             *
+             * `nullableId` rather than `id`: the shared helper answers `''` for an absent value, and
+             * `''` is a request this client would then make against `media-space//`. Absent has to
+             * stay distinguishable, because "we cannot ask" and "we asked and got nothing" are two
+             * different screens — see `useMcnPartnership`.
+             */
+            identifier: nullableId,
+            /**
+             * When this creator joined the network — the `Since …` line under its name on
+             * `/mcn-partnership`. A timestamp, so it goes through `nullableTimestamp` for the
+             * reason that field's own note gives: `created_at` on this service arrives as epoch
+             * milliseconds, and a schema that declares it text discards it silently.
+             *
+             * Unverified against a live body (no account in this repo is under an MCN — **B98**);
+             * the parser accepts epoch seconds, epoch milliseconds and ISO alike, so all three
+             * spellings render and none of them throws.
+             */
+            joined_at: nullableTimestamp,
         }),
     ),
-    /** Non-empty while the creator is live. Only the count matters to this feature. */
-    lives: z.array(z.looseObject({ status: nullableText })).catch([]),
+    /**
+     * The space's live events. Non-empty while the creator is on air.
+     *
+     * Parsed with **`channelEventSchema`** — the same shape `v4/events/` returns — rather than the
+     * `{ status }` stub it used to be, because the Posts tab now draws a card from these: banner,
+     * title and the `code` that links to `/@{slug}/event/{code}`. That endpoint is owner-only
+     * (it answers for the bearer and takes no slug), so this array is the **only** way a visitor
+     * can be told the space is live. The array is the **full event DTO** with its channel nested
+     * (confirmed against a real payload — B74a); **B74** asks what to do about a row whose
+     * `restricted_platforms` names the website.
+     */
+    lives: z.array(channelEventSchema).catch([]),
     has_mini_app: boolish,
     mini_app_url: nullableText,
+    /**
+     * The app's id in the developer platform. What `developer/api/v1/user/auth-token/` mints a
+     * token for, so `features/mini-app` cannot identify the reader to the app without it — a space
+     * that sends `has_mini_app` and a URL but no id gets an app that can run and cannot sign
+     * anybody in.
+     */
+    mini_app_id: nullableText,
     promote: nullable(z.looseObject({ referral_url: nullableText })),
 
     // ── viewer-relative: meaningless without a bearer, so `false` is the right default ──
@@ -282,7 +341,7 @@ export type ChannelStats = z.infer<typeof channelStatsSchema>
  * level (`shared/lib/api/unwrap.ts`).
  *
  * `next` is a full absolute URL rather than an opaque token, which is why it cannot simply
- * be fetched — see `lib/next-page-param.ts`.
+ * be fetched — see `shared/lib/api/page-cursor.ts`.
  */
 export interface Paginated<T> {
     results: T[]
@@ -343,16 +402,23 @@ export const channelThreadSchema = z.looseObject({
 export type ChannelThread = z.infer<typeof channelThreadSchema>
 
 /**
- * The person on the other side of a block, as `my-channel/blocks/` returns them.
+ * A person as `my-channel/`'s **list** endpoints return them — the blocked list and the
+ * follow-request list, which carry byte-identical user objects.
  *
  * **Not a `Channel`, and not `/me`'s user either** — a third shape, which is why it gets its
  * own schema rather than a cast. The differences are the ones that bite: the avatar lives
  * under `avatar` (not `images`), the display name is `display_name` with `name` as the
  * fallback (the channel DTO has only `name`), and there is no `owner_id` because the row
  * *is* the user.
+ *
+ * One schema for both lists rather than one per endpoint, and the name is neutral for that
+ * reason: `blockedUserSchema` parsing a follow request reads like a mistake at the call site,
+ * and a second copy of the same eight fields is a second thing to keep in step when the
+ * backend adds a ninth. If the two payloads ever genuinely diverge, that is the moment to
+ * split them — not before.
  */
-export const blockedUserSchema = z.looseObject({
-    /** The **user** id — what `blockUser` posts as `user_id`. Not the block's id. */
+export const listUserSchema = z.looseObject({
+    /** The **user** id — what `blockUser` posts as `user_id`. Not the block's (or request's) id. */
     id,
     name: nullableText,
     display_name: nullableText,
@@ -365,7 +431,7 @@ export const blockedUserSchema = z.looseObject({
     is_premium: boolish,
 })
 
-export type BlockedUser = z.infer<typeof blockedUserSchema>
+export type ListUser = z.infer<typeof listUserSchema>
 
 /**
  * One row of the blocked list: **the block itself**, with the user nested inside it.
@@ -380,7 +446,7 @@ export const blockedAccountSchema = z.looseObject({
     id,
     /** When the block was created. Absent in some payloads — the row then shows no meta line. */
     created_at: nullableTimestamp,
-    user: blockedUserSchema,
+    user: listUserSchema,
 })
 
 export type BlockedAccount = z.infer<typeof blockedAccountSchema>
@@ -408,8 +474,51 @@ export function normalizeBlockedAccounts(results: unknown): BlockedAccount[] {
     return rows
 }
 
-/** The display name for a blocked row, or `''` when the payload carried none. */
-export function blockedUserName(user: BlockedUser): string {
+/**
+ * One pending follow request — `my-channel/follow-requests/`.
+ *
+ * Only a **protected** space receives these: `useChannelActions` turns a Follow on a protected
+ * space into `follow_requested` rather than `is_followed`, and this list is the other end of that.
+ * A public space's list is empty by construction, which is why the screen has a state saying so.
+ *
+ * ⚠ `id` is the **request's** id, not the requester's — the same trap `blockedAccountSchema`
+ * carries, and with the same consequence: `accept`/`decline` take this one, and passing `user.id`
+ * 404s in a way that reads like a backend fault. Legacy passes `request.id` to both, which is the
+ * only evidence either client has (B77).
+ *
+ * `created_at` is read where the payload carries it and simply dropped where it does not — legacy
+ * never displays it, so its presence is a guess and the row degrades to two lines rather than
+ * printing "Invalid Date".
+ */
+export const followRequestSchema = z.looseObject({
+    id,
+    created_at: nullableTimestamp,
+    user: listUserSchema,
+})
+
+export type FollowRequest = z.infer<typeof followRequestSchema>
+
+/**
+ * Parse a page of follow requests, dropping rows that cannot be acted on — the same two filters
+ * `normalizeBlockedAccounts` applies, for the same reason.
+ *
+ * A row with no `id` renders two buttons that are both guaranteed to fail, and a row whose `user`
+ * did not parse at all is a hole with a working Accept button and no name. Everything else
+ * degrades field by field: no avatar becomes initials, no slug drops the handle line and the link
+ * with it, and both buttons still work.
+ */
+export function normalizeFollowRequests(results: unknown): FollowRequest[] {
+    if (!Array.isArray(results)) return []
+    const rows: FollowRequest[] = []
+    for (const row of results) {
+        const parsed = followRequestSchema.safeParse(row)
+        if (parsed.success && parsed.data.id !== '') rows.push(parsed.data)
+    }
+    return rows
+}
+
+/** The display name for a list row, or `''` when the payload carried none. */
+export function listUserName(user: ListUser): string {
     return user.display_name ?? user.name ?? ''
 }
 
@@ -602,4 +711,193 @@ export function parseAckPrivacy(body: unknown): ChannelPrivacy | null {
     if (typeof value !== 'string') return null
     const parsed = z.enum(CHANNEL_PRIVACY).safeParse(value.toLowerCase().trim())
     return parsed.success ? parsed.data : null
+}
+
+/* ===================== Following — `v3/channel/followed-channels/` ===================== */
+
+/**
+ * How the followed list may be ordered — legacy's two menu entries, as their wire values.
+ *
+ * `-last_activity_at` is the default (the creators who posted most recently first) and
+ * `-follows__created_at` is "last follow" (the ones you followed most recently). Both are DRF
+ * `ordering` strings, so the leading `-` is the descending marker and not decoration; they are
+ * **not** localised and not renamed — the label lives in the translation file, keyed off the
+ * value. A third ordering is one line here plus one key, which is the point of the union: a typo
+ * is a type error rather than a request the backend silently answers unordered.
+ */
+export const FOLLOWED_ORDERINGS = ['-last_activity_at', '-follows__created_at'] as const
+export type FollowedOrdering = (typeof FOLLOWED_ORDERINGS)[number]
+
+/**
+ * One row of the followed list — a **channel**, not a `ListUser`.
+ *
+ * That is the distinction this schema exists for. The blocked list and the follow-request queue
+ * carry `{ id, user: {...} }` with the avatar under `avatar` (see `listUserSchema`); this endpoint
+ * returns the space itself, so the avatar is `images.thumb`, the name is `name` with no
+ * `display_name` beside it, and the row *is* the channel. Parsing it as either of the other two
+ * shapes yields a row with a working kebab menu and no name.
+ *
+ * It is deliberately **not** `channelSchema` either: that models the profile payload (44 keys,
+ * `owner_id`, `privacy`, `mcn`, `lives`) and this list sends a projection with three fields the
+ * profile does not have — `last_activity_at`, `pin`, and the follow's own notification preference.
+ * Declaring the union of both would leave a dozen fields defaulting to `false` on every row and
+ * nothing to say which of them the endpoint actually answers.
+ *
+ * `looseObject`, so `space_tier` / `space_tier_image` (which legacy draws a badge from and this
+ * client does not yet) survive the parse and reach whoever adds that badge.
+ */
+export const followedChannelSchema = z.looseObject({
+    id,
+    /** Never carries the leading `@`. The row is unusable without it — see `normalizeFollowedChannels`. */
+    slug: z.string().catch(''),
+    name: nullableText,
+    images: channelImagesSchema,
+    verified_tick_badge: nullable(z.object({ image: nullableText })),
+    is_premium: boolish,
+    /**
+     * The space is flagged sensitive — the row draws a mark on the avatar's corner.
+     *
+     * The same flag `channelSchema` and `searchChannelSchema` carry, and it is declared here for the
+     * same reason it is declared there: it **decorates, it does not protect**. The wall is
+     * `ChannelNsfwGate`'s, on the space's own page, and a row in a list of spaces this account has
+     * already chosen to follow is not the place to re-ask the question.
+     *
+     * `boolish` with a `false` fallback, so a payload that omits it draws nothing rather than
+     * marking every row — the honest failure for a flag whose absence is indistinguishable from
+     * "not sensitive".
+     */
+    is_nsfw: boolish,
+    /**
+     * When the space last posted — the row's third line, and the default ordering's key.
+     *
+     * `null` is ordinary (a space that has never posted) and the row then shows two lines instead
+     * of three, exactly as a follow request with no `created_at` does.
+     */
+    last_activity_at: nullableTimestamp,
+    /** Pinned to the top of the list by this account. The DS row has a slot for the mark. */
+    pin: boolish,
+    /**
+     * This follow's notification preference — `{ notification: false }` is muted.
+     *
+     * ⚠ **Absent means *not* muted here, and legacy reads it the other way.** Its row does
+     * `const notification = channel?.notification_settings?.notification` and then draws the
+     * muted glyph on `!notification`, so a payload that omits the block paints a mute mark on
+     * every row in the list. Muting is opt-in, so the honest default for "the server said
+     * nothing" is on — see `isFollowedChannelMuted`, which is the only place either app should
+     * answer this question.
+     */
+    notification_settings: nullable(z.looseObject({ notification: boolish })),
+    /**
+     * The four fields `features/mini-app` reads, declared here so a `FollowedChannel` structurally
+     * satisfies its `MiniAppChannelLike` — the row draws an **Open** button for a space that leads
+     * with its app.
+     *
+     * `looseObject` means the values survive the parse either way, but they arrive typed `unknown`,
+     * which is exactly enough to make the structural match fail and nothing to say why. Declaring
+     * them is what turns "the payload has it" into "the type has it".
+     *
+     * ⚠ **`has_mini_app` alone is not the answer to "does this space have an app".** It has been seen
+     * true with an empty `mini_app_url`, so `miniAppFromChannel` requires both and this schema is not
+     * the place that decides — `shareable_url` is here for the same reason, so the app can offer the
+     * space's own share link rather than nothing. `mini_app_id` is what mints the app's auth token;
+     * without it the app runs and cannot sign anybody in, which is `channelSchema`'s note verbatim
+     * and the reason it is carried rather than dropped from the projection.
+     */
+    has_mini_app: boolish,
+    mini_app_url: nullableText,
+    mini_app_id: nullableText,
+    shareable_url: nullableText,
+})
+
+export type FollowedChannel = z.infer<typeof followedChannelSchema>
+
+/**
+ * Parse a page of followed channels, dropping rows that cannot be acted on.
+ *
+ * The filter is **`slug`**, not `id`, and that is what makes it the right one for this list:
+ * every action on the row — pin, unpin, mute, unfollow — is a POST to
+ * `channels/{slug}/…`, and the link on the name is `/@{slug}`. A row with no slug is therefore a
+ * name with four menu items that are all guaranteed to fail, which is worse than one row fewer.
+ * `id` is kept and parsed, but nothing addresses the row by it.
+ *
+ * Everything else degrades field by field, as `normalizeChannel` does: no avatar becomes initials,
+ * no `last_activity_at` drops the meta line, and the row still works.
+ */
+export function normalizeFollowedChannels(results: unknown): FollowedChannel[] {
+    if (!Array.isArray(results)) return []
+    const rows: FollowedChannel[] = []
+    for (const row of results) {
+        const parsed = followedChannelSchema.safeParse(row)
+        if (parsed.success && parsed.data.slug !== '') rows.push(parsed.data)
+    }
+    return rows
+}
+
+/**
+ * Is this follow muted? **One function, because the wire value is a tri-state and the UI is not.**
+ *
+ * `notification_settings` may be absent (the server said nothing), `{ notification: true }` or
+ * `{ notification: false }`, and only the last of those is a mute. Answering it at each call site
+ * is how legacy ends up drawing the glyph on every row — see the field's own note.
+ */
+export function isFollowedChannelMuted(channel: FollowedChannel): boolean {
+    return channel.notification_settings?.notification === false
+}
+
+/**
+ * The space a live stream belongs to, as `followed-channels/lives/` nests it.
+ *
+ * A fourth user-ish shape, and it gets four fields rather than being pointed at one of the other
+ * three: the payload is a channel (avatar under `images`), but the endpoint sends a projection of
+ * it, so reusing `followedChannelSchema` would declare `pin` and `last_activity_at` on an object
+ * that never carries either. Only what the card draws is declared.
+ */
+export const liveChannelSchema = z.looseObject({
+    slug: z.string().catch(''),
+    name: nullableText,
+    images: channelImagesSchema,
+    verified_tick_badge: nullable(z.object({ image: nullableText })),
+    is_premium: boolish,
+})
+
+export type LiveChannel = z.infer<typeof liveChannelSchema>
+
+/**
+ * One row of `followed-channels/lives/` — the full event DTO **with its channel nested**.
+ *
+ * `channelEventSchema` extended rather than restated, so `liveAccess`, `isPlatformRestricted` and
+ * `appLink` all take one of these unchanged: the gating rules are the event's, and a second copy
+ * of `price` / `required_packages` / `purchased` here is a second thing to keep in step with the
+ * three functions that read them.
+ *
+ * The nested channel is what this endpoint has and `v4/events/` does not: that one answers *for
+ * the bearer*, so its rows need no channel — every one of them is yours. These rows are other
+ * people's, and the card cannot be drawn without whose stream it is.
+ */
+export const followedLiveSchema = channelEventSchema.extend({
+    channel: nullable(liveChannelSchema),
+})
+
+export type FollowedLive = z.infer<typeof followedLiveSchema>
+
+/**
+ * Parse the Live now block, dropping rows that cannot be rendered *or* navigated to.
+ *
+ * Two filters, both about the card rather than the data:
+ *
+ * - **No `code`** — there is no `/@{slug}/event/{code}` to link to, so the card is a banner that
+ *   does nothing. Legacy applies this one too, but at render time (`{channelSlug && live?.code && …}`),
+ *   which means a page of unrenderable rows is an empty block with no explanation.
+ * - **No channel slug** — nothing to attribute the stream to and no space to link the avatar at.
+ *
+ * Everything else degrades: no banner draws the placeholder, no title drops the line.
+ */
+export function normalizeFollowedLives(results: unknown): FollowedLive[] {
+    if (!Array.isArray(results)) return []
+    const rows: FollowedLive[] = []
+    for (const row of results) {
+        const parsed = followedLiveSchema.safeParse(row)
+        if (parsed.success && parsed.data.code && parsed.data.channel?.slug) rows.push(parsed.data)
+    }
+    return rows
 }

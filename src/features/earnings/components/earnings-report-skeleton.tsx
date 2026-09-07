@@ -35,7 +35,7 @@ import { Skeleton } from '@shared/ui/skeleton'
  */
 export function EarningsReportSkeleton({ count = 5 }: { count?: number }) {
     return (
-        <div aria-busy="true" className="flex flex-col gap-3">
+        <div data-testid="earnings-loading" aria-busy="true" className="flex flex-col gap-3">
             {Array.from({ length: count }, (_, index) => `earnings-skeleton-${index}`).map(
                 (key, index) => (
                     <div

@@ -1,5 +1,6 @@
 'use client'
 
+import { DonateSupportCard, useDonationOffered } from '@features/donation'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { RISE, riseDelay } from '@shared/lib/motion'
 import type { ReactNode } from 'react'
@@ -7,6 +8,7 @@ import type { Channel } from '../api/types'
 import { useMyChannel } from '../providers/my-channel-provider'
 import { ChannelAboutActivity } from './channel-about-activity'
 import { ChannelAboutBadges } from './channel-about-badges'
+import { ChannelAboutCard } from './channel-about-card'
 import { ChannelAboutDetails } from './channel-about-details'
 import { ChannelAboutMcn } from './channel-about-mcn'
 import { ChannelEmptyState } from './channel-empty-state'
@@ -41,11 +43,15 @@ import { ChannelEmptyState } from './channel-empty-state'
  * feed sits *above* badges, not below — a creator opens this tab for who just paid, and the badges
  * are decoration they already know they have.
  *
- * ## Still missing
+ * ## Direct donate
  *
- * **Direct donate** (visitor) is the one block with no counterpart here: it needs
- * `/core/v1/gifting/direct-donate/{slug}/` and a stars flow, which is the donation plan. The tab is
- * complete on the owner's side and one block short on the visitor's.
+ * Now present, and it is the **first** block on the visitor's tab — legacy's order, and the right
+ * one: someone who opened About on a creator they follow is the person most likely to support them.
+ * It comes from `features/donation`, which renders the block's *contents*; the bordered card stays
+ * here with the other three (see `DonateSupportCard` for why that boundary falls where it does).
+ *
+ * The tab has to know whether it will render, because its own empty state depends on it —
+ * `useDonationOffered` answers exactly that and nothing more.
  */
 export function ChannelAboutTab({
     channel,
@@ -74,6 +80,14 @@ export function ChannelAboutTab({
         channel.categories.length > 0
     const hasBadges = channel.claimed_badges.some(badge => badge.image)
     /*
+     * Visitors only, and not fetched at all for the owner — a creator's own About tab has no reason
+     * to ask whether they can donate to themselves, and `enabled` is what keeps the request off that
+     * surface rather than a branch that discards the answer.
+     */
+    const { offered: hasDonation, isLoading: donationLoading } = useDonationOffered(channel.slug, {
+        enabled: !isOwner,
+    })
+    /*
      * MCN comes from **`my-channel`**, not from the channel on screen: `channels/{slug}/` carries no
      * `mcn` field, so `channel.mcn` — which this used to read — was always `undefined` and the card
      * never rendered. See `channel-about-mcn.tsx`.
@@ -84,9 +98,20 @@ export function ChannelAboutTab({
      */
     const hasMcn = isOwner && Boolean(mcn) && !mcn?.is_owner
 
-    if (!hasDetails && !hasBadges && !hasMcn && !isOwner) {
+    /*
+     * `donationLoading` gates the empty state, not the card.
+     *
+     * `useDonationOffered` answers `false` while its request is in flight, so a visitor's About tab
+     * used to render "nothing here yet" and then replace it with the Support card — the empty state
+     * asserting something the client had not found out yet. Nothing else on this tab is async (the
+     * details, badges and MCN block all come off the channel payload), so waiting costs a beat only in
+     * the one case where the answer can still change.
+     */
+    if (!hasDetails && !hasBadges && !hasMcn && !hasDonation && !isOwner && !donationLoading) {
         return <ChannelEmptyState icon="info-circle" title={t('channel_about_empty')} />
     }
+    // Still asking: render the tab's own (possibly empty) blocks rather than a verdict.
+    if (!hasDetails && !hasBadges && !hasMcn && !hasDonation && !isOwner) return null
 
     /**
      * Filtered before it is mapped, so the stagger counts **visible** cards.
@@ -96,6 +121,22 @@ export function ChannelAboutTab({
      * badges would have been, i.e. a pause with nothing in it.
      */
     const cards: { key: string; node: ReactNode }[] = [
+        {
+            key: 'donate',
+            node: hasDonation ? (
+                <ChannelAboutCard>
+                    <DonateSupportCard
+                        target={{
+                            id: channel.id,
+                            slug: channel.slug,
+                            name: channel.name,
+                            avatarUrl: channel.images.thumb,
+                            shareUrl: channel.shareable_url,
+                        }}
+                    />
+                </ChannelAboutCard>
+            ) : null,
+        },
         { key: 'details', node: hasDetails ? <ChannelAboutDetails channel={channel} /> : null },
         // Always rendered for an owner: it fetches, so whether it has rows is not known yet, and it
         // removes itself once it knows.

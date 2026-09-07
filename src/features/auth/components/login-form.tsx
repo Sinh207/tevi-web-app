@@ -11,6 +11,7 @@ import { AuthMethodButtons } from './auth-method-buttons'
 import { AuthStepHeader } from './auth-step-header'
 import { EmailSignInForm } from './email-sign-in-form'
 import { ForgotPasswordFlow } from './forgot-password-flow'
+import { QrSignInPanel } from './qr-sign-in-panel'
 import { TurnstileChallenge } from './turnstile-challenge'
 
 /**
@@ -36,7 +37,7 @@ import { TurnstileChallenge } from './turnstile-challenge'
 export function LoginForm() {
     const { t } = useTranslation()
     const { turnstileSiteKey, turnstileNonce } = useAuth()
-    const [step, setStep] = useState<'choose' | 'email' | 'forgot'>('choose')
+    const [step, setStep] = useState<'choose' | 'email' | 'forgot' | 'qr'>('choose')
     const emailTitle = t('auth_sign_in_with', { provider: t('auth_provider_email') })
 
     /**
@@ -74,6 +75,20 @@ export function LoginForm() {
         )
     }
 
+    // Same step as `/login`, at dialog scale. Legacy stacks a *second* dialog on top of this
+    // one for it; a modal over a modal is two backdrops and two Escape targets for what is one
+    // more way in.
+    if (step === 'qr') {
+        return (
+            <div className="flex w-full max-w-sm flex-col gap-4">
+                {/* The panel draws its own visible heading, so the dialog's name only has to
+                    exist for the accessibility tree — base-ui labels the popup from it. */}
+                <DialogTitle className="sr-only">{t('auth_qr_title')}</DialogTitle>
+                <QrSignInPanel onBack={() => setStep('choose')} />
+            </div>
+        )
+    }
+
     // The fields open in the dialog the same way they do on `/login` — see `LoginScreen`.
     if (step === 'email') {
         return (
@@ -105,7 +120,7 @@ export function LoginForm() {
             {/* The same split as `/login`, at the same size. The dialog used to show seven
                 unlabelled circles to save height; four labelled rows plus a tile row costs
                 about the same and does not ask anyone to recognise a mark first. */}
-            <AuthMethodButtons onEmail={() => setStep('email')} />
+            <AuthMethodButtons onEmail={() => setStep('email')} onQrCode={() => setStep('qr')} />
 
             {/* The same consent the page states, on the step where an account can actually
                 be created. Not on the reset step, where it would be describing something
@@ -116,6 +131,7 @@ export function LoginForm() {
                     would unmount the page this dialog exists to keep on screen — the same
                     mistake the password reset used to make by pushing `/login`. */}
                 <Link
+                    data-testid="auth-dialog-terms"
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -125,6 +141,7 @@ export function LoginForm() {
                 </Link>{' '}
                 {t('auth_legal_and')}{' '}
                 <Link
+                    data-testid="auth-dialog-privacy"
                     href="/privacy"
                     target="_blank"
                     rel="noopener noreferrer"

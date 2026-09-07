@@ -1,4 +1,4 @@
-import { MY_STAR_CONTAINER } from '@features/my-star'
+import { MY_STAR_CONTAINER } from '@features/my-star/skeleton'
 import { ActionRowsSkeleton } from '@shared/components/action-rows'
 import { LedgerSkeleton } from '@shared/components/ledger'
 import { Card, CardItem, CardMeta } from '@shared/ui/card'
@@ -24,7 +24,7 @@ import { Skeleton } from '@shared/ui/skeleton'
 export default function Loading() {
     return (
         <main className="flex flex-1 flex-col">
-            <div className={`${MY_STAR_CONTAINER} flex flex-1 flex-col gap-3 pt-2 pb-6`}>
+            <div className={`${MY_STAR_CONTAINER} flex flex-1 flex-col gap-3 pb-6`}>
                 <Card type="balance" aria-busy="true">
                     <CardItem type="large-item">
                         <Skeleton w={96} h={14} />
@@ -36,7 +36,7 @@ export default function Loading() {
                 </Card>
                 <ActionRowsSkeleton count={2} />
                 <div className="overflow-hidden rounded-xl bg-(--background-surface)">
-                    <LedgerSkeleton />
+                    <LedgerSkeleton data-testid="my-star-loading" />
                 </div>
             </div>
         </main>

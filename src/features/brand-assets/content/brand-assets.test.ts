@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import en from '@shared/i18n/locales/en/translation.json'
+import { committedArt } from '@shared/lib/committed-art'
 import { describe, expect, it } from 'vitest'
 import {
     BRAND_COLORS,
@@ -142,14 +143,15 @@ describe('brand assets content', () => {
         for (const asset of badges) expect(asset.width / asset.height).toBeLessThan(2)
     })
 
-    it('points the lockup previews at the static host, with no query string', () => {
+    it('serves the lockup previews from our own origin, as committed vectors', () => {
         expect(LOGO_PREVIEWS).toHaveLength(3)
         for (const preview of LOGO_PREVIEWS) {
-            // Host comes from NEXT_PUBLIC_STATIC_DOMAIN; the path is legacy's. No query
-            // string: `/_next/image` rejects one for these hosts.
-            expect(preview.src).toMatch(
-                /^https:\/\/[^/?]+\/web\/web-landing\/brand-assets\/logo-[123]\.svg$/,
-            )
+            // Brand's own files, copied byte for byte by `pnpm art:cdn` — no static art is fetched
+            // from the CDN any more (`docs/STATIC_ASSETS.md`). Vectors, so nothing was re-encoded.
+            expect(preview.src).toMatch(/^\/illustrations\/brand-assets\/logo-[123]\.svg$/)
+            const file = committedArt(preview.src)
+            expect(file.isLocal).toBe(true)
+            expect(file.isDeclaredFormat).toBe(true)
             expect(preview.width).toBe(634)
             expect(preview.height).toBe(440)
         }

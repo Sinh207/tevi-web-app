@@ -129,6 +129,48 @@ export function useChannelActions(channel: Channel) {
     })
 
     /**
+     * Mute / unmute — **the same `follow/` endpoint**, with the notification flag.
+     *
+     * There is no mute route (`channelApi.follow` says so at length). Legacy's menu item calls its
+     * `updateNotification(slug, !current)`, which posts exactly this; naming it `mute` here is what
+     * stops the next reader from going to look for the route that does not exist.
+     *
+     * Optimistic like the follow pair, and safe in the same way: the only thing on screen that reads
+     * it is the menu row's own label, so a rollback swaps one word back.
+     */
+    const muteMutation = useMutation({
+        mutationFn: (notification: boolean) => channelApi.follow(channel.slug, notification),
+        onMutate: async (notification: boolean) => ({
+            channelSnapshot: await patchChannel({ notification_settings: { notification } }),
+        }),
+        onError: (_error, _vars, context) => {
+            if (context?.channelSnapshot) {
+                queryClient.setQueryData(detailKey, context.channelSnapshot)
+            }
+        },
+        meta: { showErrorToast: t('channel_error_follow') },
+    })
+
+    /**
+     * Block — **not optimistic**, for the reason unblock is not.
+     *
+     * It replaces the page with a wall. Doing that before the server agrees means tearing the space
+     * down and rebuilding it in the reader's face when the request fails, which is worse than a
+     * pending menu row. It also invalidates rather than patches: blocking changes the thread list,
+     * the stats and the viewer flags together, and guessing all three is how they drift.
+     */
+    const blockMutation = useMutation({
+        mutationFn: () => channelApi.blockUser(channel.owner_id),
+        onSuccess: () => {
+            queryClient.setQueryData<Channel>(detailKey, previous =>
+                previous ? { ...previous, blocking_channel: true } : previous,
+            )
+            settle()
+        },
+        meta: { showErrorToast: t('channel_error_block') },
+    })
+
+    /**
      * **Not optimistic**, unlike the follow pair.
      *
      * Unblocking flips the page out of a terminal state. An optimistic version would tear the wall
@@ -166,6 +208,15 @@ export function useChannelActions(channel: Channel) {
         unblock: {
             run: requireAuth(() => unblockMutation.mutate()),
             isPending: unblockMutation.isPending,
+        },
+        block: {
+            run: requireAuth(() => blockMutation.mutate()),
+            isPending: blockMutation.isPending,
+        },
+        /** Pass the value the switch is moving **to**, as `Toggle` and legacy both do. */
+        setNotification: {
+            run: requireAuth((notification: boolean) => muteMutation.mutate(notification)),
+            isPending: muteMutation.isPending,
         },
     }
 }

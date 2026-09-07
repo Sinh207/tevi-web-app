@@ -1,11 +1,12 @@
 'use client'
 
+import { DialogCloseButton } from '@shared/components/dialog-close-button'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { type Account, getAccount, MAX_ACCOUNTS } from '@shared/lib/api/token'
 import { cn } from '@shared/lib/utils'
 import { Avatar, avatarImageClass } from '@shared/ui/avatar'
 import { ConfirmDialog } from '@shared/ui/confirm-dialog'
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@shared/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@shared/ui/dialog'
 import { Icon } from '@shared/ui/icon'
 import {
     ListRow,
@@ -187,6 +188,8 @@ export function AccountSwitcherDialog() {
                                 // child: a button inside a button is parsed out of it.
                                 <li key={account.id} className="relative flex items-center">
                                     <ListRow
+                                        data-testid="auth-account-row"
+                                        data-account-id={account.id}
                                         as="button"
                                         rightAction
                                         onClick={() => void handleSwitch(account.id)}
@@ -271,6 +274,8 @@ export function AccountSwitcherDialog() {
                                         // — not a bin. This ends a session; it does not
                                         // delete an account, and `trash` says it does.
                                         <button
+                                            data-testid="auth-account-remove"
+                                            data-account-id={account.id}
                                             type="button"
                                             disabled={busy}
                                             onClick={() => setRemoving({ id: account.id, name })}
@@ -309,6 +314,7 @@ export function AccountSwitcherDialog() {
                             {listed.length > 0 && <ListSeparator size="medium" />}
                             <div className="relative flex items-center py-2">
                                 <ListRow
+                                    data-testid="auth-account-add"
                                     as="button"
                                     rightAction
                                     // Guarded like the account rows: `aria-disabled`
@@ -344,16 +350,15 @@ export function AccountSwitcherDialog() {
                     {/* Esc and the backdrop already close this, but neither is visible.
                         Last in the DOM so base-ui's initial focus lands on the first
                         account rather than on the way out — see `LoginDialog`. */}
-                    <DialogClose
-                        aria-label={t('common_close')}
-                        className="absolute end-3 top-3 flex size-8 cursor-pointer items-center justify-center rounded-full text-text-body transition-colors hover:bg-background-subtle hover:text-text-title"
-                    >
-                        <Icon name="xmark" size={18} />
-                    </DialogClose>
+                    <DialogCloseButton
+                        data-testid="auth-switcher-close"
+                        className="absolute end-2 top-2"
+                    />
                 </DialogContent>
             </Dialog>
 
             <ConfirmDialog
+                testId="auth-switcher-sign-out-confirm"
                 open={removing !== null}
                 onOpenChange={next => !next && setRemoving(null)}
                 title={t('auth_switcher_sign_out_title')}

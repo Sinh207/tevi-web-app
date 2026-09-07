@@ -35,6 +35,7 @@ export function ViewProgramChip({ program }: { program: Program | null }) {
 
     return (
         <a
+            data-testid="affiliate-view-program"
             href={href}
             target="_blank"
             rel="noreferrer noopener"

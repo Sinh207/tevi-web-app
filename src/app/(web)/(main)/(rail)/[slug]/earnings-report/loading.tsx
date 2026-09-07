@@ -19,7 +19,7 @@ import { EARNINGS_CONTAINER, EarningsReportSkeleton } from '@features/earnings'
 export default function Loading() {
     return (
         <main className="flex flex-1 flex-col">
-            <div className={`${EARNINGS_CONTAINER} flex flex-1 flex-col gap-4 pt-4 pb-6`}>
+            <div className={`${EARNINGS_CONTAINER} flex flex-1 flex-col gap-4 pb-6`}>
                 <EarningsReportSkeleton />
             </div>
         </main>

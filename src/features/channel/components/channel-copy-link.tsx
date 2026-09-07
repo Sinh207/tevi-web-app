@@ -71,6 +71,7 @@ export function ChannelCopyLink({
 
     return (
         <button
+            data-testid="channel-copy-link"
             type="button"
             onClick={copy}
             // The visible text is the URL, which does not say what pressing it does — so the

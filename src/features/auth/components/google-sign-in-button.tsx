@@ -81,8 +81,10 @@ export function GoogleSignInButton({
                 await signInWithProvider('google', {
                     // `credential` is the GSI ID token; `clientId` is this app's OAuth
                     // client id rather than a token. Exact parity with legacy
-                    // (`providers/authentication/index.js` → connectWithGoogle), which
-                    // the backend accepts today — see B3 in docs before changing it.
+                    // (`providers/authentication/index.js` → connectWithGoogle) — and the
+                    // API team has confirmed the backend **uses** both fields as sent, so
+                    // the odd-looking `id_token` is the contract, not legacy's mistake
+                    // (B3, answered). Do not "correct" it to a real ID token.
                     access_token: res.credential,
                     id_token: res.clientId,
                 })
@@ -150,6 +152,17 @@ export function GoogleSignInButton({
                 onReady={() => setGsiReady(true)}
             />
             <div
+                /*
+                 * The row itself, so it is findable alongside the other seven ways in — same
+                 * `auth-provider` + `data-provider-key` as the rest, from `provider-button.tsx`.
+                 *
+                 * A container id and not a clickable target: the real control is Google's, inside a
+                 * cross-origin iframe layered over this at `opacity: 0.001`. Nothing here can be
+                 * pressed on Google's behalf, so this says "the Google row rendered", which is the
+                 * only honest thing to assert. Contract: docs/TEST_IDS.md §4.
+                 */
+                data-testid="auth-provider"
+                data-provider-key="google"
                 className={cn(
                     providerShellClass('row'),
                     'focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--input-border-focus)',

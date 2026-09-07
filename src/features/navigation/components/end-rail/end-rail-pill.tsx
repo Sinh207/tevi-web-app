@@ -1,12 +1,12 @@
 'use client'
 
 import { StarChangeFlash, useBalanceDisplay } from '@features/balance'
-import { MY_STAR_PATH } from '@features/my-star/routes'
+import { GET_STAR_PATH } from '@features/payment/routes'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { AppBarStarIcon } from '@shared/ui/app-bar'
 import Link from 'next/link'
-import { useAvatarSource } from '../../hooks/use-avatar-url'
+import { useAvatarSource } from '../../hooks/use-avatar-source'
 import { GetAppButton } from './get-app-button'
 
 /**
@@ -36,11 +36,13 @@ import { GetAppButton } from './get-app-button'
  * window does not restart it; and a **top-up is silent**, because the delta is negative for a credit
  * and its guard drops it. See `StarChangeFlash`.
  *
- * ## `/my-star`, not `/get-star`
+ * ## `/get-star` — where the comp always sent it
  *
- * The same substitution `AppTopBar` documents: the comp sends this to a purchase screen that
- * does not exist yet, and `/my-star` is where the balance being displayed actually lives, so
- * the destination matches what the control shows rather than standing in for a missing one.
+ * It pointed at `/my-star` while the purchase screen did not exist, on the argument that the
+ * destination should match what the control *shows*. That was a stand-in, and it is no longer
+ * needed: this pill carries no `+` of its own, so the whole capsule is the one purchase
+ * affordance the rail has, and sending it to the balance it is already displaying makes the
+ * press a no-op in meaning. The balance's own screen stays one tap away in the account drawer.
  *
  * ## The avatar goes to `/my-space` for everyone
  *
@@ -81,8 +83,9 @@ export function EndRailPill() {
              */}
             <span className="relative flex flex-none items-center">
                 <Link
-                    href={MY_STAR_PATH}
-                    aria-label={t('appbar_star_balance')}
+                    data-testid="navigation-end-rail-get-star"
+                    href={GET_STAR_PATH}
+                    aria-label={t('balance_action_get_star')}
                     className="flex items-center gap-1 rounded-(--radius-fill) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
                 >
                     <AppBarStarIcon />
@@ -116,6 +119,7 @@ export function EndRailPill() {
              * about how it lays out its own content.
              */}
             <Link
+                data-testid="navigation-end-rail-profile"
                 href="/my-space"
                 aria-label={t('nav_profile')}
                 className="flex flex-none rounded-(--radius-fill) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"

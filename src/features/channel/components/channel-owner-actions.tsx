@@ -41,20 +41,45 @@ export function ChannelOwnerActions({ channel }: { channel: Channel }) {
     const { t } = useTranslation()
 
     return (
-        <div className="flex min-w-0 items-center gap-2">
+        /*
+         * `flex-wrap`, and each button keeps its own content width (`min-w-fit`) while still
+         * sharing the line when both fit (`flex-1`).
+         *
+         * The first fix was `min-w-0` + a truncating label, which stopped the overflow and produced
+         * "Custom pr…" / "Earnings r…" on a 390 phone — a row of two controls neither of which says
+         * what it does. Wrapping is the better trade: at 390 the pair needs 394px of a 366px slot,
+         * so the second drops to its own line at full width and both labels stay whole. From 430 up
+         * they fit side by side again, with no breakpoint deciding it — the content does.
+         */
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
             {/*
              * `render` rather than wrapping the `Button` in a `Link`: this button is 48 tall and a
              * wrapper would leave the anchor sized to its text, so the top and bottom of the
              * control would not be clickable.
              */}
+            {/*
+             * Without `min-w-fit` and the wrap above, this row **scrolled the page sideways**.
+             * Measured at 390: each label wants ~196px, so the pair plus the gap came to 400 in a
+             * 366px slot and the second button ended 16px past the card's edge.
+             *
+             * `flex-1` alone does not fix it — a flex item's `min-width` is `auto`, so it refuses to
+             * shrink below its content, and `Button` is `whitespace-nowrap` (the DS's rule: every
+             * label node in Figma is one line with truncation disabled). Nowrap is kept and the row
+             * wraps instead.
+             *
+             * `truncate` stays as a backstop for the case wrapping cannot save — a locale whose
+             * label is wider than the whole column — where an ellipsis beats another page-wide
+             * scrollbar.
+             */}
             <Button
+                data-testid="channel-owner-edit"
                 variant="secondary"
                 size="large"
-                className="flex-1"
+                className="min-w-fit flex-1"
                 render={<Link href={CUSTOM_PROFILE_PATH} />}
             >
                 <Icon name="pen-line" weight="filled" size={20} />
-                {t('channel_action_custom_profile')}
+                <span className="truncate">{t('channel_action_custom_profile')}</span>
             </Button>
             {/*
              * ## The green is legacy's, not the design system's — and it is deliberate
@@ -77,13 +102,14 @@ export function ChannelOwnerActions({ channel }: { channel: Channel }) {
              * the theme. `Icon` paints with `currentColor`, so colouring the button colours both.
              */}
             <Button
+                data-testid="channel-owner-share"
                 variant="secondary"
                 size="large"
-                className="flex-1 text-(--text-success)"
+                className="min-w-fit flex-1 text-(--text-success)"
                 render={<Link href={earningsReportPath(channel.slug)} />}
             >
                 <Icon name="dollar-circle" weight="filled" size={20} />
-                {t('channel_action_earnings_report')}
+                <span className="truncate">{t('channel_action_earnings_report')}</span>
             </Button>
 
             {/*

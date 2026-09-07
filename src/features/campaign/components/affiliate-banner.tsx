@@ -38,6 +38,7 @@ export function AffiliateBanner({ onPress }: { onPress?: () => void } = {}) {
 
     return (
         <ProgramCard
+            data-testid="campaign-affiliate-banner"
             logo={campaign.logo ?? CAMPAIGN_ART.affiliateFallback}
             logoAlt=""
             /* Only the campaign's own logo bypasses the optimiser; our bundled fallback is local

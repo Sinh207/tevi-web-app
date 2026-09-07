@@ -35,10 +35,20 @@ export default async function ChannelNotFound() {
                  * `vs_not_found_w2_discover_creators` is legacy's own label for it. It points at home
                  * until a discover route exists, which is why it is the secondary of the two.
                  */}
-                <Button variant="primary" size="large" render={<Link href="/" />}>
+                <Button
+                    data-testid="channel-not-found-home"
+                    variant="primary"
+                    size="large"
+                    render={<Link href="/" />}
+                >
                     {t('channel_not_found_discover')}
                 </Button>
-                <Button variant="secondary" size="large" render={<Link href="/" />}>
+                <Button
+                    data-testid="channel-not-found-search"
+                    variant="secondary"
+                    size="large"
+                    render={<Link href="/" />}
+                >
                     {t('channel_return_home')}
                 </Button>
             </div>

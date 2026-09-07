@@ -63,6 +63,7 @@ export function GrowYourFansBanner() {
      */
     return (
         <a
+            data-testid="campaign-grow-fans"
             href={shortlink}
             target="_blank"
             rel="noreferrer noopener"

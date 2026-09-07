@@ -6,11 +6,14 @@ import {
     TotalBalanceCard,
 } from '@features/my-wallet'
 import { ActionRows, ActionRowsSkeleton } from '@shared/components/action-rows'
-import { LedgerPanel, LedgerSkeleton } from '@shared/components/ledger'
+import { LedgerSkeleton } from '@shared/components/ledger'
 import { Alert, AlertContent, AlertTitle } from '@shared/ui/alert'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { WALLET_LEDGER_FIXTURE, WALLET_ROWS } from './fixtures'
+import { CurrencyDialogPreview } from './currency-dialog-preview'
+import { WALLET_ROWS } from './fixtures'
+import { HistoryFilterPreview } from './history-filter-preview'
+import { LedgerDetailPreview } from './ledger-detail-preview'
 
 export const metadata: Metadata = {
     title: 'My wallet',
@@ -42,6 +45,17 @@ export default function DevMyWalletPage() {
                     and the ledger, as `/my-wallet` composes them. Nothing here fetches or writes.
                 </p>
             </header>
+
+            <section className="flex flex-col gap-2">
+                <h2 className="type-micro-overline text-(--text-body)">
+                    hero — live switcher (press the chip)
+                </h2>
+                <div className={`${MY_WALLET_CONTAINER} flex flex-col gap-3`}>
+                    {/* The one interactive thing on this page: the same dialog the real card opens,
+                        over the same `shared/components/currency-list.tsx` the account drawer pushes. */}
+                    <CurrencyDialogPreview />
+                </div>
+            </section>
 
             <section className="flex flex-col gap-2">
                 <h2 className="type-micro-overline text-(--text-body)">
@@ -98,9 +112,19 @@ export default function DevMyWalletPage() {
             </section>
 
             <section className="flex flex-col gap-2">
+                <h2 className="type-micro-overline text-(--text-body)">
+                    transaction-history bar · filter off / on
+                </h2>
+                <HistoryFilterPreview />
+            </section>
+
+            <section className="flex flex-col gap-2">
                 <h2 className="type-micro-overline text-(--text-body)">ledger</h2>
                 <div className={MY_WALLET_CONTAINER}>
-                    <LedgerPanel title="Transaction history" groups={WALLET_LEDGER_FIXTURE} />
+                    {/* Live: the **View all** link the real header carries, and a row press that
+                        opens the detail sheet. Both are unreachable on `/my-wallet` without a
+                        signed-in creator whose ledger runs past one page. */}
+                    <LedgerDetailPreview />
                 </div>
             </section>
 

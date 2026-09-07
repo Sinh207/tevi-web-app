@@ -84,8 +84,8 @@ test.describe('space visibility — gate the action, never the route', () => {
     test('keeps a signed-out visitor on the page and offers a sign-in', async ({ page }) => {
         await page.goto(PATH)
 
-        await expect(page.getByText('Sign in to see your space')).toBeVisible()
-        await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
+        await expect(page.getByTestId('channel-visibility-signed-out')).toBeVisible()
+        await expect(page.getByTestId('channel-visibility-sign-in')).toBeVisible()
         expect(new URL(page.url()).pathname).toBe(PATH)
     })
 
@@ -100,7 +100,7 @@ test.describe('space visibility — gate the action, never the route', () => {
      */
     test('renders no picker without a session', async ({ page }) => {
         await page.goto(PATH)
-        await expect(page.getByText('Sign in to see your space')).toBeVisible()
+        await expect(page.getByTestId('channel-visibility-signed-out')).toBeVisible()
         await expect(page.locator('main').getByRole('radio')).toHaveCount(0)
         await expect(page.locator('main').getByRole('radiogroup')).toHaveCount(0)
     })

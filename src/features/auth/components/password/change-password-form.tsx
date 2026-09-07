@@ -101,7 +101,11 @@ export function ChangePasswordForm({
     }
 
     return (
-        <form onSubmit={submit} className="flex w-full flex-col gap-6">
+        <form
+            data-testid="auth-change-password-form"
+            onSubmit={submit}
+            className="flex w-full flex-col gap-6"
+        >
             <PasswordStepHeader
                 icon={{ name: 'lock-simple', weight: 'filled' }}
                 title={t('password_change_title')}
@@ -124,6 +128,7 @@ export function ChangePasswordForm({
                 />
 
                 <PasswordField
+                    data-testid="auth-password-current"
                     ref={currentRef}
                     label={t('password_current_label')}
                     autoComplete="current-password"
@@ -142,6 +147,7 @@ export function ChangePasswordForm({
                 />
 
                 <PasswordField
+                    data-testid="auth-password-new"
                     label={t('password_new_label')}
                     autoComplete="new-password"
                     maxLength={PASSWORD_MAX_LENGTH}
@@ -152,6 +158,7 @@ export function ChangePasswordForm({
                 />
 
                 <PasswordField
+                    data-testid="auth-password-confirm"
                     label={t('password_confirm_label')}
                     autoComplete="new-password"
                     maxLength={PASSWORD_MAX_LENGTH}
@@ -176,6 +183,7 @@ export function ChangePasswordForm({
                 )}
 
                 <Button
+                    data-testid="auth-change-password-submit"
                     type="submit"
                     variant="accent"
                     size="large"

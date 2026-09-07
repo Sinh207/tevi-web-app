@@ -150,6 +150,7 @@ export function SpaceVisibilityView() {
     if (!isAuthenticated) {
         return (
             <ChannelEmptyState
+                testId="channel-visibility-signed-out"
                 icon="user-simple-alt"
                 title={t('channel_signed_out_title')}
                 // `flex-1`, so the prompt sits in the middle of the space it has rather than
@@ -158,6 +159,7 @@ export function SpaceVisibilityView() {
                 className={cn('flex-1', RISE)}
                 action={
                     <Button
+                        data-testid="channel-visibility-sign-in"
                         variant="primary"
                         size="large"
                         onClick={requireAuth(() => {
@@ -181,7 +183,12 @@ export function SpaceVisibilityView() {
                         <AlertTitle>{t('channel_error_title')}</AlertTitle>
                         <AlertSubtitle>{t('channel_error_body')}</AlertSubtitle>
                         <AlertActions>
-                            <Button variant="secondary" size="small" onClick={() => refresh()}>
+                            <Button
+                                data-testid="channel-visibility-refresh"
+                                variant="secondary"
+                                size="small"
+                                onClick={() => refresh()}
+                            >
                                 <Icon name="arrow-rotate-right" size={20} />
                                 {t('common_retry')}
                             </Button>
@@ -212,7 +219,12 @@ export function SpaceVisibilityView() {
                 body={t('channel_no_channel_body')}
                 className={cn('flex-1', RISE)}
                 action={
-                    <Button variant="secondary" size="large" onClick={() => refresh()}>
+                    <Button
+                        data-testid="channel-visibility-retry"
+                        variant="secondary"
+                        size="large"
+                        onClick={() => refresh()}
+                    >
                         <Icon name="arrow-rotate-right" size={20} />
                         {t('common_retry')}
                     </Button>
@@ -294,6 +306,7 @@ export function SpaceVisibilityView() {
              * declaration for why that is two pieces of state and not one.
              */}
             <ConfirmDialog
+                testId="channel-visibility-confirm"
                 open={confirmOpen}
                 onOpenChange={open => {
                     if (!open) setConfirmOpen(false)

@@ -4,7 +4,8 @@ import { ActionRows, ActionRowsSkeleton } from '@shared/components/action-rows'
 import { LedgerPanel, LedgerSkeleton } from '@shared/components/ledger'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { STAR_LEDGER_FIXTURE, STAR_ROWS } from './fixtures'
+import { STAR_LEDGER_FIXTURE, STAR_ROWS, STAR_ROWS_INERT } from './fixtures'
+import { LedgerFilterPreview } from './ledger-filter-preview'
 
 export const metadata: Metadata = {
     title: 'My Star',
@@ -52,15 +53,12 @@ export default function DevMyStarPage() {
 
             <section className="flex flex-col gap-2">
                 <h2 className="type-micro-overline text-(--text-body)">
-                    action rows — both lead nowhere yet, so both are visibly not ready
+                    action rows — as `/my-star` draws them, then the two inert states it no longer
+                    reaches: "coming soon" and a reason about this account
                 </h2>
                 <div className={`${MY_STAR_CONTAINER} flex flex-col gap-3`}>
                     <ActionRows rows={STAR_ROWS} unavailableLabel="Coming soon" />
-                    {/* The same list once a destination exists, so the two states can be compared. */}
-                    <ActionRows
-                        rows={STAR_ROWS.map(row => ({ ...row, href: '/dev/my-star' }))}
-                        unavailableLabel="Coming soon"
-                    />
+                    <ActionRows rows={STAR_ROWS_INERT} unavailableLabel="Coming soon" />
                 </div>
             </section>
 
@@ -71,6 +69,14 @@ export default function DevMyStarPage() {
                 <div className={MY_STAR_CONTAINER}>
                     <LedgerPanel title="Transaction history" groups={STAR_LEDGER_FIXTURE} />
                 </div>
+            </section>
+
+            <section className="flex flex-col gap-2">
+                <h2 className="type-micro-overline text-(--text-body)">
+                    filter — off, then on. The glyph is the only thing on this header that can say a
+                    filter is applied.
+                </h2>
+                <LedgerFilterPreview />
             </section>
 
             <section className="flex flex-col gap-2">

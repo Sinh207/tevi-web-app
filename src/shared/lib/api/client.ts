@@ -14,6 +14,8 @@ import {
     recordMiss,
     recordRequest,
     recordRevalidation,
+    SHARED_SCOPE,
+    type StoreOptions,
     storeEtag,
 } from './interceptors/etag'
 import { shouldSignRequest, signUrl } from './interceptors/sign'
@@ -69,6 +71,37 @@ declare module 'axios' {
          * idempotency key, a natural unique constraint) — see the retry rules below.
          */
         retry?: boolean
+        /**
+         * `false` for the handful of W_API endpoints that answer a **flat** body rather
+         * than the `{ data: … }` envelope.
+         *
+         * The unwrap is a rule about the *origin*, and W_API is not actually uniform:
+         * `payment/v3/stripe/callback/` answers `{ code, payment, type, data }` at the
+         * top level — legacy reads `res.data.type` there and `res.data.data`
+         * everywhere else. Left to the rule, that body is "unwrapped" to its own
+         * `data` field, which is `null`, and the caller is handed nothing.
+         *
+         * Set it where the shape is **known**, from the response the endpoint actually
+         * returns; it is not a switch to reach for when a body looks odd.
+         */
+        enveloped?: boolean
+        /**
+         * How this GET's response body may be cached, if the backend sends an ETag.
+         *
+         * **Persistence is opt-in.** Omit this and the body lives in the memory tier
+         * only, which dies with the tab; `{ persist: true }` also writes it to
+         * IndexedDB for `ttlMs`. Set it for content that is *public and slow-changing*
+         * — a catalogue, a currency list, a config blob. Never for anything
+         * account-scoped: it used to be the default, which left per-account billing
+         * bodies in the profile of a shared device for 24h (see `StoreOptions`).
+         *
+         * `shared: true` additionally files the body under one device-wide scope instead
+         * of the account's — read `StoreOptions.shared` before setting it, and never set it
+         * on a response that varies by bearer.
+         *
+         * Only GETs are cached at all, so this is inert on the other methods.
+         */
+        cache?: StoreOptions
     }
 }
 
@@ -111,9 +144,30 @@ type ClientConfig = InternalAxiosRequestConfig & RequestState
 
 // Models build absolute URLs via createApiModel, so no baseURL is needed;
 // GET de-duplication is handled by TanStack Query, not this axios layer.
+/**
+ * `paramsSerializer: { indexes: null }` — a **repeated key**, never a bracketed one.
+ *
+ * axios's default serialises `{ page: ['1'] }` as `page[]=1`. DRF reads `query_params.get('page')`,
+ * which is `None` for `page[]`, so it silently serves page **1** with the paginator's default size —
+ * every request. `?media_type[]=image&media_type[]=video` is dropped the same way.
+ *
+ * That matters because array-valued params are not an edge case here: `PageCursor`
+ * (`shared/lib/api/page-cursor.ts`) is `Record<string, string[]>` *by design*, so a repeatable key
+ * survives a cursor round-trip, and every paginated list in the app — channel threads, blocked
+ * accounts, follow requests, the following list, the notification inbox — sends its cursor through
+ * it. Without this option all of them ask for page 1 forever: `nextPagedCursor` counts up, gets a
+ * full page back every time, and appends the same twenty rows on every scroll. It **looks** like an
+ * infinite list that works.
+ *
+ * With `indexes: null` axios emits `page=1&media_type=image&media_type=video`, which is what both
+ * DRF and `paramsFromNextUrl` read. Set on the instance rather than per call so a new model cannot
+ * forget it — three features used to carry their own `REPEAT_ARRAY_PARAMS` constant, which is three
+ * places to remember and one of them to miss. See **B12**.
+ */
 export const apiClient = axios.create({
     timeout: API_TIMEOUT,
     headers: { Accept: 'application/json' },
+    paramsSerializer: { indexes: null },
 })
 
 /** Bare instance for the refresh call — no auth/etag interceptors (avoids
@@ -295,6 +349,19 @@ apiClient.interceptors.request.use(async (rawConfig: InternalAxiosRequestConfig)
     // to whoever is not signed in.
     if (isApiUrl(fullUrl) && !config.accessToken) config._etagScope ??= ANON_SCOPE
 
+    /*
+     * `cache: { shared: true }` re-files this request under one scope for the whole
+     * device (see `SHARED_SCOPE`). Both sides of the round trip read `_etagScope`, so
+     * overriding it here — once, before the validator is read — is what keeps the read,
+     * the write and the 304 replay agreeing about which key they mean.
+     *
+     * Gated on a scope already existing rather than set unconditionally: a request
+     * carrying a pinned `accessToken` deliberately gets none, because nothing can say
+     * whose cache its response belongs in — and "this endpoint is public" is not a
+     * reason to start caching a request whose bearer the store does not know.
+     */
+    if (config.cache?.shared && config._etagScope) config._etagScope = SHARED_SCOPE
+
     // ETag: If-None-Match for GET. Skipped on a replay, which already carries the
     // validator it was given and must not be counted as a second request.
     const isGet = (config.method ?? 'get').toLowerCase() === 'get'
@@ -307,7 +374,7 @@ apiClient.interceptors.request.use(async (rawConfig: InternalAxiosRequestConfig)
     ) {
         if (isFirstAttempt) recordRequest()
         const key = generateCacheKey(fullUrl, config.params)
-        const etag = await getStoredEtag(config._etagScope, key)
+        const etag = await getStoredEtag(config._etagScope, key, config.cache)
         if (etag) config.headers.set('If-None-Match', etag)
         else if (isFirstAttempt) recordMiss()
     }
@@ -399,7 +466,8 @@ apiClient.interceptors.response.use(
     (response: AxiosResponse) => {
         const config = response.config as ClientConfig
         const fullUrl = resolveFullUrl(config)
-        response.data = unwrapApiEnvelope(fullUrl, response.data)
+        // `enveloped: false` is a caller saying "this endpoint does not wrap" — see the option's note.
+        if (config.enveloped !== false) response.data = unwrapApiEnvelope(fullUrl, response.data)
         // Store ETag on cacheable 200s (payload already unwrapped). The scope is the
         // one captured on the way out, not whoever is active now.
         const etag = response.headers?.etag
@@ -409,6 +477,7 @@ apiClient.interceptors.response.use(
                 generateCacheKey(fullUrl, config.params),
                 etag,
                 response.data,
+                config.cache,
             )
             // We asked "has it changed?" and it had — neither a hit nor a miss.
             if (config.headers?.has('If-None-Match')) recordRevalidation()
@@ -430,6 +499,7 @@ apiClient.interceptors.response.use(
             const cached = await getCachedData(
                 config._etagScope,
                 generateCacheKey(fullUrl, config.params),
+                config.cache,
             )
             if (cached !== undefined) {
                 recordHit()

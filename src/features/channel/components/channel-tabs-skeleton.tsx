@@ -28,12 +28,19 @@ import { CHANNEL_PADDING } from '../lib/container'
  */
 export function ChannelTabsSkeleton() {
     return (
-        <div className="flex min-w-0 flex-col md:rounded-b-[var(--radius-xl)] md:bg-(--background-surface)">
+        // `aria-busy` on the root, which is this repo's loading contract — every other
+        // `*-skeleton.tsx` carries it, and it is what a suite waits for the absence of rather than
+        // sleeping. This file was the one that had it only on the inner track. See docs/TEST_IDS.md.
+        <div
+            data-testid="channel-tabs-loading"
+            aria-busy="true"
+            className="flex min-w-0 flex-col bg-(--background-surface) md:rounded-b-[var(--radius-xl)]"
+        >
             {/*
              * Same wrapper the real bar gets in `channel-tabs.tsx` — including the `md:` surface,
              * without which the track paints a band a shade off the card it sits in.
              */}
-            <div className="bg-(--background) px-3 md:bg-(--background-surface) md:px-6">
+            <div className="bg-(--background-surface) px-3 md:px-6">
                 <div aria-hidden="true" className="flex w-full items-stretch">
                     {[0, 1, 2].map(index => (
                         <div

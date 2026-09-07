@@ -204,6 +204,7 @@ export function ProfileMediaFields({
                     />
                 )}
                 <input
+                    data-testid="channel-profile-cover-file"
                     ref={coverInput}
                     type="file"
                     accept="image/jpeg,image/png"
@@ -215,6 +216,7 @@ export function ProfileMediaFields({
                     }}
                 />
                 <button
+                    data-testid="channel-profile-cover-pick"
                     type="button"
                     disabled={disabled}
                     onClick={() => coverInput.current?.click()}
@@ -287,6 +289,7 @@ export function ProfileMediaFields({
                             </span>
                         )}
                         <input
+                            data-testid="channel-profile-avatar-file"
                             ref={avatarInput}
                             type="file"
                             accept={accept}
@@ -298,6 +301,7 @@ export function ProfileMediaFields({
                             }}
                         />
                         <button
+                            data-testid="channel-profile-avatar-pick"
                             type="button"
                             disabled={disabled}
                             onClick={() => avatarInput.current?.click()}

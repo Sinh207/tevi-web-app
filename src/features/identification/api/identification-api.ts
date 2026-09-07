@@ -10,6 +10,13 @@ import type { SubmissionsResponse, SumsubLevel, SumsubSession } from './types'
 const api = createApiModel({ apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN}/auth` })
 
 /**
+ * The largest page the auth service's list endpoints accept — every one of them takes
+ * `?page=&page_size=`, defaults to 50 and caps at this. See `getSubmissions` for why the whole
+ * list is asked for in one go rather than paged.
+ */
+const MAX_PAGE_SIZE = 500
+
+/**
  * Query keys.
  *
  * Account-scoped for the same reason `authKeys.me` is: verification is a property of one
@@ -31,11 +38,26 @@ export const identificationApi = {
      * whichever bearer happens to be active when the request goes out — same reasoning as
      * `authApi.getMe`, and the same failure it prevents (one account's verification state
      * filed under another's key).
+     *
+     * ## `page_size` is the fix for a bug that could only ever under-report
+     *
+     * ✅ The endpoint **is** paginated — `?page=&page_size=`, default **50**, max **500**
+     * (auth contract, B22) — and this call read `results` and ignored `next`. Since
+     * `toIdentityState` treats an approval anywhere in the list as verified, a first-page-only
+     * read can only ever miss one: somebody with 50+ submissions whose approval had scrolled
+     * off would be shown the intro and told to verify again. Asking for the documented maximum
+     * closes that with one parameter, where following `next` would be a paging loop for a list
+     * that is a handful of rows for every real account.
+     *
+     * Deliberately **not** filtered by `level` or `status`, though the endpoint accepts both:
+     * the level's casing is unsettled (see `SumsubLevel`), and a filter that silently matches
+     * nothing reads exactly like an account with no submissions — which is the one wrong answer
+     * this screen must not give.
      */
     getSubmissions(accountId?: string | null) {
         return api.get<SubmissionsResponse>(
             'v1/identification/submissions/',
-            undefined,
+            { page_size: MAX_PAGE_SIZE },
             accountId ? { accountId } : undefined,
         )
     },

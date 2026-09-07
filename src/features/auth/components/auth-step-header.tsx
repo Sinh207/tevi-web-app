@@ -17,6 +17,7 @@ export function AuthStepHeader({ title, onBack }: { title: string; onBack: () =>
     return (
         <div className="flex w-full items-center gap-2">
             <button
+                data-testid="auth-step-back"
                 type="button"
                 onClick={onBack}
                 aria-label={t('common_back')}

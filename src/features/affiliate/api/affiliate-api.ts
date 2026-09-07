@@ -1,4 +1,5 @@
 import { env } from '@shared/config/env'
+import { CACHE_TTL } from '@shared/lib/api/interceptors/etag'
 import { createApiModel } from '@shared/lib/api/model'
 import {
     type CampaignStats,
@@ -57,7 +58,22 @@ export const affiliateApi = {
             .get<unknown>(
                 'v1/programs/',
                 { page: 1, page_size: PROGRAMS_PAGE_SIZE },
-                scope({ accountId, signal }),
+                /*
+                 * The catalogue is public — nothing here says whether *this* account joined, which
+                 * is `campaigns/current/`'s answer and is deliberately not cached.
+                 *
+                 * An hour, not a day: `estimate_income` and `promoter_count` drift on their own
+                 * rather than being edited, which is exactly the line `CACHE_TTL` draws.
+                 *
+                 * **`persist` but not `shared`**, for one field: `estimate_income` is documented as
+                 * a monthly revenue estimate, and whether that is the *program's* figure or *this
+                 * promoter's* is not settled. If it is the promoter's, a device-wide scope shows one
+                 * account another's projected earnings — **B93**.
+                 */
+                {
+                    ...scope({ accountId, signal }),
+                    cache: { persist: true, ttlMs: CACHE_TTL.hour },
+                },
             )
             .then(normalizePrograms)
     },

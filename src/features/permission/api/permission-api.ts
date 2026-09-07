@@ -1,4 +1,5 @@
 import { env } from '@shared/config/env'
+import { ANON_SCOPE, invalidateETagCache } from '@shared/lib/api/interceptors/etag'
 import { createApiModel } from '@shared/lib/api/model'
 import { type ChannelPermission, normalizeChannelPermission } from './types'
 
@@ -42,6 +43,19 @@ import { type ChannelPermission, normalizeChannelPermission } from './types'
  * SSR bearer by construction (`shared/lib/api/token.ts`).
  */
 const api = createApiModel({ apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN}/permission` })
+
+/**
+ * Forget the cached grants for one account — **on the `premium_info` frame**, and only then.
+ *
+ * Same trap, same reason as `forgetMyChannelCache` and `forgetPremiumInfoCache` (**B72**): the
+ * refetch this provider starts carries an `If-None-Match`, a `304` replays the body it is trying to
+ * replace, and the reader who just bought Premium keeps the grants they had. Gates **fail closed**
+ * here, so the failure is silent in the worst direction — a feature Premium just unlocked stays
+ * hidden, and the only cure is a reload.
+ */
+export function forgetChannelPermissionCache(accountId: string | null) {
+    return invalidateETagCache(accountId ?? ANON_SCOPE, `${api.apiBase}/v3/channel/permission/`)
+}
 
 /**
  * Query keys.

@@ -16,15 +16,55 @@
  */
 
 const MAX_MEMORY = 1000
-const DEFAULT_TTL_MS = 86_400_000 // 24h
+
+/**
+ * TTLs for the endpoints that opt into the disk tier (see `StoreOptions.persist`).
+ *
+ * Two values, not a per-endpoint number: the only question that matters is whether a
+ * stale copy for this long is *harmless*, and there are two honest answers for public
+ * content — "the backoffice edits it by hand" and "it drifts on its own".
+ */
+export const CACHE_TTL = {
+    /** A catalogue, a currency list, a publishable key: changed by a human, rarely. */
+    day: 86_400_000,
+    /** A rate or a config blob: correct now, not necessarily in an hour. */
+    hour: 3_600_000,
+} as const
+
+const DEFAULT_TTL_MS = CACHE_TTL.day
 const DB_NAME = 'tevi-etag'
 /**
  * Bump to discard the store: a cache is rebuilt, never migrated (see `onupgradeneeded`).
  * v3: `generateCacheKey` now encodes and structurally serialises params, so every
  * key written by v2 is unreachable — and some of them were *wrong* (see below).
+ * v4: persistence became opt-in. Every record already on disk was written under
+ * "persist everything", which is the policy this store exists to have stopped —
+ * per-account billing bodies among them. Stopping new writes leaves those readable
+ * and *servable* for up to 24h, so the deploy has to drop them, not wait them out.
  */
-const DB_VERSION = 3
+const DB_VERSION = 4
 const STORE = 'etags'
+
+/**
+ * Scope for a body that is **identical for every account**, opted into with
+ * `cache: { shared: true }`.
+ *
+ * Not an account id and not `ANON_SCOPE`: a device with three accounts was keeping
+ * three copies of the same 18KB country list and revalidating it three times, while
+ * the *query* layer had already keyed the same data globally
+ * (`channelKeys.categories()` takes no argument). Two layers disagreeing about whose
+ * data it is, and the ETag layer was the one that was wrong.
+ *
+ * `'shared'` cannot collide with a real scope: account ids are numeric uids or UUIDs,
+ * and the one other reserved value is `ANON_SCOPE`. It deliberately contains no `::`,
+ * which is the separator every prefix delete relies on.
+ *
+ * ⚠ **`clearETagScope` does not reach it.** Signing out drops an account's scope; a
+ * shared record survives, because nothing in it belonged to that account. That is the
+ * whole point of the flag and it is also the reason the flag has to be explicit — see
+ * `StoreOptions.shared`.
+ */
+export const SHARED_SCOPE = 'shared'
 
 /** Scope for requests made with no account signed in. */
 export const ANON_SCOPE = 'anon'
@@ -67,14 +107,6 @@ const metrics = {
 export function getPerformanceMetrics() {
     return { ...metrics }
 }
-export function resetPerformanceMetrics() {
-    metrics.requestCount = 0
-    metrics.cacheHits = 0
-    metrics.cacheMisses = 0
-    metrics.revalidations = 0
-    metrics.errorCount = 0
-}
-
 // Counters nothing reads are counters nobody trusts. Until there is real
 // telemetry, hang them off `window` in dev so `__teviApiMetrics()` in the
 // console can answer "is the ETag cache doing anything?".
@@ -374,13 +406,22 @@ function idbClear() {
  * Never waits on the IndexedDB connection: this sits in front of the request in
  * the interceptor, so a slow open would delay the GET itself.
  */
-export async function getStoredEtag(scope: string, cacheKey: string): Promise<string | null> {
+export async function getStoredEtag(
+    scope: string,
+    cacheKey: string,
+    opts: StoreOptions = {},
+): Promise<string | null> {
     const sk = scopedKey(scope, cacheKey)
     const mem = memory.get(sk)
     if (mem && mem.expiresAt > Date.now()) {
         touch(sk, mem)
         return mem.etag
     }
+    // Only an endpoint that persists can have a record on disk, so for every other
+    // one this read is a transaction that cannot hit. It also makes `persist`
+    // symmetric: *removing* the flag from an endpoint stops serving its old disk
+    // records the moment the code ships, instead of a TTL later.
+    if (!opts.persist) return null
     const rec = await idbGetIfOpen(sk)
     if (rec && rec.expiresAt > Date.now()) {
         memory.set(sk, rec)
@@ -397,13 +438,21 @@ export async function getStoredEtag(scope: string, cacheKey: string): Promise<st
  * already told us the body is unchanged, so there is nothing to serve unless we
  * find it. Giving up early here would turn a hit into a second round trip.
  */
-export async function getCachedData(scope: string, cacheKey: string): Promise<unknown> {
+export async function getCachedData(
+    scope: string,
+    cacheKey: string,
+    opts: StoreOptions = {},
+): Promise<unknown> {
     const sk = scopedKey(scope, cacheKey)
     const mem = memory.get(sk)
     if (mem && mem.expiresAt > Date.now()) {
         touch(sk, mem)
         return mem.data
     }
+    // Same gate as `getStoredEtag`, and it costs nothing to be missing: a 304 with
+    // no body re-asks unconditionally. A non-persisting endpoint that gets here has
+    // had its memory entry trimmed, so there is nothing to wait for IndexedDB about.
+    if (!opts.persist) return undefined
     const rec = await idbGet(sk)
     return rec && rec.expiresAt > Date.now() ? rec.data : undefined
 }
@@ -423,23 +472,79 @@ function tooLarge(data: unknown): boolean {
     }
 }
 
-/** Persist a 200 response's ETag + body. */
+export interface StoreOptions {
+    /**
+     * Also write this body to IndexedDB, so it survives a reload.
+     *
+     * **Opt-in, and the default is the safe one.** It used to be neither: every
+     * cacheable 200 landed on disk for 24h, which put per-account billing bodies
+     * in the browser profile of a shared device — `v3/subscription/my-subscriptions/`
+     * demonstrably among them (B72). Set it for content that is *public and
+     * slow-changing*; leave it alone for anything account-scoped.
+     *
+     * The tier it gates is worth less than it looks. This is an App Router SPA, so
+     * a client navigation keeps the whole memory tier — the disk tier only earns a
+     * hit across a **hard** reload, which is the minority case. Paying for it with
+     * somebody's ledger on disk is the wrong trade by default.
+     */
+    persist?: boolean
+    /**
+     * Key this body by `SHARED_SCOPE` instead of the account, so one copy serves every
+     * account on the device.
+     *
+     * **Deliberately not implied by `persist`.** The account scope is a second line of
+     * defence: mark an account-scoped body public by mistake today and the damage is a
+     * copy on disk, which is bad; collapse the scope as well and the same mistake serves
+     * one reader another reader's body, which is worse. So this is its own flag, and
+     * setting it is an assertion — *the response does not vary by account, at all*. It is
+     * not "mostly the same" and not "the same for the accounts I tested".
+     *
+     * A body that varies by anything **on the request** is still fine: the params are in
+     * the key already, so `payout-methods/?countryCode=US` shares correctly per country.
+     * What must not vary is the bearer.
+     */
+    shared?: boolean
+    /** How long the record stays servable, in either tier. */
+    ttlMs?: number
+}
+
+/**
+ * What `storeEtag` decided, as a value.
+ *
+ * Exported for the tests: there is no IndexedDB under Vitest, so the write itself
+ * is unobservable and "memory-only unless asked" cannot be asserted through
+ * `storeEtag`'s own effects. The decision is the part worth pinning — a refactor
+ * that flips the default back to persist-everything has to fail somewhere.
+ */
+export function cacheDecision(
+    data: unknown,
+    opts: StoreOptions = {},
+): { rec: Omit<CacheRecord, 'etag'>; persist: boolean } | null {
+    // Skipping the entry outright, rather than keeping the validator without the
+    // body: an ETag with nothing behind it turns the next 304 into a round trip
+    // that has to be re-issued unconditionally — strictly worse than not asking.
+    if (tooLarge(data)) return null
+    return {
+        rec: { data, expiresAt: Date.now() + (opts.ttlMs ?? DEFAULT_TTL_MS) },
+        persist: opts.persist === true,
+    }
+}
+
+/** Cache a 200 response's ETag + body. Memory always; disk only if asked. */
 export function storeEtag(
     scope: string,
     cacheKey: string,
     etag: string,
     data: unknown,
-    ttlMs = DEFAULT_TTL_MS,
+    opts: StoreOptions = {},
 ) {
-    // Skipping the entry outright, rather than keeping the validator without the
-    // body: an ETag with nothing behind it turns the next 304 into a round trip
-    // that has to be re-issued unconditionally — strictly worse than not asking.
-    if (tooLarge(data)) return
+    const decision = cacheDecision(data, opts)
+    if (!decision) return
     const sk = scopedKey(scope, cacheKey)
-    const rec: CacheRecord = { etag, data, expiresAt: Date.now() + ttlMs }
+    const rec: CacheRecord = { etag, ...decision.rec }
     memory.set(sk, rec)
     trimMemory()
-    void idbSet(sk, rec)
+    if (decision.persist) void idbSet(sk, rec)
 }
 
 export function recordRequest() {
@@ -505,8 +610,58 @@ export async function clearETagScope(scope: string | null) {
     await idbDeletePrefix(prefix)
 }
 
-export function invalidateETagCache(scope: string, url: string, params?: Record<string, unknown>) {
-    memory.delete(scopedKey(scope, generateCacheKey(url, params)))
+/**
+ * Forget what is cached for one resource, so the next read of it is a full one.
+ *
+ * For the case a validator cannot cover: a resource whose content changes as a side
+ * effect of a **different** endpoint's write. `my-subscriptions/` after a card
+ * membership settles is the one in hand — the backend answers `304`, the client
+ * replays "not a member", and the reader is offered what they just bought
+ * (**B72**). Dropping the record turns the next request unconditional *once*;
+ * conditional reads resume from the body that comes back.
+ *
+ * ⚠ **Await it.** The IndexedDB delete is asynchronous, and this is normally called
+ * right before a refetch — invalidating a query first and evicting after means the
+ * request goes out while the record is still there and picks up the validator being
+ * thrown away.
+ *
+ * ⚠ **The scope must be the one the request was filed under.** Every caller today passes
+ * `accountId ?? ANON_SCOPE`, which is right for every endpoint they target — but an endpoint marked
+ * `cache: { shared: true }` is filed under `SHARED_SCOPE`, and an account-scoped eviction aimed at
+ * one would silently hit nothing. It cannot throw and the next read would still answer `304`, so
+ * this is the sentence that has to catch it: a shared endpoint is evicted with `SHARED_SCOPE`.
+ *
+ * With `params` this forgets one exact request; **without them, every query variant
+ * of that path** — `?page=1&status=active&channel_id=…` and the rest — because a
+ * write does not respect the filters a client happened to read through. That is
+ * also why it is a prefix and not a loop over known keys: the point is the ones
+ * nobody here can enumerate.
+ *
+ * Used to drop the memory tier alone, which read as working and was not: IndexedDB
+ * kept the record and handed the same validator back on the very next request.
+ */
+export async function invalidateETagCache(
+    scope: string,
+    url: string,
+    params?: Record<string, unknown>,
+) {
+    if (params) {
+        const sk = scopedKey(scope, generateCacheKey(url, params))
+        memory.delete(sk)
+        await idbWrite(store => {
+            store.delete(sk)
+        })
+        return
+    }
+
+    // `generateCacheKey` ends a keyless URL with `?`, which is exactly the boundary
+    // between this path and one that merely starts with the same characters —
+    // `…/packages/` cannot be caught by a prefix taken from `…/packages`.
+    const prefix = scopedKey(scope, generateCacheKey(url))
+    for (const k of memory.keys()) {
+        if (k.startsWith(prefix)) memory.delete(k)
+    }
+    await idbDeletePrefix(prefix)
 }
 
 /**

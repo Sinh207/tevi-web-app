@@ -6,6 +6,7 @@ import type { Channel } from '../api/types'
 import { type ChannelTabId, useChannelTab } from '../hooks/use-channel-tab'
 import { CHANNEL_BAR_HEIGHT, CHANNEL_PADDING } from '../lib/container'
 import { ChannelAboutTab } from './channel-about-tab'
+import { ChannelLiveNow } from './channel-live-now'
 import { ChannelLiveTab } from './channel-live-tab'
 import { ChannelThreadList } from './channel-thread-list'
 
@@ -44,7 +45,21 @@ export function ChannelTabs({ channel, isOwner }: { channel: Channel; isOwner: b
     const panels: Record<ChannelTabId, { label: string; panel: React.ReactNode }> = {
         posts: {
             label: t('channel_tab_posts'),
-            panel: <ChannelThreadList slug={channel.slug} kind="posts" isOwner={isOwner} />,
+            /*
+             * The live card sits **above** the list rather than inside it, and outside its state
+             * machine: a space can be on air with no posts at all, and a live stream that
+             * disappeared behind an "No posts yet" panel would be the one thing on the page that is
+             * true right now, hidden by the one that is merely empty.
+             *
+             * `ChannelLiveNow` renders nothing when nothing is on air, so the common case adds a
+             * wrapper and no markup.
+             */
+            panel: (
+                <div className="flex min-w-0 flex-col gap-3">
+                    <ChannelLiveNow channel={channel} />
+                    <ChannelThreadList slug={channel.slug} kind="posts" isOwner={isOwner} />
+                </div>
+            ),
         },
         media: {
             label: t('channel_tab_media'),
@@ -68,6 +83,7 @@ export function ChannelTabs({ channel, isOwner }: { channel: Channel; isOwner: b
 
     return (
         <StickyTabs
+            testId="channel-tabs"
             variant="underline"
             label={t('channel_tabs_label')}
             stickyOffset={CHANNEL_BAR_HEIGHT}
@@ -78,7 +94,7 @@ export function ChannelTabs({ channel, isOwner }: { channel: Channel; isOwner: b
              * Surface only from `md`, matching the header above it — below that the panels sit on the
              * page background with no card edge.
              */
-            className="md:rounded-b-[var(--radius-xl)] md:bg-(--background-surface)"
+            className="bg-(--background-surface) md:rounded-b-[var(--radius-xl)]"
             /**
              * The strip is **sticky, so it always needs an opaque fill** — whatever is behind it
              * scrolls under it, and a transparent sticky row shows the content passing through. So
@@ -90,7 +106,7 @@ export function ChannelTabs({ channel, isOwner }: { channel: Channel; isOwner: b
              * `md:` half is what stops it drawing a band a shade off the card. `twMerge` lets the
              * later class win.
              */
-            barClassName="bg-(--background) px-3 md:bg-(--background-surface) md:px-6"
+            barClassName="bg-(--background-surface) px-3 md:px-6"
             tabs={available.map(id => ({
                 id,
                 label: panels[id].label,

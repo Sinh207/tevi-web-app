@@ -78,6 +78,77 @@ export const channelEventSchema = z.looseObject({
     code: nullableText,
     title: nullableText,
     start_at: nullableTimestamp,
+    /**
+     * When the stream actually went on air, as against `start_at`'s *scheduled* time.
+     *
+     * Legacy's home card prints this one, and it is the honest figure: a stream that starts twenty
+     * minutes late otherwise advertises a time that has passed. `null` until it does — a scheduled
+     * event has a `start_at` and no `started_at`.
+     */
+    started_at: nullableTimestamp,
+    /**
+     * What it costs to unlock, as a **decimal string** (`"3.00"`), in `price_currency` (`TVS`).
+     *
+     * A string on the wire and left one here: it is money, and `Number("3.00")` is a lossy step to
+     * take in a schema when only the formatter needs it. `null` means the payload said nothing,
+     * which is **not** the same as free — see `liveAccess`, where legacy conflates the two.
+     */
+    price: nullableText,
+    /** Memberships that unlock this stream. Non-empty ⇒ members-only, whatever `price` says. */
+    /**
+     * ⚠ **Rows may be ids *or* objects, and dropping the objects silently opens the stream.**
+     *
+     * This filtered to `typeof id === 'string'`, so a payload carrying
+     * `[{ id: '…' }]` — or `[{ package_id: '…' }]` — parsed to `[]`, and `liveAccess` then read a
+     * members-only stream as an **open** one and drew no badge at all. Nothing throws and nothing
+     * looks broken; the stream is simply advertised as free. It is the array trapdoor
+     * `channelCategorySchema` is written up about, one field over: a per-element mismatch became
+     * total data loss.
+     *
+     * So an element is reduced to an id whichever of the three shapes it arrives in, and only what
+     * cannot be reduced is dropped. The **length** is all any caller reads, which is why this is
+     * worth being generous about: one unparsed element is the difference between "members only" and
+     * "free".
+     */
+    required_packages: z
+        .unknown()
+        .transform(v =>
+            Array.isArray(v)
+                ? v
+                      .map(row => {
+                          if (typeof row === 'string') return row.trim() || null
+                          if (row && typeof row === 'object') {
+                              const candidate =
+                                  (row as { id?: unknown; package_id?: unknown }).id ??
+                                  (row as { package_id?: unknown }).package_id
+                              if (typeof candidate === 'string') return candidate.trim() || null
+                              if (typeof candidate === 'number') return String(candidate)
+                          }
+                          return null
+                      })
+                      .filter((id): id is string => id !== null)
+                : [],
+        )
+        .catch([]),
+    /** The backend's own answer to "is this reader locked out". */
+    need_unlock_package: z.unknown().transform(Boolean).catch(false),
+    /** This reader has already paid for it. */
+    purchased: z.unknown().transform(Boolean).catch(false),
+    /**
+     * Platforms this stream may **not** be watched on — `["Website"]` on a real payload.
+     *
+     * Legacy reads it in one place and turns it into a whole screen: the event page refuses to play
+     * and shows `PlatformRestricted` instead. It does **not** filter lists on it, so the stream is
+     * still advertised; see `isPlatformRestricted` for what this client does with that, and B74.
+     */
+    restricted_platforms: z
+        .unknown()
+        .transform(v => (Array.isArray(v) ? v.filter(p => typeof p === 'string') : []))
+        .catch([]),
+    /** The canonical share URL — `https://tevi.com/@{slug}/event/{code}/`. */
+    shareable_url: nullableText,
+    /** The short form — `https://tevi.com/e/{code}/`. Both are app-associated domains. */
+    public_url: nullableText,
     /** Upper-cased here so no call site has to remember that the wire is not consistent. */
     status: z
         .unknown()

@@ -24,12 +24,20 @@ import { PermissionProvider, usePermission } from './permission-provider'
  */
 
 const getChannelPermission = vi.hoisted(() => vi.fn())
+/** Records the order the two steps happen in — which is the claim, not that both happened. */
+const calls = vi.hoisted(() => [] as string[])
+const forgetChannelPermissionCache = vi.hoisted(() =>
+    vi.fn(async (accountId: string | null) => {
+        calls.push(`forget:${accountId}`)
+    }),
+)
 
 vi.mock('../api/permission-api', async () => {
     const actual =
         await vi.importActual<typeof import('../api/permission-api')>('../api/permission-api')
     return {
         ...actual,
+        forgetChannelPermissionCache,
         permissionApi: { ...actual.permissionApi, getChannelPermission },
     }
 })
@@ -268,6 +276,39 @@ describe('PermissionProvider', () => {
             socketHandlers.get('premium_info')?.({ is_premium: true })
         })
         await waitFor(() => expect(getChannelPermission).toHaveBeenCalledTimes(2))
+    })
+
+    /**
+     * **The ETag is evicted before the refetch, not after and not never.**
+     *
+     * The handler used to be a bare `refresh()`, and that is a silent failure: the refetch carries an
+     * `If-None-Match`, the service answers `304` because its validator has not moved, and `apiClient`
+     * replays the grants this is trying to replace. The test above — "a second request went out" —
+     * passes either way, which is exactly why this one exists. **B72.**
+     *
+     * Order matters as much as presence: `invalidateQueries` starts the request synchronously, so
+     * evicting afterwards drops a record the request has already read.
+     */
+    it('evicts the cached grants before re-reading them', async () => {
+        authState.activeId = '7'
+        authState.isAuthenticated = true
+
+        const { read } = renderPermission()
+        await waitFor(() => expect(read().isKnown).toBe(true))
+        calls.length = 0
+        getChannelPermission.mockImplementation(async () => {
+            calls.push('fetch')
+            return {}
+        })
+
+        await act(async () => {
+            socketHandlers.get('premium_info')?.({ is_premium: true })
+        })
+        await waitFor(() => expect(calls).toContain('fetch'))
+
+        // The account is the one the frame arrived for, and the eviction is first.
+        expect(forgetChannelPermissionCache).toHaveBeenCalledWith('7')
+        expect(calls[0]).toBe('forget:7')
     })
 
     it('throws when used outside the provider', () => {

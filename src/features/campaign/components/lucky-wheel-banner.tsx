@@ -45,6 +45,7 @@ export function LuckyWheelBanner() {
     return (
         <>
             <PromoCard
+                data-testid="campaign-lucky-wheel"
                 as="button"
                 onClick={() => setOpen(true)}
                 title={title}
@@ -53,6 +54,7 @@ export function LuckyWheelBanner() {
                 className="cursor-pointer text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
             />
             <GetAppDialog
+                testId="campaign-lucky-wheel-get-app"
                 open={open}
                 onOpenChange={setOpen}
                 title={title}

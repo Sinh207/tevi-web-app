@@ -22,11 +22,14 @@
  * Legacy is the counter-example for what happens otherwise: its two ledger components are ~300
  * near-identical lines each and have already drifted.
  *
- * ## The exchange service lives here on purpose
+ * ## The exchange service used to live here and no longer does
  *
- * The currency list and the live rate are **this screen's** — they serve a control that exists on this one
- * page. Putting them on the balance provider would mount two exchange-service queries above the whole app;
- * the app shell shows USD (`useBalanceDisplay`), which needs no rate at all.
+ * The currency list, the rate and `useCurrency` moved to `@features/balance` when the account drawer's
+ * balance card gained the same switcher (legacy has had one there all along). The drawer is the shell's and
+ * cannot import this barrel — see the cycle below — and a display unit belongs beside the figure it
+ * relabels rather than inside one of the two screens that offer it. Nothing was handed to the shell in the
+ * process: `useCurrency({ enabled })` requests nothing until its caller asks, so the drawer waits for
+ * `open` and this screen still asks on mount.
  *
  * ## Two barrels, and it is a hard constraint rather than a preference
  *
@@ -37,27 +40,41 @@
  * `features/navigation` imports **that**. This file must never become the drawer's dependency.
  */
 
-export { exchangeKeys } from './api/exchange-api'
 export { walletLedgerKeys } from './api/wallet-ledger-api'
+/**
+ * The live switcher — the chip plus the dialog behind it. Exported for the same reason and with the
+ * same caveat: `/dev/my-wallet` is the only place a design pass can open it, because the real screen
+ * needs a signed-in creator *and* the exchange service's list.
+ */
+/**
+ * The `?` beside the balance and the dialog behind it. Exported for `/dev/my-wallet` — on the real
+ * screen it sits on a card that needs a signed-in creator's figure.
+ */
+export { BalanceHelpButton } from './components/balance-help-button'
+export { CurrencyPicker } from './components/currency-picker'
 export { MyWalletView } from './components/my-wallet-view'
+export { TeviCoinAppLink } from './components/tevi-coin-app-link'
 /**
  * Exported for `/dev/my-wallet`, for the reason `features/earnings` exports `EarningsDayRow`: the real
  * screen is unreachable without a signed-in creator who has actually earned, so without a preview a design
  * pass on it means faking an API response. Both are pure props.
  */
 export { CurrencyChip, TotalBalanceCard } from './components/total-balance-card'
-export { MY_WALLET_CONTAINER } from './lib/container'
+/**
+ * `/my-wallet/transaction-history` — the full ledger and its filter. A second screen rather than a
+ * prop on the first: see its own doc, and `routes.ts` for why the address is legacy's.
+ */
+export { WalletTransactionHistoryView } from './components/wallet-transaction-history-view'
+export { MY_WALLET_CONTAINER, MY_WALLET_PANEL, MY_WALLET_SCREEN } from './lib/container'
 /** Exported for `/dev/my-wallet`, so the preview draws the same artwork the screen does. */
 export { MY_WALLET_ART } from './lib/illustrations'
-export { MY_WALLET_PATH } from './routes'
+export { MY_WALLET_PATH, MY_WALLET_TRANSACTION_HISTORY_PATH } from './routes'
 
 /**
- * Deliberately **not** exported: `walletLedgerApi`, `exchangeApi`, `useCurrency`, `useWalletLedger`,
- * `useFirstPayoutFree`, and the transaction-type table.
+ * Deliberately **not** exported: `walletLedgerApi`, `useWalletLedger`, `useFirstPayoutFree`, and the
+ * transaction-type table.
  *
  * A component calling the model directly is what CLAUDE.md's "never call axios from components" forbids, and
- * exporting it is the invitation. `useCurrency` is withheld for a second reason: it is the *wallet's*
- * display unit, and another screen reaching for it would be adopting a preference set on a page its reader
- * may never have opened. The vocabulary is withheld for a third: it is this ledger's, and a caller using it
- * from `/my-star` would be offering filters that endpoint cannot answer.
+ * exporting it is the invitation. The vocabulary is withheld for a second reason: it is this ledger's, and a
+ * caller using it from `/my-star` would be offering filters that endpoint cannot answer.
  */

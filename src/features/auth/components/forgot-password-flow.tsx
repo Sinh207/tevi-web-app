@@ -2,8 +2,9 @@
 
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Button } from '@shared/ui/button'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { authApi, type Username } from '../api/auth-api'
+import { useResendCountdown } from '../hooks/use-resend-countdown'
 import { toResetErrorKey } from '../lib/auth-error'
 import { AUTH_FIELD_CLASS } from './auth-fields'
 import { AuthStepHeader } from './auth-step-header'
@@ -51,7 +52,6 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
     const [sid, setSid] = useState('')
     const [errorKey, setErrorKey] = useState<string | null>(null)
     const [busy, setBusy] = useState(false)
-    const [secondsLeft, setSecondsLeft] = useState(0)
     const fieldId = useId()
     /**
      * Guards the network call. A ref, not `busy`: `setBusy` lands on the next render, so
@@ -59,19 +59,14 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
      */
     const inFlight = useRef(false)
 
+    /*
+     * The clock is `useResendCountdown`'s — three flows held the same `useState` plus the same tick
+     * effect. `expired` stays here: it needs the step, which that hook deliberately does not know.
+     */
+    const { secondsLeft, start: startCountdown } = useResendCountdown(CODE_TTL_SECONDS)
+
     const username: Username = { kind: 'email', value: email }
     const expired = step === 'verify' && secondsLeft === 0
-
-    /**
-     * One `setTimeout` per tick rather than a single `setInterval`: it re-derives from
-     * state each time, so it cannot drift or double up, and React tears it down cleanly
-     * when the step changes or the component unmounts.
-     */
-    useEffect(() => {
-        if (step !== 'verify' || secondsLeft === 0) return
-        const id = setTimeout(() => setSecondsLeft(s => s - 1), 1000)
-        return () => clearTimeout(id)
-    }, [step, secondsLeft])
 
     /**
      * Every step is the same shape: disable, call, advance or report.
@@ -98,7 +93,7 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
         run(async () => {
             const res = await authApi.sendOtp({ username, purpose: 'reset' })
             setSid(res.sid)
-            setSecondsLeft(CODE_TTL_SECONDS)
+            startCountdown()
             setStep('verify')
         })
 
@@ -109,7 +104,7 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
             // user had typed both have to go with it.
             setSid(res.sid)
             setOtp('')
-            setSecondsLeft(CODE_TTL_SECONDS)
+            startCountdown()
         })
 
     const verify = (code: string) =>
@@ -141,7 +136,7 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
         if (step === 'request') return void requestCode()
         if (step === 'verify') return void verify(otp)
         void run(async () => {
-            await authApi.resetPassword({ username, otp, password, sid })
+            await authApi.resetPassword({ username, otp, new_password: password, sid })
             // Back to sign-in rather than straight in: the reset endpoint does not mint a
             // session, and pretending otherwise would strand them on a signed-out shell.
             onCancel()
@@ -168,7 +163,11 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
     }
 
     return (
-        <form onSubmit={submit} className="flex w-full flex-col gap-4">
+        <form
+            data-testid="auth-forgot-form"
+            onSubmit={submit}
+            className="flex w-full flex-col gap-4"
+        >
             <AuthStepHeader title={t(copy.title)} onBack={onCancel} />
 
             <p className="type-dense-default text-text-body">
@@ -177,6 +176,7 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
 
             {step === 'request' && (
                 <input
+                    data-testid="auth-forgot-email"
                     id={fieldId}
                     type="email"
                     value={email}
@@ -217,6 +217,7 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
                         </span>
                     ) : expired ? (
                         <button
+                            data-testid="auth-forgot-resend"
                             type="button"
                             onClick={() => void resend()}
                             className="type-caption-meta cursor-pointer self-start text-text-link underline underline-offset-2 hover:no-underline"
@@ -233,6 +234,7 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
 
             {step === 'reset' && (
                 <input
+                    data-testid="auth-forgot-new-password"
                     id={fieldId}
                     type="password"
                     value={password}
@@ -261,7 +263,14 @@ export function ForgotPasswordFlow({ onCancel }: { onCancel: () => void }) {
                 would spend the whole step disabled and then fire something that has
                 already happened. Resend is the only action left there, and it is above. */}
             {step !== 'verify' && (
-                <Button type="submit" variant="accent" size="large" fullWidth disabled={busy}>
+                <Button
+                    data-testid="auth-forgot-submit"
+                    type="submit"
+                    variant="accent"
+                    size="large"
+                    fullWidth
+                    disabled={busy}
+                >
                     {t(busy ? cta[step].busy : cta[step].idle)}
                 </Button>
             )}

@@ -24,7 +24,17 @@ import type { ReactNode } from 'react'
  *   above a centred document reads like a mistake.
  * - `trailing` fills the bar on wide screens, where a phone-sized bar with one 40px button
  *   in it is 1300px of nothing. A breadcrumb is the usual answer, hence a node rather than
- *   a fixed shape.
+ *   a fixed shape. It sits **inside the leading cluster**, immediately after the back button —
+ *   which is what a breadcrumb wants and what a control does not.
+ * - `actions` is the other end: a second `AppBarCluster` at the bar's trailing edge, which is
+ *   what `AppBar`'s own `justify-between` is drawn for. That is where a page's own control goes
+ *   — a filter, a share, an overflow menu — because a button pressed against the back arrow
+ *   reads as part of the back affordance rather than as a separate thing.
+ *
+ *   `ChannelTopBar` exists because this slot did not: its note says in writing that `trailing`
+ *   "renders inside the leading `AppBarCluster` … this bar needs share and, later, an overflow
+ *   menu on the *other* end", and it pays for that with its own copy of the back button. This
+ *   prop is the missing half; that bar can collapse into it whenever somebody is in there.
  *
  * ## The bar's side padding is the *content's*, not the DS bar's
  *
@@ -44,6 +54,20 @@ import type { ReactNode } from 'react'
  * row's leading column, a card's padding), which is exactly what `px-4` lines the button up
  * with. The rule is the same at both ends — **match the content** — the content just changes.
  *
+ * ## The gap under the bar is the *bar's*, not the page's
+ *
+ * `AppBar` is `h-[60px]` around a 44px row of controls, so it already carries 8px of clear
+ * space below its contents. A page that adds `pt-2` to the column under it is asking for that
+ * gap twice — and since only some of them did, every sub-page had a different distance between
+ * its title and its first card (`/my-star` and `/my-wallet` 16px, `/identification` 8px,
+ * `/earnings-report` 8px on the page and 24px in its own `loading.tsx`, which made the skeleton
+ * shift as it resolved).
+ *
+ * So the column under the bar carries **no top padding** — `pb-*` only. Content that wants more
+ * air than 8px gets it from its own box (the settings panels' `py-6` is where that lives), not
+ * from the page, so the same panel reads the same on every screen it appears on. `loading.tsx`
+ * must match its page here: the two are the same layout at two moments.
+ *
  * `home` is where "back" goes when there is nothing to go back to: the app opened this URL
  * directly (a shared link, a push notification), so `router.back()` would leave the site.
  * `history.length` is the only signal available for that, and it is read in the handler
@@ -53,19 +77,35 @@ export function PageBackBar({
     title,
     home = '/',
     /**
+     * Take the press over instead of going back in history.
+     *
+     * For a page that has **states of its own**: `/star-transfer` is one URL with three screens (the
+     * transfer screen, the full history, the receipt), which is legacy's design for it, so Back has to
+     * mean "up one state" while there is one and only then leave the route. Legacy's own back button does
+     * exactly this switch.
+     *
+     * A page that hands this in owns the whole decision, including when to leave — so the `home`
+     * fallback below is not consulted.
+     */
+    onBack,
+    /**
      * For pages whose own masthead carries the title at some breakpoint — pass
      * `md:hidden` and the bar keeps only the back button there, instead of printing the
      * same words twice 40px apart.
      */
     titleClassName,
     trailing,
+    actions,
     className,
 }: {
     title: string
     home?: string
+    onBack?: () => void
     titleClassName?: string
     /** Sits next to the back button. Hide it below md yourself if it needs the room. */
     trailing?: ReactNode
+    /** The bar's trailing edge — the page's own controls. See the note above. */
+    actions?: ReactNode
     className?: string
 }) {
     const router = useRouter()
@@ -87,11 +127,16 @@ export function PageBackBar({
                  * the bug; one shared control is the fix.
                  */}
                 <BarIconButton
+                    data-testid="navigation-page-back"
                     name="angle-left"
                     weight="filled"
                     mirrored
                     label={t('common_back')}
                     onClick={() => {
+                        if (onBack) {
+                            onBack()
+                            return
+                        }
                         if (window.history.length > 1) router.back()
                         else router.push(home)
                     }}
@@ -110,6 +155,15 @@ export function PageBackBar({
                     {title}
                 </AppBarTitleText>
             </AppBarTitle>
+            {/*
+             * Rendered only when there is something in it. An empty cluster is invisible but not
+             * free: `AppBar` is `justify-between` with a `gap`, so a second in-flow child changes
+             * how the first one is placed — and the absolutely-centred title is *not* an in-flow
+             * child, so today's single cluster is the only thing `justify-between` has to work
+             * with. Keeping the DOM identical when `actions` is absent is what makes this prop
+             * additive for the eight pages already using this bar.
+             */}
+            {actions ? <AppBarCluster>{actions}</AppBarCluster> : null}
         </AppBar>
     )
 }
@@ -131,12 +185,18 @@ export function PageBreadcrumb({
     items: { label: string; href?: string }[]
 }) {
     return (
-        <nav aria-label={label} className="hidden min-w-0 md:block">
+        <nav
+            data-testid="navigation-breadcrumb"
+            aria-label={label}
+            className="hidden min-w-0 md:block"
+        >
             <ol className="type-dense-default flex min-w-0 list-none items-center gap-2">
                 {items.map((item, index) => {
                     const last = index === items.length - 1
                     return (
                         <li
+                            data-testid="navigation-breadcrumb-item"
+                            data-index={index}
                             key={item.href ?? item.label}
                             className="flex min-w-0 items-center gap-2"
                         >
@@ -157,6 +217,8 @@ export function PageBreadcrumb({
                                 </span>
                             ) : (
                                 <a
+                                    data-testid="navigation-breadcrumb-link"
+                                    data-index={index}
                                     href={item.href}
                                     className="truncate rounded-(--radius-sm) text-(--text-body) no-underline transition-colors hover:text-(--text-title) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
                                 >

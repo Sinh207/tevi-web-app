@@ -1,3 +1,4 @@
+import type { PageCursor } from '@shared/lib/api/page-cursor'
 import type { InfiniteData } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import type { BlockedAccount } from '../api/types'
@@ -8,7 +9,6 @@ import {
     nextBlockedCursor,
     removeBlockedAccount,
 } from './blocked-accounts-page'
-import type { ThreadCursor } from './next-page-param'
 
 /**
  * Both functions here fail *silently* when they are wrong — an unending list that re-requests
@@ -80,7 +80,7 @@ describe('nextBlockedCursor', () => {
     })
 
     it('counts from the cursor it was given, not from a counter', () => {
-        const third: ThreadCursor = { page: ['3'], page_size: ['20'] }
+        const third: PageCursor = { page: ['3'], page_size: ['20'] }
         expect(nextBlockedCursor(page(BLOCKED_PAGE_SIZE), third)).toEqual({
             page: ['4'],
             page_size: ['20'],
@@ -88,7 +88,7 @@ describe('nextBlockedCursor', () => {
     })
 
     it('falls back to page 2 when the cursor carries an unusable page number', () => {
-        const broken: ThreadCursor = { page: ['not-a-number'] }
+        const broken: PageCursor = { page: ['not-a-number'] }
         expect(nextBlockedCursor(page(BLOCKED_PAGE_SIZE), broken)).toEqual({
             page: ['2'],
             page_size: [String(BLOCKED_PAGE_SIZE)],
@@ -101,7 +101,7 @@ describe('removeBlockedAccount', () => {
         return {
             pages,
             pageParams: pages.map(() => null),
-        } as InfiniteData<BlockedAccountsPage, ThreadCursor | null>
+        } as InfiniteData<BlockedAccountsPage, PageCursor | null>
     }
 
     it('is a no-op on undefined', () => {

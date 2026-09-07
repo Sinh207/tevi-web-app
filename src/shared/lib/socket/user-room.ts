@@ -48,16 +48,27 @@
  */
 
 /** The wire events this room forwards. */
-export const USER_ROOM_EVENTS = ['balance_change', 'premium_info'] as const
+export const USER_ROOM_EVENTS = ['balance_change', 'premium_info', 'inbox_change'] as const
 export type UserRoomEvent = (typeof USER_ROOM_EVENTS)[number]
 
 /**
- * `inbox_change` is deliberately absent.
+ * `inbox_change` was deliberately absent until `features/notification` landed.
  *
- * The server sends it and legacy forwards it, but nothing in this app reads an inbox yet — direct
- * messages are not built. A forwarded event with no consumer is the same failure the event bus's rule
- * describes from the other side: it reads as a working integration point and silently is not one. Add
- * it to `USER_ROOM_EVENTS` on the day something subscribes.
+ * The rule it was held back by still stands, and is worth restating rather than deleting: a
+ * forwarded event with no consumer reads as a working integration point and silently is not one —
+ * the same failure the event bus's "every declared event must have an emitter" rule describes from
+ * the other side. It is here now because the notification inbox subscribes to it
+ * (`useUnreadInbox`), and it is the *only* signal that a notification arrived while the tab was
+ * open — nothing else polls for one.
+ *
+ * It carries a payload; the inbox reads **none of it**. Legacy's own handler ignores it too
+ * (`roomUser.on('inboxChange', data => setIsNewNotification(true))`), and that is the correct
+ * reading of CLAUDE.md's rule: the frame is a signal that something changed, and the count comes
+ * from the query that owns it.
+ *
+ * ⚠ Note the spelling. The **wire** name is `inbox_change`; legacy's transport re-emits it to its
+ * consumers as `inboxChange`, so a grep for the camel-case form in the old app finds the consumer
+ * and not the socket event.
  */
 
 export type UserRoomStatus = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error'

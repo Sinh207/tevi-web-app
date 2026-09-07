@@ -1,3 +1,4 @@
+import type { TranslationKey } from '@shared/i18n/settings'
 import type { TeviIconName } from '@shared/ui/icon-names'
 
 /**
@@ -37,7 +38,7 @@ export interface WalletTransactionType {
     /** The backend's slug, lower-cased. `''` is the "no filter" pseudo-type. */
     key: string
     /** `{module}_{slug}` translation key. */
-    label: string
+    label: TranslationKey
 }
 
 /** `''` — the pseudo-type the filter list opens with. Never sent to the API. */
@@ -68,27 +69,61 @@ const WALLET_TYPES: readonly WalletTransactionType[] = [
 /**
  * The glyph in a row's 40px leading disc.
  *
- * Richer than legacy's, which has three icons and picks by **currency** rather than by type
- * (`icons/TransactionIcon.js`) — so a ledger of eleven different types draws the same icon eleven times,
- * making the column decoration rather than information. The thing a reader scans a ledger for is
- * *direction*, so each type carries its own glyph.
+ * ## Read off `web-app`'s own per-type icons, which it does have
  *
- * Every name is from the DS sprite subset and nothing is hand-drawn. Two are honest approximations rather
- * than exact matches, flagged because a design pass should confirm them: `charge` borrows the payment-card
- * mark the menu's "Card management" row uses, and `commission` borrows `badge-dollar` — the sprite has no
- * percent glyph at all (checked), so a commission cannot be drawn as one.
+ * An earlier note here said legacy "has three icons and picks by **currency**, not by type". That was
+ * wrong, and it is worth stating plainly because the mapping below was built on it: `web-app` has
+ * `containers/myWallet/components/common/transactionItem/icons/typeIcons.js` plus an `ICON_BY_TYPE`
+ * dispatch in `TransactionIcon.js`, covering **ten** types. Currency is only its *fallback* — a Star
+ * or a dollar mark for a type the table does not know.
+ *
+ * So the shapes are legacy's, glyph for glyph, wherever it draws one. Each was read off its path data
+ * rather than its export name:
+ *
+ * | type | `web-app` draws | DS glyph |
+ * |---|---|---|
+ * | `adjustment` | three sliders | `sliders-simple` |
+ * | `bonus` | a star with a sparkle | `star-magic` |
+ * | `consumption` | a **gift box** | `gift-simple` |
+ * | `conversion` | two horizontal arrows, opposed | `arrows-repeat` — see below |
+ * | `refund` | an **undo arc** | `arrow-undo` |
+ * | `reward` | a trophy with a **star** in it | `trophy-star` |
+ * | `system_deduction` | a circle with a minus | `minus-circle` |
+ * | `top_up` | an arrow down onto a line | `arrow-down-line` |
+ * | `transfer_inbound` / `_outbound` | diagonal arrows in / out | `arrow-down-left` / `arrow-up-right` |
+ *
+ * **`conversion` is the one glyph that is not legacy's**, and it is a product call rather than a
+ * mistake. `web-app` draws a plain two-headed horizontal arrow, which `arrows-left-right` matches
+ * exactly — and at 20px inside a 40px disc it is a thin line with nothing to hold the eye, next to
+ * rows carrying a sack, a bank and a trophy. `arrows-repeat` is two opposed arrows closing into a
+ * cycle: same meaning (a two-way movement), a closed shape that reads at that size, and no second
+ * reading — `arrows-retweet` says *share* and `arrows-rotate` says *refresh*, neither of which is
+ * what an exchange between Star and USD is. The DS's own exchange mark exists but only fused into
+ * `bell-exchange` and `search-exchange`; it ships no standalone form, and this is not the case that
+ * warrants taking one from upstream Zappicon. *
+ * Four were wrong before this was checked: `bonus` had the gift box (which is `consumption`'s), so
+ * `consumption` had been given a `heart`; `refund` had `arrow-turn-down-left`, a *turn* rather than an
+ * undo; `reward` had the plain `trophy-simple`; and `conversion` had `arrows-repeat`, two arrows in a
+ * cycle rather than the pair legacy draws. None of them is a wrong *concept*, which is exactly why a
+ * reading of the source rather than of the export names was needed.
+ *
+ * ## Where this is still richer than legacy, and that part was true
+ *
+ * The five currency-only types — `charge`, `commission`, `payout`, `payout_failure`,
+ * `platform_earning` — have **no** entry in legacy's table, so all five fall through to its dollar
+ * mark and a wallet ledger draws the same glyph five times. Those keep a glyph each here. Two are
+ * approximations the DS forces, both re-checked against all 555 glyphs: there is no percent glyph at
+ * all, so `commission` borrows `badge-dollar`; and the only card marks are `address-card` and
+ * `wallet`, so `charge` — a card charge — takes the former.
+ *
+ * Every name is from the DS sprite subset and nothing is hand-drawn.
  */
 const WALLET_ICONS: Record<string, TeviIconName> = {
     adjustment: 'sliders-simple',
-    bonus: 'gift-simple',
-    charge: 'address-card',
-    commission: 'badge-dollar',
+    bonus: 'star-magic',
     conversion: 'arrows-repeat',
-    payout: 'bank',
-    payout_failure: 'exclamation-diamond',
-    platform_earning: 'sack-dollar',
-    refund: 'arrow-turn-down-left',
-    reward: 'trophy-simple',
+    refund: 'arrow-undo',
+    reward: 'trophy-star',
     system_deduction: 'minus-circle',
 }
 
@@ -109,19 +144,27 @@ export function isWalletTransactionFilter(type: string): boolean {
 }
 
 /** The translation key for a type, or `null` when this file does not know it — see the doc above. */
-export function walletTransactionLabelKey(type: string): string | null {
+export function walletTransactionLabelKey(type: string): TranslationKey | null {
     if (type === ALL_WALLET_TRANSACTIONS) return null
     return WALLET_TYPES.find(entry => entry.key === type)?.label ?? null
 }
 
 /**
- * The glyph for a type.
+ * The glyph for a type — legacy's `TransactionIcon` dispatch, reproduced.
  *
- * Falls back to a neutral document mark rather than to nothing: the leading disc is part of the row's
- * geometry, and leaving one empty makes a single unknown row look broken in a column of complete ones. The
- * sprite has no receipt or invoice glyph — checked — so `document-list` is the nearest thing that reads as
- * "a record of something".
+ * The table above holds only the types `web-app` draws a glyph for. Everything else falls back **by
+ * unit**, exactly as `TransactionIcon.js` does: a Star row gets the Star mark, anything else gets
+ * `USDIcon`. So `charge`, `commission`, `payout`, `payout_failure` and `platform_earning` all render
+ * `dollar-circle` — the same mark, on purpose, because that is what the app they came from shows.
+ *
+ * `dollar-circle` and not `dollar-arrow-up`: `USDIcon` draws the dollar disc with the arrow pointing
+ * **down** (money in), and the DS ships only the up variant — checked against all 1581 symbols. Taking
+ * a down arrow from upstream Zappicon is not warranted here; `dollar-circle` is the same disc without
+ * the arrow, so the row still reads as "an amount of currency" and nothing is hand-drawn.
+ *
+ * `document-list` is gone. It was a *third* answer for "unknown", which meant an unlisted type drew
+ * neither of the two marks legacy uses and looked like a different kind of row.
  */
-export function walletTransactionIcon(type: string): TeviIconName {
-    return WALLET_ICONS[type] ?? 'document-list'
+export function walletTransactionIcon(type: string, isStar = false): TeviIconName {
+    return WALLET_ICONS[type] ?? (isStar ? 'star' : 'dollar-circle')
 }

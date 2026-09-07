@@ -67,6 +67,8 @@ export function AppEndRail() {
      */
     return (
         <aside
+            data-testid="navigation-end-rail"
+            data-viewport="xl-up"
             aria-label={t('rail_landmark')}
             className={[
                 'fixed top-0 z-30 hidden flex-col gap-3 py-3',

@@ -110,6 +110,8 @@ function AssetGrid({
                 return (
                     <li key={asset.id}>
                         <a
+                            data-testid="brand-assets-download-button"
+                            data-row-key={asset.id}
                             href={buttonAssetUrl(asset)}
                             download={asset.file}
                             title={asset.file}

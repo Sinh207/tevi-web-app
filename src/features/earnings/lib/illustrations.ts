@@ -7,14 +7,15 @@
  * the opposite: `${STATIC_DOMAIN}/web/web-app/images/theo-search.svg` is **9 KB of genuine
  * vector**, 94×118, no embedded raster and no script. Nothing about it is worth re-encoding.
  *
- * It is local because **`next/image` refuses a remote SVG.** The optimizer will not process one
- * unless `dangerouslyAllowSVG` is set, which it is not and should not be for third-party-fetchable
- * art — an SVG can carry script, and `next.config.ts` allows an entire CDN wildcard. The
- * identification illustrations get away with living on the CDN because they are `.png`: Next
- * fetches them once, server-side, and serves WebP. Format, not hosting, is what decides.
+ * It is local because **`next/image` cannot process a remote SVG** — it passes one through
+ * unchanged. `next.config.ts` sets `dangerouslyAllowSVG`, but that is permission to *serve* one
+ * (hence the `script-src 'none'; sandbox` CSP under it), not permission to optimise it. A remote
+ * `.png` is the case that works: Next fetches it once, server-side, and serves AVIF. Format, not
+ * hosting, is what decides — the rule and its budgets are in
+ * [`docs/STATIC_ASSETS.md`](../../../../docs/STATIC_ASSETS.md).
  *
- * So the choice was a local copy or an `unoptimized` remote `<img>`, and for 9 KB served from
- * `public/` with the app's own cache headers the copy wins. It is Brand's file byte for byte —
+ * So the choice was a local copy or 9 KB of cross-origin passthrough on every empty state, and for
+ * 9 KB served from `public/` with the app's own compression the copy wins. It is Brand's file byte for byte —
  * nothing redrawn, nothing substituted. If Brand ships `theo-search.png`, this becomes a
  * `${STATIC_DOMAIN}/…` string and the file is deleted.
  *

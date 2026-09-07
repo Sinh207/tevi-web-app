@@ -99,6 +99,7 @@ export function SwitchConfirmDialog({
 
                 <DialogFooter layout="side-by-side">
                     <Button
+                        data-testid="affiliate-switch-cancel"
                         variant="secondary"
                         size="large"
                         disabled={pending}
@@ -106,7 +107,13 @@ export function SwitchConfirmDialog({
                     >
                         {t('common_cancel')}
                     </Button>
-                    <Button variant="accent" size="large" disabled={pending} onClick={onConfirm}>
+                    <Button
+                        data-testid="affiliate-switch-confirm"
+                        variant="accent"
+                        size="large"
+                        disabled={pending}
+                        onClick={onConfirm}
+                    >
                         {t('affiliate_switch')}
                     </Button>
                 </DialogFooter>

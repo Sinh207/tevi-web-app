@@ -1,9 +1,11 @@
 'use client'
 
 import { useAuth } from '@features/auth'
+import { DateField } from '@shared/components/date-field'
 import { TextField } from '@shared/components/field'
 import { env } from '@shared/config/env'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { toDateValue } from '@shared/lib/date-value'
 import { POP, RISE, riseDelay } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
@@ -15,7 +17,6 @@ import { useCreateChannel } from '../hooks/use-create-channel'
 import { displayUrl } from '../lib/channel-slug'
 import { AVATAR_ASPECT } from '../lib/profile-form'
 import { ImageCropDialog } from './edit-profile/image-crop-dialog'
-import { ProfileDateField } from './edit-profile/profile-date-field'
 
 /**
  * Onboarding: the screen that replaces the entire app for an account with no space.
@@ -43,10 +44,11 @@ import { ProfileDateField } from './edit-profile/profile-date-field'
  *
  * ## The fields are the app's, not this screen's
  *
- * `TextField` comes from `shared/components/field.tsx`. Date of birth is a native
- * `<input type="date">`: the DS ships no date picker, this repo has no date library, and the OS
- * picker is better on the phone where most of this traffic is. Legacy uses MUI's `DatePicker`, which
- * is a dependency this app does not have and should not acquire for one field.
+ * `TextField` and `DateField` both come from `shared/components/`. Date of birth used to be a native
+ * `<input type="date">` — the DS ships no date picker and the OS one is good on a phone — and is now
+ * the app's own calendar in a popover, so this form has no control that is visibly from another
+ * application. Legacy uses MUI's `DatePicker`; the package here is `react-day-picker`, dressed in our
+ * tokens and loaded only when a picker opens.
  */
 export function CreateChannelGate() {
     const { t } = useTranslation()
@@ -200,7 +202,7 @@ export function CreateChannelGate() {
                     {/*
                      * **No `items-center` here.** A column flex that centres its children sizes
                      * them to their content, so every field came out as wide as its own text and
-                     * `<input type="date">` — which has an intrinsic width — came out narrowest of
+                     * the date field — a button with an intrinsic width — came out narrowest of
                      * all. Legacy hits the same wall and papers over it with `width: '100%'` on each
                      * field; letting the default `stretch` do it is the same result without three
                      * copies of the same override, and it cannot be forgotten on the fourth field.
@@ -243,6 +245,7 @@ export function CreateChannelGate() {
                          */}
                         <div className="mb-1.5 flex flex-col items-center gap-2 self-center">
                             <input
+                                data-testid="channel-create-avatar-file"
                                 id={avatarId}
                                 type="file"
                                 accept="image/jpeg,image/png"
@@ -279,6 +282,7 @@ export function CreateChannelGate() {
                         </div>
 
                         <TextField
+                            data-testid="channel-create-name"
                             label={t('channel_onboarding_name')}
                             value={form.name.value}
                             onChange={event => form.setName(event.target.value)}
@@ -287,7 +291,9 @@ export function CreateChannelGate() {
                         />
 
                         {/*
-                         * `ProfileDateField`, not a native input dressed up here.
+                         * `DateField` — the app's own calendar in a popover, shared with the profile
+                         * form and with the dashboard's range picker. See that component for what
+                         * replacing `<input type="date">` costs and buys.
                          *
                          * I wrote the second one before finding the first: same idea — hide
                          * `::-webkit-calendar-picker-indicator`, overlay the DS `calendar` glyph,
@@ -300,16 +306,18 @@ export function CreateChannelGate() {
                          * `max` is today: a birth date in the future is the one rule worth checking
                          * without a round trip.
                          */}
-                        <ProfileDateField
+                        <DateField
+                            testId="channel-create-dob"
                             id={dobId}
                             label={t('channel_onboarding_dob')}
                             value={form.dob}
-                            max={new Date().toISOString().slice(0, 10)}
+                            max={toDateValue(new Date())}
                             error={form.dobError}
-                            onChange={event => form.setDob(event.target.value)}
+                            onValueChange={form.setDob}
                         />
 
                         <TextField
+                            data-testid="channel-create-username"
                             label={t('channel_onboarding_link')}
                             value={form.slug.value}
                             onChange={event => form.setSlug(event.target.value)}
@@ -353,6 +361,7 @@ export function CreateChannelGate() {
                                             style={riseDelay(index)}
                                         >
                                             <button
+                                                data-testid="channel-create-suggestion"
                                                 type="button"
                                                 onClick={() => form.applySuggestion(suggestion)}
                                                 className="type-dense-emphasis flex h-8 cursor-pointer items-center gap-1.5 rounded-(--radius-fill) border border-[#191A23]/15 bg-white/60 ps-2 pe-3 text-[#141414] transition-colors hover:bg-white"
@@ -379,6 +388,7 @@ export function CreateChannelGate() {
                          * so the purple is a DS variant rather than a literal smuggled in.
                          */}
                         <Button
+                            data-testid="channel-create-submit"
                             variant="accent"
                             size="large"
                             fullWidth
@@ -398,6 +408,7 @@ export function CreateChannelGate() {
                          * so the mismatch only shows at the moment the user is pointing at it.
                          */}
                         <Button
+                            data-testid="channel-create-sign-out"
                             variant="ghost"
                             size="large"
                             fullWidth

@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@shared/lib/utils'
+import { Icon } from '@shared/ui/icon'
 import { ProviderMark, type ProviderMarkName } from './provider-marks'
 
 /**
@@ -196,16 +197,23 @@ export function EmailProviderButton({
     label,
     onClick,
     disabled,
+    testId,
+    providerKey,
 }: {
     label: string
     onClick: () => void
     disabled?: boolean
+    /** Shared across every way in — see the note on `ProviderButton`. */
+    testId?: string
+    providerKey?: string
 }) {
     return (
         <button
             type="button"
             onClick={onClick}
             disabled={disabled}
+            data-testid={testId}
+            data-provider-key={providerKey}
             className={providerShellClass('row')}
         >
             <ProviderRowInner
@@ -224,6 +232,59 @@ export function EmailProviderButton({
     )
 }
 
+/**
+ * QR sign-in, wearing the same row as the providers.
+ *
+ * It is one of the ways in and legacy lists it first among them (`containers/login`), so it gets
+ * the row rather than a link under the stack.
+ *
+ * The glyph is the DS's own `qr-code`, not a brand mark, so it takes no plate: plates exist to
+ * make an unrecolourable third-party trademark legible on a dark surface, and this one is
+ * `currentColor` and follows the theme by itself. The 32px box is only so it occupies the same
+ * column as the marks above and below it — the same reason `EmailProviderButton` has one.
+ */
+export function QrProviderButton({
+    label,
+    onClick,
+    disabled,
+    className,
+    testId,
+    providerKey,
+}: {
+    label: string
+    onClick: () => void
+    disabled?: boolean
+    className?: string
+    testId?: string
+    providerKey?: string
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            disabled={disabled}
+            data-testid={testId}
+            data-provider-key={providerKey}
+            /*
+             * `hidden sm:flex` is applied by the caller, so this row is in the DOM and CSS-hidden on
+             * a phone. `data-viewport` says so out loud, rather than letting a driver discover it as
+             * an "element not interactable" error that reads like a broken app.
+             */
+            data-viewport="sm-up"
+            className={cn(providerShellClass('row'), className)}
+        >
+            <ProviderRowInner
+                mark={
+                    <span className="flex size-8 shrink-0 items-center justify-center">
+                        <Icon name="qr-code" size={24} />
+                    </span>
+                }
+                label={label}
+            />
+        </button>
+    )
+}
+
 export function ProviderButton({
     variant,
     mark,
@@ -231,6 +292,8 @@ export function ProviderButton({
     onClick,
     disabled,
     pending,
+    testId,
+    providerKey,
 }: {
     variant: ProviderVariant
     mark: ProviderMarkName
@@ -239,6 +302,18 @@ export function ProviderButton({
     disabled?: boolean
     /** This one is the attempt in flight — the others are merely disabled behind it. */
     pending?: boolean
+    /**
+     * **One testid for every way in, with the provider in `data-provider-key`.** So a suite finds
+     * the whole set with `[data-testid='auth-provider']` and one row with
+     * `…[data-provider-key='google']`, and a provider dropping out because its client id is
+     * unconfigured is a shorter list rather than a missing selector.
+     *
+     * Which is in flight is `aria-busy`, not a different id: the pressed row stays visually enabled
+     * on purpose (see the `pending` note below), and encoding it in the id would make "is Apple
+     * working?" a question you can only ask while the answer is yes.
+     */
+    testId?: string
+    providerKey?: string
 }) {
     return (
         <button
@@ -251,6 +326,9 @@ export function ProviderButton({
             aria-label={variant === 'tile' ? label : undefined}
             aria-busy={pending || undefined}
             title={variant === 'tile' ? label : undefined}
+            data-testid={testId}
+            data-provider-key={providerKey}
+            data-variant={variant}
             className={cn(
                 providerShellClass(variant),
                 // The one that is working is disabled too — a second press would start a

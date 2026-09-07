@@ -43,6 +43,7 @@ function PoweredBy({ text }: { text: string }) {
         <>
             {before}
             <a
+                data-testid="identification-sumsub-link"
                 href={SUMSUB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -256,6 +257,7 @@ export function IdentityIntro({
                 {signedIn ? (
                     <div className="flex items-start gap-2">
                         <Checkbox
+                            data-testid="identification-consent"
                             id={consentId}
                             checked={consented}
                             onChange={event => setConsented(event.target.checked)}
@@ -278,6 +280,7 @@ export function IdentityIntro({
                     </p>
                 )}
                 <Button
+                    data-testid="identification-continue"
                     id="identification-continue-btn"
                     size="large"
                     fullWidth

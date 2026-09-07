@@ -105,6 +105,27 @@ export function useChannel(slug: string) {
 
     return {
         channel: query.data as Channel | null | undefined,
+        /**
+         * Whether the body on screen was fetched **for this account** — i.e. whether its
+         * viewer-relative fields (`is_followed`, `follow_requested`, `notification_settings`, both
+         * blocks) can be believed yet.
+         *
+         * `dataUpdatedAt` is the whole test, and it works because of the stamp above: the anonymous
+         * server seed is deliberately dated **0**, so anything greater is a real fetch under
+         * `channelKeys.detail(slug, activeId)` — or the `my-channel` body, which is account-scoped
+         * too and carries its own real age.
+         *
+         * The bug this exists for: the seed says `is_followed: false` for **everybody**, because
+         * there is no bearer on the server. So the auto-follow bar painted on the first client
+         * render and vanished a beat later for anyone who already followed the space — most visibly
+         * when arriving from the Following list, where the reader follows *by definition*. Hiding a
+         * prompt is not a fix for showing it wrongly; not showing it until the answer is known is.
+         *
+         * This is the same shape as `useChannelOwnership`'s `'unknown'`, and for the same reason —
+         * the first paint is always the anonymous view, so anything account-relative has to be able
+         * to say "not yet" rather than guessing "no".
+         */
+        isViewerKnown: query.dataUpdatedAt > 0,
         isLoading: query.isLoading,
         isError: query.isError,
         error: query.error,

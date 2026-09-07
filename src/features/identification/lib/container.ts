@@ -43,6 +43,16 @@ export const IDENTIFICATION_CONTAINER = 'mx-auto w-full md:max-w-[612px]'
  * `position: sticky` child sticks inside *that* — a box which cannot scroll — so the bar stops
  * following the viewport and parks itself at the bottom of the panel instead.
  */
+/**
+ * `/identification`'s surface — `<main>` and the sticky bar, per `docs/DESIGN_SYSTEM.md` §6.
+ *
+ * A single panel: the intro, the outcome and the verification frame are each one block in the 612
+ * column. Below `md` the screen *is* the surface; from `md` it is the page colour with
+ * `IDENTIFICATION_PANEL` as the card. Same pair, same reasoning, as `PROFILE_SCREEN` — the two were
+ * §6's outstanding pair and were aligned together.
+ */
+export const IDENTIFICATION_SCREEN = 'bg-(--background-surface) md:bg-(--background)'
+
 export const IDENTIFICATION_PANEL = cn(
     /*
      * **`md:grow` — filling the column, and only from md.** Without it the panel hugs its

@@ -137,6 +137,7 @@ export function ChannelAboutActivity({ slug }: { slug: string }) {
                  */
                 <div className="flex justify-center">
                     <Button
+                        data-testid="channel-activity-more"
                         variant="ghost"
                         size="small"
                         onClick={() => loadMore()}

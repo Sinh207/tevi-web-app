@@ -1,3 +1,4 @@
+import type { TranslationKey } from '@shared/i18n/settings'
 /**
  * What counts as an acceptable password, in one place.
  *
@@ -98,7 +99,10 @@ export const PASSWORD_RULE_COUNT = Object.keys(PASSWORD_RULE_KEYS).length
  * appears on the first character and clears on the last is noise, so it is only reported once
  * the confirmation is at least as long as the password it is confirming.
  */
-export function confirmationErrorKey(password: string, confirmation: string): string | null {
+export function confirmationErrorKey(
+    password: string,
+    confirmation: string,
+): TranslationKey | null {
     if (!confirmation || confirmation.length < password.length) return null
     return confirmation === password ? null : 'password_error_mismatch'
 }

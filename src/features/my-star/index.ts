@@ -47,7 +47,7 @@ export { StarBalanceCard } from './components/star-balance-card'
 export { MY_STAR_CONTAINER } from './lib/container'
 /** Exported for `/dev/my-star`, so the preview draws the same artwork the screen does. */
 export { MY_STAR_ART } from './lib/illustrations'
-export { MY_STAR_PATH } from './routes'
+export { GIFT_STAR_PATH, MY_STAR_PATH } from './routes'
 
 /**
  * Deliberately **not** exported: `starLedgerApi`, `useStarLedger`, and the transaction-type table.

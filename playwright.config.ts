@@ -37,6 +37,12 @@ export default defineConfig({
 
     use: {
         baseURL: BASE_URL,
+        /**
+         * Playwright's default already — stated out loud so a major version cannot change it under
+         * the suite, and so it is visibly the same attribute QC's Selenium suite locates by.
+         * Contract: `docs/TEST_IDS.md`.
+         */
+        testIdAttribute: 'data-testid',
         /** Kept only for a failure — the artefacts are useless when everything passed. */
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',

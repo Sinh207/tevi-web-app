@@ -1,5 +1,3 @@
-import { env } from '@shared/config/env'
-
 /**
  * The Tevi brand kit as data — ported from the legacy page
  * (`tevi-web-app/src/containers/brandAssets/`).
@@ -18,15 +16,6 @@ import { env } from '@shared/config/env'
  * rather than the brand. Only Royal Indigo has a token twin (`--primary-500`, the one step
  * that does not invert); the marketing palette has none.
  */
-
-/**
- * Preview artwork host — the same bucket path the legacy page used. The fallback is
- * legacy's production CDN so the previews still resolve when `NEXT_PUBLIC_STATIC_DOMAIN`
- * is unset (an `<Image>` with `undefined` in `src` throws at render time). Both hosts are
- * in `next.config.ts`'s `remotePatterns`, and the paths carry no query string —
- * `/_next/image` rejects one for these hosts.
- */
-const STATIC_DOMAIN = env.NEXT_PUBLIC_STATIC_DOMAIN ?? 'https://static.cdn.flowstreamx.com'
 
 /** A downloadable archive served from `public/download/` — legacy's URLs, unchanged. */
 export type BrandDownload = {
@@ -50,7 +39,14 @@ export const BUTTON_PACK: BrandDownload = {
 }
 
 /**
- * The three lockup sheets. Authored 634×440 with a **white background baked into the
+ * The three lockup sheets — Brand's own files, copied byte for byte into `public/` by
+ * `pnpm art:cdn` rather than fetched. They are real vectors (1.4–3.6 KB), so there is nothing to
+ * re-encode; they are local because no static art comes from the CDN any more
+ * ([`docs/STATIC_ASSETS.md`](../../../../docs/STATIC_ASSETS.md)), and on this page in particular the
+ * previews and the `logo_pack.zip` beside them should not be able to disagree about what the brand
+ * looks like — one is now versioned with the other.
+ *
+ * Authored 634×440 with a **white background baked into the
  * artboard**, which is why the previews are framed on a pinned white tile rather than on
  * `--background-surface`: in dark mode the sheet would be a white rectangle floating on a
  * dark card either way, so the frame may as well admit it and stay consistent with the
@@ -68,21 +64,21 @@ export type BrandLogoPreview = {
 export const LOGO_PREVIEWS: BrandLogoPreview[] = [
     {
         id: 'vertical',
-        src: `${STATIC_DOMAIN}/web/web-landing/brand-assets/logo-1.svg`,
+        src: '/illustrations/brand-assets/logo-1.svg',
         width: 634,
         height: 440,
         labelKey: 'brand_assets_logo_vertical',
     },
     {
         id: 'horizontal',
-        src: `${STATIC_DOMAIN}/web/web-landing/brand-assets/logo-2.svg`,
+        src: '/illustrations/brand-assets/logo-2.svg',
         width: 634,
         height: 440,
         labelKey: 'brand_assets_logo_horizontal',
     },
     {
         id: 'symbol',
-        src: `${STATIC_DOMAIN}/web/web-landing/brand-assets/logo-3.svg`,
+        src: '/illustrations/brand-assets/logo-3.svg',
         width: 634,
         height: 440,
         labelKey: 'brand_assets_logo_symbol',

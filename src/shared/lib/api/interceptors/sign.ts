@@ -19,7 +19,8 @@ import { isApiUrl } from '../origins'
  *
  * Widening it (method + sorted query + body hash) is possible but is a coordinated
  * backend change — the server recomputes the MAC over exactly this string, so changing it
- * here alone 4xxs every signed request. Tracked as B6 in `docs/BACKEND_QUESTIONS.md`.
+ * here alone 4xxs every signed request. **No v2 is planned** (B6, answered), so this string
+ * is stable: treat it as the contract, and keep describing what it is worth accordingly.
  */
 
 let cryptoKeyPromise: Promise<CryptoKey> | null = null
@@ -43,11 +44,6 @@ function getCryptoKey(): Promise<CryptoKey> {
             throw error
         })
     return cryptoKeyPromise
-}
-
-/** Reset the cached key (e.g. after a secret rotation in tests). */
-export function clearCryptoCache() {
-    cryptoKeyPromise = null
 }
 
 function toBase64(bytes: ArrayBuffer): string {

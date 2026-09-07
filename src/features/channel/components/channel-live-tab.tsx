@@ -88,7 +88,7 @@ export function ChannelLiveTab({ slug }: { slug: string }) {
          * the full width — without it the rows scroll visibly through the gutters either side.
          */
         <div
-            className="-mx-3 md:-mx-6 sticky z-10 flex min-w-0 items-center justify-between gap-2 bg-(--background) px-3 py-1.5 md:bg-(--background-surface) md:px-6"
+            className="-mx-3 md:-mx-6 sticky z-10 flex min-w-0 items-center justify-between gap-2 bg-(--background-surface) px-3 py-1.5 md:px-6"
             style={{ top: CHANNEL_BAR_HEIGHT + 48 }}
         >
             <h3 className="type-body-strong min-w-0 truncate text-(--text-title)">

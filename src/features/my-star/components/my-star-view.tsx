@@ -3,19 +3,27 @@
 import { useRequireAuth } from '@features/auth'
 import { useBalance, useBalanceDisplay } from '@features/balance'
 import { ChannelEmptyState } from '@features/channel'
+import { GET_STAR_PATH } from '@features/payment/routes'
 import type { ActionRow } from '@shared/components/action-rows'
 import { ActionRows, ActionRowsSkeleton } from '@shared/components/action-rows'
 import { FilterMenu } from '@shared/components/filter-menu'
 import { LedgerPanel } from '@shared/components/ledger'
+import { LedgerDetailDialog } from '@shared/components/ledger-detail-dialog'
 import { useInView } from '@shared/hooks/use-in-view'
+import { useScrollIntoViewOnChange } from '@shared/hooks/use-scroll-into-view-on-change'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { DEFAULT_CURRENCY } from '@shared/lib/money'
 import { RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
+import { APP_BAR_HEIGHT } from '@shared/ui/app-bar'
 import { Button } from '@shared/ui/button'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { STAR_LEDGER_PAGE_SIZE } from '../api/star-ledger-api'
+import { useStarEntryDetail } from '../hooks/use-star-entry-detail'
 import { useStarLedger } from '../hooks/use-star-ledger'
 import { MY_STAR_ART } from '../lib/illustrations'
-import { starTransactionFilters } from '../lib/star-transaction-types'
+import { ALL_STAR_TRANSACTIONS, starTransactionFilters } from '../lib/star-transaction-types'
+import { GIFT_STAR_PATH } from '../routes'
 import { StarBalanceCard } from './star-balance-card'
 
 /**
@@ -51,10 +59,23 @@ import { StarBalanceCard } from './star-balance-card'
 export function MyStarView({ className }: { className?: string }) {
     const { t } = useTranslation()
     const requireAuth = useRequireAuth()
-    const { isKnown, isLoading: isBalanceLoading, isError: isBalanceError, refresh } = useBalance()
-    const { star } = useBalanceDisplay()
+    const {
+        star,
+        isKnown,
+        isLoading: isBalanceLoading,
+        isError: isBalanceError,
+        refresh,
+    } = useBalance()
+    /*
+     * Two different things called `star`, and both are needed here. The provider's is the **number**,
+     * which is what decides whether there is anything to gift; `useBalanceDisplay`'s is the **string**
+     * the hero card prints, already `—` when the figure is unknown. Aliased rather than renamed at the
+     * card, so the one that reaches the screen keeps the plainer name.
+     */
+    const { star: starDisplay } = useBalanceDisplay()
     const {
         groups,
+        entries,
         filter,
         setFilter,
         isLoading,
@@ -73,6 +94,24 @@ export function MyStarView({ className }: { className?: string }) {
      * nothing. `useInView`'s 600px default `rootMargin` is about a screen of lead time, which is why the
      * spinner is usually never seen.
      */
+    /*
+     * `DEFAULT_CURRENCY` and `rate: 1` are inert here, exactly as they are in `useStarLedger` — a
+     * Star figure is not converted, so `formatLedgerAmount` branches on the row's own unit before it
+     * ever reads either. See that hook's note on why they are passed rather than made optional.
+     */
+    const { select, detail } = useStarEntryDetail({
+        entries,
+        displayCurrency: DEFAULT_CURRENCY,
+        rate: 1,
+    })
+
+    /*
+     * Changing the filter replaces the list, so a reader deep in a long one is put back at its top —
+     * see `useScrollIntoViewOnChange` for why it is guarded on being scrolled past.
+     */
+    const panelRef = useRef<HTMLElement>(null)
+    useScrollIntoViewOnChange(panelRef, filter, APP_BAR_HEIGHT)
+
     const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({
         enabled: hasNextPage && !isFetchingNextPage,
     })
@@ -82,27 +121,78 @@ export function MyStarView({ className }: { className?: string }) {
     }, [sentinelInView, fetchNextPage])
 
     /*
-     * Neither destination exists yet, so both rows render visibly not-ready — `ActionRows` documents why
-     * that beats a 404 and why it beats silence. Adding `/get-star` later is one `href`.
+     * Built once, and the active row is looked up in the very list the menu renders — so the
+     * trigger's accessible name and the ticked row cannot drift apart. `ALL_STAR_TRANSACTIONS` is
+     * the *absence* of a filter rather than one of its values, so it names nothing and lights
+     * nothing up. Same shape as `/my-wallet/transaction-history`'s.
+     */
+    const filterOptions = starTransactionFilters().map(option => ({
+        key: option.key,
+        label: t(option.label),
+    }))
+    const activeFilterLabel =
+        filter === ALL_STAR_TRANSACTIONS
+            ? undefined
+            : filterOptions.find(option => option.key === filter)?.label
+
+    /*
+     * Both rows go somewhere now, and both are plain `href`s: *Get more Star* to `/get-star` and *Gift
+     * Star* to `/gift-star`. They sit next to each other and do the same kind of thing, so their
+     * addresses have the same shape — `features/payment/routes.ts` carries the rule, and
+     * `CreatorPickerView` records why Gift Star stopped being a dialog.
      *
-     * These are **navigations**, not spends, so they are not behind `useRequireStars`. That guard is for
-     * the places a price is actually paid — a gift, a paywalled post — which live in other features and
-     * call it at the point of the press.
+     * `GET_STAR_PATH` comes from `@features/payment/routes`, the import-free module, and not from that
+     * feature's barrel: this file is a client component that would otherwise pull the whole payment
+     * graph — Stripe's loader included — into `/my-star`'s chunk to read one string. `GIFT_STAR_PATH`
+     * is this feature's own `./routes`, which is where its addresses live.
+     *
+     * Neither row is behind `useRequireStars`: both are **navigations**, and the gift itself happens
+     * inside `features/donation` on whichever space the picker sends the reader to. That guard is for
+     * the point a price is actually paid.
+     *
+     * ## Gift Star is dimmed at a zero balance, and only when the figure is **known**
+     *
+     * Legacy's rule (`disabled={!balanceTVS}` on the same row): there is no point choosing who to gift
+     * Star to with none to give. Ported, with one narrowing that legacy does not make — `isKnown`. Its
+     * `balanceTVS` is falsy while the request is in flight *and* after it fails, so a 502 dims the row
+     * for the rest of the session; here a failure leaves the row pressable, which is the rule
+     * `features/permission` states in general terms and this screen already follows for its ledger: a
+     * failure is not a denial.
      *
      * Tile colours are the comp's: warning for Get more Star, indigo for Gift Star.
+     *
+     * ## Both glyphs are **filled**, which is legacy's and was the port's mistake
+     *
+     * `balanceCard/index.js` draws `IconStarFilled` and `IconGift`, and both are single solid paths —
+     * `IconStarFilled`'s is byte-identical to the sprite's `star--filled`. This shipped as outline
+     * `plus-circle` and outline `gift-simple` instead, which is also the wrong shape for the surface:
+     * a `ListLeadingTile` is a **solid colour with a `--white` glyph knocked out of it**, and an
+     * outline glyph on one reads as a hairline drawing floating on a block rather than as a mark.
+     *
+     * `star`, not `plus-circle` — the row says *Get Star*, and the plus was standing in for the
+     * subject with the action. The `+` affordance it was carrying belongs to the top bar's pill,
+     * which is a control with no room for a word.
+     *
+     * The bare ids would not do it: `star` aliases `star--regular` in the sprite, so the filled
+     * drawing has to be asked for by weight. `ActionRowGlyph` is what makes that a checked pair.
      */
     const rows: ActionRow[] = [
         {
             key: 'balance_action_get_star',
             label: t('balance_action_get_star'),
-            icon: 'plus-circle',
+            icon: 'star',
+            iconWeight: 'filled',
             tile: 'var(--accents-warning-active)',
+            href: GET_STAR_PATH,
         },
         {
             key: 'balance_action_gift_star',
             label: t('balance_action_gift_star'),
             icon: 'gift-simple',
+            iconWeight: 'filled',
             tile: 'var(--accents-indigo-active)',
+            href: GIFT_STAR_PATH,
+            disabledReason: isKnown && star <= 0 ? t('balance_gift_star_none') : undefined,
         },
     ]
 
@@ -126,6 +216,7 @@ export function MyStarView({ className }: { className?: string }) {
                          * to do — the branch unmounts. Same shape as `EarningsReportView`'s.
                          */
                         <Button
+                            data-testid="my-star-sign-in"
                             variant="primary"
                             size="large"
                             onClick={requireAuth(() => undefined)}
@@ -141,13 +232,17 @@ export function MyStarView({ className }: { className?: string }) {
     return (
         <div className={cn('flex flex-1 flex-col gap-3', className)}>
             {isBalanceLoading ? (
-                <ActionRowsSkeleton count={2} />
+                <ActionRowsSkeleton data-testid="my-star-actions-loading" count={2} />
             ) : (
                 <>
                     {/* `star` is already `—` when the figure is unknown — that decision belongs to the
                         provider, not to this screen. See `useBalanceDisplay`. */}
-                    <StarBalanceCard label={t('balance_star_label')} value={star} />
-                    <ActionRows rows={rows} unavailableLabel={t('balance_action_unavailable')} />
+                    <StarBalanceCard label={t('balance_star_label')} value={starDisplay} />
+                    <ActionRows
+                        testId="my-star-actions"
+                        rows={rows}
+                        unavailableLabel={t('balance_action_unavailable')}
+                    />
                 </>
             )}
 
@@ -164,26 +259,59 @@ export function MyStarView({ className }: { className?: string }) {
                     <span className="type-dense-default text-(--text-body)">
                         {t('balance_error_body')}
                     </span>
-                    <Button variant="secondary" size="small" onClick={() => void refresh()}>
+                    <Button
+                        data-testid="my-star-refresh"
+                        variant="secondary"
+                        size="small"
+                        onClick={() => void refresh()}
+                    >
                         {t('common_retry')}
                     </Button>
                 </div>
             )}
 
             <LedgerPanel
+                testId="my-star-ledger"
                 title={t('balance_txn_title')}
                 className="flex-1"
+                /*
+                 * The page's own `PageBackBar` is sticky and 60px tall, so the panel header parks below
+                 * it instead of under it. See `LedgerPanel`'s note on `stickyTop`.
+                 */
+                stickyTop={APP_BAR_HEIGHT}
+                fullBleed
+                pageSize={STAR_LEDGER_PAGE_SIZE}
+                ref={panelRef}
                 groups={groups}
                 loading={isLoading}
-                filter={
+                action={
                     <FilterMenu
-                        options={starTransactionFilters().map(option => ({
-                            key: option.key,
-                            label: t(option.label),
-                        }))}
+                        testId="my-star-filter"
+                        options={filterOptions}
                         value={filter}
                         onChange={setFilter}
-                        triggerLabel={t('balance_txn_filter')}
+                        /*
+                         * On, so it looks on — and **says so**, because the glyph cannot:
+                         * `sliders-simple` ships in one weight, so there is no filled form to swap
+                         * to, and the brand ink below is invisible to a screen reader. The same call
+                         * `/my-wallet/transaction-history` and `/my-membership` make on their bar
+                         * triggers; only the treatment differs, since a 24px glyph has no disc to
+                         * fill. `ALL_STAR_TRANSACTIONS` is this list's "everything" row.
+                         */
+                        active={filter !== ALL_STAR_TRANSACTIONS}
+                        triggerLabel={
+                            activeFilterLabel
+                                ? t('balance_txn_filter_active', { value: activeFilterLabel })
+                                : t('balance_txn_filter')
+                        }
+                        /*
+                         * `compact`, matching the channel Live tab's filter — see the note at
+                         * `/my-wallet/transaction-history`'s call site. The trigger stays the
+                         * default 24px glyph: this one sits in a `ListHeaderAction` on a 48-tall
+                         * header, whose own padding is the target, rather than in a page bar.
+                         */
+                        variant="compact"
+                        icon="sliders-simple"
                     />
                 }
                 error={
@@ -195,7 +323,12 @@ export function MyStarView({ className }: { className?: string }) {
                             title={t('balance_txn_error_title')}
                             body={t('balance_txn_error_body')}
                             action={
-                                <Button variant="secondary" size="large" onClick={refetch}>
+                                <Button
+                                    data-testid="my-star-retry"
+                                    variant="secondary"
+                                    size="large"
+                                    onClick={refetch}
+                                >
                                     {t('common_retry')}
                                 </Button>
                             }
@@ -216,6 +349,7 @@ export function MyStarView({ className }: { className?: string }) {
                                  * put them here.
                                  */
                                 <Button
+                                    data-testid="my-star-clear-filter"
                                     variant="secondary"
                                     size="large"
                                     onClick={() => setFilter('')}
@@ -236,7 +370,10 @@ export function MyStarView({ className }: { className?: string }) {
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
                 sentinelRef={sentinelRef}
+                onRowPress={select}
             />
+
+            {detail && <LedgerDetailDialog {...detail} />}
         </div>
     )
 }

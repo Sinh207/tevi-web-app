@@ -125,6 +125,109 @@ export function formatPlainAmount(value: number | null | undefined, locale = 'en
 }
 
 /**
+ * A figure with its currency **code after it** — `1,240.50 USD`.
+ *
+ * The payout screens' format, and legacy's: `formatNumber(net_amount, 'en-US', { minimumFractionDigits:
+ * 2, maximumFractionDigits: 2 })` followed by `net_amount_currency`. Deliberately not
+ * `formatFiatAmount`, which puts a *symbol* in front and honours the currency's own decimal count —
+ * both wrong here for the same reason: a payout row states the settlement currency as a code because
+ * that is what a bank statement will say, and it always states cents because a payout is an exact
+ * amount somebody is owed.
+ *
+ * **Two decimals, minimum and maximum**, which is the fix this exists for: `formatPlainAmount` has no
+ * minimum, so `1240.5` printed as `1,240.5` — a figure that reads like a rounding rather than a
+ * balance. Money with a currency behind it shows its cents.
+ *
+ * An empty `code` yields the bare number rather than a trailing space, which is the one case billy's
+ * `net_amount_currency` has been seen to produce.
+ *
+ * ## The decimal count is the **currency's**, and `Intl` is where it comes from
+ *
+ * VND has no minor unit, so a settlement in it must read `23,034,486 VND` and not
+ * `23,034,486.00 VND`. Legacy prints the `.00`: every payout figure it draws goes through
+ * `formatNumber(x, 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })`, hard-coded at
+ * each of the eleven call sites in `withdrawDetail` and `payoutTracking`, with no currency in the
+ * decision. This client reproduced that, on the grounds that `web-app` is the specification — and it
+ * is, for behaviour. It is not the specification for a figure that is simply wrong in a currency
+ * millions of people are paid in.
+ *
+ * `currencyFractionDigits` asks `Intl` rather than carrying a table:
+ *
+ * | code | digits | how |
+ * |---|---|---|
+ * | `VND`, `JPY`, `KRW` | **0** | ISO 4217, which `Intl` ships |
+ * | `USD`, `EUR`, `IDR` | 2 | same |
+ * | `USDT`, `TEVI` | 2 | four letters, so `Intl` throws — the fallback |
+ * | `TVS`, any unknown three-letter code | 2 | `Intl` answers 2 without complaint |
+ *
+ * Checked across all nine locales: the count is a property of the **currency**, not of the locale, so
+ * `vi` and `en` agree on VND and only the group separator differs (`23.034.486` versus `23,034,486`).
+ *
+ * A hand-written minor-unit table was the other option and is worse: it would be a second source of
+ * truth for something the platform already states in two places — ISO 4217, and `decimal_digits` on
+ * `exchange/v1/currencies/`, which `formatFiatAmount` already honours. This formatter cannot reach the
+ * second, because its callers hold a bare **code string** (`net_amount_currency`, `methodCurrency`) and
+ * not a `Currency` record; `Intl` is the source that needs no plumbing to get there.
+ *
+ * `digits` is an escape hatch for the caller that *does* hold the record — pass
+ * `currency.decimalDigits` and the backend wins over `Intl`. Nothing does yet.
+ *
+ * ## What stays: the **minimum equals the maximum**
+ *
+ * A currency with cents shows them — `1240.5` prints `1,240.50`, not `1,240.5`. That was the fix this
+ * function was written for, and it is unaffected: only the *number* of digits is now per-currency.
+ */
+export function formatAmountWithCode(
+    value: number | null | undefined,
+    code: string,
+    locale = 'en',
+    digits?: number,
+): string {
+    const amount = typeof value === 'number' && Number.isFinite(value) ? value : 0
+    const fraction = digits ?? currencyFractionDigits(code, locale)
+    const formatted = formatNumber(amount, locale, {
+        minimumFractionDigits: fraction,
+        maximumFractionDigits: fraction,
+    })
+    return code ? `${formatted} ${code}` : formatted
+}
+
+/**
+ * How many decimals a currency code takes — `0` for VND, `2` for USD, `2` for anything unrecognised.
+ *
+ * Asked of `Intl` with `style: 'currency'`, which carries the ISO 4217 minor units, then read back off
+ * `resolvedOptions()`. The formatter itself is discarded: it would print a *symbol* (`₫23,034,486`)
+ * where these screens want the code after the number, which is what a bank statement says.
+ *
+ * **Throws are the interesting case.** A code longer than three letters — `USDT`, `TEVI`, the two units
+ * that appear most often on the payout screens — makes `Intl` throw `RangeError`, so the `catch` is
+ * load-bearing rather than defensive. An unknown *three*-letter code does not throw; `Intl` answers 2,
+ * which is the same answer the fallback would give.
+ *
+ * `2` and not `0` as the fallback: a unit we cannot identify is more likely to have cents than not, and
+ * hiding a fractional part is losing information where showing an extra `.00` is only noise.
+ */
+export function currencyFractionDigits(code: string, locale = 'en'): number {
+    const trimmed = code.trim()
+    if (!trimmed) return 2
+    try {
+        /*
+         * `?? 2`, because TypeScript types `maximumFractionDigits` as optional on
+         * `ResolvedNumberFormatOptions` — it is always present for `style: 'currency'` at runtime, but
+         * the type is honest about the general case and the fallback is the same one the `catch` uses.
+         */
+        return (
+            new Intl.NumberFormat(locale, {
+                style: 'currency',
+                currency: trimmed,
+            }).resolvedOptions().maximumFractionDigits ?? 2
+        )
+    } catch {
+        return 2
+    }
+}
+
+/**
  * Convert a USD figure into another currency.
  *
  * Its own function, separate from the formatter, because the two are different decisions and only

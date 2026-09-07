@@ -1,9 +1,11 @@
 'use client'
 
+import { NsfwInfoDialog } from '@features/nsfw'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { safeExternalUrl } from '@shared/lib/safe-url'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
+import { useState } from 'react'
 import type { Channel, ChannelSocialLink } from '../api/types'
 import { formatJoinedDate } from '../lib/channel-format'
 import { isWebLink, SOCIAL_ICON, SOCIAL_MARK_SIZE, socialMarkUrl } from '../lib/social-links'
@@ -17,7 +19,30 @@ import { ChannelDescription } from './channel-description'
  * of the six sub-components) and not an accident. A channel with no bio and no links renders a
  * compact header, rather than a stack of empty lines each reserving a text height.
  */
-export function ChannelBio({ channel }: { channel: Channel }) {
+export function ChannelBio({
+    channel,
+    /** The reader owns this space — the NSFW row then offers the appeal. See `ChannelNsfwLabel`. */
+    isOwner = false,
+    /**
+     * A sensitive space whose gate is unanswered: the **creator's own writing and destinations** are
+     * withheld with the art.
+     *
+     * The two rows that go are the two the creator authored — the description and every link
+     * (the named custom one and the platform marks alike). A bio is free text and a link is a place
+     * the reader has not agreed to be sent yet, so the gate cannot both withhold the cover and leave
+     * a paragraph plus a row of taps to somewhere else standing above it.
+     *
+     * The two that stay are ours, not theirs: the joined date is a fact about the account, and the
+     * NSFW label is the gate's own subject — hiding *that* would take away the one line explaining
+     * why the rest is missing. The identity block above (name, handle, the space's own address) is
+     * untouched for the reason in `ChannelNsfwGate` — hiding it only hid the address.
+     */
+    withheld = false,
+}: {
+    channel: Channel
+    isOwner?: boolean
+    withheld?: boolean
+}) {
     const { t, currentLanguage } = useTranslation()
 
     /**
@@ -31,11 +56,11 @@ export function ChannelBio({ channel }: { channel: Channel }) {
 
     return (
         <div className="flex min-w-0 flex-col gap-3">
-            {channel.description && <ChannelDescription text={channel.description} />}
+            {!withheld && channel.description && <ChannelDescription text={channel.description} />}
 
-            {customLink && <ChannelMetaLink link={customLink} />}
+            {!withheld && customLink && <ChannelMetaLink link={customLink} />}
 
-            {platformLinks.length > 0 && (
+            {!withheld && platformLinks.length > 0 && (
                 /*
                  * `gap-0`, not the `gap-1` this had while every mark was a 24px glyph filling a
                  * 24px box. Each mark now centres its ink in that box with 2–2.4px to spare on
@@ -64,24 +89,58 @@ export function ChannelBio({ channel }: { channel: Channel }) {
                 </p>
             )}
 
-            {channel.is_nsfw && (
-                /*
-                 * Legacy renders a CDN glyph plus the literal, untranslated string "NSFW". Same
-                 * shape, but through the sprite and through `t()` — an untranslated label in a
-                 * nine-locale app is a bug that happens to be invisible in English.
-                 */
-                <p className="type-body-default flex min-w-0 items-center gap-1 text-(--text-subtitle)">
-                    <Icon
-                        name="nsfw"
-                        weight="filled"
-                        size={20}
-                        className="flex-none"
-                        aria-hidden="true"
-                    />
-                    {t('channel_nsfw')}
-                </p>
-            )}
+            {channel.is_nsfw && <ChannelNsfwLabel isOwner={isOwner} />}
         </div>
+    )
+}
+
+/**
+ * The `NSFW` row — a **button**, because the acronym is the one thing in this block a reader can be
+ * expected not to know.
+ *
+ * Legacy renders a CDN glyph plus the literal, untranslated string "NSFW", and nothing happens when
+ * you press it. Same shape here — through the sprite and through `t()`, since an untranslated label
+ * in a nine-locale app is a bug that happens to be invisible in English — but pressable, opening
+ * `NsfwInfoDialog`, which is what the native app does from this exact row.
+ *
+ * ## A button that looks like the meta rows around it
+ *
+ * It sits in a column with the joined date, and the two are the same *kind* of thing: facts about
+ * the space. So it keeps that column's type and `--text-subtitle` ink rather than becoming a link —
+ * the row above it is already `--text-link` and means "somewhere else on the web", which this is
+ * not. What marks it as pressable is the hover, plus `w-fit` so the target is the words and not the
+ * full width of a 612px column.
+ *
+ * The glyph stays subtitle-grey; the dialog's copy of it is pink. See `NsfwInfoDialog` for why the
+ * same mark is drawn twice in two colours — and for what the **owner** additionally gets behind this
+ * row, which is the appeal.
+ *
+ * `type="button"` explicitly: this block sits inside no form today, and a bare `<button>` in one
+ * submits it.
+ */
+function ChannelNsfwLabel({ isOwner }: { isOwner: boolean }) {
+    const { t } = useTranslation()
+    const [open, setOpen] = useState(false)
+
+    return (
+        <>
+            <button
+                data-testid="channel-bio-nsfw"
+                type="button"
+                onClick={() => setOpen(true)}
+                className="type-body-default flex w-fit min-w-0 items-center gap-1 text-start text-(--text-subtitle) transition-colors hover:text-(--text-title)"
+            >
+                <Icon
+                    name="nsfw"
+                    weight="filled"
+                    size={20}
+                    className="flex-none"
+                    aria-hidden="true"
+                />
+                {t('channel_nsfw')}
+            </button>
+            <NsfwInfoDialog open={open} onOpenChange={setOpen} canAppeal={isOwner} />
+        </>
     )
 }
 
@@ -134,6 +193,7 @@ function ChannelMetaLink({ link }: { link: ChannelSocialLink }) {
         <p className="type-body-default flex min-w-0 items-center gap-1 text-(--text-link)">
             <Icon name="globe" weight="filled" size={20} className="flex-none" />
             <a
+                data-testid="channel-bio-link"
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -176,6 +236,7 @@ function ChannelSocialMark({ link }: { link: ChannelSocialLink }) {
     return (
         <li className="flex-none">
             <a
+                data-testid="channel-bio-social"
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"

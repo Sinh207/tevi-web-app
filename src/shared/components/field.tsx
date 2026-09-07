@@ -1,5 +1,6 @@
 'use client'
 
+import { subTestId, type TestIdProps } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
 import { type ComponentPropsWithRef, type ReactNode, useId } from 'react'
 
@@ -54,6 +55,18 @@ export type FieldShellProps = {
     labelData?: ReactNode
     children: ReactNode
     className?: string
+    /**
+     * Base `data-testid`. The **bare** id stays on the control (the caller puts it there); the
+     * furniture derives — `-field` on the wrapper, `-label`, `-label-data`, `-message`, and
+     * `-error` / `-hint` on whichever of the two is showing.
+     *
+     * The message line needs its own id rather than being reached through `aria-describedby`,
+     * because `messageId` is `${id}-message` and `id` is `useId()` unless a caller supplied one —
+     * a React-internal value that changes shape between versions and needs CSS escaping. So the
+     * most common form assertion in a suite becomes `[data-testid='…-error']`: present means
+     * invalid, and its text is the message. `role="alert"` stays, so it is assertable by role too.
+     */
+    testId?: string
 }
 
 /**
@@ -73,60 +86,107 @@ export function FieldShell({
     labelData,
     children,
     className,
+    testId,
 }: FieldShellProps) {
     return (
-        <div className={cn('flex flex-col gap-1.5', className)}>
+        <div
+            className={cn('flex flex-col gap-1.5', className)}
+            data-testid={subTestId(testId, 'field')}
+        >
             <div className="flex items-baseline gap-2">
                 <label
                     htmlFor={id}
+                    data-testid={subTestId(testId, 'label')}
                     className="type-dense-strong min-w-0 flex-auto text-(--text-body)"
                 >
                     {label}
                 </label>
                 {labelData !== undefined && (
-                    <span className="type-caption-meta flex-none text-(--text-subtitle)">
+                    <span
+                        data-testid={subTestId(testId, 'label-data')}
+                        className="type-caption-meta flex-none text-(--text-subtitle)"
+                    >
                         {labelData}
                     </span>
                 )}
             </div>
             {children}
-            <div id={messageId} className="min-h-4">
+            <div id={messageId} data-testid={subTestId(testId, 'message')} className="min-h-4">
                 {error ? (
                     // `role="alert"` and not `aria-live`: this appears in response to
                     // something the user just did, and is worth interrupting for.
-                    <p role="alert" className="type-caption-meta text-(--text-error)">
+                    <p
+                        role="alert"
+                        data-testid={subTestId(testId, 'error')}
+                        className="type-caption-meta text-(--text-error)"
+                    >
                         {error}
                     </p>
                 ) : hint ? (
-                    <div className="type-caption-meta text-(--text-subtitle)">{hint}</div>
+                    <div
+                        data-testid={subTestId(testId, 'hint')}
+                        className="type-caption-meta text-(--text-subtitle)"
+                    >
+                        {hint}
+                    </div>
                 ) : null}
             </div>
         </div>
     )
 }
 
-export type TextFieldProps = Omit<ComponentPropsWithRef<'input'>, 'className'> & {
+/**
+ * `prefix` is **omitted from the input's own props**, not merely added to them.
+ *
+ * `<input>` has a native `prefix` attribute typed `string`, so intersecting the two produced
+ * `string & ReactNode` — which accepts `"@"` and rejects every element. The prop below is
+ * documented as rendering a node inside the field, and it renders one; the collision was invisible
+ * until the first caller passed something other than a character (the Star mark on the donate
+ * dialog's amount field). Omitting the native attribute is what makes the declared type the real one.
+ */
+export type TextFieldProps = Omit<ComponentPropsWithRef<'input'>, 'className' | 'prefix'> & {
     label: ReactNode
     hint?: ReactNode
     error?: string | null
     labelData?: ReactNode
     /** Rendered inside the field at its leading edge — the `@` before a username. */
     prefix?: ReactNode
+    /**
+     * Rendered inside the field at its trailing edge — a clear button, a unit.
+     *
+     * Symmetric with `prefix` and sharing its wrapper: an adornment on either side means the
+     * *wrapper* carries the field surface and the input is stripped bare, which is the only
+     * arrangement where the two read as one value rather than as a control beside a box.
+     *
+     * Interactive content is allowed here (unlike `prefix`, which is a character in practice) and
+     * has to keep itself out of the way: the reason is that the field's `<label htmlFor>` does not
+     * cover it, so anything pressable in here needs its own accessible name.
+     */
+    suffix?: ReactNode
     /** Rendered between the control and its message — a rule checklist. */
     footer?: ReactNode
 }
 
-/** A labelled single-line field. */
+/**
+ * A labelled single-line field.
+ *
+ * A `data-testid` passed here lands on the `<input>` in **both** layout arms, so a locator that
+ * types into this field does not change the day a designer adds a suffix icon and the markup
+ * switches arms. That property is the point of the whole layout. The furniture derives from the
+ * same string — see `FieldShellProps.testId`.
+ */
 export function TextField({
     label,
     hint,
     error,
     labelData,
     prefix,
+    suffix,
     footer,
     id,
+    'data-testid': testId,
     ...props
-}: TextFieldProps) {
+}: TextFieldProps & TestIdProps) {
     const generated = useId()
     const fieldId = id ?? generated
     const messageId = `${fieldId}-message`
@@ -139,36 +199,58 @@ export function TextField({
             error={error}
             labelData={labelData}
             messageId={messageId}
+            testId={testId}
         >
-            {prefix ? (
+            {prefix || suffix ? (
                 /*
-                 * The prefix sits *inside* the border rather than beside the field, so the `@`
+                 * An adornment sits *inside* the border rather than beside the field, so the `@`
                  * and what follows it read as one value. That means the wrapper carries the
                  * surface and the input is stripped bare — and `focus-within` moves the focus
                  * ring onto the wrapper, because the input no longer has a border to colour.
+                 *
+                 * The trailing side keeps its own padding rather than the wrapper's: `pe-1.5` so a
+                 * 32px icon button sits 6px off the border instead of 16, which is what puts its
+                 * *glyph* where a 16px inset would have put a character.
                  */
                 <div
                     className={cn(
                         FIELD_SURFACE,
                         FIELD_HEIGHT,
                         'flex items-center gap-1 focus-within:border-(--input-border-focus)',
+                        suffix ? 'pe-1.5' : undefined,
                     )}
+                    data-testid={subTestId(testId, 'affix')}
                     aria-invalid={error ? true : undefined}
                 >
-                    <span className="type-body-default flex-none text-(--text-subtitle)">
-                        {prefix}
-                    </span>
+                    {prefix ? (
+                        <span
+                            data-testid={subTestId(testId, 'prefix')}
+                            className="type-body-default flex-none text-(--text-subtitle)"
+                        >
+                            {prefix}
+                        </span>
+                    ) : null}
                     <input
                         {...props}
+                        data-testid={testId}
                         id={fieldId}
                         aria-invalid={error ? true : undefined}
                         aria-describedby={messageId}
                         className="type-body-default min-w-0 flex-auto bg-transparent text-(--input-text) placeholder:text-(--input-placeholder) focus:outline-none"
                     />
+                    {suffix ? (
+                        <span
+                            data-testid={subTestId(testId, 'suffix')}
+                            className="flex flex-none items-center"
+                        >
+                            {suffix}
+                        </span>
+                    ) : null}
                 </div>
             ) : (
                 <input
                     {...props}
+                    data-testid={testId}
                     id={fieldId}
                     aria-invalid={error ? true : undefined}
                     aria-describedby={messageId}
@@ -200,8 +282,9 @@ export function TextAreaField({
     labelData,
     id,
     rows = 3,
+    'data-testid': testId,
     ...props
-}: TextAreaFieldProps) {
+}: TextAreaFieldProps & TestIdProps) {
     const generated = useId()
     const fieldId = id ?? generated
     const messageId = `${fieldId}-message`
@@ -214,9 +297,11 @@ export function TextAreaField({
             error={error}
             labelData={labelData}
             messageId={messageId}
+            testId={testId}
         >
             <textarea
                 {...props}
+                data-testid={testId}
                 id={fieldId}
                 rows={rows}
                 aria-invalid={error ? true : undefined}

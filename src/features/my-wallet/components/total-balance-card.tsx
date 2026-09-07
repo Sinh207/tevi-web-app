@@ -1,5 +1,6 @@
 'use client'
 
+import { subTestId } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
 import {
     Card,
@@ -31,25 +32,34 @@ import type { ReactNode } from 'react'
  * When the chosen currency **is** USD the two would be identical, so the caller omits the second line —
  * printing `$4,400.03` twice reads as a rendering bug.
  *
- * `currencyControl` is a slot rather than a built-in picker, so this component stays renderable without a
- * menu around it (the `/dev` preview does exactly that).
+ * `currencyControl` and `help` are slots rather than built-in controls, so this component stays
+ * renderable without a menu or a dialog around it (the `/dev` preview does exactly that).
  */
 export function TotalBalanceCard({
     label,
     value,
     /** The USD line. Omit when the display currency is already USD. */
     subValue,
+    /** The `?` control beside the figure. Omit and the title line is the figure alone. */
+    help,
     currencyControl,
     className,
+    testId,
 }: {
     label: string
     value: ReactNode
     subValue?: ReactNode
+    help?: ReactNode
     currencyControl?: ReactNode
     className?: string
+    /**
+     * The card's own id. The figure inside is what a suite reads — a balance is the single most
+     * asserted value on this screen — so it derives as `${testId}-value`.
+     */
+    testId?: string
 }) {
     return (
-        <Card type="balance" className={cn('flex-none', className)}>
+        <Card type="balance" data-testid={testId} className={cn('flex-none', className)}>
             <CardMeta gap="8" justify="between" className="w-full">
                 <CardItem type="large-item" tone="subtitle">
                     <CardItemMeta>{label}</CardItemMeta>
@@ -60,7 +70,16 @@ export function TotalBalanceCard({
                 {/* `subtitleLines` left at the DS default of 2, which is the comp's own override for this
                     card — a long converted figure may wrap. */}
                 <CardItem type="title-subtitle" titleSize="32">
-                    <CardItemTitle>{value}</CardItemTitle>
+                    {/*
+                     * The help control sits **inside** the title line, which is where legacy puts it
+                     * — `{balanceTEVIDisplay} <IconBtnHelp />`, a 14px glyph trailing the 32px
+                     * figure. `items-baseline` so it rides the figure's baseline rather than the
+                     * centre of a 48px line box, which is what made it look like it had slipped.
+                     */}
+                    <CardItemTitle className="flex items-baseline gap-2">
+                        <span data-testid={subTestId(testId, 'count')}>{value}</span>
+                        {help}
+                    </CardItemTitle>
                 </CardItem>
                 {subValue !== undefined && (
                     <CardItem type="item" tone="subtitle">

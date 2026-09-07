@@ -103,6 +103,7 @@ export function ChannelAboutMcn() {
                  */}
                 {leave === null && (
                     <Button
+                        data-testid="channel-mcn-leave"
                         variant="ghost"
                         size="small"
                         className="-me-2 flex-none text-(--text-error)"
@@ -140,6 +141,7 @@ export function ChannelAboutMcn() {
                             </span>
                         </p>
                         <Button
+                            data-testid="channel-mcn-cancel"
                             variant="ghost"
                             size="small"
                             className="-me-2 flex-none"
@@ -172,16 +174,27 @@ export function ChannelAboutMcn() {
              * without retranslating nine locales.
              */}
             <ConfirmDialog
+                testId="channel-mcn-leave-confirm"
                 open={asking === 'leave'}
                 onOpenChange={open => setAsking(open ? 'leave' : null)}
                 title={t('channel_mcn_leave')}
                 description={t('channel_mcn_leave_description', { hours: 48 })}
                 confirmLabel={t('channel_mcn_leave_confirm')}
-                onConfirm={() => confirmLeave()}
+                /*
+                 * Closed on press — `ConfirmDialog` closes nothing by itself, so without this the
+                 * dialog stands open once the request settles, offering the same irreversible press
+                 * a second time. Same fix, same reasoning, as `mcn-partnership-view.tsx`, which is
+                 * the other consumer of `useMcnLeave`; `follow-requests-view.tsx` states the rule.
+                 */
+                onConfirm={() => {
+                    confirmLeave()
+                    setAsking(null)
+                }}
                 pending={isConfirming}
                 destructive
             />
             <ConfirmDialog
+                testId="channel-mcn-cancel-confirm"
                 open={asking === 'cancel'}
                 onOpenChange={open => setAsking(open ? 'cancel' : null)}
                 title={t('channel_mcn_cancel_title')}
@@ -190,7 +203,10 @@ export function ChannelAboutMcn() {
                 // buttons are a plain yes/no. `common_close` is legacy's `mcn_w2_close`, verbatim.
                 confirmLabel={t('common_confirm')}
                 cancelLabel={t('common_close')}
-                onConfirm={() => cancelLeave()}
+                onConfirm={() => {
+                    cancelLeave()
+                    setAsking(null)
+                }}
                 pending={isCancelling}
             />
         </ChannelAboutCard>

@@ -1,6 +1,7 @@
 import { MenuDrawer, MenuProvider } from '@features/navigation'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { CurrencyScreenPreview } from './currency-preview'
 
 export const metadata: Metadata = { title: 'Left Bar', robots: { index: false, follow: false } }
 
@@ -56,6 +57,22 @@ export default function LeftBarPage() {
                     <MenuDrawer />
                 </div>
             </MenuProvider>
+
+            <section className="flex flex-col gap-3">
+                <header className="flex max-w-2xl flex-col gap-1">
+                    <h2 className="type-title-t2-semibold text-text-title">Change currency</h2>
+                    <p className="type-dense-default text-text-body">
+                        Pushed from the balance card's own currency control, as legacy's{' '}
+                        <code className="type-dense-emphasis">BtnCurrency</code> opens a dialog from
+                        that spot. Neither the DS nor legacy has a search here; the endpoint answers
+                        with ~150 rows, so the field and its ranking are the app's own (see{' '}
+                        <code className="type-dense-emphasis">searchCurrencies</code>). Above is the
+                        drawer as an anonymous visitor sees it — the list needs a real account,
+                        which is why this preview runs on a fixture.
+                    </p>
+                </header>
+                <CurrencyScreenPreview />
+            </section>
         </main>
     )
 }

@@ -120,6 +120,7 @@ export function EarningsReportView({
                          * `access` stops being `'signed-out'` and this branch unmounts.
                          */
                         <Button
+                            data-testid="earnings-sign-in"
                             variant="primary"
                             size="large"
                             onClick={requireAuth(() => undefined)}
@@ -149,6 +150,7 @@ export function EarningsReportView({
                          */
                         mySlug ? (
                             <Button
+                                data-testid="earnings-go-to-mine"
                                 variant="primary"
                                 size="large"
                                 render={<Link href={earningsReportPath(mySlug)} />}
@@ -177,7 +179,12 @@ export function EarningsReportView({
                         title={t('earnings_error_title')}
                         body={t('earnings_error_body')}
                         action={
-                            <Button variant="secondary" size="large" onClick={refetch}>
+                            <Button
+                                data-testid="earnings-retry"
+                                variant="secondary"
+                                size="large"
+                                onClick={refetch}
+                            >
                                 {t('common_retry')}
                             </Button>
                         }
@@ -193,6 +200,8 @@ export function EarningsReportView({
                     <div className="flex flex-col gap-3">
                         {days.map(day => (
                             <EarningsDayRow
+                                testId="earnings-day"
+                                rowKey={day.id}
                                 key={day.id}
                                 day={day}
                                 locale={currentLanguage}

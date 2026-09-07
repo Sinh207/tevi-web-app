@@ -68,6 +68,7 @@ export function PasswordDone({
              * semantics it would otherwise claim (see `shared/ui/button.tsx`).
              */}
             <Button
+                data-testid="auth-password-done"
                 render={<Link href="/" />}
                 size="large"
                 fullWidth

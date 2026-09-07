@@ -191,6 +191,19 @@
     --shadow-3xl: var(--elevation-3xl);
     --shadow-label: var(--elevation-label);
 
+    /* The brand sweep — the purple wash that marks a **chosen** purchase option and
+       badges the recommended one. Given by design as raw stops rather than as a Figma
+       variable, and they are not on the Primary ramp (which runs #be9cf7 / #8a4fe3 /
+       #501bc0), so they are literals here — once, with a name — rather than in markup.
+       Mode-invariant on purpose: it is brand paint over a fixed white sweep, the same
+       call `--gradient-premium-name`'s stops make in the other direction. */
+    --gradient-brand-sweep: linear-gradient(
+        93.2deg,
+        #cd7ef4 2%,
+        #8766e9 53.81%,
+        #cd7ef4 99.09%
+    );
+
     /* Derived, not a Figma variable — the premium display-name gradient, solved
        once against the canonical 104x24 name box so List / Conversation List /
        Card cannot drift apart. Both stops are bound variables, so it flips mode. */
@@ -392,6 +405,74 @@
     --ring: var(--focus-ring);
     /* Brand purple (Figma "Accent" button) — exposed as the `brand` utility */
     --brand: var(--primary-500);
+    /*
+     * Brand purple as **ink**, which `--brand` cannot be in both modes.
+     *
+     * `--primary-500` is `#501bc0` in Light *and* Dark — the one rung of the ramp that does not
+     * invert — so it reads at 8.6:1 on a white page and 2.3:1 on a black one, which is a link a
+     * dark-mode reader cannot see. `--primary-600` inverts (`#4316a0` Light, `#8a4fe3` Dark) and
+     * clears 4.5:1 both ways, so the Dark override below is the whole point of this token.
+     *
+     * **Not a design-system token.** The DS paints a list header's action
+     * `--accents-indigo-active` (`.tevi-list-trailing[data-variant='button']`, verified in
+     * `components.css`) — blue, not purple. `/my-wallet`'s **View all** is purple because the
+     * product asked for it and legacy's own button is `#501BC0`; the divergence is stated at that
+     * call site. Use `--text-link` for anything the DS has not overruled.
+     */
+    --text-brand: var(--primary-500);
+    /*
+     * The tinted disc a brand-inked glyph sits on — `web-app` paints a ledger row's 40px leading
+     * circle `#DCD1F2` with a `#501BC0` glyph in it. `--primary-200` and not that hex, so the value
+     * tracks the ramp; `#d9c7fb` is a shade off `#DCD1F2` and that is the trade.
+     *
+     * ## Dark is **not** the inverted rung, and that is the fix rather than the shortcut
+     *
+     * The rung inverts on its own (`#d9c7fb` Light, `#2c0e69` Dark), and letting it was the first
+     * version. Measured, it gave Dark a disc at **1.16:1 against the panel** — a circle that all but
+     * dissolved into `#18181b` — where Light sits at 1.55. Reported from a screenshot, and the number
+     * says the same thing the eye did.
+     *
+     * Raising the disc alone makes it worse, because `--text-brand` is the glyph and the two converge:
+     * `primary-300` takes glyph-on-disc from 3.14 to 2.74, `primary-400` to 2.31. So **both** move, and
+     * `--text-on-brand` below is the other half.
+     *
+     * | | disc ↔ panel | glyph ↔ disc |
+     * |---|---|---|
+     * | Light — `primary-200` / `primary-500` | 1.55 | 5.98 |
+     * | Dark — `primary-400` / `primary-700` | **1.57** | **4.99** |
+     *
+     * Dark now mirrors Light on the number that failed, and clears 4.5:1 on the glyph where 3:1 is all
+     * a non-text mark is asked for.
+     */
+    --background-brand: var(--primary-200);
+
+    /**
+     * The glyph inside that disc — **not** `--text-brand`.
+     *
+     * `--text-brand` is for brand ink on the *page* (the **View all** link, the Tevi Coin link), where
+     * the ground is `--background-surface`. On the brand-tinted disc the ground is different at both
+     * ends, so the ink has to be too: sharing one token is what pinned Dark's glyph at 3.14:1.
+     *
+     * Light is the same value `--text-brand` resolves to, which is why the split shows up in no
+     * light-mode screenshot — the two only diverge in Dark.
+     */
+    --text-on-brand: var(--primary-500);
+}
+
+/*
+ * The one rung that inverts. Kept in its own block rather than folded into the DS dark block
+ * above (line ~205): that block is a 1:1 port of `colors_and_type.css` and must stay one, so an
+ * app-level token overriding itself belongs beside its own definition.
+ */
+.dark,
+:root[data-theme='dark'] {
+    --text-brand: var(--primary-600);
+    /*
+     * Two rungs up from where the ramp would put them, and the note on `--background-brand` carries
+     * the arithmetic: the inverted rung left the disc at 1.16:1 against the panel.
+     */
+    --background-brand: var(--primary-400);
+    --text-on-brand: var(--primary-700);
 }
 
 @theme inline {
@@ -430,6 +511,8 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
     --color-brand: var(--brand);
+    --color-text-brand: var(--text-brand);
+    --color-background-brand: var(--background-brand);
 
     /* ---- primitive ramps ---- */
     --color-zinc-50: var(--zinc-50);
@@ -481,6 +564,7 @@
     --color-text-link: var(--text-link);
     --color-text-link-hover: var(--text-link-hover);
     --color-text-on-primary: var(--text-on-primary);
+    --color-text-on-brand: var(--text-on-brand);
     --color-text-on-accent: var(--text-on-accent);
     --color-text-error: var(--text-error);
     --color-text-success: var(--text-success);
@@ -591,6 +675,30 @@
  * Letter-spacing is -2% for size >= 18, 0 for size <= 16.
  * ==================================================================== */
 @layer components {
+    /*
+     * A 2px gradient ring on a rounded box — the *chosen* state for a Star package and a
+     * payment method.
+     *
+     * ⚠ **Not `border-image`.** That is what the spec was handed as, and it cannot be used here:
+     * `border-image` **ignores `border-radius`**, so a gradient border drawn that way squares the
+     * corners off. The design is a rounded tile, so the ring is painted as two stacked
+     * backgrounds instead — the surface clipped to the padding box, the gradient clipped to the
+     * border box — with a transparent border reserving the 2px between them. That respects the
+     * radius exactly, and it is the only single-element technique that does.
+     *
+     * The fill is `--background-surface`, so it follows the theme; only the sweep is fixed. It is
+     * named directly rather than through a `--gradient-ring-fill` hook: nothing needs a second fill,
+     * and a variable no caller sets is the CSS version of an event with no emitter.
+     */
+    .gradient-ring {
+        border: 2px solid transparent;
+        background-image:
+            linear-gradient(var(--background-surface), var(--background-surface)),
+            var(--gradient-brand-sweep);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+    }
+
     [class^='type-'],
     [class*=' type-'] {
         font-family: var(--font-family-base);
@@ -964,6 +1072,56 @@
 }
 
 /* ====================================================================
+ * `tevi-chart-draw` — the trend line arriving.
+ *
+ * The dashboard's plot is two `<path>`s, and a line that is simply
+ * *there* on the first paint says nothing about which of the four
+ * metrics you just picked. Drawing it says "this is the series you
+ * asked for" in the same 240ms every other arrival in the app takes.
+ *
+ * **`stroke-dashoffset` on a normalised path.** The paths carry
+ * `pathLength="1"` and `stroke-dasharray: 1`, so one dash covers the
+ * whole line whatever its real length is and the offset can run 1 → 0
+ * without measuring anything in JavaScript. That normalisation is also
+ * what makes it survive `preserveAspectRatio="none"`: the plot is
+ * stretched to the column's width, so a length in user units would be
+ * a different length on every window.
+ *
+ * ⚠ The comparison line is **dashed** (`stroke-dasharray: 5 5`), and it
+ * therefore cannot use this — the two dash patterns are the same
+ * property. It fades in instead, which is also the right hierarchy: the
+ * current period draws, the period behind it appears.
+ *
+ * Fires on mount and on a metric switch (the chart is keyed by metric,
+ * so it remounts), and **not** on a period change — the same series
+ * with new numbers should not redraw itself while you are reading it.
+ *
+ * Callers pair it with `motion-reduce:animate-none`, which leaves the
+ * line drawn: nothing is lost, since the animation only reveals what is
+ * already the final state.
+ * ==================================================================== */
+@keyframes tevi-chart-draw {
+    from {
+        stroke-dashoffset: 1;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* The comparison line's half of the pair — see `tevi-chart-draw`. It
+ * fades because its own dash pattern is the state (`5 5`), and a
+ * `transition` cannot fire on mount. */
+@keyframes tevi-chart-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ====================================================================
  * `tevi-live-breath` — the app's only **ongoing** animation, and the
  * only one that is not an entrance or an exit.
  *
@@ -997,5 +1155,304 @@
     }
     50% {
         opacity: 0.35;
+    }
+}
+
+/* ====================================================================
+ * `tevi-premium-sheen` — the light running across the recommended plan.
+ *
+ * `/premium`'s annual card is the one surface in the app whose job is to
+ * be *chosen*, and it is already differentiated in five static ways (the
+ * gold frame, the crown strip, the violet ground, the struck price, the
+ * discount line). Motion is the sixth, and unlike the other five it
+ * carries no information — so it is a **glare**, the reflection a metal
+ * card gets when it is tilted, and not a highlight around the price.
+ *
+ * ## The band is the whole card wide, and that is what makes it work
+ * ## in RTL
+ *
+ * The element is `inset-0` — exactly the card — with the streak painted
+ * as a narrow `via` stop inside its own gradient, and it travels
+ * `-100% → 100%` of its own width. A shorter box positioned at
+ * `start-0` would be the obvious construction and it is the one that
+ * breaks: `start` flips with the direction while a positive `translate`
+ * does not, so in Arabic the streak would begin off the trailing edge
+ * and leave the card without ever crossing it — no error, no sheen. At
+ * `inset-0` the box is identical in both directions and the sweep is
+ * physical in both.
+ *
+ * ## Most of the cycle is the pause
+ *
+ * The pass takes ~1.6s of a 4.5s cycle and the element rests invisible
+ * for the rest. A glare that runs continuously is a card that never
+ * settles, and this one sits under three prices a reader is trying to
+ * compare. The hold is written into the keyframe rather than into a
+ * delay because a delay only postpones the *first* pass.
+ *
+ * Callers pair it with `motion-reduce:animate-none`, and the element
+ * carries a base `opacity-0` so that leaves no white band lying across
+ * the card — the one reduced-motion outcome that would be worse than
+ * the animation.
+ * ==================================================================== */
+@keyframes tevi-premium-sheen {
+    0% {
+        opacity: 0;
+        translate: -100% 0;
+    }
+    8% {
+        opacity: 1;
+    }
+    28% {
+        opacity: 1;
+    }
+    36% {
+        opacity: 0;
+        translate: 100% 0;
+    }
+    100% {
+        opacity: 0;
+        translate: 100% 0;
+    }
+}
+
+/* ====================================================================
+ * `tevi-premium-spin` — the Premium mark turning.
+ *
+ * The badge at the top of `/premium` is a medallion, and a medallion
+ * turning is the one loop that says "this is the prize" without saying
+ * anything about state. It is the only element on the page with nothing
+ * to read, which is why it can carry a permanent animation at all: the
+ * rule `LIVE_BREATH` states — only ever on a surface small enough to
+ * ignore — is satisfied by a 100px badge whose whole content is
+ * decoration.
+ *
+ * **12 seconds, linear.** Not the app's 240ms curve, which is an
+ * arrival, and deliberately far slower than anything that could be read
+ * as progress: the app's own spinner is a dot cascade
+ * (`tevi-loader-dot`), so nothing here competes with it, but a
+ * one-second rotation is a loading state whatever the shape. Linear
+ * because an eased rotation reads as something being *turned* rather
+ * than turning.
+ *
+ * ## `rotate: y`, and the mobile app is why
+ *
+ * A **coin turn about the vertical axis**, not a flat spin. This shipped
+ * flat first, and a flat 360 passes through upside-down: at 180° the
+ * crown inside the badge is a bucket, which reads as a rendering fault
+ * rather than as motion. The native Premium screen turns it like a coin
+ * — the reference screenshot catches the badge edge-on, a few pixels
+ * wide — so that is what this is, and the inversion cannot happen.
+ *
+ * **No `perspective`.** The reference shows the badge as a uniform
+ * narrow bar at the halfway point, with no near edge growing, which is
+ * what a rotation without a perspective ancestor looks like. Adding one
+ * would be a different, showier effect than the app's.
+ *
+ * Callers pair it with `motion-reduce:animate-none`, which leaves the
+ * badge face-on — nothing is lost, since the rotation reveals nothing.
+ * ==================================================================== */
+@keyframes tevi-premium-spin {
+    /*
+     * ⚠ **The `from` frame is load-bearing, and its absence fails silently.**
+     *
+     * Written as `to { rotate: y 360deg }` alone, the implicit start is
+     * the element's own `rotate: none` — which carries no axis, so
+     * Chrome interpolates the pair as a **2D** rotation and the badge
+     * spins flat. `getComputedStyle` says `rotate: 45deg`, with the axis
+     * simply gone, and the painted box measures 141px on a 100px badge
+     * (100·√2 — the bounding box of a flat 45° turn) where a real
+     * `rotateY(45°)` would measure 71. It looks like a coin turn at a
+     * glance and it is the flat spin this was changed away from.
+     *
+     * Stating `y 0deg` at the start gives both ends the same axis, and
+     * the turn is about the vertical one for the whole cycle.
+     */
+    from {
+        rotate: y 0deg;
+    }
+    to {
+        rotate: y 360deg;
+    }
+}
+
+/* ====================================================================
+ * `tevi-premium-spark` — one sparkle thrown out of the mark.
+ *
+ * A hundred and fifty of these ride the Premium badge, each starting on
+ * its rim and travelling outward. Together they are the burst the mobile
+ * app's screen has, and the static confetti the member's hero draws,
+ * given to the visitor as motion instead.
+ *
+ * **The direction and the distance are the caller's**, as two custom
+ * properties, and so is the **duration**: the keyframe ends at
+ * `translate: var(--spark-x) var(--spark-y)`, so one keyframe serves
+ * every angle, and `PremiumSparkField` sets a different
+ * `animation-duration` per particle. A field where everything travels
+ * for the same 2.6s reads as a pulse; a spread of 1.5–3.6s reads as a
+ * spray. A var used as a keyframe *endpoint* resolves per element with
+ * no `@property` — it is the value being interpolated to, not the
+ * interpolated thing.
+ *
+ * ## The opacity flickers rather than fading once
+ *
+ * Four swings on the way out (1 → 0.45 → 1 → 0.4 → 0.9 → 0), which is
+ * what makes the field glitter instead of drifting: a sparkle that fades
+ * monotonically is a dot moving, and the eye reads the *change* in
+ * brightness as light catching an edge. The swings are unevenly spaced
+ * on purpose — evenly spaced ones beat, and a hundred and fifty
+ * particles beating together is a strobe.
+ *
+ * `scale` climbs to 1 across the flight, so each sparkle also grows as it
+ * goes, which reads as coming towards the reader rather than away.
+ *
+ * **Where it climbs *from* is the caller's**, because it is the one number
+ * that does not survive a change of scale. On `/premium`'s 100px mark,
+ * starting at 0.15 is a speck becoming a star. On an 18px badge the same
+ * 0.15 is a *sub-pixel* speck for most of the flight — the sparkles were
+ * reported invisible, and the measurement agreed: nominal 4px, actually
+ * 1.5px at the moment they are brightest. `PremiumBadge` sets
+ * `--spark-scale-from: 0.55`, so its sparks are already more than half
+ * size when they appear. The fallback keeps the hero's own curve.
+ *
+ * Callers pair it with `motion-reduce:animate-none` **and** a base
+ * `opacity-0`: with the animation off the field is simply absent, which
+ * is right — it is decoration with no state behind it, and a hundred and
+ * fifty sparkles frozen mid-flight is a different and worse picture.
+ * ==================================================================== */
+@keyframes tevi-premium-spark {
+    0% {
+        opacity: 0;
+        translate: 0 0;
+        scale: var(--spark-scale-from, 0.15);
+    }
+    6% {
+        opacity: 1;
+    }
+    18% {
+        opacity: 0.45;
+    }
+    30% {
+        opacity: 1;
+    }
+    46% {
+        opacity: 0.4;
+    }
+    60% {
+        opacity: 0.9;
+    }
+    100% {
+        opacity: 0;
+        translate: var(--spark-x) var(--spark-y);
+        scale: 1;
+    }
+}
+
+/* ====================================================================
+ * `tevi-premium-zoom` — the mark leaning in, once every two turns.
+ *
+ * Twelve seconds, which is **exactly two of `tevi-premium-spin`'s six**,
+ * and that ratio is the whole mechanism: both animations start in the
+ * same frame and neither ever ends, so a peak placed at 87.5% of this
+ * cycle lands on 10500ms — where the spin's phase is 270°, the mark
+ * edge-on. Change either duration and the pulse drifts off the edge it
+ * was aimed at.
+ *
+ * **It holds rather than spiking, and 1.18 rather than 1.4.** The
+ * plateau runs 84%-91% of the cycle, which is 245°-295° of the turn: it
+ * is already growing while the face is still half open, holds across the
+ * edge-on passage, and is back before the face returns. So there is
+ * always something *visible* being enlarged — the first version spiked
+ * to 1.4 across 259°-281°, which is a big zoom onto a nine-pixel sliver
+ * and reads as a lurch rather than as a lean.
+ *
+ * The rise and fall are ~360ms each side. A pulse that starts *after*
+ * the badge is side-on looks like a hitch rather than a flourish.
+ *
+ * It scales, so it must only ever sit on a wrapper whose box does not
+ * move — which is why it is a separate element from the one that turns:
+ * `rotate` and `scale` are independent properties and could share an
+ * element, but they cannot share an *animation list* in a Tailwind
+ * arbitrary value without a comma nobody can read.
+ *
+ * Callers pair it with `motion-reduce:animate-none`, which leaves the
+ * mark at its own size — nothing is lost, the pulse reveals nothing.
+ * ==================================================================== */
+@keyframes tevi-premium-zoom {
+    0%,
+    81% {
+        scale: 1;
+    }
+    84%,
+    91% {
+        scale: 1.18;
+    }
+    94%,
+    100% {
+        scale: 1;
+    }
+}
+
+/* ====================================================================
+ * `tevi-premium-rim` — the mark's edge, and the reason it does not
+ * blink.
+ *
+ * The thickness is built out of slices **parallel** to the face, which
+ * is the only way they can never intersect it (a perpendicular quad
+ * always crosses the face's plane and pokes through as a gold seam —
+ * measured twice). That construction has one hole: at 90° and 270° every
+ * slice is edge-on at the same instant, each has a singular matrix, and
+ * Chrome culls them all. The mark disappeared, twice a turn, visibly.
+ *
+ * Twisting the slices apart was the obvious repair and it is worse: an
+ * off-square slice is no longer parallel to the *face* either, so at 45°
+ * half the artwork went gold.
+ *
+ * This is one quad, `t` wide, turning a quarter of a turn ahead of
+ * everything else — so it is broadside exactly when the rest is edge-on,
+ * and its matrix is furthest from singular at the moment theirs are
+ * singular. It carries the mark through that instant on its own.
+ *
+ * **Rotation and opacity in one keyframe**, because the pair is the
+ * point: the quad is only allowed to exist between 79° and 101° (and
+ * again 259°-281°), where the face is under twenty pixels wide and its
+ * poke-through cannot be told from the edge it is standing in for. The
+ * angles at every stop are `90 + 360·progress`, so `linear` keeps the
+ * turn uniform while the opacity gates it.
+ *
+ * Callers pair it with `motion-reduce:animate-none`, which leaves the
+ * quad at its base `opacity-0` — the still badge needs no edge.
+ * ==================================================================== */
+@keyframes tevi-premium-rim {
+    0% {
+        rotate: y 90deg;
+        opacity: 0;
+    }
+    22% {
+        rotate: y 169.2deg;
+        opacity: 0;
+    }
+    25% {
+        rotate: y 180deg;
+        opacity: 1;
+    }
+    28% {
+        rotate: y 190.8deg;
+        opacity: 0;
+    }
+    72% {
+        rotate: y 349.2deg;
+        opacity: 0;
+    }
+    75% {
+        rotate: y 360deg;
+        opacity: 1;
+    }
+    78% {
+        rotate: y 370.8deg;
+        opacity: 0;
+    }
+    100% {
+        rotate: y 450deg;
+        opacity: 0;
     }
 }

@@ -64,6 +64,8 @@ export function ProgramRow({
             </div>
 
             <Button
+                data-testid="affiliate-program-row"
+                data-program-id={program.id}
                 variant="accent"
                 size="small"
                 className="flex-none rounded-(--radius-fill)"

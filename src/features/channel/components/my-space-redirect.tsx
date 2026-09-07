@@ -2,11 +2,14 @@
 
 import { useAuth, useRequireAuth } from '@features/auth'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { RISE } from '@shared/lib/motion'
+import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { type ReactNode, useEffect } from 'react'
 import { toChannelPath } from '../lib/channel-slug'
+import { CHANNEL_SETTINGS_CONTAINER, MY_SPACE_SCREEN } from '../lib/container'
 import { useMyChannel } from '../providers/my-channel-provider'
 import { ChannelEmptyState } from './channel-empty-state'
 import { ChannelSkeleton } from './channel-view'
@@ -34,8 +37,22 @@ import { ChannelSkeleton } from './channel-view'
  * An anonymous visitor gets a prompt here, not a redirect to `/login`. CLAUDE.md: screens gate the
  * **action**, never the route — so the sign-in button runs through `useRequireAuth` and opens the
  * dialog in place.
+ *
+ * ## The two empty states carry the tab's chrome; the redirect does not
+ *
+ * `/my-space` sits outside `(tabs)` even though the tab bar points at it, because the screen it
+ * lands on — `/@{slug}` — draws its own bar (`ChannelTopBar`), and a route group cannot know that
+ * this one resolves into another. That is right for the redirect and wrong for the two states where
+ * the redirect never happens: they left the reader on a tab destination with **no bar at all** and
+ * the prompt sitting on bare page colour, which is the one screen in the app with no chrome above
+ * it.
+ *
+ * So the bar comes in as `chrome` from the page (`app/` composes, this decides *when*) and is
+ * rendered only by the two empty branches. `ChannelSkeleton` keeps its own — it is the destination's
+ * shape, bar included, and stacking two of them is exactly what putting this route in `(tabs)` would
+ * have done.
  */
-export function MySpaceRedirect() {
+export function MySpaceRedirect({ chrome }: { chrome?: ReactNode }) {
     const { t } = useTranslation()
     const router = useRouter()
     const requireAuth = useRequireAuth()
@@ -64,14 +81,56 @@ export function MySpaceRedirect() {
         return <ChannelSkeleton />
     }
 
+    /**
+     * The shell the two empty states share — the mobile bar, the 612 column, and the surface that
+     * exists only where that bar does. See `MY_SPACE_SCREEN`.
+     */
+    function shell(content: ReactNode) {
+        return (
+            <div className={cn('flex flex-1 flex-col', MY_SPACE_SCREEN)}>
+                {/*
+                 * Below `md` only, like every other mobile top bar in this app: from `md` the left
+                 * rail is the navigation and a tab destination draws no bar (home does not either).
+                 * Sticky and painted in the screen's own colour, not `--background` — below `md` the
+                 * surface is full-bleed, and a page-coloured bar there shows a strip of the wrong
+                 * colour above the panel.
+                 */}
+                {chrome && (
+                    <div
+                        data-viewport="md-down"
+                        className={cn('sticky top-0 z-20 md:hidden', MY_SPACE_SCREEN)}
+                    >
+                        {chrome}
+                    </div>
+                )}
+                <div className={cn(CHANNEL_SETTINGS_CONTAINER, 'flex flex-1 flex-col')}>
+                    {content}
+                </div>
+            </div>
+        )
+    }
+
     // `isAuthenticated` already excludes anonymous sessions, so this is the whole signed-out case.
     if (!isAuthenticated) {
-        return (
+        return shell(
             <ChannelEmptyState
+                testId="channel-my-space-signed-out"
                 icon="user-simple-alt"
                 title={t('channel_signed_out_title')}
+                body={t('channel_my_space_signed_out_body')}
+                /*
+                 * The same block every other signed-out screen renders — `flex-1` so the prompt
+                 * centres in the space it has instead of clinging to the top of the column, and
+                 * `RISE` so it arrives the way `MyStarView`, `MyWalletView` and this feature's own
+                 * `SpaceVisibilityView` do. The page's `main` is `flex-1`; this is the last link in
+                 * that chain. Without it this one screen dropped its prompt under the navbar while
+                 * every sibling centred one, which is the whole difference a reader saw between
+                 * tabs.
+                 */
+                className={cn('flex-1', RISE)}
                 action={
                     <Button
+                        data-testid="channel-my-space-sign-in"
                         variant="primary"
                         size="large"
                         onClick={requireAuth(() => {
@@ -81,7 +140,7 @@ export function MySpaceRedirect() {
                         {t('auth_sign_in')}
                     </Button>
                 }
-            />
+            />,
         )
     }
 
@@ -93,17 +152,25 @@ export function MySpaceRedirect() {
      * rather than "no channel", so the app stays usable. A dead end at `/my-space` would be the wrong
      * answer to a transient failure.
      */
-    return (
+    return shell(
         <ChannelEmptyState
+            testId="channel-my-space-no-channel"
             icon="user-sparkles-alt"
             title={t('channel_no_channel_title')}
             body={t('channel_no_channel_body')}
+            // Same centring as the branch above — the two states share this screen's whole column.
+            className={cn('flex-1', RISE)}
             action={
-                <Button variant="secondary" size="large" onClick={() => router.refresh()}>
+                <Button
+                    data-testid="channel-my-space-retry"
+                    variant="secondary"
+                    size="large"
+                    onClick={() => router.refresh()}
+                >
                     <Icon name="arrow-rotate-right" size={20} />
                     {t('common_retry')}
                 </Button>
             }
-        />
+        />,
     )
 }

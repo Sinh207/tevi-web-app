@@ -137,6 +137,8 @@ export async function LegalDocumentBody({
 
             {document.sections.map((section, index) => (
                 <section
+                    data-testid="legal-section"
+                    data-row-key={section.id}
                     key={section.id}
                     className="flex scroll-mt-[var(--legal-offset-sm,76px)] flex-col gap-2 md:scroll-mt-[var(--legal-offset-md,24px)] md:gap-3"
                     aria-labelledby={section.id}
@@ -166,6 +168,8 @@ export async function LegalDocumentBody({
                          * how they get the URL for one.
                          */}
                         <a
+                            data-testid="legal-section-link"
+                            data-row-key={section.id}
                             href={`#${section.id}`}
                             aria-label={t('legal_link_to_section', { title: section.title })}
                             className="hidden shrink-0 rounded-(--radius-sm) text-(--text-placeholder) opacity-0 transition-opacity hover:text-(--text-link) focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring) group-hover:opacity-100 md:inline-flex print:md:hidden"

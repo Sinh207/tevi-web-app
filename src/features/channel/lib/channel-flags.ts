@@ -23,24 +23,30 @@ export type ChannelVisibility =
     | { kind: 'blocking' }
     | { kind: 'unpublished' }
     | { kind: 'protected'; requested: boolean }
-    /** Shell renders blurred behind a confirm. */
+    /**
+     * Sensitive space, gate unanswered: the shell renders with its **art blurred** and the gate in
+     * place of the tabs. Not terminal — see `showsChannelShell`.
+     */
     | { kind: 'nsfw' }
 
 export interface ChannelVisibilityInput {
     channel: Channel
     ownership: ChannelOwnership
     /**
-     * Whether the NSFW gate has already been satisfied — by **either** of the two routes legacy
-     * offers, which the caller collapses into one boolean:
+     * Whether the NSFW gate has been satisfied. It takes **both** of legacy's conditions, and the
+     * caller ands them together:
      *
-     * 1. a per-channel confirmation for this viewer (`lib/nsfw-consent.ts`), or
-     * 2. the account's own **global** "disable filtering" setting
-     *    (`nsfw_settings.show_sensitive`, `accountShowSensitive`).
+     * 1. the account's global "disable filtering" setting (`nsfw_settings.show_sensitive`), **and**
+     * 2. a per-space confirmation from this viewer (`shared/lib/nsfw-consent.ts`).
      *
-     * The second is easy to miss — an earlier version of this feature only knew about the first, so a
-     * viewer who had turned filtering off in Settings was still gated on every channel, once each.
-     * Legacy's dialog puts the checkbox that writes that setting *inside* the gate, which is where the
-     * pairing comes from.
+     * ⚠ **And, not or.** This read `isConfirmed || showsSensitive` for a while, which let anyone who
+     * had turned filtering off in Settings straight into every sensitive space with no age
+     * confirmation at all — the opposite of what the setting is for. Legacy is explicit:
+     * `isNsfw = !showSensitive || !confirmedList.includes(slug)`, i.e. pass only when both hold.
+     *
+     * The pairing is why the gate has **two faces**. With filtering on, the only useful offer is to
+     * turn it off; with it already off, what is left to ask is the age confirmation for this space.
+     * Legacy's dialog switches between exactly those two, and `channel-nsfw-gate.tsx` now does too.
      */
     nsfwConfirmed?: boolean
 }
@@ -82,8 +88,15 @@ export function channelVisibility({
             : { kind: 'normal' }
     }
 
-    if (channel.blocked_user) return { kind: 'blocked-by' }
+    /*
+     * **`blocking` before `blocked-by`**, which is legacy's order (`content/index.js` renders
+     * `BlockedChannel` before `BlockedUser`) and the useful one. They differ only under a mutual
+     * block, and there the state the reader can *act on* should win: "You blocked @ada" carries an
+     * Unblock button, "@ada has blocked you" is a dead end. Answering with the dead end when the
+     * reader holds the key is the wrong half of the truth.
+     */
     if (channel.blocking_channel) return { kind: 'blocking' }
+    if (channel.blocked_user) return { kind: 'blocked-by' }
     if (channel.privacy === 'unpublished') return { kind: 'unpublished' }
     if (channel.privacy === 'protected' && !channel.is_followed) {
         return { kind: 'protected', requested: channel.follow_requested }
@@ -115,9 +128,84 @@ export function isTerminalVisibility(visibility: ChannelVisibility): boolean {
 /**
  * Whether the tab strip and its panels render at all.
  *
- * Separate from `isTerminalVisibility` because the NSFW gate is *not* terminal — the page is
- * whole, just behind a confirmation — yet its tabs must not render either.
+ * Separate from `isTerminalVisibility` because the sensitive-content gate is *not* terminal — the
+ * space renders, header and all — yet its tabs must not render either. That is the whole difference
+ * between this and `showsChannelShell` below, and it is the line the gate depends on: the tabs are
+ * **not** drawn behind a blur, they are not drawn.
  */
 export function showsChannelTabs(visibility: ChannelVisibility): boolean {
     return visibility.kind === 'normal' || visibility.kind === 'owner-unpublished'
+}
+
+/**
+ * Whether the header shows its **stats strip** — followers, members, posts, income.
+ *
+ * Legacy's `isShowChannelStats` names four states and hides on them: **suspended**, **unpublished**,
+ * **blocked by you**, **protected**. Shown otherwise, including — and this is the one that looks like
+ * an oversight and is not — when the *other* account has blocked **you**: that state hides their
+ * content, not the public count of who follows them. `nsfw` likewise keeps its numbers; the gate
+ * withholds the tabs, not the identity (see `channel-nsfw-gate.tsx`).
+ *
+ * ## The wall, not the privacy — with one exception, and it is the exception that matters
+ *
+ * This tested `channel.privacy === 'protected'` the way legacy does. That is a rule about the
+ * *space*, and the two cases it gets wrong are the two where the space and the **wall** disagree,
+ * because `channelVisibility` has already resolved both to `normal`:
+ *
+ * - **The owner of a protected space saw no figures of their own.** Legacy cannot make that mistake:
+ *   its `isShowChannelStats` exists only in the viewer tree, and the creator tree renders
+ *   `AvatarAndStats` with no gate at all.
+ * - **A follower of a protected space saw none either**, once the wall was already down and the
+ *   tabs, posts and socials were all on screen. Legacy hides them there too — deliberately, as far
+ *   as the source shows: `isShowSecondaryData` sits ten lines below with `!(isProtectedChannel &&
+ *   !isFollowed)` and this one has the bare `!isProtectedChannel`. Ported verbatim at first for that
+ *   reason. It is still a bug: nothing is protected by blanking a header whose whole body is open,
+ *   and the counts are there to be tallied by scrolling. **Deliberate divergence from legacy.**
+ *
+ * So *mostly* the question is "is a wall up", which `visibility` answers on its own. **`blocked-by`
+ * is where that stops being true**, and it is why this still takes a channel. `channelVisibility`
+ * checks `blocked_user` **before** `unpublished` and `protected`, so a walled space that has blocked
+ * you arrives here as `blocked-by` with its privacy nowhere in the `kind` — and reading the `kind`
+ * alone hands the blocked visitor a follower count that an ordinary stranger is refused. More than a
+ * stranger sees is the one direction this strip must never leak, so that branch reads the privacy.
+ *
+ * Otherwise an allowlist rather than a deny-list: a `kind` added later hides its numbers until
+ * someone decides otherwise, which is the safe direction for a surface that publishes how big an
+ * audience is.
+ */
+export function showsChannelStats(
+    channel: Pick<Channel, 'privacy'>,
+    visibility: ChannelVisibility,
+): boolean {
+    // Their block hides their content, not their public numbers — but "public" is the operative
+    // word, and on a walled space there are none to show.
+    if (visibility.kind === 'blocked-by') {
+        return channel.privacy !== 'protected' && channel.privacy !== 'unpublished'
+    }
+
+    return (
+        visibility.kind === 'normal' ||
+        visibility.kind === 'owner-unpublished' ||
+        visibility.kind === 'nsfw'
+    )
+}
+
+/**
+ * Whether the page renders the **action row** — Become a member, Donate, and the owner's own
+ * controls.
+ *
+ * Legacy's rule, from `content/buttonGroup`: hidden for `unpublished`, both blocks and `suspended`;
+ * shown otherwise, **including for a protected space** — where Follow is the whole point, since it
+ * is how a stranger asks to be let in.
+ *
+ * `nsfw` is this app's addition to the hidden list: the row is the transactional half (donate, join)
+ * and offering to spend money on a space whose content has not been agreed to yet is the one thing
+ * on that screen that should wait. Identity is not withheld; the transaction is.
+ */
+export function showsChannelActions(visibility: ChannelVisibility): boolean {
+    return (
+        visibility.kind === 'normal' ||
+        visibility.kind === 'owner-unpublished' ||
+        visibility.kind === 'protected'
+    )
 }

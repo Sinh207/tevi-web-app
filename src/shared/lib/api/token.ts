@@ -150,9 +150,11 @@ function getActiveAccount(): Account | null {
 export function getAccessToken(): string | null {
     return getActiveAccount()?.access_token ?? null
 }
-export function getRefreshToken(): string | null {
-    return getActiveAccount()?.refresh_token ?? null
-}
+/*
+ * No `getRefreshToken()` beside these. A refresh is per **account** — `client.ts` reads
+ * `getAccount(id)?.refresh_token` so a background account can refresh, or die, without touching the
+ * rendered one. An accessor that silently meant "the active account" is the wrong question here.
+ */
 export function getExpiresAt(): number | null {
     return getActiveAccount()?.expires_at ?? null
 }

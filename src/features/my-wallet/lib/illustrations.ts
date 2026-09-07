@@ -1,19 +1,15 @@
-import { env } from '@shared/config/env'
-
 /**
- * `/my-wallet`'s empty-state artwork. See `features/my-star/lib/illustrations.ts` for why these are
- * remote `.png` files with a hard-coded fallback host and declared intrinsic sizes — the reasoning is
- * identical and is written out there.
+ * `/my-wallet`'s empty-state artwork. See `features/my-star/lib/illustrations.ts` for why this is a
+ * committed file rather than a `${STATIC_DOMAIN}/…` string — the reasoning is identical and is
+ * written out there.
+ *
+ * Unlike that one the source has the pixels to spare (451×512), so it is encoded at the full 2× the
+ * declared box: 119 KB → 26 KB.
  *
  * A separate file rather than a shared one: the two screens use different art, and a feature may not
  * reach into another feature's `lib/`.
  */
-const STATIC_DOMAIN = env.NEXT_PUBLIC_STATIC_DOMAIN ?? 'https://static.cdn.flowstreamx.com'
 
 export const MY_WALLET_ART = {
-    empty: {
-        src: `${STATIC_DOMAIN}/web/web-app/my-wallet/no-currency-transactions.png`,
-        width: 225,
-        height: 256,
-    },
+    empty: { src: '/illustrations/my-wallet/empty.webp', width: 225, height: 256 },
 } as const

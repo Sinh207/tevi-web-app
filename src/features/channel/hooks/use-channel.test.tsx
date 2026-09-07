@@ -124,5 +124,35 @@ describe('useChannel', () => {
             // No `initialDataUpdatedAt` for this branch — it must not be trusted for 60s.
             await waitFor(() => expect(getChannel).toHaveBeenCalled())
         })
+
+        /**
+         * The seed says `is_followed: false` for **everybody** — the server has no bearer — so
+         * anything drawn from that field on the first render is drawn from a guess. This is what
+         * made the auto-follow bar appear and then vanish for a reader who already followed the
+         * space, which is every reader arriving from the Following list.
+         *
+         * A render test cannot state this: both renders show the same component tree and the same
+         * `channel`. The claim is entirely about **which** body is on screen, so it is asserted on
+         * the flag the call site gates on.
+         */
+        it('says the viewer’s own fields are not known until the account-scoped body lands', async () => {
+            const h = renderChannel()
+            h.queryClient.setQueryData(channelKeys.detail(SLUG, null), MINE)
+            h.mount()
+
+            expect(h.read().channel?.name).toBe('Ada')
+            expect(h.read().isViewerKnown).toBe(false)
+
+            await waitFor(() => expect(h.read().channel?.name).toBe('Ada (fetched)'))
+            expect(h.read().isViewerKnown).toBe(true)
+        })
+
+        it('trusts the `my-channel` seed immediately — it was fetched for this account', () => {
+            const h = renderChannel()
+            h.seed(MINE, Date.now())
+            h.mount()
+
+            expect(h.read().isViewerKnown).toBe(true)
+        })
     })
 })

@@ -73,7 +73,7 @@ export default async function MyStarPage() {
                  */}
                 <PageBackBar title={t('balance_star_title')} className={MY_STAR_CONTAINER} />
             </div>
-            <div className={`${MY_STAR_CONTAINER} flex flex-1 flex-col pt-2 pb-6`}>
+            <div className={`${MY_STAR_CONTAINER} flex flex-1 flex-col pb-6`}>
                 <MyStarView />
             </div>
         </main>

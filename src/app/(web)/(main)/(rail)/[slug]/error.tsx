@@ -32,7 +32,12 @@ export default function ChannelRouteError({ reset }: { error: Error; reset: () =
                     {t('channel_error_body')}
                 </p>
             </div>
-            <Button variant="secondary" size="large" onClick={reset}>
+            <Button
+                data-testid="channel-error-retry"
+                variant="secondary"
+                size="large"
+                onClick={reset}
+            >
                 <Icon name="arrow-rotate-right" size={20} />
                 {t('common_retry')}
             </Button>

@@ -78,6 +78,8 @@ export function ProfileCategoriesField({
                         const active = selected.includes(name)
                         return (
                             <button
+                                data-testid="channel-profile-category"
+                                data-option-value={name}
                                 key={name}
                                 type="button"
                                 // `aria-pressed`, not `aria-selected`: these are independent

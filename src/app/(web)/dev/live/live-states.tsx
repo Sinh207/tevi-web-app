@@ -3,9 +3,10 @@
 import {
     ChannelEmptyState,
     ChannelError,
-    type ChannelEvent,
     ChannelEventCard,
+    ChannelLiveFilter,
     ChannelLiveTab,
+    channelEventSchema,
     LIVE_EVENTS_ART,
 } from '@features/channel/dev'
 
@@ -13,7 +14,12 @@ import {
  * The fixtures and the three states, in a client component because `ChannelError` takes an
  * `onRetry` callback and a server component cannot hand a function across the boundary.
  */
-const FIXTURES: ChannelEvent[] = [
+/*
+ * Parsed through the real schema rather than written as literals. Fixtures typed by hand go stale
+ * the first time the schema learns a field — which is exactly what happened when `lives` turned out
+ * to carry `price`, `started_at` and `required_packages`, and five of these stopped compiling.
+ */
+const FIXTURES = [
     {
         code: 'live-1',
         title: 'Friday night listening party',
@@ -63,7 +69,7 @@ const FIXTURES: ChannelEvent[] = [
         status: 'SOMETHING_NEW',
         images: { banner: null },
     },
-]
+].map(event => channelEventSchema.parse(event))
 
 export function LiveStates() {
     return (
@@ -75,6 +81,18 @@ export function LiveStates() {
              */}
             <Section title="The tab itself — heading row, sticky under the tab strip">
                 <ChannelLiveTab slug="ada" />
+            </Section>
+
+            {/*
+             * Off and applied, side by side. Legacy has no applied state at all, so there is
+             * nothing to compare against and the only way to know the fill survives `hover` and
+             * `data-popup-open` is to hover it and open it here.
+             */}
+            <Section title="Filter trigger — off (All) and applied">
+                <div className="flex items-center gap-4">
+                    <ChannelLiveFilter value="" onChange={() => {}} />
+                    <ChannelLiveFilter value="ended" onChange={() => {}} />
+                </div>
             </Section>
 
             <Section title="Rows — every status">

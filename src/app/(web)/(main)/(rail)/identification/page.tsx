@@ -1,4 +1,8 @@
-import { IDENTIFICATION_CONTAINER, IdentificationView } from '@features/identification'
+import {
+    IDENTIFICATION_CONTAINER,
+    IDENTIFICATION_SCREEN,
+    IdentificationView,
+} from '@features/identification'
 import { PageBackBar } from '@features/navigation'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
@@ -39,13 +43,16 @@ export default async function IdentificationPage() {
     const t = await getServerT()
 
     return (
-        <main className="flex flex-1 flex-col">
+        // `IDENTIFICATION_SCREEN` — a single-panel screen, see `docs/DESIGN_SYSTEM.md` §6.
+        <main className={`flex flex-1 flex-col ${IDENTIFICATION_SCREEN}`}>
             {/* No hairline under the bar, unlike the policy pages: those are long documents
                 where the rule marks where the chrome ends and the reading starts. This screen
                 is a short form on the same `--background`, and a full-bleed line across it
                 only cuts the illustration off from its own title. The opaque background is
                 what keeps the content from showing through while it scrolls under. */}
-            <div className="sticky top-0 z-20 bg-(--background)">
+            {/* The bar carries the screen colour: below `md` the content scrolls under it, and a
+                page-coloured bar there shows the form sliding past the title. */}
+            <div className={`sticky top-0 z-20 ${IDENTIFICATION_SCREEN}`}>
                 <PageBackBar
                     title={t('identification_title')}
                     className={IDENTIFICATION_CONTAINER}

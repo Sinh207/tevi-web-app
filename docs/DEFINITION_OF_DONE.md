@@ -4,7 +4,8 @@ Checklist to run through before marking any UI feature or component as done. Not
 applies to every change — skip what's genuinely not relevant, but don't skip because it's
 inconvenient to check. New to the repo? This doc plus [`CLAUDE.md`](../CLAUDE.md) is the fastest
 way to understand what "done" means here (plus [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) for
-anything touching tokens, icons or brand assets). **Reviewers**: use this checklist too, not just the
+anything touching tokens, icons or brand assets, and [`STATIC_ASSETS.md`](STATIC_ASSETS.md) for
+anything pointing at a CDN image). **Reviewers**: use this checklist too, not just the
 author — it's shared vocabulary for what "ready to merge" means, not a self-report form.
 
 **Quick reference** — 1 [Data states](#1-data-states) · 2 [Forms & mutations](#2-forms--mutations)
@@ -27,6 +28,39 @@ fall through to a blank screen:
 - [ ] **Success** — the actual data render, including partial data (e.g. some fields null/missing
       from the API).
 
+### A press that decides *which* screen comes next waits **on the button**
+
+A skeleton stands in for content whose shape is known. When a read decides **which view opens at
+all**, its shape is not known — so opening first and loading inside is a screen asserting something
+it cannot know yet. Keep the reader where they are, put the wait on the control they pressed, and
+open once the answer is in.
+
+- [ ] The control shows `Loader` (the DS "working…" dots — its own note says *use it inside a
+      button*), is `disabled`, and carries `aria-busy` while the read is in flight.
+- [ ] The press awaits the deciding read — `queryClient.fetchQuery`, so the destination's own
+      `useQuery` reuses it rather than asking again. That needs a **non-zero `staleTime` shared by
+      both**; with `staleTime: 0` the destination treats the just-fetched answer as stale and fires a
+      second request that can only repeat the first.
+- [ ] The read is **not allowed to reject the press**: a 5xx is a reason to open on the error face,
+      not to refuse to open. `.catch(() => undefined)` and let the destination surface it.
+- [ ] Guard the late resolve — the dialog or screen can be dismissed mid-flight, and a press that
+      lands afterwards must not open anything.
+- [ ] Only the *deciding* read belongs on the button. Once the destination is known its own chrome is
+      true, so reads that merely fill it in are skeletons **inside** it (`NsfwAppealScreen`: `latest/`
+      decides queue-vs-submitted and waits on the button; `nsfw-posts/` only fills rows and skeletons
+      in place).
+
+⚠ **`next/dynamic` cannot be part of that promise.** It re-resolves through `React.lazy`, so it
+renders `null` for a tick *even when the module is already cached* — measured at ~160ms in this dev
+server, which showed as a 2px-tall popup under a full scrim. If a press must reveal a split component
+with no placeholder, `await import()` yourself and keep the component in state; the bundler splits on
+`import()`, not on the wrapper. `nsfw-info-dialog.tsx` is the worked example.
+
+Reference: `features/nsfw`. This was arrived at by trying the alternatives — two dialogs handing over
+(a ~150ms window with nothing on screen), then overlapping them (two scrims, two dialogs' text
+fading through each other), then a loading face inside the destination (which drew *"How to remove
+NSFW status"* at an owner who had already appealed).
+
 ## 2. Forms & mutations
 
 - [ ] Submit button shows a loading state and is disabled while the mutation is pending — no
@@ -35,6 +69,15 @@ fall through to a blank screen:
       everything.
 - [ ] Mutation success/failure feedback is visible (toast via `meta.showErrorToast` or an
       explicit success state) — a mutation should never resolve silently.
+- [ ] **A failed write shows the API's own message on a 4xx**, with our translated string only as
+      the fallback — read off the response body (`message → data.message → detail → error`), never
+      `ApiError.message` (its chain ends in axios's English). **5xx, 429, 403**, a read failure and a
+      network failure all keep our key; the email sign-in form keeps its 400/401 collapse.
+      See [`API_ERRORS.md`](API_ERRORS.md).
+- [ ] **A rejection that names fields lands on those fields, not in a toast** — and never both, which
+      is the same news twice in the less useful place. A form that parses field errors handles
+      `onError` itself and sets **no** `meta.showErrorToast` (`use-save-profile.ts` is the
+      reference).
 - [ ] On success, relevant queries are invalidated (`invalidateQueries`) so the UI reflects the
       new state without a manual refresh.
 - [ ] Unsaved-changes edge cases considered (navigating away mid-edit, resubmitting after an
@@ -52,6 +95,13 @@ fall through to a blank screen:
       background account dying must not disturb the session on screen at all.
 - [ ] Anything that needs a real account gates the **action**, not the route — `useRequireAuth`
       opens the login dialog on click. Never assume the user was bounced to `/login`.
+- [ ] That rule is about the **press**, not about what a menu advertises. A *list* may drop the
+      entries a guest has no account to use — the account drawer does, from `Row.authOnly` in
+      `features/navigation/lib/menu-rows.ts`, following legacy's own table, and a section that
+      loses all of its rows loses its heading with them. The routes behind those rows stay
+      reachable and still explain themselves to anyone who arrives by link. During the bootstrap
+      window the signed-in set is shown, because a returning account is briefly indistinguishable
+      from a guest and the press gate holds either way.
 - [ ] If touching multi-account: switching accounts, hitting `MAX_ACCOUNTS` (10), and removing
       the active account all behave correctly.
 - [ ] No token/account data logged or leaked into error toasts (see §8 Security — same rule,
@@ -79,6 +129,12 @@ Test at all custom breakpoints, not just mobile/desktop:
 
 - [ ] Images via `next/image` (or explicit lazy-loading) — no unoptimized `<img>` for
       user-facing content.
+- [ ] **No new static image points at another host.** Illustrations, banners, backdrops and brand
+      marks are committed under `public/illustrations/` via `scripts/build-cdn-art.mjs`; only
+      content whose URL the backend decides (avatars, post media) is remote. `pnpm art:audit` must
+      be clean. Reasons a size check is not enough — remote SVG is passed through unoptimised, a CSS
+      `background-image` is never optimised at all, and small is not local — are in
+      [`STATIC_ASSETS.md`](STATIC_ASSETS.md). Read it before adding art.
 - [ ] Long/unbounded lists are paginated or virtualized — never render an unbounded array.
 - [ ] No unnecessary re-renders from unstable references (inline objects/functions passed to
       memoized children, missing `useMemo`/`useCallback` where it matters).
@@ -163,6 +219,9 @@ target pure logic, E2E covers the actual UI.
 - [ ] If the change is user-facing and reusable (login flow, account switch, a page that will be
       hit repeatedly by regressions), add or update a Playwright spec — the harness
       (`pnpm test:e2e`) exists but has no specs yet, so the first flows written here set the
+- [ ] New Playwright specs locate by `data-testid` for identity and `data-slot` for structure — not
+      by `getByRole` + accessible name, which breaks on every copy edit and in every locale but
+      English. `e2e/get-star.spec.ts` still matches `/^Pay /` and is the example of the problem.
       convention for everyone after.
 - [ ] Don't test implementation details (internal state shape, private helpers) — test behavior
       through the module's public exports/UI, the same way a consumer would use it.
@@ -189,5 +248,41 @@ target pure logic, E2E covers the actual UI.
 
 - [ ] Run the dev server and manually click through: loading, error, empty, success, RTL,
       dark mode, and at least one narrow (sm) and one wide (xl) viewport.
-- [ ] `pnpm typecheck`, `pnpm lint`, and `pnpm lint:rtl` pass.
+- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm lint:rtl`, and `pnpm lint:testids` pass.
 - [ ] Tests pass per §9 (`pnpm test`, and `pnpm test:e2e` if a Playwright spec applies).
+
+## 13. Automation hooks (`data-testid`)
+
+QC drives this app with Selenium (Java/Python), so every element a test would address needs a stable
+name. Full convention, the QC-facing catalog and the trap list: [`TEST_IDS.md`](TEST_IDS.md).
+
+- [ ] Every element a test would **act on** (button, link, input, option, toggle, menu item) or
+      **read a value from** (a figure, a status, a name, a count), plus the container that scopes
+      them, carries a `data-testid`. Nothing else does — no layout wrappers, no icons, no spinners,
+      no skeleton internals, no `aria-hidden` nodes.
+- [ ] The name is `{scope}-{element}[-{part}]`, kebab, and **contains no translated text and no
+      translation key** — if you reached for `t()` or a label to name something, use a slug or an id
+      instead. `{scope}` is declared in `shared/lib/testid-surfaces.ts`; a new one is a line there.
+- [ ] **A per-item identity goes in a companion attribute**, never interpolated into the id:
+      `data-testid="payment-saved-card-row" data-card-id={card.id}`. Use the value the React `key`
+      already uses when it is a server id, slug or code; the array **index** only when the row
+      genuinely has no identity and cannot reorder; and **never** display text.
+- [ ] **State is a separate attribute.** Read `aria-checked` / `aria-selected` / `aria-expanded` /
+      `aria-busy` / `disabled` / `data-open`. If the state is not published yet, publish it as
+      `aria-*` — that is a11y work that pays twice — rather than encoding it in the id.
+- [ ] A control that renders in **more than one shell** (rail vs top bar vs tab bar vs drawer) takes
+      its shell's prefix and never shares a leaf name with another. All four are in the DOM at once
+      and `findElement` takes the first match in document order.
+- [ ] A control that is in the DOM but CSS-hidden at some widths carries
+      `data-viewport="md-up|md-down|sm-up|xl-up"` beside its testid.
+- [ ] **Loading is `aria-busy="true"` on the skeleton root**, not a testid on every bar. A skeleton
+      file gets exactly one `data-testid`, on that same root, and nothing inside it.
+- [ ] A third-party iframe or redirect (Stripe Elements, Google GSI, Turnstile, Sumsub, a mini-app
+      frame, an OAuth popup, a TikTok/LINE redirect) gets the testid on **our container**, never a
+      target inside it — automation cannot reach in, and a testid that promises otherwise is a false
+      lead.
+- [ ] Disabled-pending-route controls are tagged too: "this is disabled" is an assertion, and an
+      untagged dead control is indistinguishable from a regression.
+- [ ] Sub-parts of a composite are **derived** (`subTestId(testId, 'confirm')`), never a second
+      `*TestId` prop.
+- [ ] `pnpm lint:testids` passes and `testids/` is regenerated (`pnpm testids`) and committed.

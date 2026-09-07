@@ -66,6 +66,56 @@ export type AppEvents = {
      * Emitted by `BalanceProvider`'s `balance_change` handler; consumed by `StarChangeFlash`.
      */
     'balance:star-changed': { delta: number }
+    /**
+     * **A payment settled** — the backend confirmed it, not Stripe and not a URL parameter.
+     *
+     * ## Why this is on the bus at all
+     *
+     * The money part is not a signal: `PaymentProvider` invalidates `balanceKeys.all` itself, because
+     * the balance and both ledgers are server state and that is TanStack Query's job. What is left is
+     * everything *else* a completed payment means to a screen that was not involved in it — the gift
+     * dialog that can close now, the paywalled post that can unlock, the membership tier that can
+     * stop saying "renew". Those are imperative UI signals to modules the payment feature must not
+     * import, which is exactly what this bus is for.
+     *
+     * It is also the half of the `payment` ⇄ `balance` cycle that goes the other way. `payment`
+     * imports `balance`'s barrel to invalidate; `balance` never imports `payment` (see
+     * `features/payment/index.ts`), so anything it needs to hear about arrives here.
+     *
+     * ## The payload is deliberately almost nothing
+     *
+     * `purchaseType` is the callback response's `type`, and it is only ever used to pick copy — it is
+     * **not** a verdict and not an amount. No figures ride along: a listener that wants to know what
+     * changed re-reads the query that owns it, for the same reason `balance_change`'s socket payload
+     * is thrown away — a number carried on a signal has no ordering guarantee against the HTTP
+     * responses beside it and can move a figure backwards.
+     *
+     * Emitted by `PaymentProvider` when a settle lands, whether or not a dialog was still open.
+     */
+    'payment:succeeded': { purchaseType: string | null }
+    /**
+     * A priced action was pressed and the balance could not cover it — open the Star purchase sheet,
+     * pre-selected to at least `shortfall`.
+     *
+     * An **event and not an import**, and this is the one place in the app where that is a structural
+     * decision rather than a preference: `useRequireStars` lives in `features/balance` and the sheet
+     * lives in `features/payment`, which already imports `features/balance` (it invalidates
+     * `balanceKeys` after a settle). A call the other way would close a cycle between two barrels —
+     * ESM resolves that by handing one side a half-initialised module, which is the failure
+     * `menu-active.ts` shipped. So the balance feature *announces* the shortfall and the payment
+     * provider listens.
+     *
+     * `shortfall` is what is missing, not the price: the sheet's job is to close the gap, and the
+     * reader has already been told what the thing costs by the screen they pressed it on.
+     *
+     * `ack` is how the emitter finds out whether **anything was listening**. mitt reports no listener
+     * count and emits synchronously, so the listener calling `ack()` before `emit` returns is a
+     * reliable "I have this". It matters because `PaymentProvider` is mounted by `(web)/layout.tsx`
+     * only: a priced action on a `/app/*` webview screen — where card payment is deliberately absent —
+     * has nobody to open a sheet, and the caller must fall back to saying what is missing rather than
+     * doing nothing at all.
+     */
+    'payment:star-purchase-requested': { shortfall: number; ack: () => void }
 }
 
 export const eventBus: Emitter<AppEvents> = mitt<AppEvents>()

@@ -1,5 +1,6 @@
 'use client'
 
+import { subTestId } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
 import {
     SegmentedControl,
@@ -55,6 +56,16 @@ export type StickyTabsProps = {
     className?: string
     /** Extra classes for the sticky wrapper — e.g. horizontal padding matching the page. */
     barClassName?: string
+    /**
+     * Base `data-testid`. Each tab is `${testId}-tab` and each panel `${testId}-panel`, both
+     * carrying `data-tab-id={tab.id}`.
+     *
+     * ⚠ The DOM `id`s this component writes (`${tab.id}-tab` / `${tab.id}-panel`) are **not**
+     * prefixed, so two `StickyTabs` on one page with a tab called `about` produce duplicate ids and
+     * `aria-controls` resolves to the first. They exist for the ARIA relationship, not for
+     * automation — locate by the testid, which is scoped by its caller's feature prefix.
+     */
+    testId?: string
 }
 
 export function StickyTabs({
@@ -67,6 +78,7 @@ export function StickyTabs({
     mountAll = true,
     className,
     barClassName,
+    testId,
 }: StickyTabsProps) {
     const [uncontrolled, setUncontrolled] = useState(tabs[0]?.id)
     const active = value ?? uncontrolled
@@ -96,6 +108,8 @@ export function StickyTabs({
                     {tabs.map(tab => (
                         <SegmentedControlItem
                             key={tab.id}
+                            data-testid={subTestId(testId, 'tab')}
+                            data-tab-id={tab.id}
                             id={`${tab.id}-tab`}
                             aria-controls={`${tab.id}-panel`}
                             // The item carries the variant too — the track and the segment are
@@ -115,6 +129,8 @@ export function StickyTabs({
                 mountAll || tab.id === active ? (
                     <div
                         key={tab.id}
+                        data-testid={subTestId(testId, 'panel')}
+                        data-tab-id={tab.id}
                         role="tabpanel"
                         id={`${tab.id}-panel`}
                         aria-labelledby={`${tab.id}-tab`}

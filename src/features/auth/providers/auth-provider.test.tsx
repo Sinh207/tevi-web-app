@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { apiClient } from '@shared/lib/api/client'
+import { __testing, apiClient } from '@shared/lib/api/client'
 import { clearETagCache } from '@shared/lib/api/interceptors/etag'
 import { clearTurnstileTokens, getTurnstileHeaders } from '@shared/lib/api/request-context'
 import {
@@ -112,6 +112,20 @@ function renderAuth() {
  * adapter, and at the 1s default these went red purely because a dev server was running
  * alongside. A CI runner is shared in exactly the same way.
  */
+/*
+ * The **test** budget, raised well above the `waitFor` budget below — which is the fix for this file's
+ * intermittent redness.
+ *
+ * `WAIT` was 5000 and so is Vitest's default `testTimeout`, so the two expired together: a condition
+ * that had not become true burned the whole budget and the test died with *"Test timed out in
+ * 5000ms"* — no assertion, no failing value, and a **different test each run**, whichever happened to
+ * be slowest under load. Lowering `WAIT` instead would trade one flake for another; the headroom it
+ * documents below is real (bootstrap chains several awaits through the fake adapter, and a shared CI
+ * runner is exactly the case). So the test gets room to let `waitFor` lose first and report what it
+ * was actually waiting for.
+ */
+vi.setConfig({ testTimeout: 20_000 })
+
 const WAIT = { timeout: 5000 }
 const settled = () => waitFor(() => expect(auth.isBootstrapping).toBe(false), WAIT)
 
@@ -142,6 +156,21 @@ beforeEach(async () => {
     toastError.mockClear()
     routerReplace.mockClear()
     apiClient.defaults.adapter = adapter
+    /*
+     * **The refresh client too**, and this was the file's intermittent failure.
+     *
+     * `refreshClient` is a separate axios instance (`client.ts` keeps it bare so a refresh cannot
+     * recurse through the interceptor that triggered it), so stubbing `apiClient` alone left every
+     * refresh in this file going out over jsdom's real XHR to `wapi.tevi.dev` — while the tests
+     * scripted `on('/token/refresh/', …)` routes the fake transport never saw. Whether the request
+     * failed fast or simply never settled depended on the machine and the network, which is why a
+     * *different* test timed out on each run: with the refresh hanging, `await refreshUser()` in the
+     * bootstrap never returns, the `finally` never runs, and `isBootstrapping` stays true forever.
+     *
+     * Found by tracing the bootstrap: on a failing run the only line reached was "token? true".
+     * `client.test.ts` has always stubbed both instances (`__testing.refreshClient`).
+     */
+    __testing.refreshClient.defaults.adapter = adapter
     useAuthStore.setState({
         isBootstrapping: true,
         isSigningIn: false,

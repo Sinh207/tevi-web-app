@@ -47,9 +47,15 @@ export function ChannelStats({
     const { t, currentLanguage } = useTranslation()
 
     /**
-     * Rendered even before `stats` arrive — the strip is a separate microservice from the channel
-     * (see `useChannelStats`), so it lands after the shell. `null` counts mean no column yet, and
-     * the row keeps its reserved height rather than appearing and pushing the page down.
+     * Mounted before `stats` arrive — the strip is a separate microservice from the channel (see
+     * `useChannelStats`), so it lands after the shell. Until it does, every count is `undefined`,
+     * no column qualifies and the whole strip returns `null`.
+     *
+     * Which is only safe because of where it sits: `ChannelHeader`'s row is `items-end` against the
+     * avatar, and the avatar (80/120px) is the taller sibling, so the strip appearing beside it
+     * costs no vertical shift and nothing below moves. Reserving a height here would be the wrong
+     * fix anyway — the strip renders **one to four** columns, so there is no single height to
+     * reserve, and a row of skeletons would promise four figures that may never arrive.
      */
     const columns = [
         {

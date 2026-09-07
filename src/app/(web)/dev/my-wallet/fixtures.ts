@@ -14,7 +14,7 @@ export const WALLET_ROWS: ActionRow[] = [
     {
         key: 'withdraw_request',
         label: 'Payout request',
-        icon: 'sack-dollar',
+        icon: 'dollar-arrow-up',
         tile: 'var(--accents-success-active)',
     },
     {
@@ -26,7 +26,7 @@ export const WALLET_ROWS: ActionRow[] = [
     {
         key: 'withdraw_tracking',
         label: 'Payout tracking',
-        icon: 'clock',
+        icon: 'money-search',
         tile: 'var(--accents-warning-active)',
     },
 ]
@@ -47,7 +47,19 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '19 Feb 2025, 14:32',
                 amount: '+₫21,391,626',
                 isCredit: true,
-                icon: 'sack-dollar',
+                icon: 'dollar-circle',
+                /*
+                 * The Tevi Coin bonus (**B83**) — on this row and not the others, which is the point:
+                 * most movements have none, so the harness has to show the trailing column with and
+                 * without the second line to prove a row without one is unchanged.
+                 *
+                 * `+10` is the figure the live payload carries for its newest row.
+                 */
+                bonus: {
+                    label: 'Bonus:',
+                    amount: '+10',
+                    mark: { src: '/tevi-coin.svg', size: 14 },
+                },
             },
             // A payout leaving — the row a reader most wants to be able to find.
             {
@@ -56,7 +68,7 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '18 Feb 2025, 09:05',
                 amount: '-₫25,400,000',
                 isCredit: false,
-                icon: 'bank',
+                icon: 'dollar-circle',
             },
             // And one that came back.
             {
@@ -65,7 +77,7 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '18 Feb 2025, 06:30',
                 amount: '+₫25,400,000',
                 isCredit: true,
-                icon: 'exclamation-diamond',
+                icon: 'dollar-circle',
             },
             /*
              * A **Star** row on the currency ledger — a `conversion` has a leg in each, which is why the
@@ -102,7 +114,7 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '28 Jan 2025, 16:20',
                 amount: '+₫952,500',
                 isCredit: true,
-                icon: 'badge-dollar',
+                icon: 'dollar-circle',
             },
             // An unknown type (B36): kept, with the backend's sentence and the neutral glyph.
             {
@@ -111,7 +123,7 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '27 Jan 2025, 08:15',
                 amount: '+₫95,250',
                 isCredit: true,
-                icon: 'document-list',
+                icon: 'dollar-circle',
             },
         ],
     },

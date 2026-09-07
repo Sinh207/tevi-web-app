@@ -42,10 +42,19 @@ export function ChannelAboutCard({ className, ...props }: ComponentPropsWithoutR
  * the thing `CLAUDE.md` forbids. Semibold is the closest step and the one every other 16px heading
  * in this app already uses.
  *
- * `h3` because the page's `h1` is the display name and the tab strip's labels sit between.
+ * **`h3` by default, because of where these cards usually are**: the About tab, whose page `h1` is
+ * the display name with the tab strip's labels between. `as` exists for the other host — a card of
+ * this shape on a **sub-page**, where `PageBackBar`'s title is the `h1` and nothing sits between, so
+ * the next level down is `h2` (`/mcn-partnership`; `card-management-view.tsx` is the same shape on
+ * the same kind of page). A level skipped is not a WCAG failure, but it is a document outline that
+ * says a section exists which does not.
  */
-export function ChannelAboutCardTitle({ className, ...props }: ComponentPropsWithoutRef<'h3'>) {
+export function ChannelAboutCardTitle({
+    className,
+    as: As = 'h3',
+    ...props
+}: ComponentPropsWithoutRef<'h3'> & { as?: 'h2' | 'h3' }) {
     return (
-        <h3 className={cn('type-body-strong min-w-0 text-(--text-title)', className)} {...props} />
+        <As className={cn('type-body-strong min-w-0 text-(--text-title)', className)} {...props} />
     )
 }

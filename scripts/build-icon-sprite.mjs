@@ -45,6 +45,13 @@ const KEEP = [
 ]
 
 const SOURCE = 'design-system/tevi-icons.svg'
+/**
+ * Glyphs the Figma library does not carry, kept beside the export rather than inside it so a
+ * re-export cannot drop them. Merged **after** SOURCE, so if Figma later ships one of these ids
+ * the overlay copy is what wins — and `icon-names.test.ts` fails on the duplicate so nobody has to
+ * notice on their own. See that file's header for what is allowed in it.
+ */
+const EXTRA = 'design-system/tevi-icons.extra.svg'
 const SRC_DIR = 'src'
 const OUT_DIR = 'public'
 
@@ -92,7 +99,7 @@ function duotoneHooks(symbol) {
 }
 
 export function collectSprite() {
-    const sprite = readFileSync(SOURCE, 'utf8')
+    const sprite = readFileSync(SOURCE, 'utf8') + readFileSync(EXTRA, 'utf8')
     const symbols = new Map(
         [...sprite.matchAll(/<symbol id="([^"]+)"[\s\S]*?<\/symbol>/g)].map(m => [m[1], m[0]]),
     )

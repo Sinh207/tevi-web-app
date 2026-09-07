@@ -38,7 +38,12 @@ export function LoginBanner() {
             body={t('rail_login_body')}
             art={RAIL_ART.login}
             action={
-                <Button variant="accent" size="medium" onClick={promptSignIn}>
+                <Button
+                    data-testid="navigation-end-rail-sign-in"
+                    variant="accent"
+                    size="medium"
+                    onClick={promptSignIn}
+                >
                     {t('rail_login_cta')}
                 </Button>
             }

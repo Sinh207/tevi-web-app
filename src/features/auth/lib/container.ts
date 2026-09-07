@@ -13,3 +13,15 @@
  * (`px-3 md:px-6`); this decides only how wide the column may get.
  */
 export const PASSWORD_CONTAINER = 'mx-auto w-full md:max-w-[612px]'
+
+/**
+ * The two-step-verification page's content column — the same rule and the same 612 as the password
+ * page above.
+ *
+ * A **second constant** rather than a re-export of `PASSWORD_CONTAINER`, for the reason that one
+ * already states: a page's own width is a layout decision it owns, and two screens agreeing on a
+ * number today is not a reason for one to change when the other is redesigned. Here the two are also
+ * genuinely the same kind of screen — a settings sub-page with a form in it — so they will most
+ * likely keep agreeing; the point is that neither has to.
+ */
+export const TWO_FA_CONTAINER = 'mx-auto w-full md:max-w-[612px]'

@@ -115,6 +115,7 @@ export function ChannelPublishBanner({ channel }: { channel: Channel }) {
                      * a choice this banner made on its own.
                      */}
                     <Button
+                        data-testid="channel-publish"
                         variant="accent"
                         size="medium"
                         onClick={() => setConfirmOpen(true)}
@@ -126,6 +127,7 @@ export function ChannelPublishBanner({ channel }: { channel: Channel }) {
             </Banner>
 
             <ConfirmDialog
+                testId="channel-publish-confirm"
                 open={confirmOpen}
                 onOpenChange={setConfirmOpen}
                 title={t('space_visibility_confirm_title')}

@@ -1,5 +1,5 @@
 import { cn } from '@shared/lib/utils'
-import type { ComponentPropsWithoutRef, HTMLAttributes, ReactNode } from 'react'
+import type { ComponentPropsWithoutRef, ElementType, HTMLAttributes, ReactNode } from 'react'
 
 /**
  * List — Figma "List", ported 1:1.
@@ -26,8 +26,18 @@ export type ListRowProps = HTMLAttributes<HTMLElement> & {
      * keyboard-reachable instead of a div with an onClick. Pass `'a'` when the row's
      * destination is a URL: a row that goes somewhere should be middle-clickable,
      * copyable and announced as a link, which a button can never be.
+     *
+     * **A component is allowed too, and `next/link` is the reason.** A bare `'a'` to an
+     * internal route is a full document load: the router cache, the query cache and the
+     * scroll position all go. `as={Link}` renders the same `<a>` with the same semantics
+     * *and* keeps the navigation client-side, so a row that goes somewhere in this app
+     * should use it. `ElementType` costs the per-tag prop typing, which is why the three
+     * literals stay in the union — they are the common cases and they keep their types.
+     *
+     * This axis is not the design system's. Figma draws one frame; the tag is this repo's
+     * adaptation, so widening it is not a departure from the DS.
      */
-    as?: 'div' | 'button' | 'a'
+    as?: 'div' | 'button' | 'a' | ElementType
     /** With `as="a"`. Not in `HTMLAttributes`, hence declared. */
     href?: string
     /**
@@ -469,12 +479,16 @@ function ListHeaderText({ className, ...props }: ComponentPropsWithoutRef<'div'>
  * port cannot know which level: Figma draws a frame with text in it, and whether that text is an
  * `h2` depends on what is around it. `span` stays the default, so a purely decorative header — a
  * month divider inside a list, say — does not inject a phantom heading into the outline.
+ *
+ * `h1` is in the union for the screens whose *only* title is a list header — a tab destination has
+ * no `PageBackBar` to put one in, so `/following`'s "Following" header is the document's outline
+ * root. The alternative is an `sr-only` `<h1>` on the page saying the same word twice.
  */
 function ListHeaderTitle({
     className,
     as: As = 'span',
     ...props
-}: ComponentPropsWithoutRef<'span'> & { as?: 'span' | 'h2' | 'h3' | 'h4' }) {
+}: ComponentPropsWithoutRef<'span'> & { as?: 'span' | 'h1' | 'h2' | 'h3' | 'h4' }) {
     return (
         <As
             data-slot="list-header-title"
@@ -734,8 +748,42 @@ function ListUserItemName({
     )
 }
 
-/** `@handle` — 14/regular in Text - Subtitle. */
-function ListUserItemHandle({ className, ...props }: ComponentPropsWithoutRef<'span'>) {
+/**
+ * `@handle` — 14/regular in Text - Subtitle.
+ *
+ * ## ⚠ The children are wrapped in `<bdi>`, and it is a correctness fix rather than a port
+ *
+ * A handle is a **Latin identifier inside a paragraph whose direction is the reader's**, and `@` is
+ * a bidi-neutral character. Under `ar` the Unicode algorithm therefore puts it on the *trailing*
+ * side of the Latin run and the line renders **`ada@`** — on every row in the app that draws one:
+ * `/search`, `/following`, the blocked list, the follow-request queue, membership holdings and the
+ * gift-premium picker, all six of which reach this primitive.
+ *
+ * The DS cannot express this — Figma has no bidi — so it is not a deviation from it. What the fix
+ * had to be was **measured**, because the obvious candidate is wrong (420px viewport, `dir="rtl"`,
+ * one `@ada` per mechanism):
+ *
+ * | | reads | stays on the row's edge |
+ * |---|---|---|
+ * | plain | `ada@` ✗ | ✓ |
+ * | `dir="ltr"` | `@ada` ✓ | **✗ — jumps to the opposite edge** |
+ * | `dir="auto"` | `@ada` ✓ | **✗ — same jump** |
+ * | **`<bdi>`** | `@ada` ✓ | **✓** |
+ * | `unicode-bidi: isolate` alone | `ada@` ✗ | ✓ |
+ *
+ * `dir` on the element changes its **alignment** as well as its ordering, so the handle would have
+ * left-aligned under a right-aligned name — two lines of one identity no longer sharing an edge.
+ * `isolate` alone does nothing here: it stops the run affecting its *neighbours*, not its own order.
+ * `<bdi>` is `isolate` **plus** `dir="auto"` scoped to the run, which is exactly the one thing
+ * needed and nothing else.
+ *
+ * Nothing changes in an LTR locale — the element is already `ltr`, so `<bdi>` is inert there.
+ */
+function ListUserItemHandle({
+    className,
+    children,
+    ...props
+}: ComponentPropsWithoutRef<'span'>) {
     return (
         <span
             data-slot="list-user-item-handle"
@@ -744,7 +792,9 @@ function ListUserItemHandle({ className, ...props }: ComponentPropsWithoutRef<'s
                 className,
             )}
             {...props}
-        />
+        >
+            <bdi>{children}</bdi>
+        </span>
     )
 }
 

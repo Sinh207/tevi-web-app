@@ -4,12 +4,15 @@ import {
     accountAutoFollow,
     accountNsfwSettings,
     accountShowSensitive,
+    accountTwoFaPasscode,
     PASSWORD_SETTINGS_PATH,
+    TWO_FA_SETTINGS_PATH,
     useAuth,
     useUpdateMe,
     useUserLogin,
 } from '@features/auth'
 import {
+    AUTO_FOLLOW_SECONDS,
     BLOCKED_ACCOUNTS_PATH,
     type ChannelPrivacy,
     SPACE_VISIBILITY_PATH,
@@ -30,8 +33,11 @@ import { TILE } from '../../lib/menu-tiles'
  * Privacy and Security — the legacy drawer's second level, rebuilt.
  *
  * Legacy: `../tevi-web-app/src/components/layouts/common/iconBtnMenu/menu/content/
- * btnPrivacyAndSecurity`. Same five rows in the same two groups, and the same split
- * between them: the first three *go* somewhere, the last two *are* the setting.
+ * btnPrivacyAndSecurity`. Its five rows in the same two groups, and the same split between
+ * them: the link rows *go* somewhere, the last two *are* the setting.
+ *
+ * **Six rows now, not five.** Two-step verification joins the first group — see the row itself
+ * for why it is not in legacy's list and why it belongs beside the password.
  *
  * ── what is deliberately different ────────────────────────────────────────────────────
  *
@@ -52,19 +58,13 @@ import { TILE } from '../../lib/menu-tiles'
  * are marked below. Worth a design pass.
  *
  * ── where the three link rows go ──────────────────────────────────────────────────────
- * All three destinations now exist — `/settings/password`, `/settings/space-visibility` and
- * `/settings/blocked-accounts` — so every row here navigates. The two owned by
+ * All four destinations now exist — `/settings/password`, `/settings/two-step-verification`,
+ * `/settings/space-visibility` and `/settings/blocked-accounts` — so every row here navigates.
+ * The two owned by
  * `features/channel` are linked through that feature's exported path constants rather than
  * a literal, because a literal keeps type-checking and keeps rendering after the page moves;
  * it just 404s, which is the failure mode that reaches production.
  */
-
-/**
- * Legacy's `AUTO_FOLLOW.duration_secs` (`constants/channel.js`). **The client does not
- * decide this** — the backend runs the timer; the number is only what the sentence says.
- * If the two ever disagree, the sentence is the one that is wrong.
- */
-const AUTO_FOLLOW_SECONDS = 10
 
 /** Legacy's mask for "a password is set" — six bullets, not the real length. */
 const PASSWORD_MASK = '••••••'
@@ -163,6 +163,40 @@ export function PrivacySecurityScreen({ active }: { active: boolean }) {
             href: PASSWORD_SETTINGS_PATH,
         },
         {
+            /*
+             * **Not a legacy row.** Legacy's Privacy and Security screen has five entries and this is
+             * not one of them — its web app never built the two-step-verification screen at all, so
+             * there was nowhere for a row to lead. There is now, and this is where it belongs: the
+             * one setting on the account that gates a *money* action sits beside the password, above
+             * the two rows that gate what other people can see.
+             */
+            key: 'privacy_security_two_step',
+            /*
+             * `shield`, and it is a compromise the sprite forces. Everything that would say this
+             * exactly — a shield with a tick, a key, a fingerprint — is absent from the DS subset;
+             * `badge-check` came closest and **has no filled drawing**, so it would be the one
+             * outline glyph in a column of solid ones (the reason `star-magic` lost the Star transfer
+             * row). `shield` does repeat the glyph on the drawer row that leads *here*, which is on
+             * the screen behind this one and never on it at the same time — and the tile colour is
+             * different, so the two do not read as the same entry. Worth a design pass.
+             */
+            icon: { name: 'shield', weight: 'filled' },
+            tile: TILE.primary,
+            /*
+             * On or off, from `/me` — free, already in the cache, and the same flag the withdrawal
+             * gate reads. No `undefined` branch as the Password row has: that row waits on a fetch
+             * that can fail, this one reads a profile the drawer cannot render without.
+             */
+            value: isAuthenticated
+                ? t(
+                      accountTwoFaPasscode(currentUser)
+                          ? 'privacy_security_two_step_on'
+                          : 'privacy_security_two_step_off',
+                  )
+                : undefined,
+            href: TWO_FA_SETTINGS_PATH,
+        },
+        {
             key: 'privacy_security_space_visibility',
             icon: { name: 'user-simple-alt', weight: 'filled' },
             tile: TILE.indigo,
@@ -218,6 +252,8 @@ export function PrivacySecurityScreen({ active }: { active: boolean }) {
                 <LeftBarList bordered>
                     {linkRows.map((row, i) => (
                         <LeftBarRow
+                            data-testid="navigation-menu-privacy-row"
+                            data-row-key={row.key}
                             key={row.key}
                             rule={i > 0}
                             title={t(row.key)}
@@ -265,6 +301,7 @@ export function PrivacySecurityScreen({ active }: { active: boolean }) {
                         tile={TILE.warning}
                         control={
                             <Toggle
+                                data-testid="navigation-menu-auto-follow"
                                 checked={autoFollow}
                                 disabled={!isAuthenticated}
                                 aria-disabled={pending}
@@ -288,6 +325,7 @@ export function PrivacySecurityScreen({ active }: { active: boolean }) {
                         tile={TILE.error}
                         control={
                             <Toggle
+                                data-testid="navigation-menu-allow-sensitive"
                                 checked={showSensitive}
                                 disabled={!isAuthenticated}
                                 aria-disabled={pending}

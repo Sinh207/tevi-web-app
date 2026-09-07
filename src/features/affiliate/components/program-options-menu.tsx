@@ -57,6 +57,7 @@ export function ProgramOptionsMenu({
     return (
         <Menu>
             <MenuTrigger
+                data-testid="affiliate-program-menu"
                 render={
                     <Button
                         variant="ghost"
@@ -72,6 +73,7 @@ export function ProgramOptionsMenu({
             <MenuContent>
                 {appUrl ? (
                     <MenuItem
+                        data-testid="affiliate-menu-open-app"
                         render={<a href={appUrl} target="_blank" rel="noreferrer noopener" />}
                     >
                         <MenuItemIcon>
@@ -82,7 +84,7 @@ export function ProgramOptionsMenu({
                 ) : null}
 
                 {canCopy ? (
-                    <MenuItem onClick={onCopyLink}>
+                    <MenuItem data-testid="affiliate-menu-copy-link" onClick={onCopyLink}>
                         <MenuItemIcon>
                             {/* The sprite has no `copy` glyph — only `copyright` — so the DS's
                                 stand-in for it is `pages`. */}
@@ -92,7 +94,7 @@ export function ProgramOptionsMenu({
                     </MenuItem>
                 ) : null}
 
-                <MenuItem tone="destructive" onClick={onLeave}>
+                <MenuItem data-testid="affiliate-menu-leave" tone="destructive" onClick={onLeave}>
                     <MenuItemIcon>
                         <Icon name="logout" size={24} />
                     </MenuItemIcon>

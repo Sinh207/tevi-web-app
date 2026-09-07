@@ -8,17 +8,6 @@ import { CAMPAIGN_TYPES, type CampaignsByType, normalizeCampaigns } from './type
 const api = createApiModel({ apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN}/dapp-campaign` })
 
 /**
- * `campaign_type` is sent **once per value**, not as a bracketed array.
- *
- * axios's default serializer emits `campaign_type[]=LUCKY_WHEEL&campaign_type[]=…`, which DRF
- * ignores — it does not error, it just returns every campaign, and the rail would render whatever
- * happened to come first. `channel-api.ts` carries the identical constant for the identical reason
- * and calls the failure silent; this is the second instance, so the comment is worth repeating
- * rather than cross-referencing.
- */
-const REPEAT_ARRAY_PARAMS = { paramsSerializer: { indexes: null } } as const
-
-/**
  * Keyed by account: `user_joined` is per-account, and so is whether a campaign is offered at all.
  * Switching accounts in this tab or another therefore refetches on its own, and signing out drops
  * the data with the account rather than needing anything cleared by hand.
@@ -40,8 +29,15 @@ export const campaignApi = {
         return api
             .get<unknown>(
                 'v1/campaigns/',
+                /*
+                 * `campaign_type` goes out **once per value**, not bracketed: DRF ignores
+                 * `campaign_type[]=…` and answers with every campaign, so the rail would render
+                 * whichever three came first. `apiClient`'s instance-level `paramsSerializer` is
+                 * what produces the repeated key — this call site relies on it rather than
+                 * restating it.
+                 */
                 { campaign_type: [...CAMPAIGN_TYPES] },
-                { signal, ...(accountId ? { accountId } : {}), ...REPEAT_ARRAY_PARAMS },
+                { signal, ...(accountId ? { accountId } : {}) },
             )
             .then(normalizeCampaigns)
     },

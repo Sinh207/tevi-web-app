@@ -194,6 +194,7 @@ export function SpaceVisibilityOption({
              * so the ring is always on the thing that just changed.
              */}
             <Radio
+                data-testid="channel-visibility-option"
                 // `span`, not the DS default `label` — the card above is already the label,
                 // and a label inside a label is invalid (see `shared/ui/radio.tsx`).
                 as="span"

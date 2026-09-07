@@ -65,6 +65,7 @@ export function ProfileTopBar({
         <AppBar className={cn('md:px-0', CHANNEL_SETTINGS_CONTAINER)}>
             <AppBarCluster className="min-w-0">
                 <BarIconButton
+                    data-testid="channel-profile-back"
                     name="angle-left"
                     weight="filled"
                     mirrored
@@ -134,6 +135,7 @@ export function ProfileTopBar({
             {saveLabel ? (
                 <AppBarCluster className="min-w-0 md:hidden">
                     <AppBarButton
+                        data-testid="channel-profile-save-bar"
                         type="text-secondary"
                         disabled={!canSave}
                         onClick={onSave}

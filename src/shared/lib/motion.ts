@@ -97,3 +97,105 @@ export const LIVE_BREATH =
  */
 export const STAR_FLOAT =
     'animate-[tevi-star-float_2000ms_ease-out_forwards] motion-reduce:animate-[tevi-star-float_1ms_linear_forwards]'
+
+/**
+ * The dashboard's trend line drawing itself in — `tevi-chart-draw` in `globals.css`, which explains
+ * the `pathLength` normalisation and why the dashed comparison line cannot use it.
+ *
+ * Here rather than in `features/analytics` for the reason `STAR_FLOAT` is here: this file is the one
+ * list of what moves in this app, and a keyframe with no entry in it is a keyframe the next person
+ * re-invents. The 240ms and the curve are the app's, so the plot arrives like everything else.
+ */
+export const CHART_DRAW =
+    'animate-[tevi-chart-draw_240ms_cubic-bezier(0.32,0.72,0,1)_both] motion-reduce:animate-none'
+
+/**
+ * The comparison line appearing behind it — `tevi-chart-fade`, delayed until the current line has
+ * finished drawing so the two do not compete for the eye.
+ *
+ * A fade rather than a draw because the dashed line's `stroke-dasharray` **is** its identity, and
+ * `tevi-chart-draw` needs that property for itself. `RISE` is not an option either: it translates,
+ * and a path pulled 8px off its own axis is a chart that lies for 240ms.
+ */
+export const CHART_FADE_IN =
+    'animate-[tevi-chart-fade_200ms_cubic-bezier(0.32,0.72,0,1)_240ms_both] motion-reduce:animate-none'
+
+/**
+ * The glare crossing the recommended plan card — `tevi-premium-sheen` in `globals.css`, which
+ * explains why the streak's box is the whole card (it is what keeps the sweep working in RTL) and
+ * why three quarters of the cycle is a pause.
+ *
+ * The fourth animation outside the 240ms curve, and the only one that is purely ornamental: the
+ * other three each mark something (an arrival, a departure, a live stream). This one exists because
+ * the annual card has to be *picked*, and it carries no information at all — which is also why it
+ * is the one loop allowed on a surface a reader is reading.
+ *
+ * `4500ms` and `infinite` belong here rather than at the call site so a second premium surface
+ * cannot get a differently-timed sheen. Whoever adds one puts a base `opacity-0` on the element:
+ * see the keyframe's last paragraph.
+ */
+export const PREMIUM_SHEEN =
+    'animate-[tevi-premium-sheen_4500ms_linear_infinite] motion-reduce:animate-none'
+
+/**
+ * The Premium mark turning like a coin — `tevi-premium-spin` in `globals.css`, which is where the
+ * axis is argued: `rotate: y`, because the mobile app turns it that way and because a flat 360
+ * passes through an upside-down crown.
+ *
+ * **6 seconds**, halved from the 12 the flat spin used. A flat spin is legible the whole way round,
+ * so it could afford to be slow; a coin turn spends a third of its cycle nearly edge-on, and at 12s
+ * that is four seconds of a badge that looks like a gold sliver. Six keeps the face-on view the
+ * thing you mostly see. Linear, because an eased rotation reads as something being turned by hand.
+ *
+ * The badge is a flat image, so it has no thickness to show at the halfway point: the painted width
+ * is `100·cos θ` and reaches **zero** at 90° and 270°. The reference screenshot catches the native
+ * badge as a narrow sliver there, which a 3D object has and a `<img>` cannot — a couple of frames of
+ * nothing, twice per turn, is the honest cost and it reads as edge-on rather than as a glitch.
+ */
+export const PREMIUM_SPIN =
+    'animate-[tevi-premium-spin_6000ms_linear_infinite] motion-reduce:animate-none'
+
+/**
+ * One sparkle thrown out of the Premium mark — `tevi-premium-spark` in `globals.css`.
+ *
+ * The angle, the distance and the **duration** are all the caller's: the keyframe ends at
+ * `var(--spark-x) / var(--spark-y)`, and `PremiumSparkField` sets `animationDelay` *and*
+ * `animationDuration` per particle. The 2600ms here is only the fallback for a caller that does not
+ * — a field where every particle travels for the same time reads as a pulse rather than a spray, so
+ * the one caller there is overrides it with a 1.5–3.6s spread.
+ *
+ * That is deliberate rather than sloppy: what belongs in this file is the keyframe's name, its
+ * easing, that it loops, and what reduced motion does with it. The travel is geometry, and geometry
+ * belongs next to the numbers it was chosen against.
+ *
+ * Pair it with a base `opacity-0` — see the keyframe.
+ */
+export const PREMIUM_SPARK =
+    'animate-[tevi-premium-spark_2600ms_ease-out_infinite] motion-reduce:animate-none'
+
+/**
+ * The mark leaning in once every two turns — `tevi-premium-zoom` in `globals.css`.
+ *
+ * **12000ms, and it must stay exactly twice `PREMIUM_SPIN`'s 6000.** The keyframe's peak is placed
+ * at 87.5% of the cycle because that is where the spin has reached 270° and the badge is edge-on;
+ * the two animations start in the same frame and never end, so the ratio is what keeps the pulse on
+ * that edge. Retiming either one without the other aims the zoom at nothing in particular — and it
+ * fails silently, because a badge that pulses mid-face still looks like an effect.
+ *
+ * It goes on a **wrapper**, not on the element that turns: it scales, so its box must not move, and
+ * the two properties cannot share one Tailwind arbitrary animation list legibly.
+ */
+export const PREMIUM_ZOOM =
+    'animate-[tevi-premium-zoom_12000ms_ease-in-out_infinite] motion-reduce:animate-none'
+
+/**
+ * The Premium mark's edge — `tevi-premium-rim` in `globals.css`, which is where the whole argument
+ * lives: it turns a quarter of a turn ahead of every other surface, so it is broadside at the two
+ * angles where the rest of the mark is edge-on and would otherwise be culled.
+ *
+ * **6000ms, the same as `PREMIUM_SPIN`**, and it has to be: the keyframe writes an angle at every
+ * stop on the assumption that one cycle is one turn. It is one animation rather than two because the
+ * rotation and the opacity gate are the same idea — the quad may only be seen while it is broadside.
+ */
+export const PREMIUM_RIM =
+    'animate-[tevi-premium-rim_6000ms_linear_infinite] motion-reduce:animate-none'

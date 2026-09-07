@@ -35,8 +35,16 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react'
  */
 export interface PromoCardArt {
     src: string
-    /** Rendered square. Legacy uses 70 for most and 90 for the Premium crown. */
-    size: number
+    /**
+     * The art's **own** ratio, not a square box. Legacy draws all three of these at
+     * `width={size} height={size}`, which is right only while the file happens to be square:
+     * Tailwind's preflight sets `height: auto` on every `img`, so the browser draws the file's real
+     * ratio whatever the attribute says, and the reserved box is then the wrong shape. `login.svg`
+     * is 72×74 and was declared 70×70 — a 2px shift on every page the rail renders beside, and
+     * the thing `next/image`'s "width or height modified, but not the other" warning points at.
+     */
+    width: number
+    height: number
 }
 
 /**
@@ -101,8 +109,8 @@ export function PromoCard({ title, body, art, className, ...rest }: PromoCardPro
                     src={art.src}
                     alt=""
                     aria-hidden
-                    width={art.size}
-                    height={art.size}
+                    width={art.width}
+                    height={art.height}
                     className="pointer-events-none absolute bottom-0 end-0 select-none"
                 />
             ) : null}

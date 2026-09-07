@@ -23,7 +23,7 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
              * Sticky over scrolling content needs one, so the host supplies
              * `--background`; without it the page scrolls straight through the bar.
              */}
-            <div className="sticky top-0 z-20 bg-(--background) md:hidden">
+            <div data-viewport="md-down" className="sticky top-0 z-20 bg-(--background) md:hidden">
                 <AppTopBar />
             </div>
             {children}

@@ -126,6 +126,8 @@ export function DataStorageScreen({ active }: { active: boolean }) {
                 <LeftBarList bordered>
                     {stats.map((row, i) => (
                         <LeftBarRow
+                            data-testid="navigation-menu-storage-row"
+                            data-row-key={row.key}
                             key={row.key}
                             // Reports, does not act — so no button, no cursor, no chevron.
                             as="div"
@@ -160,6 +162,7 @@ export function DataStorageScreen({ active }: { active: boolean }) {
                 <FieldLabel className="h-[32px]">{t('data_storage_section_manage')}</FieldLabel>
                 <LeftBarList bordered>
                     <LeftBarRow
+                        data-testid="navigation-menu-clear-data"
                         title={t('data_storage_clear_cache')}
                         icon={{ name: 'trash', weight: 'filled' }}
                         tile={TILE.error}
@@ -176,6 +179,7 @@ export function DataStorageScreen({ active }: { active: boolean }) {
 
             {/* Kept mounted so the pending state survives the round trip. */}
             <ConfirmDialog
+                testId="navigation-menu-clear-data-confirm"
                 open={confirming}
                 onOpenChange={setConfirming}
                 title={t('data_storage_clear_title')}

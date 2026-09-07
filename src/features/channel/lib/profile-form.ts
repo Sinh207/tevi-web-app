@@ -230,13 +230,26 @@ export function invalidSocialRows(links: SocialLinkDraft[]): number[] {
 /**
  * The latest date of birth an account may claim — today minus 18 years, as `YYYY-MM-DD`.
  *
- * Passed to the date input's `max`, which is a *hint*: a browser that ignores it, or a person
- * typing into the field, can still produce a younger date. That is why this is also the check in
- * `dateOfBirthError` rather than only an attribute.
+ * Passed to the picker's `max`, which `DateField` **enforces** (it disables later days), and used
+ * again by `dateOfBirthError` so a value that arrives some other way is checked too.
+ *
+ * ## The 29 February rollover
+ *
+ * `setFullYear(y - 18)` on 29 Feb targets a non-leap year, and JS rolls the date *forward*: on
+ * 29 Feb 2028 it produced `2010-03-01` instead of `2010-02-28`, so 1 March 2010 stayed selectable and
+ * `dateOfBirthError` passed it (`'2010-03-01' > '2010-03-01'` is false) — an account 17 years and 364
+ * days old cleared the 18-year gate. One day in every four years, which is exactly the kind of bug
+ * that ships.
+ *
+ * Clamped by setting the day *after* the year, which is the standard fix: a rollover is detectable
+ * because the month changes, and 28 Feb is the last day of the target February.
  */
 export function maxDateOfBirth(today: Date = new Date()): string {
     const date = new Date(today)
+    const month = date.getMonth()
     date.setFullYear(date.getFullYear() - MIN_AGE_YEARS)
+    // Rolled over into the next month: pull it back to the last day of the intended one.
+    if (date.getMonth() !== month) date.setDate(0)
     return toDateInputValue(date)
 }
 

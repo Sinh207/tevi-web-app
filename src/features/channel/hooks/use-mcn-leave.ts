@@ -3,6 +3,7 @@
 import { useAuth } from '@features/auth'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { type McnLeave, organizationApi, organizationKeys } from '../api/organization-api'
 
 /**
@@ -46,7 +47,18 @@ export function useMcnLeave({ enabled = true }: { enabled?: boolean } = {}) {
 
     const confirm = useMutation({
         mutationFn: () => organizationApi.confirmLeave(activeId),
-        onSuccess: leave => queryClient.setQueryData<McnLeave | null>(key, leave ?? null),
+        onSuccess: leave => {
+            queryClient.setQueryData<McnLeave | null>(key, leave ?? null)
+            /*
+             * Legacy's own confirmation, and it earns its place on a screen where success is
+             * otherwise almost invisible: a card appears somewhere below the fold and a kebab
+             * quietly stops being offered. This says the network has been told.
+             *
+             * Raised here rather than at the two call sites so the About-tab card and
+             * `/mcn-partnership` cannot end up reporting the same write differently.
+             */
+            toast.success(t('mcn_partnership_leave_submitted'))
+        },
         // A message, not a key: the toast is raised outside React by `query-client.ts`, so a key
         // would ship the literal `channel_mcn_leave_failed` to the reader.
         meta: { showErrorToast: t('channel_mcn_leave_failed') },
@@ -54,7 +66,10 @@ export function useMcnLeave({ enabled = true }: { enabled?: boolean } = {}) {
 
     const cancel = useMutation({
         mutationFn: () => organizationApi.cancelLeave(activeId),
-        onSuccess: () => queryClient.setQueryData<McnLeave | null>(key, null),
+        onSuccess: () => {
+            queryClient.setQueryData<McnLeave | null>(key, null)
+            toast.success(t('mcn_partnership_leave_cancelled'))
+        },
         meta: { showErrorToast: t('channel_mcn_cancel_failed') },
     })
 

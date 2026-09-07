@@ -1,20 +1,21 @@
 'use client'
 
+import { DialogCloseButton } from '@shared/components/dialog-close-button'
 import { StoreBadge } from '@shared/components/store-badge'
 import { env } from '@shared/config/env'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { qrImageUrl } from '@shared/lib/qr-image'
 import { useWebConfig } from '@shared/lib/remote-config'
+import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@shared/ui/dialog'
-import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
 
@@ -52,9 +53,8 @@ import type { ReactNode } from 'react'
  *
  * ## The QR is server-rendered
  *
- * `${W_API}/qr/v1/?text=` — no QR library in the bundle, the same endpoint legacy uses. The URL is
- * encoded here; legacy interpolates it raw, which breaks the moment a target carries a query
- * string.
+ * `qrImageUrl` — the same endpoint legacy uses, and the only place it is named. It returns Tevi's
+ * branded code rather than a plain one, which is why no QR library belongs in the bundle.
  *
  * The store buttons are the standard badges — brand mark, "Download on the", store name — built
  * from `StoreBadge`, which explains why those two marks are inline SVG rather than sprite glyphs.
@@ -64,21 +64,31 @@ export function GetAppDialog({
     onOpenChange,
     title,
     body,
+    testId,
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     /** Defaults to the generic "Get the Tevi app". */
     title?: ReactNode
     body?: ReactNode
+    /**
+     * Base `data-testid`. Derives `-title`, `-qr`, `-close`, `-overlay` (from `DialogContent`), and
+     * `-stores-ios` / `-stores-android` via `StoreButtons`.
+     *
+     * The two store badges inline their names rather than taking a companion attribute, because
+     * `ios` and `android` are a closed enum written in this source file — the one case where the
+     * catalog can enumerate every id, so inlining costs nothing. See `shared/lib/test-id.ts`.
+     */
+    testId?: string
 }) {
     const { t } = useTranslation()
 
     const target = env.NEXT_PUBLIC_BASE_URL
-    const qrSrc = `${env.NEXT_PUBLIC_W_API_DOMAIN}/qr/v1/?text=${encodeURIComponent(target)}`
+    const qrSrc = qrImageUrl(target)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent data-testid={testId}>
                 {/* `DialogTitle` and `DialogDescription` carry the DS's own type and ink
                     (`type-body-strong` / `type-dense-default`). Restating them here — which this
                     file used to do — silently makes one dialog a different size from every other
@@ -88,7 +98,9 @@ export function GetAppDialog({
                     **campaign name** — server data of no fixed length, passed in by the Lucky
                     Wheel card — rather than a string we wrote and can see. */}
                 <DialogHeader className="px-6">
-                    <DialogTitle>{title ?? t('rail_qr_title')}</DialogTitle>
+                    <DialogTitle data-testid={subTestId(testId, 'title')}>
+                        {title ?? t('rail_qr_title')}
+                    </DialogTitle>
                     <DialogDescription>{body ?? t('rail_qr_body')}</DialogDescription>
                 </DialogHeader>
 
@@ -106,6 +118,7 @@ export function GetAppDialog({
                         <Image
                             src={qrSrc}
                             alt={t('rail_qr_alt')}
+                            data-testid={subTestId(testId, 'qr')}
                             width={132}
                             height={132}
                             unoptimized
@@ -118,18 +131,16 @@ export function GetAppDialog({
                     {t('rail_qr_stores')}
                 </p>
 
-                <StoreButtons />
+                <StoreButtons testId={subTestId(testId, 'stores')} />
 
-                {/* Escape and the backdrop already dismiss this, but neither is visible. Same
-                    corner affordance `AccountSwitcherDialog` and `LoginDialog` use, and the same
-                    one legacy's `dialogs/shareQr` puts here — last in the DOM so initial focus
-                    lands on the content rather than on the way out. */}
-                <DialogClose
-                    aria-label={t('common_close')}
-                    className="absolute end-3 top-3 flex size-8 cursor-pointer items-center justify-center rounded-full text-text-body transition-colors hover:bg-background-subtle hover:text-text-title"
-                >
-                    <Icon name="xmark" size={18} />
-                </DialogClose>
+                {/* Escape and the backdrop already dismiss this, but neither is visible. Literally
+                    the same control `AccountSwitcherDialog` and `LoginDialog` use — `DialogCloseButton`,
+                    which is also where legacy's `dialogs/shareQr` puts its own — last in the DOM so
+                    initial focus lands on the content rather than on the way out. */}
+                <DialogCloseButton
+                    data-testid={subTestId(testId, 'close')}
+                    className="absolute end-2 top-2"
+                />
             </DialogContent>
         </Dialog>
     )
@@ -137,6 +148,10 @@ export function GetAppDialog({
 
 /**
  * The two store buttons, and the only thing here that reads remote config.
+ *
+ * Exported because a second dialog needs exactly this pair: `ChannelLiveRestrictedDialog`, where a
+ * desktop reader is told the stream only plays in the app. Two copies of a store badge is how one of
+ * them ends up pointing at a listing that moved.
  *
  * A component rather than four lines in `GetAppDialog`, for one reason: **`GetAppDialog` is mounted
  * on every route that shows the end rail, and this is not.** `DialogContent` renders through
@@ -150,7 +165,7 @@ export function GetAppDialog({
  * deferring: the fallback for these two fields *is* the real store URL, so the first paint of the
  * button is already correct and a later swap only ever replaces a working link with a working link.
  */
-function StoreButtons() {
+export function StoreButtons({ testId }: { testId?: string }) {
     const { t } = useTranslation()
     const { download } = useWebConfig()
 
@@ -177,6 +192,7 @@ function StoreButtons() {
                 size="large"
                 className="justify-start px-3"
                 aria-label={`${t('rail_qr_download_on_the')} ${t('rail_qr_app_store')}`}
+                data-testid={subTestId(testId, 'ios')}
                 render={<a href={download.ios.link} target="_blank" rel="noreferrer noopener" />}
             >
                 <StoreBadge
@@ -190,6 +206,7 @@ function StoreButtons() {
                 size="large"
                 className="justify-start px-3"
                 aria-label={`${t('rail_qr_get_it_on')} ${t('rail_qr_google_play')}`}
+                data-testid={subTestId(testId, 'android')}
                 render={
                     <a href={download.android.link} target="_blank" rel="noreferrer noopener" />
                 }

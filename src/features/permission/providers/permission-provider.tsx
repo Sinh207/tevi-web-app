@@ -4,7 +4,7 @@ import { useAuth } from '@features/auth'
 import { useSocketEvent } from '@features/realtime'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createContext, useCallback, useContext, useMemo } from 'react'
-import { permissionApi, permissionKeys } from '../api/permission-api'
+import { forgetChannelPermissionCache, permissionApi, permissionKeys } from '../api/permission-api'
 import type { ChannelPermission, FiatAgency } from '../api/types'
 import {
     allows,
@@ -181,7 +181,20 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
      * never fires.
      */
     useSocketEvent('premium_info', () => {
-        void refresh()
+        /*
+         * ⚠ **The ETag is evicted first.** `refresh()` alone sends a conditional GET, the service
+         * answers `304` because its validator has not moved, and `apiClient` replays the grants this
+         * is trying to replace — so the feature Premium just unlocked stays hidden. Gates fail closed
+         * here, so that failure is silent and in the worst direction. `forgetChannelPermissionCache`
+         * has the argument; **B72** is where the shape was first found.
+         *
+         * Awaited **before** the invalidate: `invalidateQueries` starts the request synchronously, so
+         * evicting afterwards would drop the record the request had already read on its way out.
+         */
+        void (async () => {
+            await forgetChannelPermissionCache(activeId)
+            await refresh()
+        })()
     })
 
     /*

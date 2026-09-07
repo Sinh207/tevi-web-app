@@ -50,8 +50,11 @@ export function useUserLogin({ enabled = true }: { enabled?: boolean } = {}): {
                  * an error would put a retry button in front of someone whose only problem is
                  * that they have never set a password. Every other status still throws.
                  *
-                 * Whether the backend actually answers 404 here rather than 200 with an empty
-                 * body is unconfirmed (B7, `docs/BACKEND_QUESTIONS.md`) — this handles both.
+                 * ✅ **The real answer is a 200 carrying two empty strings** (auth contract,
+                 * B7) — so this branch is belt and braces rather than the normal path, and
+                 * `hasCredentials` below is what actually reads "no credentials". Kept because
+                 * a 404 costs one line to tolerate and is indistinguishable from the 200 to
+                 * every consumer.
                  */
                 if (error instanceof ApiError && error.status === 404) return {} as UserLogin
                 throw error
@@ -70,7 +73,13 @@ export function useUserLogin({ enabled = true }: { enabled?: boolean } = {}): {
     return {
         userLogin: query.data,
         email: query.data?.email,
-        hasCredentials: Boolean(query.data?.email || query.data?.phone),
+        /*
+         * Truthiness, not key presence: an account with no credentials gets
+         * `{ email: '', phone_number: '' }` — both keys always there, both blank (B7). The
+         * phone field was read as `phone` here, a spelling the endpoint has never sent, so an
+         * account that signs in with a number and no address read as having nothing.
+         */
+        hasCredentials: Boolean(query.data?.email || query.data?.phone_number),
         /*
          * `isLoading`, not `isPending`: a disabled query is pending forever, and a skeleton
          * that never resolves is what a signed-out visitor would have seen. `isBootstrapping`

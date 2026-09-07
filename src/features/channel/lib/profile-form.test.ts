@@ -320,3 +320,14 @@ describe('moveSocialLink', () => {
         expect(moveSocialLink(rows, -1, 0)).toBe(rows)
     })
 })
+
+describe('maxDateOfBirth', () => {
+    it('clamps the leap-day case instead of rolling a day forward', () => {
+        expect(maxDateOfBirth(new Date(2028, 1, 29))).toBe('2010-02-28')
+        expect(maxDateOfBirth(new Date(2044, 1, 29))).toBe('2026-02-28')
+    })
+
+    it('is today minus eighteen years on an ordinary day', () => {
+        expect(maxDateOfBirth(new Date(2025, 6, 15))).toBe('2007-07-15')
+    })
+})

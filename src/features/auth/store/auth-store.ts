@@ -24,8 +24,14 @@ export type SocialProvider =
     | 'telegram'
     | 'line'
 
-/** How the current sign-in attempt was started. */
-export type LoginMethod = SocialProvider | 'email' | null
+/**
+ * How the current sign-in attempt was started.
+ *
+ * `qr` is not a `SocialProvider` and never will be: there is no `v1/connect/qr/` behind it. The
+ * session arrives over a socket already minted, so the only thing this value does for QR is put a
+ * failure — a full account list, a `/me` that would not load — next to the code that produced it.
+ */
+export type LoginMethod = SocialProvider | 'email' | 'qr' | null
 
 interface AuthState {
     /** The one-time session bootstrap on first mount is still running. */

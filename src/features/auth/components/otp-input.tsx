@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslation } from '@shared/i18n/use-translation'
+import { subTestId } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
 import { useEffect, useRef } from 'react'
 
@@ -38,12 +39,54 @@ export function OtpInput({
     length = 6,
     disabled,
     autoFocus,
+    invalid,
+    spread,
+    testId = 'auth-otp',
 }: {
     value: string
     onChange: (next: string) => void
     length?: number
     disabled?: boolean
     autoFocus?: boolean
+    /**
+     * The code was rejected — tints the boxes and marks them `aria-invalid`.
+     *
+     * A prop rather than the caller styling around the component, because the caller cannot reach
+     * the boxes; and it takes a boolean rather than the message, because the message belongs where
+     * every other error in this repo puts it — one `role="alert"` line the caller owns, not six
+     * copies of it in the accessibility tree.
+     *
+     * ⚠ **Do not use this to mean "incomplete".** The boxes are empty until they are typed into;
+     * marking a half-typed code invalid tells a screen reader something is wrong with a field
+     * nobody has finished using.
+     */
+    invalid?: boolean
+    /**
+     * The scope this instance belongs to, for `data-testid`. Defaults to the sign-in flows' `auth-otp`
+     * — the value every existing caller was already emitting — so a second surface can be addressed
+     * separately without the first one's ids moving under QC's feet.
+     */
+    testId?: string
+    /**
+     * Spread the boxes across the row instead of centring them.
+     *
+     * ⚠ **Declared last on purpose.** `scripts/check-testids.mjs` decides whether a component can
+     * receive a `testId` by looking for it in the **first 1400 characters** after the declaration —
+     * and `stripComments` blanks comments to spaces rather than removing them, so a docblock counts
+     * toward that budget. This prop sat above `testId` for one commit and pushed it out of the
+     * window, which reported every `<OtpInput testId=…>` in the repo as a silently dropped
+     * attribute. Anything added here goes below `testId`, not above it.
+     *
+     * The DS draws this control **space-between** over its full width (`Verification code input`,
+     * Figma `1077:80583`), and so do the two-step-verification page comps over their 516px column.
+     * Centred 48px boxes are the right answer inside a 420px dialog and on a 360px phone, which is
+     * what every existing caller is, so that stays the default — this is the opt-in for a caller with
+     * a wide column to fill.
+     *
+     * It only changes the *distribution*: the boxes still cap at the DS's 48 and still shrink rather
+     * than overflow, which is what `min-w-0` on the fieldset is for.
+     */
+    spread?: boolean
 }) {
     const { t } = useTranslation()
     const boxes = useRef<(HTMLInputElement | null)[]>([])
@@ -108,13 +151,25 @@ export function OtpInput({
      * 6px in the dialog and 64px on a 360px phone.
      *
      * The boxes then divide whatever width there is (`flex-1 min-w-0`) and stop growing at
-     * the DS size (`max-w-12`), so they are 48px wherever there is room and smaller only
-     * where there is not.
+     * the DS size, so they are **50px** wherever there is room and smaller only where there
+     * is not.
+     *
+     * ⚠ 50, not 48 — and the digit is **18/SemiBold**, not 20. Both were off by two pixels
+     * against the design system's own component set (`Verification code input`, Figma
+     * `1077:80583`: 50×50 boxes, radius 8, gap 8, an 18px Semi Bold glyph at -2% tracking) and
+     * against every page comp that places it. Caught measuring the two-step-verification
+     * screens; corrected here rather than there, because the control is shared with the three
+     * sign-in flows and two pixels of drift in the DS's most recognisable input is worth more
+     * than the churn.
      */
     return (
         <fieldset
+            data-testid={testId}
             dir="ltr"
-            className="flex w-full min-w-0 items-center justify-center gap-2 border-0 p-0"
+            className={cn(
+                'flex w-full min-w-0 items-center gap-2 border-0 p-0',
+                spread ? 'justify-between' : 'justify-center',
+            )}
         >
             {/* A real `<legend>`, hidden visually rather than replaced by `aria-label`:
                 it is what names the group, and the heading above already says it on
@@ -122,6 +177,8 @@ export function OtpInput({
             <legend className="sr-only">{t('auth_otp_group_label')}</legend>
             {Array.from({ length }, (_, index) => (
                 <input
+                    data-testid={subTestId(testId, 'digit')}
+                    data-index={index}
                     // A fixed-length positional list, never reordered or filtered: the index
                     // *is* each box's identity, and a synthetic id would only obscure that.
                     // biome-ignore lint/suspicious/noArrayIndexKey: explained above
@@ -137,6 +194,9 @@ export function OtpInput({
                     aria-label={t('auth_otp_digit_label', { index: index + 1, total: length })}
                     value={value[index] ?? ''}
                     disabled={disabled}
+                    // On every box, not on the group: `<fieldset>` is not a form control, so
+                    // `aria-invalid` there is ignored — the boxes are what a reader lands on.
+                    aria-invalid={invalid || undefined}
                     // Only the active box takes tab focus; the arrows and auto-advance move
                     // between them, so six tab stops would just be six ways to get lost.
                     tabIndex={index === caret ? 0 : -1}
@@ -150,11 +210,22 @@ export function OtpInput({
                     }}
                     onFocus={e => e.currentTarget.select()}
                     className={cn(
-                        'type-title-t2-semibold h-12 min-w-0 max-w-12 flex-1 rounded-lg text-center',
+                        'type-subheading-strong h-[50px] min-w-0 max-w-[50px] flex-1 rounded-lg text-center',
                         'border border-(--input-border) bg-(--input-bg) text-(--input-text)',
                         'transition-colors hover:border-(--input-border-hover)',
                         'focus:border-(--input-border-focus) focus:outline-none',
                         'disabled:opacity-50',
+                        /*
+                         * Rejected: a tinted ground and an error border, matching what legacy draws
+                         * (`#FFF5F5` behind a `#FF4444` edge) in DS tokens.
+                         *
+                         * `invalid` wins over `focus` — hence the `focus:` overrides last. Without
+                         * them the box under the caret loses the tint the instant the boxes are
+                         * cleared and refocused, which is the exact moment the error appears: a row
+                         * of five red boxes and one that looks fine.
+                         */
+                        invalid &&
+                            'border-(--accents-error-active) bg-(--accents-error-bg-active) focus:border-(--accents-error-active)',
                     )}
                 />
             ))}

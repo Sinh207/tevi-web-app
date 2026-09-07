@@ -4,6 +4,8 @@ import {
     type ChannelOwnership,
     channelVisibility,
     isTerminalVisibility,
+    showsChannelActions,
+    showsChannelStats,
     showsChannelTabs,
 } from './channel-flags'
 
@@ -52,12 +54,21 @@ describe('channelVisibility — precedence', () => {
         expect(visibility({ is_nsfw: true }, 'owner')).toEqual({ kind: 'normal' })
     })
 
-    /** "They blocked you" is the one the visitor cannot act on, so it must win. */
-    it('prefers blocked-by over blocking when both are set', () => {
+    /**
+     * Under a **mutual** block, the state the reader can act on wins — legacy's order
+     * (`content/index.js` renders `BlockedChannel` before `BlockedUser`).
+     *
+     * This asserted the opposite for a while, on the reasoning that the condition the visitor
+     * cannot undo is the truer one. It is the *less useful* one: "You blocked @ada" carries an
+     * Unblock button and the block clears from this very page; "@ada has blocked you" is a dead end.
+     * Answering with the dead end while the reader holds the key is the wrong half of the truth.
+     */
+    it('prefers blocking over blocked-by when both are set', () => {
         expect(visibility({ blocked_user: true, blocking_channel: true })).toEqual({
-            kind: 'blocked-by',
+            kind: 'blocking',
         })
         expect(visibility({ blocking_channel: true })).toEqual({ kind: 'blocking' })
+        expect(visibility({ blocked_user: true })).toEqual({ kind: 'blocked-by' })
     })
 
     it('walls an unpublished space from a stranger, ahead of protected', () => {
@@ -78,15 +89,20 @@ describe('channelVisibility — precedence', () => {
     })
 
     /**
-     * The two routes past the gate, and the second is the one that was missing: legacy's dialog carries
-     * a "Disable filtering" checkbox writing `nsfw_settings.show_sensitive`, so a viewer who turned
-     * filtering off in Settings must not be asked again on every space. `channel-view.tsx` collapses
-     * both into this one flag.
+     * `nsfwConfirmed` is **both** of legacy's conditions anded together by `channel-view.tsx`: the
+     * account's `nsfw_settings.show_sensitive` *and* a confirmation for this space. This flag cannot
+     * see the difference, which is the point — the two faces of the gate are the UI's problem, and
+     * the resolver's job is to stay closed until whichever face is showing has been answered.
+     *
+     * It was an **or** for a while, which let anyone who had turned filtering off in Settings into
+     * every sensitive space with no age confirmation at all.
      */
-    it('accepts either per-channel consent or the account-wide setting', () => {
+    it('stays gated until the caller says both conditions hold', () => {
         const nsfw = channel({ is_nsfw: true })
         expect(channelVisibility({ channel: nsfw, ownership: 'viewer' })).toEqual({ kind: 'nsfw' })
-        // per-channel
+        expect(
+            channelVisibility({ channel: nsfw, ownership: 'viewer', nsfwConfirmed: false }),
+        ).toEqual({ kind: 'nsfw' })
         expect(
             channelVisibility({ channel: nsfw, ownership: 'viewer', nsfwConfirmed: true }),
         ).toEqual({ kind: 'normal' })
@@ -129,7 +145,7 @@ describe('channelVisibility — precedence', () => {
     })
 })
 
-describe('isTerminalVisibility / showsChannelTabs', () => {
+describe('isTerminalVisibility / showsChannelTabs / showsChannelActions', () => {
     it('marks every wall terminal and nothing else', () => {
         expect(isTerminalVisibility({ kind: 'suspended' })).toBe(true)
         expect(isTerminalVisibility({ kind: 'blocked-by' })).toBe(true)
@@ -138,7 +154,7 @@ describe('isTerminalVisibility / showsChannelTabs', () => {
         expect(isTerminalVisibility({ kind: 'protected', requested: false })).toBe(true)
         expect(isTerminalVisibility({ kind: 'normal' })).toBe(false)
         expect(isTerminalVisibility({ kind: 'owner-unpublished' })).toBe(false)
-        // Not terminal — the page is whole, just behind a confirmation.
+        // Not terminal — the space renders, with its art blurred and the gate where its tabs go.
         expect(isTerminalVisibility({ kind: 'nsfw' })).toBe(false)
     })
 
@@ -147,5 +163,95 @@ describe('isTerminalVisibility / showsChannelTabs', () => {
         expect(showsChannelTabs({ kind: 'owner-unpublished' })).toBe(true)
         expect(showsChannelTabs({ kind: 'nsfw' })).toBe(false)
         expect(showsChannelTabs({ kind: 'suspended' })).toBe(false)
+    })
+
+    it('shows the stats strip where legacy does, and hides it on the walls legacy names', () => {
+        const open = { privacy: 'public' } as const
+
+        expect(showsChannelStats(open, { kind: 'normal' })).toBe(true)
+        // Their block hides their content, not the public count of who follows them — legacy's
+        // `isShowChannelStats` names four states and this is deliberately not one of them.
+        expect(showsChannelStats(open, { kind: 'blocked-by' })).toBe(true)
+        // The gate withholds the tabs, not the identity, and the numbers are part of the identity.
+        expect(showsChannelStats(open, { kind: 'nsfw' })).toBe(true)
+
+        expect(showsChannelStats(open, { kind: 'suspended' })).toBe(false)
+        expect(showsChannelStats(open, { kind: 'blocking' })).toBe(false)
+        expect(showsChannelStats(open, { kind: 'unpublished' })).toBe(false)
+        expect(showsChannelStats(open, { kind: 'protected', requested: false })).toBe(false)
+    })
+
+    /*
+     * The two cases the payload-reading version got wrong, and the reason the branch below reads
+     * `visibility` at all. Both are asserted **through `channelVisibility`**, because that is where
+     * the distinction lives: a protected space resolves to `normal` for its owner and for a
+     * follower, and to `protected` for everyone else. Assert them against a bare `{ kind: 'normal' }`
+     * and the claim evaporates — there is nothing left in it about being protected.
+     */
+    it('keeps the figures on a protected space once the wall is down', () => {
+        const walled = { privacy: 'protected' } as const
+        const stats = (overrides: Record<string, unknown>, ownership?: ChannelOwnership) =>
+            showsChannelStats(channel(overrides), visibility(overrides, ownership))
+
+        // The owner's own figures are the point of their own page. Legacy cannot get this wrong:
+        // `isShowChannelStats` lives only in its viewer tree.
+        expect(stats(walled, 'owner')).toBe(true)
+
+        // A follower sees the tabs, the posts and the socials; blanking the header protects nothing.
+        // Deliberate divergence — legacy hides them here.
+        expect(stats({ ...walled, is_followed: true })).toBe(true)
+
+        // A stranger still gets no numbers: the wall is up, and that is the state legacy names.
+        expect(stats(walled)).toBe(false)
+    })
+
+    /**
+     * `channelVisibility` answers `blocked-by` **before** it looks at privacy, so the `kind` alone
+     * cannot tell a walled space from an open one — and letting `blocked-by` through unconditionally
+     * would show the blocked visitor a count the ordinary stranger beside them is refused. More than
+     * a stranger sees is the one direction this strip must not leak.
+     */
+    it('withholds the numbers from a blocked visitor when the space is walled anyway', () => {
+        const stats = (overrides: Record<string, unknown>) =>
+            showsChannelStats(channel(overrides), visibility(overrides))
+
+        expect(visibility({ blocked_user: true, privacy: 'protected' })).toEqual({
+            kind: 'blocked-by',
+        })
+
+        expect(stats({ blocked_user: true })).toBe(true)
+        expect(stats({ blocked_user: true, privacy: 'protected' })).toBe(false)
+        expect(stats({ blocked_user: true, privacy: 'unpublished' })).toBe(false)
+    })
+
+    /** The owner of an unpublished space keeps its numbers under the publish banner. */
+    it('shows the strip to an owner behind the publish banner', () => {
+        const unpublished = { privacy: 'unpublished' } as const
+        expect(showsChannelStats(channel(unpublished), visibility(unpublished, 'owner'))).toBe(true)
+        expect(showsChannelStats(channel(unpublished), visibility(unpublished))).toBe(false)
+    })
+
+    it('offers the action row where legacy does, and nowhere else', () => {
+        /*
+         * Legacy's `content/buttonGroup` hides itself for `unpublished`, both blocks and
+         * `suspended`, and shows otherwise — **protected included**, which is the one that matters:
+         * Follow is how a stranger asks to be let in, so a protected space that hides the row hides
+         * its own way in and the copy ("Tap the Follow button…") becomes a lie.
+         */
+        expect(showsChannelActions({ kind: 'protected', requested: false })).toBe(true)
+        expect(showsChannelActions({ kind: 'normal' })).toBe(true)
+        expect(showsChannelActions({ kind: 'owner-unpublished' })).toBe(true)
+
+        for (const hidden of [
+            { kind: 'suspended' },
+            { kind: 'blocked-by' },
+            { kind: 'blocking' },
+            { kind: 'unpublished' },
+            // This app's addition: the row is the transactional half, and a space whose content has
+            // not been agreed to should not be selling a membership.
+            { kind: 'nsfw' },
+        ] as const) {
+            expect(showsChannelActions(hidden)).toBe(false)
+        }
     })
 })

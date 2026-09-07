@@ -2,6 +2,7 @@
 
 import { useRequireAuth } from '@features/auth'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { eventBus } from '@shared/lib/event-bus'
 import { formatStarAmount } from '@shared/lib/money'
 import { useCallback } from 'react'
 import { toast } from 'sonner'
@@ -34,14 +35,15 @@ import { useBalance } from '../providers/balance-provider'
  *
  * ## What happens when they cannot afford it
  *
- * Today: a toast naming the shortfall. That is the honest placeholder, and it is **one line** from
- * being the real thing — `/get-star` does not exist yet (buying Star is a later pass), so opening a
- * purchase sheet here would open nothing.
+ * The purchase **sheet**, opened with the gap already known — not a navigation to `/get-star`, even
+ * though that page exists. The whole point of this hook is that whatever the reader was doing is still
+ * there when they come back: a gift pressed during a livestream must not close the livestream. The page
+ * is for the presses that *are* navigations (the `+` in the top bar, the *Get Star* row on `/my-star`),
+ * and both surfaces run the same flow — see `features/payment/routes.ts`.
  *
- * When it lands, the `onInsufficient` branch below becomes `openStarPurchase(shortfall)` and nothing
- * else in this file changes — and, more to the point, nothing at any call site changes. That is why
- * the divert lives here rather than being a boolean each caller branches on: there will be a dozen
- * prices in this app, and the day the purchase flow ships should not be a dozen edits.
+ * The toast below is the fallback for where no sheet can open, and it is still reached: see the branch
+ * itself. The divert lives here rather than being a boolean each caller branches on because there will
+ * be a dozen prices in this app, and the day the purchase flow changes should not be a dozen edits.
  *
  * A caller that needs to render its own affordability *state* — a price shown in red, a disabled
  * button — should read `hasEnoughStars` from `useBalance()` directly. This hook is for the press.
@@ -70,15 +72,32 @@ export function useRequireStars() {
                     return
                 }
                 /*
-                 * ⚠ The single line that becomes the purchase sheet. Everything else in this feature
-                 * is already in place for it: `starShortfall` is the amount to pre-select, and
-                 * `refresh` is what the sheet calls on success.
+                 * The purchase sheet, opened by announcing the gap rather than by calling into
+                 * `features/payment` — which would close a cycle between the two barrels (the payment
+                 * feature imports this one). The event's own doc in `event-bus.ts` states that.
+                 *
+                 * The toast stays as the **fallback**: `PaymentProvider` is mounted by
+                 * `(web)/layout.tsx`, so a surface rendered outside it — a `/app/*` webview, where card
+                 * payment is deliberately absent — has nothing listening. `mitt` returns no listener
+                 * count, so the toast is raised only when the emit is *not* handled, which the provider
+                 * reports by flipping a flag on the bus payload. Simpler and honest: emit, and if
+                 * nothing opened, say what is missing.
                  */
-                toast.error(
-                    t('balance_insufficient_stars', {
-                        amount: formatStarAmount(starShortfall(cost)),
-                    }),
-                )
+                const shortfall = starShortfall(cost)
+                let opened = false
+                eventBus.emit('payment:star-purchase-requested', {
+                    shortfall,
+                    ack: () => {
+                        opened = true
+                    },
+                })
+                if (!opened) {
+                    toast.error(
+                        t('balance_insufficient_stars', {
+                            amount: formatStarAmount(shortfall),
+                        }),
+                    )
+                }
             }),
         [requireAuth, hasEnoughStars, starShortfall, isKnown, refresh, t],
     )

@@ -95,7 +95,13 @@ const currencyCode = z
  */
 const SECONDS_CUTOFF_MS = 1_000_000_000_000
 
-const epochMs = z
+/**
+ * Exported because `features/payout` reads the same wire shapes from the same service, and the first
+ * version of its schema declared `created_at: z.string()` — so a payload sending epoch **milliseconds
+ * as a number** (which `billing/payout-request/` does) failed the parse and every row was dropped.
+ * One parser, one answer; the B37 note above is why there is more than one shape to answer for.
+ */
+export const epochMs = z
     .unknown()
     .transform(value => {
         if (typeof value === 'number') {
@@ -194,6 +200,24 @@ const entrySchema = z.looseObject({
         .transform(v => (typeof v === 'string' ? v.trim() : ''))
         .catch(''),
     created_at: epochMs,
+    /**
+     * **Billy's own spelling is `amount_currency`**; `currency` is accepted beside it.
+     *
+     * This was `currency` alone, and the live payload (2026-08-28) sends `amount_currency` — so every
+     * row that is *not* an earning parsed with no unit at all. `formatLedgerAmount` then takes its
+     * `!currency` branch and prints a bare number **without converting**: a `reward` of `0.10` TEVI
+     * rendered as `0.1` on a wallet displaying VND, where it should read `₫2,540`, and a `-1000.00`
+     * payout as `-1000` instead of `-₫25,400,000`. Four orders of magnitude, on a money column, with
+     * nothing thrown and no empty state to notice.
+     *
+     * Earnings hid it: they take `net_amount_currency`, which the payload *does* send under that name,
+     * so the rows a test would reach for first were all correct.
+     *
+     * Both spellings are read because only the currency ledger has been seen live; the Star ledger
+     * (`v5/billing/tvs-transactions/`) has not, and a parser that insists on one name is how this
+     * happened in the first place.
+     */
+    amount_currency: currencyCode,
     currency: currencyCode,
     amount,
     net_amount: amount,
@@ -210,6 +234,21 @@ const entrySchema = z.looseObject({
 export interface LedgerEntry {
     /** List key. The row's own id, else a composite — see `normalizeLedger`. */
     id: string
+    /**
+     * The **billy transaction id**, or `null` when the payload carried none.
+     *
+     * Separate from `id` because `id` is a *list key* and therefore has a fallback
+     * (`type + timestamp`), which is right for React and wrong for anything that leaves the browser.
+     * `/my-wallet` sends these to `dapp-wallet/v1/t/transactions/?billy_tx_id=…` to fetch the Tevi
+     * Coin bonus on each row (B83) — and it was sending `id`, so a row billy gave no id for went out
+     * as `platform_earning-1739000000000`: a lookup for a transaction that does not exist, in a
+     * parameter the other service parses as an id list.
+     *
+     * Nothing broke visibly, which is the point of splitting the two. The bonus for that row simply
+     * never matched, the query key carried a value no server would recognise, and the only way to see
+     * it was to ask where the ids came from.
+     */
+    txId: string | null
     /** Lower-cased slug. Each screen looks it up in its own vocabulary. */
     type: string
     /** The backend's own sentence. Screens fall back to the type's label when empty. */
@@ -237,6 +276,9 @@ export interface LedgerEntry {
  * The `id` fallback is `type + timestamp`, never the array index. Legacy uses the index, and that is
  * the version that breaks: the list grows at the top as pages load, so every index shifts and React
  * reuses the wrong row's state.
+ *
+ * ⚠ That fallback is for **React only**. Anything that sends an id to a server must read `txId`, which
+ * is `null` rather than composed when billy gave none — see the field.
  */
 export function normalizeLedger(body: unknown): LedgerEntry[] {
     const rows = Array.isArray(body)
@@ -249,13 +291,21 @@ export function normalizeLedger(body: unknown): LedgerEntry[] {
     for (const row of rows) {
         const parsed = entrySchema.safeParse(row)
         if (!parsed.success) continue
-        const { id, type, description, created_at, currency, amount, net_amount } = parsed.data
+        const { id, type, description, created_at, amount, net_amount } = parsed.data
+        // `amount_currency` first — see the field. `currency` is the fallback, not the source.
+        const currency = parsed.data.amount_currency || parsed.data.currency
         // No timestamp, no row — see the note on `LedgerEntry.createdAt`.
         if (created_at === null) continue
 
         const isEarning = EARNING_TYPES.has(type)
         out.push({
             id: id || `${type}-${created_at}`,
+            /*
+             * The real id and nothing else — **never the composite**. See `LedgerEntry.txId`: this one
+             * goes out over the wire, so a fabricated value here is a request about a transaction that
+             * does not exist.
+             */
+            txId: id || null,
             type,
             description,
             createdAt: created_at,

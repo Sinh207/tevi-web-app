@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+    DESCRIPTION_MAX,
     formatActivityDateTime,
     formatCompactCount,
     formatExactCount,
     formatIncomeUsd,
     formatJoinedDate,
+    formatRelativeTime,
+    truncateDescription,
 } from './channel-format'
 
 describe('formatCompactCount', () => {
@@ -175,5 +178,139 @@ describe('formatJoinedDate is timezone-independent', () => {
     it('still localises the month name', () => {
         expect(formatJoinedDate(AT, 'vi')).toContain('2022')
         expect(formatJoinedDate(AT, 'vi')).not.toBe(formatJoinedDate(AT, 'en'))
+    })
+})
+
+/**
+ * The coarse relative stamp. `now` is passed in at every call — the function's own note explains why
+ * that is a correctness rule (it must not run during SSR) and not merely a testing convenience.
+ */
+describe('formatRelativeTime', () => {
+    const NOW = Date.parse('2026-08-24T12:00:00.000Z')
+    const ago = (ms: number) => new Date(NOW - ms).toISOString()
+
+    it('walks the unit ladder in the order legacy does', () => {
+        expect(formatRelativeTime(ago(20_000), 'en', NOW)).toBe('20 seconds ago')
+        expect(formatRelativeTime(ago(5 * 60_000), 'en', NOW)).toBe('5 minutes ago')
+        expect(formatRelativeTime(ago(3 * 3_600_000), 'en', NOW)).toBe('3 hours ago')
+        expect(formatRelativeTime(ago(4 * 86_400_000), 'en', NOW)).toBe('4 days ago')
+        expect(formatRelativeTime(ago(70 * 86_400_000), 'en', NOW)).toBe('2 months ago')
+        expect(formatRelativeTime(ago(800 * 86_400_000), 'en', NOW)).toBe('2 years ago')
+    })
+
+    /**
+     * `numeric: 'auto'` is what turns a count into a sentence — with `'always'` this reads
+     * "1 day ago", which is the tell that the option was dropped.
+     */
+    it('uses the locale idiom rather than a bare count', () => {
+        expect(formatRelativeTime(ago(86_400_000), 'en', NOW)).toBe('yesterday')
+        expect(formatRelativeTime(ago(31 * 86_400_000), 'en', NOW)).toBe('last month')
+    })
+
+    /** A scheduled stream is in the future, and the sign has to survive. */
+    it('handles a future time', () => {
+        expect(formatRelativeTime(new Date(NOW + 3 * 3_600_000).toISOString(), 'en', NOW)).toBe(
+            'in 3 hours',
+        )
+    })
+
+    it('localises', () => {
+        const vi = formatRelativeTime(ago(4 * 86_400_000), 'vi', NOW)
+        expect(vi).not.toBe(formatRelativeTime(ago(4 * 86_400_000), 'en', NOW))
+        expect(vi).toContain('4')
+    })
+
+    /** `''` and not `'Invalid Date'`, so the caller can drop the whole line. */
+    it('answers an empty string for anything it cannot read', () => {
+        expect(formatRelativeTime(null, 'en', NOW)).toBe('')
+        expect(formatRelativeTime(undefined, 'en', NOW)).toBe('')
+        expect(formatRelativeTime('', 'en', NOW)).toBe('')
+        expect(formatRelativeTime('nonsense', 'en', NOW)).toBe('')
+    })
+
+    /** An unrecognised tag must not take the row down — the guard every formatter here carries. */
+    it('falls back to English on a bad locale tag', () => {
+        expect(formatRelativeTime(ago(5 * 60_000), 'not-a-locale!!', NOW)).toBe('5 minutes ago')
+    })
+})
+
+/**
+ * The overflow cases: rounding inside a unit can reach the next unit's threshold, so without the
+ * promotion these render "60 minutes ago", "24 hours ago" and "12 months ago". Every one is
+ * reachable from a real timestamp and invisible to a test that samples the middle of a branch.
+ */
+describe('formatRelativeTime promotes a rounded value that overflows its unit', () => {
+    const NOW = Date.parse('2026-08-24T12:00:00.000Z')
+    const ago = (seconds: number) => new Date(NOW - seconds * 1000).toISOString()
+
+    it('never says 60 minutes', () => {
+        expect(formatRelativeTime(ago(3599), 'en', NOW)).toBe('1 hour ago')
+    })
+
+    it('never says 24 hours', () => {
+        expect(formatRelativeTime(ago(86_399), 'en', NOW)).toBe('yesterday')
+    })
+
+    it('never says 12 months', () => {
+        expect(formatRelativeTime(ago(31_535_999), 'en', NOW)).toBe('last year')
+    })
+
+    it('never says 30 days', () => {
+        expect(formatRelativeTime(ago(2_591_999), 'en', NOW)).toBe('last month')
+    })
+
+    /** And the same in the other direction, for a scheduled stream. */
+    it('promotes a future value too', () => {
+        expect(formatRelativeTime(new Date(NOW + 3599 * 1000).toISOString(), 'en', NOW)).toBe(
+            'in 1 hour',
+        )
+    })
+
+    /** Under a second is "now", not "0 seconds ago" — `numeric: 'auto'` says so. */
+    it('reads a moment ago as now', () => {
+        expect(formatRelativeTime(ago(0), 'en', NOW)).toBe('now')
+    })
+})
+
+describe('truncateDescription', () => {
+    it('leaves a bio that already fits', () => {
+        expect(truncateDescription('Short bio')).toBe('Short bio')
+        expect(truncateDescription('x'.repeat(DESCRIPTION_MAX))).toHaveLength(DESCRIPTION_MAX)
+    })
+
+    it('cuts at a word and marks the cut', () => {
+        const text = `${'word '.repeat(60)}end`
+        const out = truncateDescription(text)
+
+        expect(out.endsWith('…')).toBe(true)
+        expect(out.endsWith(' …')).toBe(false)
+        expect(Array.from(out).length).toBeLessThanOrEqual(DESCRIPTION_MAX + 1)
+        // Never mid-word: everything before the ellipsis is whole words.
+        expect(out.slice(0, -1).endsWith('word')).toBe(true)
+    })
+
+    it('cuts an unbroken run at the limit rather than throwing it away', () => {
+        // No space to back up to — a URL, or a language that does not space its words. Backing up
+        // to a space three lines earlier would drop most of the bio.
+        const out = truncateDescription('x'.repeat(400))
+        expect(Array.from(out).length).toBe(DESCRIPTION_MAX + 1)
+    })
+
+    it('does not split an emoji in half', () => {
+        /*
+         * `slice` counts UTF-16 units, so cutting at 200 lands inside the surrogate pair and renders
+         * as `�`. `Array.from` counts code points, which is what the reader counts.
+         */
+        const out = truncateDescription(`${'🎧'.repeat(150)}`, 10)
+
+        /*
+         * A **lone** surrogate is the failure: a high one with no low after it, or a low one with no
+         * high before it. Matching `[\uD800-\uDFFF]` alone is wrong — that flags the second half of
+         * every well-formed pair, which is how this assertion failed against correct output.
+         */
+        expect(out).not.toMatch(
+            /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/,
+        )
+        expect(Array.from(out)).toHaveLength(11)
     })
 })

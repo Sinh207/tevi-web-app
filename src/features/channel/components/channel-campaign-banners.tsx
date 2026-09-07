@@ -6,6 +6,7 @@ import { CardCarousel } from '@shared/components/card-carousel'
 import { useRailVisible } from '@shared/hooks/use-rail-visible'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { safeExternalUrl } from '@shared/lib/safe-url'
+import { ListSeparator } from '@shared/ui/list'
 
 /**
  * The owner's promo strip on their own space — legacy's
@@ -66,19 +67,36 @@ export function ChannelCampaignBanners() {
     if (railVisible || (!showGrowYourFans && !showAffiliate)) return null
 
     return (
-        /* The header card's own inline padding, so the strip lines up with everything above and
-           below it — and the card surface continues under it from `md`, exactly as it does for
-           `ChannelPublishBanner`, which occupies this same slot in the other owner state. */
-        <div className="px-3 pb-3 md:bg-(--background-surface) md:px-6 md:pb-6">
-            <CardCarousel
-                label={t('channel_campaigns_label')}
-                slideLabel={(index, count) => t('channel_campaigns_slide', { index, count })}
-            >
-                {/* Legacy's order: the milestone campaign first, affiliate second. */}
-                {showGrowYourFans ? <GrowYourFansBanner /> : null}
-                {/* The card *and* its dialog — see `AffiliateEntry` for why they travel together. */}
-                {showAffiliate ? <AffiliateEntry /> : null}
-            </CardCarousel>
-        </div>
+        <>
+            {/*
+             * The rule **above** the strip, which legacy draws and this did not:
+             * `content/index.js` wraps its affiliate block in a pair —
+             * `<Divider thick /><Box>{affiliate}</Box>` — before the second divider that precedes
+             * the tabs. So the strip is fenced on both sides rather than running straight on from
+             * the action row above it.
+             *
+             * It lives **inside** this component rather than beside it in `channel-view`, because
+             * this is the only place that knows whether anything will render: the strip is absent
+             * when the end rail is showing the same cards, and a separator that survived that would
+             * be a line under nothing.
+             */}
+            <ListSeparator size="large" />
+            {/* The header card's own inline padding, so the strip lines up with everything above and
+                below it — and the card surface continues under it from `md`, exactly as it does for
+                `ChannelPublishBanner`, which occupies this same slot in the other owner state. */}
+            <div className="bg-(--background-surface) px-3 py-3 md:px-6 md:py-6">
+                <CardCarousel
+                    testId="channel-campaign"
+                    label={t('channel_campaigns_label')}
+                    slideLabel={(index, count) => t('channel_campaigns_slide', { index, count })}
+                >
+                    {/* Legacy's order: the milestone campaign first, affiliate second. */}
+                    {showGrowYourFans ? <GrowYourFansBanner /> : null}
+                    {/* The card *and* its dialog — see `AffiliateEntry` for why they travel
+                        together. */}
+                    {showAffiliate ? <AffiliateEntry /> : null}
+                </CardCarousel>
+            </div>
+        </>
     )
 }

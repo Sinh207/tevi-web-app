@@ -21,6 +21,8 @@ import { initDeviceInfo, primeDeviceInfo } from '@shared/lib/device-info'
 import { eventBus } from '@shared/lib/event-bus'
 import { getFirebaseAuth } from '@shared/lib/firebase'
 import { LOCKS, withLock } from '@shared/lib/locks'
+import { clearNsfwConsent } from '@shared/lib/nsfw-consent'
+import { clearSearchRecents } from '@shared/lib/search-recents'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
@@ -93,6 +95,17 @@ interface AuthContextValue {
         payload: Record<string, unknown>,
     ) => Promise<SignInResult>
     signInWithEmail: (payload: { email: string; password: string }) => Promise<SignInResult>
+    /**
+     * Adopt a session the **phone** already obtained — QR sign-in, where the credential arrives
+     * over the device room rather than from a request this browser made.
+     *
+     * Takes the token response instead of making one, which is the whole difference: by the time
+     * this is called the backend has already minted the session, so there is nothing left to
+     * authenticate and nothing that can be challenged. Everything after that point — the account
+     * limit, storing the tokens, fetching `/me`, `auth:signed-in` — is identical to every other
+     * method, so it goes through the same `runSignIn` and not around it.
+     */
+    signInWithQrSession: (session: TokenResponse) => Promise<SignInResult>
     signOut: () => Promise<void>
     switchAccount: (id: string) => Promise<void>
     /** Ends the account's session server-side before dropping it locally. */
@@ -360,6 +373,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     /**
+     * The phone approved the code. See the note on the context type for why this takes a session
+     * rather than fetching one.
+     *
+     * `runSignIn` wraps a call that has already happened, so its 406 branch is unreachable here —
+     * a challenge is something the gateway raises on a *request*, and this browser made none. What
+     * is reachable is the rest of it: `MaxAccountsError` when ten accounts are already stored (the
+     * token is then revoked rather than left running), a `/me` that will not load, and the
+     * `auth:signed-in` that closes `LoginDialog`. Reimplementing that here is how a tenth account
+     * would silently succeed on this one path alone.
+     */
+    const signInWithQrSession = useCallback(
+        (session: TokenResponse) => runSignIn('qr', async () => session),
+        [runSignIn],
+    )
+
+    /**
      * The widget solved the challenge — run the parked attempt again, now that the axios
      * client has a `X-Turnstile-Token` to send with it. A second 406 re-parks the call
      * and re-renders the widget, which is what a rotated challenge looks like.
@@ -424,7 +453,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
      * The local half is not optional either: the context used to hand out
      * `token.ts`'s `removeAccount` directly, so an account's cached response bodies
      * stayed in IndexedDB and its profile stayed in the query cache — both readable
-     * by whoever uses the device next.
+     * by whoever uses the device next. Its NSFW consent had the same problem and is
+     * dropped here too, which is why that store lives in `shared/`.
      */
     const forgetAccount = useCallback(
         async (id: string, opts?: { promote?: boolean }) => {
@@ -435,6 +465,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             })
             removeAccount(id, opts)
             void clearETagScope(id)
+            // Everything else this account left on the device. Consent to see a space's sensitive
+            // content is one of them, and it is the one that reads as somebody else's answer if it
+            // survives: the next person to use the browser would not be asked.
+            clearNsfwConsent(id)
+            // The other one: the terms this account typed into `/search`. Same argument as
+            // consent above — a search history left on a shared device reads as the next
+            // person's, and it is legible at a glance.
+            clearSearchRecents(id)
             queryClient.removeQueries({ queryKey: authKeys.me(id) })
         },
         [queryClient],
@@ -602,6 +640,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             signInWithAnonymous,
             signInWithProvider,
             signInWithEmail,
+            signInWithQrSession,
             signOut,
             switchAccount,
             removeAccount: forgetAccount,
@@ -624,6 +663,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             signInWithAnonymous,
             signInWithProvider,
             signInWithEmail,
+            signInWithQrSession,
             signOut,
             switchAccount,
             forgetAccount,

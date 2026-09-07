@@ -1,6 +1,7 @@
 'use client'
 
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
+import { subTestId, type TestIdProps } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
 
 /**
@@ -35,18 +36,46 @@ export function DialogOverlay({ className, ...props }: BaseDialog.Backdrop.Props
     )
 }
 
+/**
+ * `data-testid` is forwarded to the backdrop as `${testId}-overlay`.
+ *
+ * The scrim is the one part of this component a caller cannot reach: it is rendered here, not
+ * passed in. "Press outside to dismiss" is a real QC step and `fixed inset-0` is a real click
+ * target, but a driver needs an element to aim at. No prop *name* is added — the attribute is one
+ * the caller already passes — and a design-system re-sync of this file does not have to reconcile
+ * it. Same category as `button.tsx`'s `rendersNativeButton`: derive it once here rather than ask
+ * every call site to remember. Contract: `docs/TEST_IDS.md`.
+ */
 export function DialogContent({
     className,
     children,
     ...props
-}: BaseDialog.Popup.Props) {
+}: BaseDialog.Popup.Props & TestIdProps) {
     return (
         <BaseDialog.Portal>
-            <DialogOverlay />
+            <DialogOverlay data-testid={subTestId(props['data-testid'], 'overlay')} />
             <BaseDialog.Popup
                 className={cn(
                     'fixed top-1/2 start-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2',
                     'flex w-[370px] max-w-[calc(100vw-2rem)] flex-col gap-5 p-6',
+                    /*
+                     * A height cap to match the width cap, and `auto` so what does not fit can be
+                     * reached.
+                     *
+                     * Without it a tall popup overflows **both** edges of a short viewport with
+                     * `overflow: visible` — measured on a 740×420 landscape phone: `top: -16`,
+                     * `bottom: 436`. The footer button and anything above the fold are then not
+                     * off-screen but *unreachable*, which is the kind of break that never shows in a
+                     * portrait screenshot. Ten of this app's dialogs had already worked around it
+                     * with their own `max-h`; seventeen had not.
+                     *
+                     * `dvh`, not `vh`: a mobile browser's `vh` excludes the address bar, which is
+                     * the ~60px that decides this on exactly the devices it breaks on.
+                     *
+                     * A call site that scrolls its own body still says so — `max-h-[min(88vh,720px)]
+                     * overflow-hidden` is the pattern, and `twMerge` lets both win over these.
+                     */
+                    'max-h-[calc(100dvh-2rem)] overflow-y-auto',
                     'rounded-2xl border border-separator-default bg-background-subtle',
                     'shadow-2xl outline-none',
                     // `scale`, not `transform`: Tailwind v4's `scale-*` set the `scale`
@@ -88,7 +117,23 @@ export function DialogDescription({ className, ...props }: BaseDialog.Descriptio
     )
 }
 
-/** `SheetButtonGroup` 50:12963 — gap 8, children fill. */
+/**
+ * `SheetButtonGroup` 50:12963 — gap 8, children fill.
+ *
+ * ## "Fill" is the **cross** axis, and reading it as `flex-1` squashed every stacked footer
+ *
+ * This applied `[&>*]:flex-1` to both layouts. In `side-by-side` that is right: a row's main axis is
+ * horizontal, so the children share the width. In `stacked` the main axis is **vertical**, so the
+ * same class made each button `flex: 1 1 0%` in height — its own `h-12` was overridden by a share of
+ * whatever space the column happened to have, and a `size="large"` button measured **26px**.
+ *
+ * It went unnoticed because the only stacked footers in the app were single-button ones inside
+ * dialogs tall enough to look plausible, and `ConfirmDialog` — the component that would have shown it
+ * at a glance — is `side-by-side`. Found by measuring a rendered button rather than by reading, which
+ * is the only way a layout bug that produces a *smaller correct-looking button* ever surfaces.
+ *
+ * So each layout now fills the axis it actually has: width in a column, main-axis share in a row.
+ */
 export function DialogFooter({
     layout = 'stacked',
     className,
@@ -97,8 +142,8 @@ export function DialogFooter({
     return (
         <div
             className={cn(
-                'flex gap-2 [&>*]:flex-1',
-                layout === 'stacked' ? 'flex-col' : 'flex-row',
+                'flex gap-2',
+                layout === 'stacked' ? 'flex-col [&>*]:w-full' : 'flex-row [&>*]:flex-1',
                 className,
             )}
             {...props}

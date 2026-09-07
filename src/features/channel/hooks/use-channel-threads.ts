@@ -1,10 +1,10 @@
 'use client'
 
 import { useAuth } from '@features/auth'
+import { nextPageParam, type PageCursor } from '@shared/lib/api/page-cursor'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { channelApi, channelKeys, type ThreadKind } from '../api/channel-api'
 import type { ChannelThread } from '../api/types'
-import { nextPageParam, type ThreadCursor } from '../lib/next-page-param'
 
 /**
  * A channel's posts or media, paginated over the `next` cursor.
@@ -34,7 +34,7 @@ export function useChannelThreads({
 
     const query = useInfiniteQuery({
         queryKey: channelKeys.threads(slug, kind, activeId),
-        initialPageParam: null as ThreadCursor | null,
+        initialPageParam: null as PageCursor | null,
         queryFn: ({ pageParam, signal }) =>
             channelApi.getThreads({
                 slug,

@@ -1,15 +1,31 @@
 import { env } from '@shared/config/env'
 import { ApiError } from '@shared/lib/api/errors'
+import { ANON_SCOPE, CACHE_TTL, invalidateETagCache } from '@shared/lib/api/interceptors/etag'
 import { createApiModel } from '@shared/lib/api/model'
+import type { PageCursor } from '@shared/lib/api/page-cursor'
 import { BLOCKED_FIRST_PAGE, type BlockedAccountsPage } from '../lib/blocked-accounts-page'
-import type { ThreadCursor } from '../lib/next-page-param'
+import {
+    FOLLOW_REQUESTS_COUNT_PAGE,
+    FOLLOW_REQUESTS_FIRST_PAGE,
+    type FollowRequestsPage,
+} from '../lib/follow-requests-page'
+import {
+    FOLLOWED_LIVES_LIMIT,
+    FOLLOWING_FIRST_PAGE,
+    type FollowedChannelsPage,
+} from '../lib/following-page'
 import {
     type Channel,
     type ChannelPrivacy,
     type ChannelThread,
+    type FollowedLive,
+    type FollowedOrdering,
     normalizeBlockedAccounts,
     normalizeCategoryNames,
     normalizeChannel,
+    normalizeFollowedChannels,
+    normalizeFollowedLives,
+    normalizeFollowRequests,
     normalizeSocialPlatforms,
     type Paginated,
     parseAckPrivacy,
@@ -18,6 +34,28 @@ import {
 
 /** Channel service: `${W_API}/core`. */
 const api = createApiModel({ apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN}/core` })
+
+/**
+ * Forget the cached `v3/channel/my-channel/` body for one account — **on the `premium_info` frame**,
+ * and only then.
+ *
+ * The trap `forgetPremiumInfoCache` and `forgetMyMembershipsCache` were written for (**B72**), on a
+ * third endpoint. `invalidateQueries` alone looks as though it should be enough and is not: the
+ * refetch carries the `If-None-Match` this client still holds, the service answers `304` because
+ * *its* validator has not moved, and `apiClient` replays the cached body — so an account that has
+ * just bought Premium is re-told it has none.
+ *
+ * That matters more here than for the expiry date, because `is_premium` from this body is what the
+ * **whole app** reads: the drawer's gold profile card, the avatar's ring and crown, and `/premium`'s
+ * own hero branch and plan grid. A stale `false` leaves a paying reader looking at the offer.
+ *
+ * Aimed at the **event**, not the endpoint — the same trade the premium helper states. Every other
+ * read of `my-channel` is an ordinary conditional GET and stays one; making the endpoint
+ * unconditional would pay a full body on every visit to be right for a few seconds after a purchase.
+ */
+export function forgetMyChannelCache(accountId: string | null) {
+    return invalidateETagCache(accountId ?? ANON_SCOPE, `${api.apiBase}/v3/channel/my-channel/`)
+}
 
 /**
  * Query keys for the channel feature.
@@ -48,8 +86,44 @@ export const channelKeys = {
      * The signed-in account's blocked list. Account-scoped for the same reason as the
      * rest — it is a *personal* list, and an un-scoped key would hand account B account
      * A's blocks the moment someone uses the switcher.
+     *
+     * `q` is **in the key**, so a searched list is its own cache entry rather than
+     * overwriting the unfiltered one — which is what makes clearing the field instant
+     * instead of a request. The empty term is the unfiltered list's key, so it is the
+     * default and every existing call site keeps meaning what it meant.
      */
-    blocks: (accountId: string | null) => ['channel', 'blocks', accountId ?? 'anon'] as const,
+    blocks: (accountId: string | null, q = '') =>
+        ['channel', 'blocks', accountId ?? 'anon', q] as const,
+    /**
+     * Every search's list for one account — the prefix `blocks` extends.
+     *
+     * Invalidation scope, and it exists because a row removed from the *searched* list is
+     * still sitting in the unfiltered one: they are separate entries now, and a 60s
+     * `staleTime` is long enough for a reader to clear the field and be shown the account
+     * they just unblocked, with an Unblock button that 404s.
+     */
+    blocksAll: (accountId: string | null) => ['channel', 'blocks', accountId ?? 'anon'] as const,
+    /**
+     * The pending follow requests for the signed-in account's own space. Account-scoped like
+     * the rest, and for the sharper version of the same reason: it is a list of people asking
+     * to see a *protected* space, so handing account B account A's copy after a switch would
+     * show one account's private list to another.
+     */
+    followRequests: (accountId: string | null) =>
+        ['channel', 'follow-requests', accountId ?? 'anon'] as const,
+    /**
+     * How many are pending — the drawer's badge, and **its own key on purpose.**
+     *
+     * It is not the list's key with a different page size: the drawer asks for one row and the
+     * screen asks for twenty, so sharing a key would have whichever mounted second overwrite
+     * the other's pages. Keeping them apart costs one small request and means the badge cannot
+     * truncate the list to a single row (or the list inflate the badge's payload to twenty).
+     *
+     * The two are kept in step by invalidation instead — every accept and decline invalidates
+     * this key, which is what makes the badge drop as rows leave the screen.
+     */
+    followRequestsCount: (accountId: string | null) =>
+        ['channel', 'follow-requests-count', accountId ?? 'anon'] as const,
     /**
      * The two option lists the edit-profile form fills its pickers from.
      *
@@ -59,6 +133,35 @@ export const channelKeys = {
      * identical body. The rule the rest of the file follows ("personalised payload ⇒ account in
      * the key") is what says these two are different, not an exception to it.
      */
+    /**
+     * The spaces this account follows, for one **ordering** — `/following`.
+     *
+     * Account-scoped like every other personal list here. The ordering is *in* the key for the
+     * reason `blocks` puts its search term there: the two orderings are different lists, so
+     * switching between them must not have the second overwrite the first's pages, and switching
+     * back must be instant rather than a request.
+     */
+    followed: (accountId: string | null, ordering: string) =>
+        ['channel', 'followed', accountId ?? 'anon', ordering] as const,
+    /**
+     * Every ordering's list for one account — the prefix `followed` extends.
+     *
+     * Invalidation scope, and it is what pin, mute and unfollow actually write to: an unfollowed
+     * space is still sitting in the *other* ordering's cached pages, and a 60s `staleTime` is long
+     * enough for a reader to flip the sort and be shown a space they just unfollowed, with a
+     * Unfollow row in its menu that now 404s.
+     */
+    followedAll: (accountId: string | null) =>
+        ['channel', 'followed', accountId ?? 'anon'] as const,
+    /**
+     * Which of them are on air — the Live now block at the top of the same screen.
+     *
+     * Its own key rather than a field on the list's, because it is its own request against its own
+     * endpoint with its own page size, and it changes on a completely different clock: a stream
+     * starts, and no follow has moved.
+     */
+    followedLives: (accountId: string | null) =>
+        ['channel', 'followed-lives', accountId ?? 'anon'] as const,
     categories: () => ['channel', 'categories'] as const,
     socialPlatforms: () => ['channel', 'social-platforms'] as const,
 }
@@ -99,16 +202,6 @@ const FIRST_PAGE: Record<ThreadKind, Record<string, unknown>> = {
     posts: { limit: 20, pinned: 0 },
     media: { limit: 21, pinned: 0, media_type: ['image', 'video'] },
 }
-
-/**
- * Axios 1.x serialises `{ media_type: ['image','video'] }` as `media_type[]=image&…`, and DRF
- * wants the bare key repeated. `indexes: null` is the flag that produces that.
- *
- * Getting this wrong is a **silent** failure, which is why it is a named constant with a test:
- * the server ignores the bracketed key, returns unfiltered results, and the media tab fills
- * with posts. It looks like it works. See B12.
- */
-const REPEAT_ARRAY_PARAMS = { paramsSerializer: { indexes: null } } as const
 
 /** The slug comes straight off the URL, so it is encoded at every use (DoD §8). */
 const channelPath = (slug: string, suffix = '') =>
@@ -175,15 +268,16 @@ export const channelApi = {
         slug: string
         isOwner: boolean
         kind: ThreadKind
-        cursor?: ThreadCursor | null
+        cursor?: PageCursor | null
         accountId?: string | null
         signal?: AbortSignal
     }) {
         const path = isOwner ? 'v3/channel/my-channel/threads/' : channelPath(slug, 'threads/')
+        // Array-valued params repeat their key rather than being bracketed — `apiClient` sets
+        // that for every model (`paramsSerializer`), which is what makes a `PageCursor` survive.
         return api.get<Paginated<ChannelThread>>(path, cursor ?? FIRST_PAGE[kind], {
             signal,
             ...(accountId ? { accountId } : {}),
-            ...REPEAT_ARRAY_PARAMS,
         })
     },
 
@@ -225,13 +319,125 @@ export const channelApi = {
      * reader will assume there is and "fix" this, so the two callers are named for what they do
      * and both point here. See B15 for whether a bare `{}` is idempotent.
      */
-    follow(slug: string, notification?: boolean) {
+    follow(slug: string, notification?: boolean, accountId?: string | null) {
         const body = notification === undefined ? {} : { notification }
-        return api.post(channelPath(slug, 'follow/'), body)
+        return api.post(channelPath(slug, 'follow/'), body, accountId ? { accountId } : undefined)
     },
 
-    unfollow(slug: string) {
-        return api.post(channelPath(slug, 'unfollow/'), {})
+    /**
+     * `accountId` is optional and **`/following` is the one caller that must pass it.**
+     *
+     * Everywhere else this fires on the press, so the account that is active when the request is
+     * built is the account that was active when the button was pressed, and reading it from the
+     * session is correct. `/following` defers the request by five seconds so an Undo can cancel it
+     * (`useFollowedChannels`), and five seconds is long enough to use the account switcher — at
+     * which point an un-scoped request unfollows the space **on the wrong account**. The write has
+     * to land on the account that was active when it was pressed, which is the rule
+     * `updatePrivacy` and `updateMyChannel` already state for their own reasons.
+     */
+    unfollow(slug: string, accountId?: string | null) {
+        return api.post(channelPath(slug, 'unfollow/'), {}, accountId ? { accountId } : undefined)
+    },
+
+    /**
+     * Pin a followed space to the top of `/following`.
+     *
+     * Its own route (`channels/{slug}/pin/`), not a field on the follow — which is why pinning is
+     * not `follow(slug, …)` with a third argument: the two writes have separate endpoints, separate
+     * failure messages and, on the wire, nothing in common but the slug.
+     *
+     * A POST with **no body**, and not retried: `apiClient` replays only idempotent methods unless
+     * a call opts in, and B15's question about whether a bare `{}` follow is idempotent applies
+     * here for the same reason — nothing tells this client the backend deduplicates it.
+     */
+    pinChannel(slug: string, accountId?: string | null) {
+        return api.post(channelPath(slug, 'pin/'), undefined, accountId ? { accountId } : undefined)
+    },
+
+    /** The other half. A POST as well — there is no DELETE on the pin. */
+    unpinChannel(slug: string, accountId?: string | null) {
+        return api.post(
+            channelPath(slug, 'unpin/'),
+            undefined,
+            accountId ? { accountId } : undefined,
+        )
+    },
+
+    /**
+     * One page of the spaces this bearer follows — `/following`'s list.
+     *
+     * `accountId` is threaded through rather than read from the active session when the request is
+     * built, for the reason `getBlockedAccounts` gives: this is a personal list, and an account
+     * switch mid-flight must not have page two answered as somebody else.
+     *
+     * `ordering` is merged **after** the cursor, exactly as `q` is on the blocked list and for the
+     * same reason: page two's params come from the `next` URL the backend built, which echoes the
+     * ordering back — so where it is already there the two agree, and where the cursor is our own
+     * `{ page, page_size }` fallback this is what carries it. Losing it on page two would silently
+     * re-sort the list mid-scroll and repeat rows across pages.
+     *
+     * Legacy also sends `q=''` on every request. Dropped: `createApiModel` strips empty params, so
+     * it was never on the wire, and there is no search field on this screen to fill it.
+     *
+     * Normalised here rather than at the hook, so the cache-surgery helpers and the view both see
+     * `FollowedChannel[]` and never a raw row. `count` is coerced because it is what the limit
+     * warning compares against and what the screen announces; `next` is passed through untouched,
+     * since `nextFollowedCursor` needs to tell absent from explicitly null.
+     */
+    async getFollowedChannels({
+        cursor,
+        ordering,
+        accountId,
+        signal,
+    }: {
+        cursor?: PageCursor | null
+        ordering: FollowedOrdering
+        accountId?: string | null
+        signal?: AbortSignal
+    }): Promise<FollowedChannelsPage> {
+        const body = await api.get<Partial<Paginated<unknown>>>(
+            'v3/channel/followed-channels/',
+            { ...(cursor ?? FOLLOWING_FIRST_PAGE), ordering },
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        const results = normalizeFollowedChannels(body?.results)
+        const count = Number(body?.count)
+        return {
+            // `results.length` and not `0` as the fallback, as on the other two lists: a payload
+            // with rows but no `count` should say how many it has rather than claim to be empty.
+            results,
+            count: Number.isFinite(count) && count >= 0 ? count : results.length,
+            next: body?.next,
+        }
+    },
+
+    /**
+     * Which followed spaces are on air right now — the Live now block.
+     *
+     * **Not paginated, deliberately.** Legacy asks for `limit=10` and its block shows five with a
+     * "Show more" that reveals the rest; there is no cursor and no second request, because this is
+     * a strip at the top of a screen whose subject is the list below it. Ten is legacy's number and
+     * it stays — the expand/collapse is presentation, and `useFollowedLives` owns it.
+     *
+     * The one endpoint in this file that takes `limit` rather than `page`/`page_size`, which is why
+     * it does not go through `PagedList`: there is no `next` to follow and no total to report.
+     *
+     * A failure is a **rejection**, not an empty array: the block is optional, and the view drops it
+     * on error rather than telling a reader that nobody they follow is live when it does not know.
+     */
+    async getFollowedLives({
+        accountId,
+        signal,
+    }: {
+        accountId?: string | null
+        signal?: AbortSignal
+    } = {}): Promise<FollowedLive[]> {
+        const body = await api.get<Partial<Paginated<unknown>>>(
+            'v3/channel/followed-channels/lives/',
+            { limit: FOLLOWED_LIVES_LIMIT },
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        return normalizeFollowedLives(body?.results)
     },
 
     /**
@@ -358,7 +564,9 @@ export const channelApi = {
         const body = await api.get<Partial<Paginated<unknown>>>(
             'v3/channel/categories/',
             { page: 1, page_size: 100 },
-            { signal },
+            // A taxonomy the backoffice edits, identical for every reader and for a signed-out
+            // one — nothing here is the account's.
+            { signal, cache: { persist: true, shared: true, ttlMs: CACHE_TTL.day } },
         )
         return normalizeCategoryNames(body?.results)
     },
@@ -368,7 +576,12 @@ export const channelApi = {
         const body = await api.get<Partial<Paginated<unknown>>>(
             'v3/channel/my-channel/social-links/supported-platforms/',
             { page: 1, page_size: 100 },
-            { signal },
+            /*
+             * Persisted despite the `my-channel/` path: the body is `{ value, name }` per platform —
+             * the list of platforms Tevi supports, not this space's links. The path segment says
+             * where the write goes, not whose data comes back.
+             */
+            { signal, cache: { persist: true, shared: true, ttlMs: CACHE_TTL.day } },
         )
         return normalizeSocialPlatforms(body?.results)
     },
@@ -407,16 +620,30 @@ export const channelApi = {
      */
     async getBlockedAccounts({
         cursor,
+        q,
         accountId,
         signal,
     }: {
-        cursor?: ThreadCursor | null
+        cursor?: PageCursor | null
+        /**
+         * The search term, already trimmed and debounced by the hook. **A guess about the
+         * contract** — what the backend matches (display name? handle? both?) is B76.
+         * Empty means unfiltered, and `createApiModel` strips it rather than sending `q=`.
+         */
+        q?: string
         accountId?: string | null
         signal?: AbortSignal
     }): Promise<BlockedAccountsPage> {
         const body = await api.get<Partial<Paginated<unknown>>>(
             'v3/channel/my-channel/blocks/',
-            cursor ?? BLOCKED_FIRST_PAGE,
+            /*
+             * `q` merged **after** the cursor, and that order is the point: page two's params
+             * come from the `next` URL the backend built, which echoes the term back — so on
+             * the paths where it is already there the two agree, and on the paths where the
+             * cursor is our own `{ page, page_size }` fallback this is what carries it. Losing
+             * it on page two would silently widen the list mid-scroll.
+             */
+            { ...(cursor ?? BLOCKED_FIRST_PAGE), ...(q ? { q } : {}) },
             { signal, ...(accountId ? { accountId } : {}) },
         )
         const results = normalizeBlockedAccounts(body?.results)
@@ -428,6 +655,112 @@ export const channelApi = {
             count: Number.isFinite(count) && count >= 0 ? count : results.length,
             next: body?.next,
         }
+    },
+
+    /**
+     * One page of the people asking to follow this bearer's **own** space.
+     *
+     * `my-channel/follow-requests/` — legacy's endpoint and its page size, unchanged. Only a
+     * protected space can have any: a Follow on a protected space becomes `follow_requested`
+     * rather than `is_followed` (see `useChannelActions`), and this is the queue that produces.
+     *
+     * `accountId` is threaded through rather than read from the active session when the request
+     * is built, for the reason `getBlockedAccounts` gives: this is a personal list, and an
+     * account switch mid-flight must not have page two answered as somebody else.
+     *
+     * Normalised here rather than at the hook, so the cache-surgery helpers and the view both
+     * see `FollowRequest[]` and never a raw row. `count` is coerced because it is what the
+     * drawer's badge prints and what the screen announces; `next` is passed through untouched,
+     * since `nextFollowRequestCursor` needs to tell absent from explicitly null.
+     */
+    async getFollowRequests({
+        cursor,
+        accountId,
+        signal,
+    }: {
+        cursor?: PageCursor | null
+        accountId?: string | null
+        signal?: AbortSignal
+    } = {}): Promise<FollowRequestsPage> {
+        const body = await api.get<Partial<Paginated<unknown>>>(
+            'v3/channel/my-channel/follow-requests/',
+            cursor ?? FOLLOW_REQUESTS_FIRST_PAGE,
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        const results = normalizeFollowRequests(body?.results)
+        const count = Number(body?.count)
+        return {
+            results,
+            // `results.length` and not `0` as the fallback, as on the blocked list: a payload
+            // with rows but no `count` should say how many it has rather than claim to be empty.
+            count: Number.isFinite(count) && count >= 0 ? count : results.length,
+            next: body?.next,
+        }
+    },
+
+    /**
+     * How many follow requests are pending — the number on the drawer's badge.
+     *
+     * The same endpoint asked for **one row**, because there is no count-only route; legacy does
+     * exactly this (`getFollowRequests(1, 1)`). `results` is dropped on the floor here on
+     * purpose: a caller that renders rows must use `getFollowRequests`, and returning a
+     * one-row page from a function called `…Count` is how a badge ends up being the list.
+     *
+     * `-1` is not a fallback anywhere here — a count that failed to load is a rejected promise,
+     * so the badge can be absent rather than claim zero.
+     */
+    async getFollowRequestsCount({
+        accountId,
+        signal,
+    }: {
+        accountId?: string | null
+        signal?: AbortSignal
+    } = {}): Promise<number> {
+        const body = await api.get<Partial<Paginated<unknown>>>(
+            'v3/channel/my-channel/follow-requests/',
+            FOLLOW_REQUESTS_COUNT_PAGE,
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        const count = Number(body?.count)
+        /*
+         * A payload with no usable `count` falls back to what it *did* carry — `results.length`,
+         * so 0 or 1 — rather than to 0. It is a badge: "at least one" is the useful half of the
+         * answer and it is the half this can still be sure of.
+         */
+        if (Number.isFinite(count) && count >= 0) return count
+        return Array.isArray(body?.results) ? body.results.length : 0
+    },
+
+    /**
+     * Let one person in. `id` is the **request's** id, not the requester's — see
+     * `followRequestSchema` and B77.
+     *
+     * A POST with no body, and it is not retried: `apiClient` replays only idempotent methods
+     * unless a call opts in (`{ retry: true }`), and accepting twice is not a thing this client
+     * knows the backend tolerates.
+     */
+    acceptFollowRequest(requestId: string) {
+        return api.post(
+            `v3/channel/my-channel/follow-requests/${encodeURIComponent(requestId)}/accept/`,
+        )
+    },
+
+    /**
+     * Turn one person away. **A DELETE on the request itself** — there is no `decline/` verb;
+     * declining is removing the row, which is legacy's own shape here.
+     */
+    declineFollowRequest(requestId: string) {
+        return api.del(`v3/channel/my-channel/follow-requests/${encodeURIComponent(requestId)}/`)
+    },
+
+    /** Let everybody in. Server-side bulk — the client never loops over the loaded pages. */
+    acceptAllFollowRequests() {
+        return api.post('v3/channel/my-channel/follow-requests/accept-all/')
+    },
+
+    /** Turn everybody away. A DELETE, like the single decline it repeats. */
+    declineAllFollowRequests() {
+        return api.del('v3/channel/my-channel/follow-requests/decline-all/')
     },
 }
 

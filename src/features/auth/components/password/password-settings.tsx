@@ -83,6 +83,7 @@ export function PasswordSettings() {
                     description={t('password_signed_out_description')}
                 />
                 <Button
+                    data-testid="auth-password-sign-in"
                     size="large"
                     onClick={openLoginDialog}
                     className={cn('self-start active:scale-[0.99]', RISE)}
@@ -129,7 +130,12 @@ export function PasswordSettings() {
                     <AlertContent>
                         <AlertTitle>{t('password_load_failed')}</AlertTitle>
                         <AlertActions>
-                            <Button variant="secondary" size="small" onClick={() => refetch()}>
+                            <Button
+                                data-testid="auth-password-retry"
+                                variant="secondary"
+                                size="small"
+                                onClick={() => refetch()}
+                            >
                                 {t('common_retry')}
                             </Button>
                         </AlertActions>

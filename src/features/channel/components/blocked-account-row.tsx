@@ -1,10 +1,10 @@
 'use client'
 
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
-import { CardUserHeaderVerified } from '@shared/ui/card-user-header'
 import {
     ListRowRule,
     ListUserItem,
@@ -19,9 +19,8 @@ import {
     ListUserItemPreview,
 } from '@shared/ui/list'
 import { Loader } from '@shared/ui/loader'
-import Image from 'next/image'
 import Link from 'next/link'
-import { type BlockedAccount, blockedUserName } from '../api/types'
+import { type BlockedAccount, listUserName } from '../api/types'
 /*
  * Aliased at the import, not renamed at the source: the function is a short localised date
  * and `channel-header.tsx` is entitled to call it what it uses it for. At *this* call site the
@@ -93,7 +92,7 @@ export function BlockedAccountRow({
     const { t } = useTranslation()
 
     const { user } = entry
-    const name = blockedUserName(user)
+    const name = listUserName(user)
     const label = name || (user.slug ? `@${user.slug}` : t('blocked_accounts_unknown_user'))
     const blockedOn = formatShortDate(entry.created_at, locale)
     const verifiedImage = user.verified_tick_badge?.image ?? null
@@ -102,20 +101,10 @@ export function BlockedAccountRow({
         <>
             <ListUserItemNameRow className="w-full">
                 <ListUserItemName premium={user.is_premium}>{label}</ListUserItemName>
-                {/* The API hands back a badge *image*, so it is a CDN asset rather than the
-                    sprite's `badge-check`; the DS-drawn mark is the fallback for a verified
-                    account whose payload carries no custom art. Mirror of `ChannelIdentity`. */}
-                {verifiedImage ? (
-                    <Image
-                        src={verifiedImage}
-                        alt={t('channel_verified')}
-                        width={18}
-                        height={18}
-                        className="flex-none"
-                    />
-                ) : user.verified_tick_badge ? (
-                    <CardUserHeaderVerified title={t('channel_verified')} />
-                ) : null}
+                {/* The badge *image* is the fact, and the gate lives in `VerifiedBadge`: the
+                    payload object is present (`{}`) on an ordinary unverified account, so there is
+                    nothing to draw without art — no sprite fallback. */}
+                <VerifiedBadge image={verifiedImage} size={24} />
             </ListUserItemNameRow>
             {user.slug && <ListUserItemHandle>@{user.slug}</ListUserItemHandle>}
         </>
@@ -158,7 +147,20 @@ export function BlockedAccountRow({
              * for a control sitting on one.
              */}
             <ListUserItem className="bg-(--background-surface) transition-colors hover:bg-(--background-segment)">
-                <ListUserItemAvatar>
+                {/*
+                 * `items-center` when the row is a two-line one, matching the text column beside it.
+                 *
+                 * The DS slot is `items-start`, and that is right where it comes from: a
+                 * conversation row is a name, a message preview and a timestamp, so the avatar
+                 * belongs at the top of a block that can grow. This row has **two short lines** and
+                 * centres them (`ListUserItemPreview` below), so a top-aligned avatar sat visibly
+                 * higher than the name it belongs to — with the row's own padding left over
+                 * underneath it.
+                 *
+                 * Tied to the same condition as the text: with a "blocked on" date the row grows a
+                 * third line and the DS's top alignment is correct again.
+                 */}
+                <ListUserItemAvatar className={blockedOn ? undefined : 'items-center'}>
                     <AnimatedAvatar
                         size="large"
                         thumb={user.avatar.thumb}
@@ -181,6 +183,8 @@ export function BlockedAccountRow({
                         <ListUserItemInfo>
                             {user.slug ? (
                                 <Link
+                                    data-testid="channel-blocked-row-link"
+                                    data-channel-slug={user.slug}
                                     href={toChannelPath(user.slug)}
                                     className="flex w-full min-w-0 flex-col items-start rounded-(--radius-sm) no-underline outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
                                 >
@@ -198,7 +202,8 @@ export function BlockedAccountRow({
 
                         <ListUserItemCta className="self-center">
                             <Button
-                                variant="secondary"
+                                data-testid="channel-unblock"
+                                variant="ghost"
                                 size="medium"
                                 /*
                                  * Two kinds of unavailable, and they must not be the same
@@ -230,13 +235,35 @@ export function BlockedAccountRow({
                                  */
                                 aria-label={t('blocked_accounts_unblock_name', { name: label })}
                                 /*
+                                 * Legacy's `variant='text'` in the brand purple (`#501BC0`),
+                                 * which the DS Button has no variant for: `ghost` is the
+                                 * boxless one — transparent surface, no border, hover tint —
+                                 * and the purple is an override at the call site, the same
+                                 * shape `MembershipDetailDialog`'s Renew button takes rather
+                                 * than a sixth variant `shared/ui` never ported.
+                                 *
+                                 * `--primary-600`, not legacy's literal `--primary-500`: 500
+                                 * is `#501bc0` in *both* themes, so as ink on the dark row it
+                                 * is unreadable. 600 is the step that inverts (`#4316a0` /
+                                 * `#8a4fe3`) and clears AA in both — see that dialog for the
+                                 * measurements. Hover is `--primary-100`, the ramp's own pale
+                                 * step, in place of `ghost`'s neutral zinc.
+                                 *
+                                 * `-mx-2` against `px-2`: with no box to see, the label — not
+                                 * the hit area — is what has to line up with the row's own
+                                 * `pe-4`. The padding stays as tap target and reaches the
+                                 * edge; the text sits at 16px like every other row edge.
+                                 *
                                  * `aria-disabled` is an attribute, not a state the DS Button
                                  * paints — its variant classes key off `:disabled`. So the
-                                 * soft form has to repeat the same two tokens, including
-                                 * over the hover rule, or a button that cannot be pressed
-                                 * still lights up under the cursor.
+                                 * soft form has to repeat the same tokens, including over the
+                                 * hover rule, or a button that cannot be pressed still lights
+                                 * up under the cursor.
                                  */
-                                className="aria-disabled:cursor-not-allowed aria-disabled:bg-(--button-secondary-bg-disabled) aria-disabled:text-(--button-secondary-text-disabled) aria-disabled:hover:bg-(--button-secondary-bg-disabled)"
+                                className={cn(
+                                    '-mx-2 px-2 text-(--primary-600) hover:not-disabled:bg-(--primary-100)',
+                                    'aria-disabled:cursor-not-allowed aria-disabled:text-(--text-disabled) aria-disabled:hover:bg-transparent',
+                                )}
                             >
                                 {/* The label stays put and the loader takes the leading slot,
                                     so the button does not change width mid-request and shove

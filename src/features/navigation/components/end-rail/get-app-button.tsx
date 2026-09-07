@@ -45,6 +45,7 @@ export function GetAppButton() {
              * `small` is 28 and would leave a 24 glyph nearly filling the control.
              */}
             <Button
+                data-testid="navigation-end-rail-get-app"
                 variant="ghost"
                 size="medium"
                 className="gap-1 px-1"
@@ -53,7 +54,7 @@ export function GetAppButton() {
                 <PhoneMark className="size-6 flex-none" />
                 <span className="type-body-strong">{t('rail_get_app')}</span>
             </Button>
-            <GetAppDialog open={open} onOpenChange={setOpen} />
+            <GetAppDialog testId="navigation-get-app" open={open} onOpenChange={setOpen} />
         </>
     )
 }

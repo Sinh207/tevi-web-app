@@ -1,9 +1,8 @@
 'use client'
 
-import { useTranslation } from '@shared/i18n/use-translation'
+import { DialogCloseButton } from '@shared/components/dialog-close-button'
 import { eventBus } from '@shared/lib/event-bus'
-import { Dialog, DialogClose, DialogContent } from '@shared/ui/dialog'
-import { Icon } from '@shared/ui/icon'
+import { Dialog, DialogContent } from '@shared/ui/dialog'
 import { useEffect } from 'react'
 import { useAuthStore } from '../store/auth-store'
 import { LoginForm } from './login-form'
@@ -28,7 +27,6 @@ import { LoginForm } from './login-form'
  * password-reset form, with an account-creation consent line under it.
  */
 export function LoginDialog() {
-    const { t } = useTranslation()
     const open = useAuthStore(s => s.isLoginDialogOpen)
     const close = useAuthStore(s => s.closeLoginDialog)
     /**
@@ -71,12 +69,10 @@ export function LoginDialog() {
                     focusable element on open. With the close button written at the top, the
                     thing focused when a sign-in dialog appeared was the way out of it, ring
                     and all. Now that is "Sign in with Apple". */}
-                <DialogClose
-                    aria-label={t('common_close')}
-                    className="absolute end-3 top-3 flex size-8 cursor-pointer items-center justify-center rounded-full text-text-body transition-colors hover:bg-background-subtle hover:text-text-title"
-                >
-                    <Icon name="xmark" size={18} />
-                </DialogClose>
+                <DialogCloseButton
+                    data-testid="auth-login-close"
+                    className="absolute end-2 top-2"
+                />
             </DialogContent>
         </Dialog>
     )

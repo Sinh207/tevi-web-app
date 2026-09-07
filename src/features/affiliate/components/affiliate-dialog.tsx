@@ -186,11 +186,17 @@ export function AffiliateDialog({
                 <DialogContent className="w-[402px] gap-0 overflow-hidden p-0">
                     <header className="relative flex h-12 flex-none items-center justify-between px-4">
                         {step === 'list' ? (
-                            <Button variant="ghost" size="small" onClick={() => dismiss(false)}>
+                            <Button
+                                data-testid="affiliate-dismiss"
+                                variant="ghost"
+                                size="small"
+                                onClick={() => dismiss(false)}
+                            >
                                 {t('common_cancel')}
                             </Button>
                         ) : (
                             <Button
+                                data-testid="affiliate-back-to-list"
                                 variant="ghost"
                                 size="small"
                                 iconOnly
@@ -255,6 +261,7 @@ export function AffiliateDialog({
                     {step === 'detail' && selected ? (
                         <footer className="flex flex-none flex-col items-center gap-2 border-t border-t-(--separator-default) bg-(--background-surface) p-4">
                             <Button
+                                data-testid="affiliate-primary-action"
                                 variant="accent"
                                 size="large"
                                 fullWidth
@@ -307,6 +314,7 @@ export function AffiliateDialog({
             />
 
             <ConfirmDialog
+                testId="affiliate-leave-confirm"
                 open={leaveOpen}
                 onOpenChange={next => !next && setLeaveOpen(false)}
                 title={t('affiliate_leave_title')}

@@ -79,8 +79,15 @@ export function LegalToc({
                 {items.map((item, index) => {
                     const active = item.id === activeId
                     return (
-                        <li key={item.id} className={chips ? 'snap-start' : undefined}>
+                        <li
+                            data-testid="legal-toc-item"
+                            data-row-key={item.id}
+                            key={item.id}
+                            className={chips ? 'snap-start' : undefined}
+                        >
                             <a
+                                data-testid="legal-toc-link"
+                                data-row-key={item.id}
                                 href={`#${item.id}`}
                                 aria-current={active ? 'true' : undefined}
                                 className={cn(

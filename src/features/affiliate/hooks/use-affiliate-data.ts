@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@features/auth'
+import { keepFor } from '@shared/lib/api/query-client'
 import { useQuery } from '@tanstack/react-query'
 import { affiliateApi, affiliateKeys } from '../api/affiliate-api'
 import type { CampaignStats, CurrentCampaign, Program } from '../api/types'
@@ -61,7 +62,9 @@ export function useAffiliateData(enabled: boolean): AffiliateData {
         queryKey: affiliateKeys.programs(activeId),
         queryFn: ({ signal }) => affiliateApi.getPrograms({ accountId: activeId, signal }),
         enabled: on,
-        staleTime: STALE_TIME,
+        // The only one of the three that is a catalogue rather than this account's position in it,
+        // so it is the one whose `staleTime` is worth holding past the 5-minute default `gcTime`.
+        ...keepFor(STALE_TIME),
     })
 
     const current = useQuery({

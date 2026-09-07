@@ -3,13 +3,15 @@
 import { AccountSwitcherDialog, AuthProvider, LoginDialog, SplashGate } from '@features/auth'
 import { BalanceProvider } from '@features/balance'
 import { MyChannelProvider } from '@features/channel'
+import { MiniAppHost } from '@features/mini-app'
+import { PaymentProvider } from '@features/payment'
 import { PermissionProvider } from '@features/permission'
 import { RealtimeProvider } from '@features/realtime'
 
 /**
  * Everything that depends on there being a session (outer → inner):
  *
- *   Auth → Realtime → Permission → Balance → MyChannel → children,  plus the dialogs and the splash cover
+ *   Auth → Realtime → Permission → Balance → Payment → MyChannel → children,  plus the dialogs and the splash cover
  *
  * Sits **below** `AppProviders` (QueryClient/Theme/Locale), because all three of these are
  * queries keyed on the active account, and it is mounted by `(web)/layout.tsx` rather than
@@ -61,6 +63,20 @@ import { RealtimeProvider } from '@features/realtime'
  * decision as a pure, tested function — including the two states legacy gets wrong (it
  * blanks the whole app while loading, and pushes to `/500` on any unexpected status).
  *
+ * `PaymentProvider` sits between the two, and both edges are load-bearing. It is **inside
+ * Balance** because a settled payment invalidates `balanceKeys.all` — the figure and both
+ * ledgers — so the balance has to exist above it, and the pair are two halves of one
+ * sentence: Balance answers whether this account can afford something, Payment is how it
+ * comes to be able to. And it is **outside MyChannel** for the reason Balance is: the
+ * create-space gate replaces every route, and it must not stand between a price and the
+ * wallet paying for it. Somebody with no space can still buy Star, top up, or be gifted
+ * Premium; a gate that swallowed the checkout would make the one thing they can do
+ * unreachable.
+ *
+ * It holds the checkout machine, the status dialog and the watcher that finishes a payment
+ * returning from a 3DS or gateway redirect — all three of which have to outlive the screen
+ * that started the payment, which is the whole reason it is a provider and not a hook.
+ *
  * The dialogs stay below it so a gated account can still be signed out of.
  */
 export function SessionProviders({
@@ -92,7 +108,36 @@ export function SessionProviders({
                     `features/permission`. */}
                 <PermissionProvider>
                     <BalanceProvider>
-                        <MyChannelProvider>{children}</MyChannelProvider>
+                        {/* The live checkout: the machine, the status dialog, and the URL watcher
+                            that finishes a payment coming back from a redirect. Inside Balance
+                            because it invalidates it; outside MyChannel because the create-space
+                            gate must not stand between a price and the wallet paying it. See
+                            `features/payment`. */}
+                        <PaymentProvider>
+                            <MyChannelProvider>
+                                {children}
+                                {/* The mini-app player — third-party apps framed inside Tevi
+                                    (`features/mini-app`). An overlay, not a wrapper: it renders
+                                    **nothing** until an app is opened, and the window itself is a
+                                    dynamic import, so a visit that opens none costs one store
+                                    subscription and no bundle.
+
+                                    It is a *sibling of `children`* rather than of the dialogs
+                                    because the bridge reads `myChannel.slug` — the reader's own
+                                    space slug is part of the mini-app URL contract
+                                    (`docs/MINI_APP.md` §3), and `useMyChannel` throws outside its
+                                    provider. That also puts it under the create-space gate, which
+                                    is right: an account with no space has no surface from which to
+                                    open an app in the first place.
+
+                                    Deliberately **not** above the dialogs. Both of those can be
+                                    raised *by* a mini app — the sign-in dialog when a guest presses
+                                    Open, the Star purchase sheet when an app asks for one — and the
+                                    player is `z-40` against their `z-50`, so an application is
+                                    never drawn on top of the question it just asked. */}
+                                <MiniAppHost />
+                            </MyChannelProvider>
+                        </PaymentProvider>
                     </BalanceProvider>
                 </PermissionProvider>
             </RealtimeProvider>

@@ -1,12 +1,12 @@
 'use client'
 
 import { Menu } from '@base-ui/react/menu'
+import { ShareDialog } from '@features/share'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { ConfirmDialog } from '@shared/ui/confirm-dialog'
 import { Icon } from '@shared/ui/icon'
 import { useState } from 'react'
-import { toast } from 'sonner'
 import { type ChannelEvent, eventShareUrl } from '../api/events-api'
 import { useCancelEvent } from '../hooks/use-cancel-event'
 import { ChannelEventQrDialog } from './channel-event-qr-dialog'
@@ -31,13 +31,24 @@ import {
  * Which is also why this could not be flattened into a button the way "Leave this MCN" was: that
  * menu had exactly one item, this one genuinely has two or three.
  *
- * ## Share copies rather than opening the share sheet
+ * ## Share opens the sheet now, and the reason it used not to is gone
  *
- * Legacy calls `copyText` and so does this — deliberately, not by omission. `navigator.share` is the
- * better affordance on a phone and the channel bar uses it, but here the row sits inside an open
- * menu: invoking the OS sheet from a menu item means two overlays fighting over focus, and on
- * desktop `navigator.share` mostly does not exist, so the row would do nothing on the surface where
+ * This copied the link to the clipboard, and the argument was about *overlays*: invoking the OS
+ * share sheet from an open menu means two of them fighting over focus, and on a desktop
+ * `navigator.share` mostly does not exist, so the row would have done nothing on the surface where
  * a creator is most likely to be organising events.
+ *
+ * `features/share`'s dialog is neither of those things — it is an ordinary popup raised from a menu
+ * item, exactly as **Get QR Code** in this same menu already is. So the row opens it, and Copy link
+ * survives *inside* it as one of the seven channels, which is where legacy puts it too.
+ *
+ * ⚠ **No content context.** `spaceShareContext` names a space and there is no builder for a live:
+ * legacy has none either (`utils/shareContent.js` builds `post` and `space` only), and this client's
+ * event schema carries a `code` and no id — the field `POST v1/links` would need. So an event shares
+ * through `v1/shorten/`, one plain link for every channel, and the per-channel attribution that a
+ * space share gets is simply not available here. **B97** in `docs/BACKEND_QUESTIONS.md` is where the
+ * question sits: if `content_type: 'live'` takes the event **code** as its `content_id`, this becomes
+ * one line.
  *
  * ## Every write is guarded, and the destructive one twice
  *
@@ -47,6 +58,7 @@ import {
 export function ChannelEventMenu({ event, slug }: { event: ChannelEvent; slug: string }) {
     const { t } = useTranslation()
     const [qrOpen, setQrOpen] = useState(false)
+    const [shareOpen, setShareOpen] = useState(false)
     const [confirmOpen, setConfirmOpen] = useState(false)
     const cancel = useCancelEvent()
 
@@ -55,17 +67,6 @@ export function ChannelEventMenu({ event, slug }: { event: ChannelEvent; slug: s
 
     const url = eventShareUrl(slug, event.code)
     const canCancel = event.status === 'PUBLISHED'
-
-    async function share() {
-        try {
-            await navigator.clipboard.writeText(url)
-            toast.success(t('channel_event_link_copied'), { id: 'channel-event-share' })
-        } catch {
-            // Real, not padding: `navigator.clipboard` is absent on insecure origins and can be
-            // refused by permissions policy. Put the URL in the toast so it can be copied by hand.
-            toast.error(t('channel_event_link_copy_failed', { url }), { id: 'channel-event-share' })
-        }
-    }
 
     return (
         <>
@@ -85,11 +86,16 @@ export function ChannelEventMenu({ event, slug }: { event: ChannelEvent; slug: s
                     <Menu.Positioner side="bottom" align="end" sideOffset={4} className="z-50">
                         {/* 200 wide, against the filter's 160 — legacy's own two numbers. */}
                         <Menu.Popup className={cn('min-w-[200px]', MENU_POPUP)}>
-                            <Menu.Item className={cn(MENU_ITEM, MENU_ITEM_ACTION)} onClick={share}>
+                            <Menu.Item
+                                data-testid="channel-event-share"
+                                className={cn(MENU_ITEM, MENU_ITEM_ACTION)}
+                                onClick={() => setShareOpen(true)}
+                            >
                                 {t('channel_event_share')}
                                 <Icon name="share" size={24} className="flex-none" />
                             </Menu.Item>
                             <Menu.Item
+                                data-testid="channel-event-qr"
                                 className={cn(MENU_ITEM, MENU_ITEM_ACTION)}
                                 onClick={() => setQrOpen(true)}
                             >
@@ -98,6 +104,7 @@ export function ChannelEventMenu({ event, slug }: { event: ChannelEvent; slug: s
                             </Menu.Item>
                             {canCancel && (
                                 <Menu.Item
+                                    data-testid="channel-event-cancel"
                                     className={cn(MENU_ITEM, MENU_ITEM_DESTRUCTIVE)}
                                     onClick={() => setConfirmOpen(true)}
                                 >
@@ -110,16 +117,31 @@ export function ChannelEventMenu({ event, slug }: { event: ChannelEvent; slug: s
                 </Menu.Portal>
             </Menu.Root>
 
+            <ShareDialog
+                open={shareOpen}
+                onOpenChange={setShareOpen}
+                url={url}
+                title={event.title}
+                image={event.images.banner}
+                /* No context — see the note on this file. An event shares through `v1/shorten/`. */
+            />
+
             <ChannelEventQrDialog event={event} url={url} open={qrOpen} onOpenChange={setQrOpen} />
 
             <ConfirmDialog
+                testId="channel-event-cancel-confirm"
                 open={confirmOpen}
                 onOpenChange={setConfirmOpen}
                 title={t('channel_event_cancel_title')}
                 description={t('channel_event_cancel_description')}
                 confirmLabel={t('channel_event_cancel_confirm')}
                 cancelLabel={t('common_close')}
-                onConfirm={() => event.code && cancel.mutate(event.code)}
+                /* Same as the block confirm: `ConfirmDialog` leaves the dismissal to its caller,
+                   so a confirm that only fires the mutation leaves the dialog sitting there. */
+                onConfirm={() => {
+                    setConfirmOpen(false)
+                    if (event.code) cancel.mutate(event.code)
+                }}
                 pending={cancel.isPending}
                 destructive
             />

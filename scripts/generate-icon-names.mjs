@@ -18,7 +18,14 @@ const WEIGHTS = [
     ['duotone-line', 'DuotoneLine'],
 ]
 
-const sprite = readFileSync('design-system/tevi-icons.svg', 'utf8')
+/**
+ * The Figma export plus the overlay of upstream glyphs it does not carry. Both, because
+ * a name only in the overlay still has to be a legal `<Icon name>` — see
+ * `design-system/tevi-icons.extra.svg` for what may live there.
+ */
+const sprite =
+    readFileSync('design-system/tevi-icons.svg', 'utf8') +
+    readFileSync('design-system/tevi-icons.extra.svg', 'utf8')
 const ids = new Set([...sprite.matchAll(/<symbol id="([^"]+)"/g)].map(m => m[1]))
 const names = [...ids].filter(id => !id.includes('--')).sort()
 

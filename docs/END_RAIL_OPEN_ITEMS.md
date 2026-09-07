@@ -151,14 +151,22 @@ its default — the two are set together, in one ternary, so they cannot drift a
 
 ---
 
-## R4 — `/premium` does not exist {#r4}
+## ~~R4 — `/premium` does not exist~~ · **closed: the route landed** {#r4}
 
-`PremiumBanner`'s CTA points at `/premium`, which is not a route. **Agreed deliberately**: the card
-needs no edit on the day that route lands, and until then the button reaches the app's 404. The
-alternative — a disabled button — trades a wrong destination for a dead control, which is worse in a
-promo card.
+> **Done.** `src/app/(web)/dev/../(rail)/premium/page.tsx` serves it — verified `200`. The bet this
+> item recorded paid off exactly as written: the card needed **no edit** on the day the route landed,
+> because it had always pointed at the real address.
+>
+> Both call sites now take the path from `features/premium/routes.ts` (`PREMIUM_PATH`) rather than a
+> literal — the banner here, and `PayoutFastPremiumDialog`, which shipped its *Subscribe now* button
+> against a 404 for as long as this item was open. That dialog **auto-opens on arrival** for every
+> non-Premium account with a payout method, so it was the widest exposure of this gap and not the
+> narrowest; worth remembering the next time "the button reaches the app's 404" is agreed for a promo
+> card, because it is a different trade on a money screen.
 
-`TODO` marker is at `end-rail/premium-banner.tsx`.
+The original note, for the reasoning: `PremiumBanner`'s CTA pointed at `/premium`, which was not a
+route. **Agreed deliberately** — the alternative, a disabled button, trades a wrong destination for a
+dead control, which is worse in a promo card.
 
 ---
 
@@ -252,14 +260,19 @@ finished item.
 > unreachable without a real account *and* a live frame): 2s travel 20→60px with opacity 1→0, element
 > gone by 2.5s, immediate under reduced motion, and a rapid double showing the second amount.
 
-## R9 — 25 keys are English-only {#r9}
+## ~~R9 — 25 keys are English-only~~ · **closed: all eight locales landed** {#r9}
 
-Every `rail_*` and `campaign_*` key exists in `en/translation.json` and in **none** of the other
-eight locales, so they fall back to English per `FALLBACK_LNG`. That is the designed behaviour, not a
-bug — but it does mean the rail is untranslated for eight of nine audiences.
+> **Done.** Measured: 25 `rail_*` / `campaign_*` keys in English, **0 missing** in each of `vi`, `ko`,
+> `id`, `ms`, `fil`, `zh-CN`, `zh-TW`, `ar`. The rail reads in every surfaced language.
+>
+> ⚠ The note below said `resources.test.ts` makes partial coverage safe, and that is still true — but
+> it does **not** catch the opposite failure, a key present in *no* locale, which renders the raw
+> `snake_case` string on screen in all nine languages at once. `src/shared/i18n/keys.test.ts` is that
+> guard now: it scans every `t('literal')` against English and understands i18next's plural suffixes.
 
-`resources.test.ts` enforces English being a superset, so adding the keys to any locale is safe and
-partial coverage is fine.
+The original note: every `rail_*` and `campaign_*` key existed in `en/translation.json` and in none
+of the other eight locales, falling back to English per `FALLBACK_LNG` — designed behaviour, not a
+bug, but it meant the rail was untranslated for eight of nine audiences.
 
 ---
 

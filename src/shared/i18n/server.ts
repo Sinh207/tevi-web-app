@@ -6,6 +6,7 @@ import {
     COOKIE_NAME,
     DEFAULT_NS,
     FALLBACK_LNG,
+    type Locale,
     NAMESPACES,
     resolveInitialLocale,
     toLocale,
@@ -37,21 +38,30 @@ export async function getT(locale: string): Promise<TFunction> {
 }
 
 /**
- * Resolve the request locale and return its `t`.
+ * Resolve the request locale.
  *
  * Chain: the `/app/*` webview's `?lang=` (forwarded as a header by `proxy.ts`) → cookie
  * → `Accept-Language` → English. Same order as `app/layout.tsx`, and it has to stay that
  * way: this is what `generateMetadata` uses, so a mismatch would put an English `<title>`
  * on a Vietnamese page.
+ *
+ * Exported because a *few* server components need the locale itself rather than a `t`:
+ * copy that is written per language instead of keyed — the open letter is three separate
+ * letters, not one letter with 685 keys — has to pick its own version.
  */
-export async function getServerT(): Promise<TFunction> {
+export async function getServerLocale(): Promise<Locale> {
     const [cookieStore, headerStore] = await Promise.all([cookies(), headers()])
     const webview = readWebviewHeaders(name => headerStore.get(name))
-    const locale =
-        webview.locale ??
+    return (
+        (webview.locale ? toLocale(webview.locale) : null) ??
         resolveInitialLocale({
             cookieValue: cookieStore.get(COOKIE_NAME)?.value,
             acceptLanguage: headerStore.get('accept-language'),
         })
-    return getT(locale)
+    )
+}
+
+/** The request locale's `t`. See `getServerLocale` for the chain. */
+export async function getServerT(): Promise<TFunction> {
+    return getT(await getServerLocale())
 }

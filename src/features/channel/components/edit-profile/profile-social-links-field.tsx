@@ -217,6 +217,8 @@ export function ProfileSocialLinksField({
                          * whole feature exist for a keyboard.
                          */}
                         <button
+                            data-testid="channel-profile-link-reorder"
+                            data-index={index}
                             type="button"
                             disabled={disabled || links.length < 2}
                             aria-label={t('profile_social_reorder', { index: index + 1 })}
@@ -274,6 +276,8 @@ export function ProfileSocialLinksField({
                             platform name leaves the arrow floating in the gap. */}
                         <span className="relative flex flex-none items-center">
                             <select
+                                data-testid="channel-profile-link-platform"
+                                data-index={index}
                                 value={link.platform}
                                 disabled={disabled}
                                 aria-label={t('profile_social_platform_n', { index: index + 1 })}
@@ -325,6 +329,8 @@ export function ProfileSocialLinksField({
                         <span aria-hidden className="h-6 w-px flex-none bg-(--separator-default)" />
 
                         <input
+                            data-testid="channel-profile-link-url"
+                            data-index={index}
                             type="url"
                             inputMode="url"
                             value={link.url}
@@ -342,6 +348,8 @@ export function ProfileSocialLinksField({
                         />
 
                         <button
+                            data-testid="channel-profile-link-remove"
+                            data-index={index}
                             type="button"
                             disabled={disabled}
                             onClick={() => remove(index)}
@@ -370,6 +378,7 @@ export function ProfileSocialLinksField({
             {links.length < SOCIAL_LINKS_MAX && (
                 <div>
                     <Button
+                        data-testid="channel-profile-link-add"
                         type="button"
                         variant="ghost"
                         size="medium"

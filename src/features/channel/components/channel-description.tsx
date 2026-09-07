@@ -1,8 +1,8 @@
 'use client'
 
+import { ClampedText } from '@shared/components/clamped-text'
 import { useTranslation } from '@shared/i18n/use-translation'
-import { cn } from '@shared/lib/utils'
-import { useEffect, useState } from 'react'
+import { DESCRIPTION_MAX, truncateDescription } from '../lib/channel-format'
 
 /**
  * The creator's bio: three lines, then "more".
@@ -17,80 +17,31 @@ import { useEffect, useState } from 'react'
  * *not*, on the grounds that a `line-clamp` with no way to expand hides content — which is right, and
  * is why this has the toggle rather than the clamp alone.
  *
- * ## Measured, not assumed
+ * ## The clamp itself is `shared/components/clamped-text.tsx`
  *
- * The toggle only appears when the text is **actually** overflowing, which is a layout question the
- * markup cannot answer: three lines of a wide column may be a whole bio, and the same text on a phone
- * may be six. `scrollHeight > clientHeight` on the clamped element is the measurement, re-taken on
- * resize — a hard-coded character count would show "more" on text that is already fully visible, and
- * hide it on text that is not.
- *
- * Plain text with `whitespace-pre-line`. **Never `dangerouslySetInnerHTML`** — this is
- * creator-authored, there is no sanitiser in the repo, and `docs/DEFINITION_OF_DONE.md` §8 calls
- * adding one without a sanitiser a blocker rather than a nit.
+ * This file is the bio's copy and type; the measured overflow, the toggle and the reason the depth is
+ * a literal are all there. It moved when the membership join dialog needed the same treatment for a
+ * creator's tier pitch — a second `scrollHeight > clientHeight` observer with the same off-by-one
+ * would have been the drift this codebase keeps warning about.
  */
 export function ChannelDescription({ text }: { text: string }) {
     const { t } = useTranslation()
-    const [expanded, setExpanded] = useState(false)
-    const [overflows, setOverflows] = useState(false)
-    const [node, setNode] = useState<HTMLParagraphElement | null>(null)
-
-    /*
-     * `text` is in the dependency list although it is not read in here: the measurement is of the
-     * DOM that `text` produced, and the observer below cannot cover it. While clamped the box is
-     * three lines whatever the content, so replacing four lines of bio with exactly three changes
-     * `scrollHeight` and not `clientHeight` — no resize fires, and the "more" control stays up with
-     * nothing left to reveal.
-     */
-    // biome-ignore lint/correctness/useExhaustiveDependencies: `text` re-measures a clamp the ResizeObserver cannot see change
-    useEffect(() => {
-        if (!node) return
-
-        const measure = () => {
-            // Only meaningful while clamped: expanded, `scrollHeight === clientHeight` by definition,
-            // so measuring then would hide the control that collapses it again.
-            if (expanded) return
-            setOverflows(node.scrollHeight > node.clientHeight + 1)
-        }
-        measure()
-
-        // The answer depends on the column's width, which changes with the viewport and with the
-        // rail appearing at `md`. `ResizeObserver` catches both, plus a font swap re-flowing the text.
-        if (typeof ResizeObserver === 'undefined') return
-        const observer = new ResizeObserver(measure)
-        observer.observe(node)
-        return () => observer.disconnect()
-    }, [node, expanded, text])
 
     return (
-        <div className="flex min-w-0 flex-col items-start gap-1">
-            <p
-                ref={setNode}
-                className={cn(
-                    'type-body-default min-w-0 whitespace-pre-line break-words text-(--text-title)',
-                    !expanded && 'line-clamp-3',
-                )}
-            >
-                {text}
-            </p>
-            {overflows && (
-                /*
-                 * A plain text button, not a DS component: there is no disclosure primitive in the
-                 * design system, and this is one word. `type-dense-emphasis` in `--text-link` is what
-                 * the DS uses for an inline text action elsewhere.
-                 *
-                 * `aria-expanded` rather than swapping the label alone, so the control announces its
-                 * state instead of relying on the word changing.
-                 */
-                <button
-                    type="button"
-                    onClick={() => setExpanded(value => !value)}
-                    aria-expanded={expanded}
-                    className="type-dense-emphasis cursor-pointer rounded-[var(--radius-sm)] text-(--text-link) hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
-                >
-                    {expanded ? t('channel_show_less') : t('channel_show_more')}
-                </button>
-            )}
-        </div>
+        <ClampedText
+            testId="channel-description-expand"
+            /*
+             * At most `DESCRIPTION_MAX` characters on the profile, whatever the creator saved — see
+             * `truncateDescription` for the cut (code points, and a word boundary when one is near).
+             *
+             * The clamp stays on top of it and is not redundant: the cap is how much bio the profile
+             * shows, the clamp is how much of that shows before you ask — three lines on this column,
+             * and fewer of the same characters on a phone, where the text runs longer.
+             */
+            text={truncateDescription(text, DESCRIPTION_MAX)}
+            moreLabel={t('common_show_more')}
+            lessLabel={t('common_show_less')}
+            className="type-body-default text-(--text-title)"
+        />
     )
 }

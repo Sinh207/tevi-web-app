@@ -36,7 +36,11 @@ export default async function NotFound() {
         >
             <h1 className="font-brand type-display-hero-bold text-primary-500">404</h1>
             <p className="type-dense-default text-text-body">{t('notfound_message')}</p>
-            {!isWebview && <Button render={<Link href="/" />}>{t('common_back_home')}</Button>}
+            {!isWebview && (
+                <Button data-testid="app-not-found-home" render={<Link href="/" />}>
+                    {t('common_back_home')}
+                </Button>
+            )}
         </main>
     )
 }

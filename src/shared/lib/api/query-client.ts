@@ -7,11 +7,26 @@ import { ApiError } from './errors'
  *   useQuery({ ..., meta: { showErrorToast: true } })
  *   useMutation({ ..., meta: { showErrorToast: 'Could not save' } })
  * Network errors are already toasted elsewhere; 401 is handled by the interceptor.
+ *
+ * **A mutation's value is a `string`, never `true`** — and that asymmetry is the point.
+ * `true` means "print `error.message`", and on a failed **write** that is the one thing
+ * that must not be printed: `normalizeApiError` falls back to axios's own English
+ * (*"Request failed with status code 400"*) whenever the body carried no message, so
+ * `true` would put a library's internal wording on a money screen in nine locales.
+ *
+ * A write's string is therefore its **fallback**, used when the API's own 4xx message is
+ * absent or unusable — the API's sentence is what a reader should see first, because the
+ * backend is the only party that knows why *that* write was refused. Typing the boolean out
+ * of `mutationMeta` makes "every write carries a translated fallback" a compile error
+ * instead of a convention. Queries keep the boolean: nothing prints `error.message` there.
+ *
+ * The full rule, the statuses that are skipped (5xx, 429, 403) and the shared predicate:
+ * `docs/API_ERRORS.md`.
  */
 declare module '@tanstack/react-query' {
     interface Register {
         queryMeta: { showErrorToast?: boolean | string }
-        mutationMeta: { showErrorToast?: boolean | string }
+        mutationMeta: { showErrorToast?: string }
     }
 }
 
@@ -24,6 +39,24 @@ function toastError(error: DefaultError, meta?: { showErrorToast?: boolean | str
     }
     const msg = typeof meta.showErrorToast === 'string' ? meta.showErrorToast : error.message
     toast.error(msg)
+}
+
+/**
+ * `staleTime` and `gcTime` together, because on their own the first one is a claim the second
+ * quietly overrules.
+ *
+ * `staleTime` says how long data may be *served* without refetching; `gcTime` says how long an
+ * **inactive** query's data is kept at all. The defaults are 60s and 5min, so a hook that sets a
+ * 24-hour `staleTime` and nothing else is not caching for 24 hours — it caches until five minutes
+ * after the last component reading it unmounts, and the next visit refetches in full. Every long
+ * `staleTime` in this app was written that way, which is why a country list declared stale-after-a-
+ * day was still re-requested by anyone who left the screen and came back after lunch.
+ *
+ * Pass the number once and get both. The value stays each call site's own decision — this only
+ * stops the two from disagreeing.
+ */
+export function keepFor(ms: number) {
+    return { staleTime: ms, gcTime: ms } as const
 }
 
 export function makeQueryClient() {

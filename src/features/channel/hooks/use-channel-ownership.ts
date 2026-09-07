@@ -25,9 +25,15 @@ import { useMyChannel } from '../providers/my-channel-provider'
  *    logged-out visit, which is most traffic, at zero cost.
  * 3. **Compare `owner_id` against `/me`, then `slug` against the account's own channel.** Either match
  *    means owner. Two comparisons rather than one because they fail differently: `owner_id` is
- *    synchronous and available on the public payload but depends on the two ids sharing an identifier
- *    space (B11, unconfirmed); the slug comparison is legacy's rule and always works once the provider
- *    has resolved. Whichever answers first is right.
+ *    synchronous and available on the public payload, and the two ids **do** share an identifier space
+ *    (B11, answered) — so this is the fast path, not a hope. The slug comparison is legacy's rule and
+ *    always works once the provider has resolved; it stays because `/me` carries **no channel slug**
+ *    (B19, answered), so it is the only rule that survives an account whose `owner_id` is absent.
+ *    Whichever answers first is right.
+ *
+ *    ⚠ `/me` returns `id` as a **number** (`2533836474`) while the channel DTO normalises `owner_id`
+ *    to a string, which is why the comparison below is `String(userId) === channel.owner_id` and not
+ *    `===` on the raw values. Written before the payload was seen; the payload confirms it matters.
  *
  * ## `isBootstrapping`, and the bug that was here
  *

@@ -30,7 +30,7 @@ import { Skeleton } from '@shared/ui/skeleton'
  */
 export function BlockedAccountsSkeleton({ count = 6 }: { count?: number }) {
     return (
-        <ul aria-busy="true" className="list-none">
+        <ul data-testid="channel-blocked-loading" aria-busy="true" className="list-none">
             {/* Keyed by a derived string rather than the bare index: these rows have no
                 identity and never reorder, so the key only has to be stable and distinct —
                 and `key={index}` is the shape that is a real bug on a list that *does*
@@ -59,15 +59,17 @@ export function BlockedAccountsSkeleton({ count = 6 }: { count?: number }) {
                                         </div>
                                     </ListUserItemInfo>
                                     <ListUserItemCta className="self-center">
-                                        {/* 36 × 88 — the DS `Button size="medium"` height, and the
-                                        width the word "Unblock" occupies at 14/500 plus its
-                                        16px side padding. */}
-                                        <Skeleton
-                                            w={88}
-                                            h={36}
-                                            delay={index * 160}
-                                            className="rounded-[var(--radius-lg)]"
-                                        />
+                                        {/* A bar, not a 36px block: the real CTA is a *text*
+                                        button — boxless purple ink — so a filled pill here
+                                        would promise a control that never arrives. The 36px
+                                        box is still reserved (the DS `Button size="medium"`
+                                        height) so nothing shifts on load, and 56px is the
+                                        width the word "Unblock" occupies at 14/500, which is
+                                        also that button's whole layout footprint once its
+                                        `-mx-2` cancels its padding. */}
+                                        <div className="flex h-[36px] w-[56px] items-center">
+                                            <Skeleton delay={index * 160} />
+                                        </div>
                                     </ListUserItemCta>
                                 </ListUserItemPreview>
                             </ListUserItemContent>

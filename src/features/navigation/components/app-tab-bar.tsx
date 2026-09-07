@@ -4,9 +4,10 @@ import { useRequireAuth } from '@features/auth'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Icon } from '@shared/ui/icon'
-import { TabBar, TabBarFab, TabBarItem, TabBarProfile } from '@shared/ui/tab-bar'
+import { TabBar, TabBarItem, TabBarProfile } from '@shared/ui/tab-bar'
 import { usePathname } from 'next/navigation'
-import { useAvatarSource } from '../hooks/use-avatar-url'
+import { useAvatarSource } from '../hooks/use-avatar-source'
+import { CreateTabBarFab } from './create-tab-bar-fab'
 
 /**
  * The mobile app shell's bottom bar — `Tab Bar` from the design system, composed with
@@ -16,8 +17,9 @@ import { useAvatarSource } from '../hooks/use-avatar-url'
  * The rail (`AppNavbar`) has nine entries; this has five. They are different Figma
  * components with different contents, not one component at two sizes.
  *
- * Home and My Space are real links; the rest stay inert rather than pointing at routes that would
- * 404. Give each a `href` as its route lands.
+ * Home, Following and My Space are real links; the FAB opens the Create list (`CreateTabBarFab`,
+ * the same two options the rail's `+` offers). **Messages is the only inert entry left**, rather
+ * than pointing at a route that would 404. Give each a `href` as its route lands.
  *
  * My Space is selected for `/@{slug}` too, so tapping through to your own channel keeps the tab lit —
  * the alternative leaves the bar looking as though you navigated away from every tab.
@@ -33,21 +35,32 @@ export function AppTabBar() {
     })
 
     return (
-        <TabBar aria-label={t('nav_main')}>
+        <TabBar data-testid="navigation-tab-bar" aria-label={t('nav_main')}>
             <TabBarItem
+                data-testid="navigation-tab-bar-home"
                 href="/"
                 selected={pathname === '/'}
                 knockout
                 label={t('nav_home')}
                 icon={<Icon name="house-heart" weight="duotone" size={24} />}
             />
+            {/*
+             * A real `href`, like Home and My Space — and, as on My Space, that is not a hole in
+             * "gate the action, never the route": `/following` renders a sign-in prompt for an
+             * anonymous visitor rather than a list. Being a link is strictly better than an
+             * onClick — middle-click, prefetch and copy-link all work.
+             */}
             <TabBarItem
-                onClick={gated}
+                data-testid="navigation-tab-bar-following"
+                href="/following"
+                selected={pathname === '/following'}
                 label={t('nav_following')}
                 icon={<Icon name="user-heart-alt" weight="duotone" size={24} />}
             />
-            <TabBarFab aria-label={t('nav_video')} onClick={gated} />
+            {/* The FAB, the Create list it opens and the app prompt behind its event row. */}
+            <CreateTabBarFab />
             <TabBarItem
+                data-testid="navigation-tab-bar-messages"
                 knockout
                 onClick={gated}
                 label={t('nav_messages')}
@@ -61,6 +74,7 @@ export function AppTabBar() {
              * prefetch and copy-link all work, and it needs no slug, so there is nothing to wait for.
              */}
             <TabBarProfile
+                data-testid="navigation-tab-bar-my-space"
                 href="/my-space"
                 selected={pathname === '/my-space' || pathname.startsWith('/@')}
                 label={t('nav_my_space')}

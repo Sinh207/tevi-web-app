@@ -9,10 +9,19 @@ import { describe, expect, it } from 'vitest'
  * re-run `scripts/generate-icon-names.mjs`, one of them fails.
  */
 const root = process.cwd()
-const sprite = readFileSync(join(root, 'design-system/tevi-icons.svg'), 'utf8')
+const figma = readFileSync(join(root, 'design-system/tevi-icons.svg'), 'utf8')
+/**
+ * Glyphs the Figma library does not carry, kept out of the export so a re-export cannot drop
+ * them. `pnpm icons` merges the two, so the types are generated from both and so are these
+ * assertions. See `design-system/tevi-icons.extra.svg` for what is allowed in it.
+ */
+const extra = readFileSync(join(root, 'design-system/tevi-icons.extra.svg'), 'utf8')
 const generated = readFileSync(join(root, 'src/shared/ui/icon-names.ts'), 'utf8')
 
-const symbolIds = new Set([...sprite.matchAll(/<symbol id="([^"]+)"/g)].map(m => m[1]))
+const idsIn = (svg: string) => [...svg.matchAll(/<symbol id="([^"]+)"/g)].map(m => m[1])
+const figmaIds = idsIn(figma)
+const extraIds = idsIn(extra)
+const symbolIds = new Set([...figmaIds, ...extraIds])
 
 /** Pull the `| 'name'` members out of one exported type alias. */
 function unionMembers(typeName: string): string[] {
@@ -64,7 +73,35 @@ describe('tevi icon sprite', () => {
         expect(missing).toEqual([])
     })
 
-    it('keeps the 554 glyphs the design system documents', () => {
-        expect(unionMembers('TeviIconName')).toHaveLength(554)
+    it('keeps the 554 glyphs the design system documents, plus the overlay', () => {
+        const overlayNames = extraIds.filter(id => !id.includes('--'))
+        expect(unionMembers('TeviIconName')).toHaveLength(554 + overlayNames.length)
+    })
+})
+
+/**
+ * The overlay is a stopgap, and the failure mode of a stopgap is that it outlives its reason.
+ * The day Figma ships one of these glyphs, the export and the overlay both define the id and
+ * the merge silently picks one — which is exactly the kind of "renders something, just not the
+ * right something" this whole area keeps producing. Fail instead, and the fix is to delete the
+ * overlay entry.
+ */
+describe('upstream glyph overlay', () => {
+    it('defines nothing the Figma export already has', () => {
+        const inFigma = new Set(figmaIds)
+        expect(extraIds.filter(id => inFigma.has(id))).toEqual([])
+    })
+
+    it('keeps every alias in it resolvable', () => {
+        const have = new Set([...figmaIds, ...extraIds])
+        const refs = [...extra.matchAll(/<use[^>]+href="#([^"]+)"/g)].map(m => m[1])
+        expect(refs.filter(id => !have.has(id))).toEqual([])
+    })
+
+    it('still carries eye-slash, which the password reveal toggle needs', () => {
+        // Two states, two glyphs. `eye` alone cannot express them: it is filled-only and its
+        // bare id is an alias onto `eye--filled`, so a weight toggle draws it twice.
+        expect(extraIds).toContain('eye-slash')
+        expect(extraIds).toContain('eye-slash--filled')
     })
 })

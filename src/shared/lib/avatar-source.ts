@@ -52,6 +52,10 @@ function text(value: unknown): string | null {
  * 1. **The clip plays only for Premium.** `shouldRenderVideo = isPremium && playback.url`.
  *    A non-Premium account can *have* an `avatar_video` — from a lapsed subscription, or
  *    uploaded through another surface — and it stays a still.
+ *    ⚠ For an **account** (the nav rail, the tab bar, the menu drawer) `isPremium` has to
+ *    come from `useMyChannel()`: `/me` carries neither a Premium flag nor an `avatar_video`
+ *    (B19/B21, answered). A caller with only a stored `/me` body — the account switcher —
+ *    can therefore never animate, and passing `isPremium` it does not have would be a lie.
  * 2. **When Premium, the still prefers `avatar_video.thumbnail`** over `thumb`, so the
  *    poster is a frame of the clip rather than a different picture. Getting this backwards
  *    makes the avatar visibly jump the moment playback starts.

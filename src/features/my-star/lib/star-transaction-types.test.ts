@@ -112,10 +112,11 @@ describe('starTransactionLabelKey', () => {
 })
 
 describe('starTransactionIcon', () => {
-    it('gives every known type its own glyph', () => {
+    it('gives every type in the filter list its own glyph', () => {
         for (const filter of starTransactionFilters()) {
             if (filter.key === ALL_STAR_TRANSACTIONS) continue
-            expect(starTransactionIcon(filter.key)).not.toBe('document-list')
+            expect(starTransactionIcon(filter.key)).not.toBe('dollar-circle')
+            expect(starTransactionIcon(filter.key)).not.toBe('star')
         }
     })
 
@@ -127,11 +128,13 @@ describe('starTransactionIcon', () => {
     })
 
     /*
-     * The leading disc is part of the row's geometry — leaving one empty makes a single unknown row look
-     * broken in a column of complete ones.
+     * Legacy dispatches the unknown case on the row's **currency** (`TransactionIcon.js`): a Star row
+     * gets the Star mark, anything else the dollar disc. `space_tier_bonus` is a real type the backend
+     * sends and this table does not list.
      */
-    it('falls back to a neutral glyph for an unknown type', () => {
-        expect(starTransactionIcon('space_tier_bonus')).toBe('document-list')
-        expect(starTransactionIcon('')).toBe('document-list')
+    it('falls back by unit for an unknown type', () => {
+        expect(starTransactionIcon('space_tier_bonus', true)).toBe('star')
+        expect(starTransactionIcon('space_tier_bonus')).toBe('dollar-circle')
+        expect(starTransactionIcon('', true)).toBe('star')
     })
 })

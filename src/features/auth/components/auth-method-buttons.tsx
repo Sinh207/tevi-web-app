@@ -18,6 +18,7 @@ import {
     ProviderButton,
     type ProviderVariant,
     providerLabelKey,
+    QrProviderButton,
 } from './provider-button'
 
 /** Where every provider sends the browser back to. Inlined at build time. */
@@ -122,8 +123,12 @@ function useOAuthCallbacks() {
  *
  * The order is the native app's — the one people arriving from it already know — not the
  * legacy web order (`containers/login`: QR, email, Apple, Google, Telegram, TikTok,
- * Facebook, LINE, X) and not alphabetical. QR is absent from both groups: it needs the
- * socket layer.
+ * Facebook, LINE, X) and not alphabetical.
+ *
+ * QR is in neither group and sits **above** both, which is legacy's placement and the right
+ * one: it is not a ninth identity provider competing with the eight, it is the shortcut for
+ * somebody already signed in on their phone, and it is the only row here that cannot fail on
+ * the wrong account. It is also the only row that is not always offered — see `onQrCode`.
  *
  * **The split is the ranking, so it lives here and nowhere else.** Eight identical labelled
  * rows rank nothing — the eye has to read all eight, and the one most people want is in the
@@ -144,6 +149,7 @@ const SECONDARY = ['telegram', 'twitter', 'tiktok', 'line'] as const
 export function AuthMethodButtons({
     mode = 'sign-in',
     onEmail,
+    onQrCode,
 }: {
     mode?: AuthMode
     /**
@@ -151,6 +157,13 @@ export function AuthMethodButtons({
      * registration endpoint behind it.
      */
     onEmail?: () => void
+    /**
+     * Omit to leave QR out — `/signup` does, for a stronger reason than email's. A QR is
+     * scanned by an app that is **already signed in**; there is no account for it to create,
+     * so on a registration page it is a button that cannot do the thing the page is for.
+     * Legacy gates it on exactly the same condition (`!isSignUp`).
+     */
+    onQrCode?: () => void
 }) {
     const { t } = useTranslation()
     const { isSigningIn } = useAuth()
@@ -331,6 +344,8 @@ export function AuthMethodButtons({
             return onEmail ? (
                 <EmailProviderButton
                     key={key}
+                    testId="auth-provider"
+                    providerKey={key}
                     label={t(providerLabelKey(mode), { provider: t('auth_provider_email') })}
                     onClick={onEmail}
                     disabled={busy}
@@ -346,6 +361,8 @@ export function AuthMethodButtons({
         return (
             <ProviderButton
                 key={key}
+                testId="auth-provider"
+                providerKey={key}
                 variant={variant}
                 mark={key}
                 label={
@@ -364,6 +381,30 @@ export function AuthMethodButtons({
 
     return (
         <div className="flex w-full flex-col gap-2">
+            {/*
+             * `hidden sm:flex` — and this is the one control on the card that is viewport
+             * conditional, so it is worth saying why. The code has to be read by a *second*
+             * device; on a phone there is no second device, and pointing a phone at its own
+             * screen is the one instruction that cannot be followed. A row that leads to a
+             * dead end is worse than an absent one, which is the same rule that hides an
+             * unconfigured provider two lines below.
+             *
+             * CSS rather than a media-query hook: this is the first paint of a sign-in card,
+             * and a hook would render the row on the server and take it away on hydration.
+             */}
+            {onQrCode && (
+                <QrProviderButton
+                    testId="auth-provider"
+                    providerKey="qr"
+                    className="hidden sm:flex"
+                    // Not `providerLabelKey(mode)`: this row exists only on sign-in (see
+                    // `onQrCode`), so a "Sign up with" wording is unreachable, and offering
+                    // it would describe something QR cannot do.
+                    label={t('auth_sign_in_with', { provider: t('auth_provider_qr') })}
+                    onClick={onQrCode}
+                    disabled={busy}
+                />
+            )}
             {PRIMARY.map(key => button(key, 'row'))}
             {/* One row, however many survive. `flex-1` on each tile divides the width, so
                 three configured providers give three wider tiles rather than three narrow

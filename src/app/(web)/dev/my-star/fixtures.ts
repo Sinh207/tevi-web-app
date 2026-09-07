@@ -18,14 +18,49 @@ export const STAR_ROWS: ActionRow[] = [
     {
         key: 'get_star',
         label: 'Get more Star',
-        icon: 'plus-circle',
+        icon: 'star',
+        iconWeight: 'filled',
         tile: 'var(--accents-warning-active)',
+        href: '/get-star',
     },
     {
         key: 'gift_star',
         label: 'Gift Star',
         icon: 'gift-simple',
+        iconWeight: 'filled',
         tile: 'var(--accents-indigo-active)',
+        href: '/gift-star',
+    },
+]
+
+/**
+ * The same two rows in their two **inert** states, which is the half of this component `/my-star`
+ * itself can no longer show: both of its rows have destinations now.
+ *
+ * They are one component and two different sentences, and the difference is worth being able to see
+ * side by side — `ActionRow.disabledReason`'s own note is the argument. *Coming soon* is a fact about
+ * the app that never changes while the reader looks at it; a reason is a fact about **their account**
+ * that goes away when the thing it names does. The live case is Gift Star at a zero Star balance,
+ * which otherwise needs an account with no Star to look at.
+ */
+export const STAR_ROWS_INERT: ActionRow[] = [
+    {
+        key: 'get_star_unavailable',
+        label: 'Get more Star',
+        icon: 'star',
+        iconWeight: 'filled',
+        tile: 'var(--accents-warning-active)',
+    },
+    {
+        key: 'gift_star_no_star',
+        label: 'Gift Star',
+        icon: 'gift-simple',
+        iconWeight: 'filled',
+        tile: 'var(--accents-indigo-active)',
+        /* Kept, to pin the trap: a row with a destination *and* a reason must still render as a
+           disabled `<button>` — a dimmed `Link` navigates on press and on Enter. */
+        href: '/gift-star',
+        disabledReason: 'You have no Star to gift yet.',
     },
 ]
 
@@ -43,7 +78,7 @@ export const STAR_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '19 Feb 2025, 14:32',
                 amount: '+500',
                 isCredit: true,
-                icon: 'plus-circle',
+                icon: 'arrow-down-line',
                 amountMark: STAR_MARK,
             },
             // No description on the wire: the title fell back to the type's translated label.
@@ -53,7 +88,7 @@ export const STAR_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '19 Feb 2025, 09:05',
                 amount: '-120',
                 isCredit: false,
-                icon: 'heart',
+                icon: 'gift-simple',
                 amountMark: STAR_MARK,
             },
             /*
@@ -89,7 +124,7 @@ export const STAR_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '17 Feb 2025, 16:20',
                 amount: '+3,750',
                 isCredit: true,
-                icon: 'document-list',
+                icon: 'star',
                 amountMark: STAR_MARK,
             },
             // A title long enough to prove it truncates instead of pushing the amount off the row.
@@ -99,7 +134,7 @@ export const STAR_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '17 Feb 2025, 08:15',
                 amount: '+1,200',
                 isCredit: true,
-                icon: 'trophy-simple',
+                icon: 'trophy-star',
                 amountMark: STAR_MARK,
             },
         ],
@@ -117,7 +152,7 @@ export const STAR_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '31 Jan 2025, 19:45',
                 amount: '+4.2',
                 isCredit: true,
-                icon: 'trophy-simple',
+                icon: 'trophy-star',
             },
             // A row with no readable timestamp is dropped by the parser, so it can never reach here — the
             // closest thing a preview can show is a row whose subtitle is absent.

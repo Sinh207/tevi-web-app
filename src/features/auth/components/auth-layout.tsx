@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from '@shared/lib/utils'
 import { Logo } from '@shared/ui/logo'
 import Image from 'next/image'
 
@@ -15,9 +16,30 @@ import Image from 'next/image'
  * asset in the DS: "Tevi" is live text in `font-brand`, which is also why it can inherit
  * the title colour and stay legible in both themes.
  */
-export function AuthLayout({ children }: { children: React.ReactNode }) {
+export function AuthLayout({
+    children,
+    fill = false,
+}: {
+    children: React.ReactNode
+    /**
+     * Fill the parent instead of the viewport.
+     *
+     * `/login` and `/signup` are pages: nothing owns the height above them, so `min-h-dvh` is
+     * what centres the card. `/app/privacy-settings` renders this **inside** the `/app/*` webview
+     * shell, which is already `min-h-[var(--window-height)]` (`100dvh`) *plus* the safe-area
+     * insets it reserves — and `min-height` includes padding, so a second full-viewport box in
+     * there makes the document exactly one notch-plus-home-indicator taller than the screen and
+     * gives a centred login card a scrollbar. Same trap `app/app/privacy/page.tsx` documents.
+     */
+    fill?: boolean
+}) {
     return (
-        <main className="relative flex min-h-dvh w-full flex-col items-center justify-center gap-8 bg-background px-4 py-10">
+        <main
+            className={cn(
+                'relative flex w-full flex-col items-center justify-center gap-8 bg-background px-4 py-10',
+                fill ? 'flex-1' : 'min-h-dvh',
+            )}
+        >
             {/* An `<Image>` rather than a CSS `background-image` off the CDN, which is what
                 legacy does and what this did until it was measured: **278KB of PNG** for
                 what is four soft colour blobs on a light base — no detail to preserve, and

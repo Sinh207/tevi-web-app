@@ -1,25 +1,30 @@
 'use client'
 
-import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
-import { Icon } from '@shared/ui/icon'
-import type { TeviIconName } from '@shared/ui/icon-names'
+import Image from 'next/image'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
+import { Trans } from 'react-i18next'
 import type { Channel } from '../api/types'
-import { useChannelActions } from '../hooks/use-channel-actions'
 import type { ChannelVisibility } from '../lib/channel-flags'
 import { CHANNEL_PADDING } from '../lib/container'
-import { ChannelNsfwGate } from './channel-nsfw-gate'
+import { CHANNEL_WALL_ART } from '../lib/illustrations'
 
 /**
- * Every wall the channel page can put up, and the NSFW gate.
+ * Every wall the channel page can put up.
  *
- * ## Identity, then an explanation, then nothing
+ * The sensitive-content gate is **not** one of them any more: that space renders its own shell with
+ * the art blurred and the gate where its tabs would be (`channel-nsfw-gate.tsx`). A wall is for a
+ * space whose content is not yours to see at all.
  *
- * A terminal state shows the avatar and the name and says why you cannot see the rest. It does
- * **not** show the cover, the stats, the bio, the socials or the tabs. Legacy expresses the same
+ * ## An explanation, in the tabs' place
+ *
+ * The identity is **not** this component's any more: `channel-view` renders the real header above
+ * every state, so the cover, avatar, name, bio, stats and socials are on screen and only the *tabs*
+ * are replaced by the wall. That is legacy's arrangement — `content/index.js` puts `<Info />` above
+ * the branch — and it is what tells a visitor they reached the space they meant to. Legacy expresses the same
  * intent as two independently-computed booleans (`isShowChannelStats` and `isShowSecondaryData`)
  * checked in different places, which is how they came to disagree; here `channelVisibility` has
  * already decided and this component only renders the answer.
@@ -35,15 +40,10 @@ import { ChannelNsfwGate } from './channel-nsfw-gate'
 export function ChannelStateScreen({
     channel,
     visibility,
-    onConfirmNsfw,
 }: {
     channel: Channel
     visibility: ChannelVisibility
-    onConfirmNsfw: () => void
 }) {
-    if (visibility.kind === 'nsfw') {
-        return <ChannelNsfwGate channel={channel} onConfirm={onConfirmNsfw} />
-    }
     return <TerminalScreen channel={channel} visibility={visibility} />
 }
 
@@ -55,7 +55,6 @@ function TerminalScreen({
     visibility: ChannelVisibility
 }) {
     const { t } = useTranslation()
-    const { unblock, follow } = useChannelActions(channel)
 
     /**
      * Every wall here is a **your-space** surface: legacy keeps them under its `vs_*` namespace, and
@@ -70,30 +69,86 @@ function TerminalScreen({
      * follow request"). The second is not a nicer sentence, it is the only one that tells the reader
      * what to do.
      */
+    /*
+     * Two different things, and legacy is deliberate about which goes where:
+     *
+     * - **`handle`** for "You blocked @ada" — `blockedChannel` interpolates `channelSlug`, so it is
+     *   the address you blocked, not a display name that two accounts could share.
+     * - **`name`** for "Ada Lovelace has blocked you" — `blockedUser` replaces the whole `@[%s]`,
+     *   the `@` included, with `channel?.name`.
+     *
+     * Both read `name` here for a while, which produced "You blocked @Ada Lovelace": a handle that
+     * does not exist, spelled with somebody's spaces and capitals in it.
+     */
     const name = channel.name ?? channel.slug
-    const copy: Record<string, { icon: TeviIconName; title: string; body: string }> = {
+    const handle = channel.slug
+    const copy: Record<
+        string,
+        {
+            art: (typeof CHANNEL_WALL_ART)[keyof typeof CHANNEL_WALL_ART]
+            title: string
+            /** A node, not a string: the suspended wall carries a link inside its sentence. */
+            body: ReactNode
+        }
+    > = {
         suspended: {
-            icon: 'ban',
+            art: CHANNEL_WALL_ART.suspended,
             title: t('channel_state_suspended_title'),
-            body: t('channel_state_suspended_body'),
+            /*
+             * The link is **inside the sentence**, where legacy puts it — and where each language
+             * puts the phrase, which is the reason for `Trans` rather than string surgery.
+             *
+             * Legacy composes it by deleting the phrase from the sentence and appending the link
+             * after it, so the link always lands at the end however the language reads. Splitting on
+             * the phrase would not work here either: only **five of nine** of our bodies contain
+             * `channel_community_guidelines` verbatim — the rest say it their own way ("Nguyên tắc
+             * Cộng đồng" against "Nguyên tắc cộng đồng", "커뮤니티 지침" against "커뮤니티
+             * 가이드라인"), because the two keys came from two different legacy strings. Measured,
+             * not assumed.
+             *
+             * So each locale wraps its own wording in `<0>…</0>` and `Trans` fills the tag. Nothing
+             * is re-worded, and the link sits mid-sentence in the languages that put it there.
+             */
+            body: (
+                <Trans
+                    i18nKey="channel_state_suspended_body"
+                    components={[
+                        <Link
+                            data-testid="channel-suspended-guidelines"
+                            key="guidelines"
+                            href="/community-guidelines"
+                            className="text-(--text-link) underline"
+                        >
+                            {/* `Trans` replaces the children with the tag's contents. */}
+                            guidelines
+                        </Link>,
+                    ]}
+                />
+            ),
         },
         'blocked-by': {
-            icon: 'ban',
+            art: CHANNEL_WALL_ART.blocked,
             title: t('channel_state_blocked_by_title', { name }),
             body: t('channel_state_blocked_by_body'),
         },
         blocking: {
-            icon: 'ban',
-            title: t('channel_state_blocking_title', { name }),
+            art: CHANNEL_WALL_ART.blocked,
+            title: t('channel_state_blocking_title', { name: handle }),
             body: t('channel_state_blocking_body'),
         },
         unpublished: {
-            icon: 'lock-simple',
-            title: t('channel_state_unpublished_viewer_body'),
-            body: '',
+            art: CHANNEL_WALL_ART.unpublished,
+            /*
+             * Two lines, as legacy has them: `'Oops… This Space has been unpublished'` over the
+             * explanation. This used the **body** as its title and left the second line empty, so
+             * the one state that reads as a mistake ("This is an unpublished space") was the only
+             * one missing the sentence that says so.
+             */
+            title: t('channel_state_unpublished_viewer_title'),
+            body: t('channel_state_unpublished_viewer_body'),
         },
         protected: {
-            icon: 'lock-simple',
+            art: CHANNEL_WALL_ART.protected,
             title: t('channel_state_protected_title'),
             body: t('channel_state_protected_body', { name }),
         },
@@ -108,29 +163,37 @@ function TerminalScreen({
                 'flex min-w-0 flex-col items-center gap-6 text-center',
                 CHANNEL_PADDING,
                 'py-10',
+                /*
+                 * The card the header starts has to end somewhere, and this is where. Same pair the
+                 * tab strip and the NSFW gate carry: surface fill and the bottom corners **from
+                 * `md`**, because below that breakpoint the content *is* the page and a fill would
+                 * draw a card edge where there is no edge.
+                 *
+                 * Without it the wall sat on the page ground with the header's card stopping dead
+                 * above it — the one state where the space looked broken rather than closed.
+                 */
+                'bg-(--background-surface) md:rounded-b-[var(--radius-xl)]',
             )}
         >
-            {/*
-             * The avatar and name still render: a wall with no identity leaves the visitor unsure
-             * they even reached the right URL. Everything past this point is what the wall hides.
-             */}
-            <div className="flex flex-col items-center gap-3">
-                <AnimatedAvatar
-                    size="xl"
-                    thumb={channel.images.thumb}
-                    // Even a Premium creator's clip does not play behind a wall — it would read as
-                    // content leaking past the thing that is supposed to be blocking it.
-                    isPremium={false}
-                    alt={channel.name ?? channel.slug}
-                    initials={(channel.name ?? channel.slug).slice(0, 2).toUpperCase()}
-                />
-                <p className="type-title-t2-bold text-(--text-title)">
-                    {channel.name ?? `@${channel.slug}`}
-                </p>
-            </div>
-
             <div className="flex max-w-[420px] flex-col items-center gap-2">
-                <Icon name={state.icon} size={32} className="text-(--icon-secondary)" />
+                {/*
+                 * Legacy's own artwork, at legacy's own box — `alt=""` because it is decoration: the
+                 * title underneath says the same thing, and naming the picture would read it twice.
+                 *
+                 * A sprite glyph stood here before, which was the wrong instrument: a 32px `ban` in
+                 * Icon-Secondary makes a suspension look like a form validation error. These are
+                 * illustrations, and the states they explain are the ones a visitor meets least
+                 * often and understands least — the picture is doing most of the work.
+                 */}
+                <Image
+                    src={state.art.src}
+                    alt=""
+                    width={state.art.width}
+                    height={state.art.height}
+                    className="mb-2 h-auto max-w-full"
+                    // Above the fold on the one screen it appears on, and the only image on it.
+                    priority
+                />
                 <p className="type-body-emphasis text-(--text-title)">{state.title}</p>
                 {state.body && (
                     <p className="type-dense-default text-(--text-subtitle)">{state.body}</p>
@@ -138,50 +201,37 @@ function TerminalScreen({
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-3">
-                {/* A blocking screen must offer the way out, or it is a dead end the visitor
-                    created and cannot undo from the only page that shows it. */}
-                {visibility.kind === 'blocking' && (
-                    <Button
-                        variant="secondary"
-                        size="large"
-                        onClick={unblock.run}
-                        disabled={unblock.isPending}
-                    >
-                        {t('channel_action_unblock')}
-                    </Button>
-                )}
-
-                {visibility.kind === 'protected' && (
-                    <Button
-                        variant={visibility.requested ? 'secondary' : 'primary'}
-                        size="large"
-                        onClick={follow.run}
-                        disabled={follow.isPending || visibility.requested}
-                    >
-                        <Icon name="user-plus" weight="filled" size={20} />
-                        {visibility.requested
-                            ? t('channel_action_requested')
-                            : t('channel_action_follow')}
-                    </Button>
-                )}
-
+                {/*
+                 * **No Unblock here**, which is legacy's shape: its `blockedChannel` wall is a
+                 * picture and two sentences, no control at all. Unblocking lives in Settings →
+                 * Blocked accounts (`blocked-accounts-view.tsx`), where the whole list is, and that
+                 * is also the only place it can be undone for an account whose space you cannot
+                 * reach any more.
+                 *
+                 * It shipped here for a while on the reasoning that a wall must offer its own way
+                 * out. It reads well and is wrong twice: the menu's Block row is hidden once
+                 * blocked (legacy's rule too), so this page has no *entry* point to pair it with,
+                 * and putting the undo on the page you land on by accident is how a block gets
+                 * lifted by accident.
+                 */}
                 {/* Suspended and unpublished have nothing to act on, so the only affordance is
                     leaving — legacy's "Return to home". */}
                 {(visibility.kind === 'suspended' || visibility.kind === 'unpublished') && (
-                    <Button variant="secondary" size="large" render={<Link href="/" />}>
+                    /*
+                     * `accent`. It is the only thing to press on a page that is otherwise a dead
+                     * end, and this app's one call to action is accent — `secondary` read as the
+                     * quiet half of a pair that does not exist here.
+                     */
+                    <Button
+                        data-testid="channel-wall-home"
+                        variant="accent"
+                        size="large"
+                        render={<Link href="/" />}
+                    >
                         {t('channel_return_home')}
                     </Button>
                 )}
             </div>
-
-            {visibility.kind === 'suspended' && (
-                <Link
-                    href="/community-guidelines"
-                    className="type-dense-default text-(--text-link) hover:underline"
-                >
-                    {t('channel_community_guidelines')}
-                </Link>
-            )}
         </section>
     )
 }

@@ -72,7 +72,12 @@ export function ChannelError({
                      * now rather than one tucked into a strip, and at 36 tall it clears WCAG 2.5.8
                      * with room the 28px `small` does not have.
                      */
-                    <Button variant="secondary" size="medium" onClick={onRetry}>
+                    <Button
+                        data-testid="channel-retry"
+                        variant="secondary"
+                        size="medium"
+                        onClick={onRetry}
+                    >
                         <Icon name="arrow-rotate-right" size={18} />
                         {t('common_retry')}
                     </Button>

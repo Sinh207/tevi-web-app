@@ -44,6 +44,7 @@ export function CopyHexButton({ hex }: { hex: string }) {
 
     return (
         <button
+            data-testid="brand-assets-copy-hex"
             type="button"
             onClick={copy}
             aria-label={t('brand_assets_copy_hex', { hex })}

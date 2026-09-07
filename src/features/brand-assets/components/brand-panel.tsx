@@ -95,6 +95,7 @@ export function BrandDownloadLink({
     return (
         <div className={cn('flex flex-col items-start gap-2', className)}>
             <a
+                data-testid="brand-assets-download"
                 href={download.href}
                 download={download.file}
                 className={cn(

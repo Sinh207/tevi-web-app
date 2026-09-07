@@ -1,15 +1,16 @@
 'use client'
 
+import { ShareDialog, spaceShareContext } from '@features/share'
 import { BarIconButton } from '@shared/components/bar-icon-button'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { toast } from 'sonner'
 import type { Channel } from '../api/types'
 import { CHANNEL_CONTAINER } from '../lib/container'
 import { ChannelVerifiedMark } from './channel-verified-mark'
+import { ChannelViewerMenu } from './channel-viewer-menu'
 
 /**
  * The channel page's own bar — back on the leading side, share on the trailing side.
@@ -56,10 +57,29 @@ import { ChannelVerifiedMark } from './channel-verified-mark'
  * unreadable. Opaque, sticky, `--background`. If product wants the immersive look later, the honest
  * route is the overlay-theme AppBar positioned over the cover, which is a DS-backed change.
  */
-export function ChannelTopBar({ channel }: { channel: Channel }) {
+export function ChannelTopBar({
+    channel,
+    isOwner = false,
+}: {
+    channel: Channel
+    /** Hides the overflow menu — nothing in it applies to the person whose space it is. */
+    isOwner?: boolean
+}) {
     const { t } = useTranslation()
     const router = useRouter()
-    const [isSharing, setIsSharing] = useState(false)
+    /*
+     * **The share sheet, which is what legacy's own `iconBtnShare` opens.** This pressed
+     * `navigator.share` (`useShareSpace`) for as long as there was nothing to open — the DS draws
+     * no share sheet, so the platform's was the honest substitute. `features/share` is that sheet
+     * now: a link preview, seven channels and a QR step, with the link **minted per channel** so
+     * "shares by Telegram" is a real figure rather than a guess.
+     *
+     * What is given up is the OS sheet on a phone, which reaches WhatsApp, SMS and AirDrop. That is
+     * a real loss and a deliberate one: legacy has no such path, the attribution only exists on
+     * ours, and a row that hands the reader over to the OS can be added to the sheet later without
+     * moving this call site.
+     */
+    const [shareOpen, setShareOpen] = useState(false)
 
     /**
      * Falls back to the handle for a channel with no display name — a real state, the field is
@@ -67,32 +87,6 @@ export function ChannelTopBar({ channel }: { channel: Channel }) {
      * same fallback `channel-identity.tsx` uses so the two never disagree.
      */
     const title = channel.name ?? `@${channel.slug}`
-    const shareTitle = title
-    const shareUrl = channel.shareable_url
-
-    /**
-     * `navigator.share` where it exists, clipboard everywhere else.
-     *
-     * No DS `dropdown` or `bottom-sheet` is ported yet, so this is the one control that can ship
-     * without one — report and block are gated on that primitive rather than hand-rolled, since a
-     * `div` with state would violate DoD §10.
-     */
-    async function share() {
-        if (!shareUrl || isSharing) return
-        setIsSharing(true)
-        try {
-            if (typeof navigator !== 'undefined' && navigator.share) {
-                await navigator.share({ title: shareTitle, url: shareUrl })
-            } else {
-                await navigator.clipboard.writeText(shareUrl)
-                toast.success(t('channel_link_copied'))
-            }
-        } catch {
-            // A dismissed share sheet rejects, and that is not a failure worth reporting.
-        } finally {
-            setIsSharing(false)
-        }
-    }
 
     return (
         // 60px tall and `top-0 z-20`, matching the sticky-bar precedent in `/brand-assets`. The tab
@@ -120,6 +114,7 @@ export function ChannelTopBar({ channel }: { channel: Channel }) {
                      * different thing from every other sub-page bar — see that component's note.
                      */}
                     <BarIconButton
+                        data-testid="channel-back"
                         name="angle-left"
                         weight="filled"
                         mirrored
@@ -158,15 +153,25 @@ export function ChannelTopBar({ channel }: { channel: Channel }) {
                      */}
                     <div className="flex w-full min-w-0 items-center justify-center gap-1">
                         <AppBarTitleText className="min-w-0 truncate">{title}</AppBarTitleText>
-                        {/* 16, matching the 16px title beside it — the header's copy is 18 next to
-                            a 20px name. Same rule, different scale: see `channel-verified-mark`. */}
-                        <ChannelVerifiedMark channel={channel} size={16} />
+                        {/*
+                         * 24, and **not** the 16 that matched the title's own 16px.
+                         *
+                         * Matching the type size is the rule this row used to follow, and at 16 the
+                         * tick reads as punctuation rather than as a mark. 24 is what fits without
+                         * costing anything: `AppBarTitleText` is `type-body-strong` and
+                         * `--line-height-default` is 1.5, so the title's line box is already 24px —
+                         * and the bar itself is a fixed `h-[60px]` (`shared/ui/app-bar.tsx`). The
+                         * badge therefore grows into space that was already there and cannot move
+                         * the bar. Same number as the rows use, one scale rather than per-surface.
+                         */}
+                        <ChannelVerifiedMark channel={channel} size={24} />
                     </div>
                 </AppBarTitle>
 
                 <AppBarCluster>
-                    {shareUrl && (
+                    {channel.shareable_url && (
                         <BarIconButton
+                            data-testid="channel-share"
                             /*
                              * Outline, where the back arrow beside it is filled — not an
                              * oversight. `icons.md` marks the glyphs the DS ships in only one
@@ -179,19 +184,38 @@ export function ChannelTopBar({ channel }: { channel: Channel }) {
                              */
                             name="share"
                             label={t('channel_share')}
-                            onClick={share}
-                            disabled={isSharing}
+                            onClick={() => setShareOpen(true)}
                         />
                     )}
                     {/*
-                     * The overflow menu (report · block · mute notifications) is **not** here yet,
-                     * and that is a scope decision rather than an omission: it needs the DS
-                     * `dropdown` on desktop or `Sheet/Bottom Sheet` on mobile, neither of which is
-                     * ported. Hand-rolling a `div` + state would break DoD §10, which requires the
-                     * base-ui `Dialog` primitive. It lands with that primitive.
+                     * The overflow menu — mute, follow/unfollow, block. **Viewers only**: every row
+                     * in it is something one account does about another, and an owner has no use
+                     * for any of them.
+                     *
+                     * It was deferred on the grounds that the DS dropdown was not ported. It is:
+                     * `shared/ui/menu.tsx`, on base-ui, already worn by the Live tab's filter and
+                     * the event row's menu. See `ChannelViewerMenu` for what it does and does not
+                     * carry (Report is the one legacy row still missing).
                      */}
+                    {!isOwner && <ChannelViewerMenu channel={channel} />}
                 </AppBarCluster>
             </AppBar>
+
+            {/*
+             * Mounted beside the bar rather than inside the cluster: the bar is `sticky` with its
+             * own stacking context, and a dialog rendered inside it would portal out anyway. Only
+             * when the space has a link — the same condition the button itself is behind.
+             */}
+            {channel.shareable_url && (
+                <ShareDialog
+                    open={shareOpen}
+                    onOpenChange={setShareOpen}
+                    url={channel.shareable_url}
+                    title={title}
+                    image={channel.images.thumb}
+                    context={spaceShareContext(channel)}
+                />
+            )}
         </div>
     )
 }

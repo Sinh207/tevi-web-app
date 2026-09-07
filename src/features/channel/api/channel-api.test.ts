@@ -42,6 +42,18 @@ describe('channelKeys', () => {
     it('nests under one root so the feature can be invalidated wholesale', () => {
         expect(channelKeys.detail('ada', null)[0]).toBe(channelKeys.all[0])
     })
+
+    /**
+     * `blocksAll` is only useful as long as it is a **prefix** of `blocks` — that is what makes
+     * one `invalidateQueries` reach every search term's list. Reorder the key and invalidation
+     * silently matches nothing, leaving an unblocked account listed under the other terms.
+     */
+    it('keeps every search term’s blocked list under one invalidation prefix', () => {
+        expect(channelKeys.blocks('acc-1')).toEqual(['channel', 'blocks', 'acc-1', ''])
+        expect(channelKeys.blocks('acc-1', 'ada')).not.toEqual(channelKeys.blocks('acc-1'))
+        const scope = channelKeys.blocksAll('acc-1')
+        expect(channelKeys.blocks('acc-1', 'ada').slice(0, scope.length)).toEqual([...scope])
+    })
 })
 
 describe('getChannel', () => {
@@ -143,16 +155,14 @@ describe('getThreads', () => {
         expect(get.mock.calls[0][1]).not.toHaveProperty('limit')
     })
 
-    /**
-     * Axios would send `media_type[]=image`; DRF wants the bare key repeated. Without this the
-     * server ignores the filter and returns unfiltered results — the tab **looks** like it
-     * works. See B12.
+    /*
+     * The repeated-key serialisation this used to assert here (`media_type=image&media_type=video`
+     * rather than `media_type[]=…`, B12) is `apiClient`'s, set once on the instance — so it is
+     * pinned in `shared/lib/api/client.test.ts` against the built URI, which is the bytes that
+     * actually leave. Asserting the flag again here only pinned that this model remembered to pass
+     * something it no longer passes. What is still this model's own is the test above: the cursor
+     * reaches axios with its values as arrays.
      */
-    it('serialises repeated params as a bare key, not a bracketed one', async () => {
-        get.mockResolvedValue(PAGE)
-        await channelApi.getThreads({ slug: 'ada', isOwner: false, kind: 'media' })
-        expect(get.mock.calls[0][2]).toMatchObject({ paramsSerializer: { indexes: null } })
-    })
 
     it('forwards the abort signal so a tab switch cancels in flight', async () => {
         get.mockResolvedValue(PAGE)
@@ -167,18 +177,71 @@ describe('follow / unfollow / mute', () => {
     it('posts an empty body to follow and a notification flag to mute', async () => {
         post.mockResolvedValue({})
         await channelApi.follow('ada')
-        expect(post).toHaveBeenCalledWith('v3/channel/channels/ada/follow/', {})
+        expect(post).toHaveBeenCalledWith('v3/channel/channels/ada/follow/', {}, undefined)
 
         await channelApi.follow('ada', false)
-        expect(post).toHaveBeenLastCalledWith('v3/channel/channels/ada/follow/', {
-            notification: false,
-        })
+        expect(post).toHaveBeenLastCalledWith(
+            'v3/channel/channels/ada/follow/',
+            { notification: false },
+            undefined,
+        )
     })
 
     it('unfollows on its own route', async () => {
         post.mockResolvedValue({})
         await channelApi.unfollow('ada')
-        expect(post).toHaveBeenCalledWith('v3/channel/channels/ada/unfollow/', {})
+        expect(post).toHaveBeenCalledWith('v3/channel/channels/ada/unfollow/', {}, undefined)
+    })
+
+    /**
+     * The four writes `/following` makes carry the account **explicitly**, and only that screen
+     * needs them to: it defers the unfollow by five seconds so an Undo can cancel it, which is long
+     * enough to use the account switcher. An un-scoped request would then be signed as whoever is
+     * active when the timer fires and unfollow the space on the wrong account. See
+     * `channelApi.unfollow` and `use-followed-channels.test.tsx`.
+     *
+     * Absent `accountId` stays `undefined` rather than becoming `{ accountId: null }` — the
+     * interceptor reads the active session in that case, which is right for every other caller.
+     */
+    it('scopes follow, unfollow and the pin routes to an account when given one', async () => {
+        post.mockResolvedValue({})
+
+        await channelApi.unfollow('ada', 'acc-1')
+        expect(post).toHaveBeenLastCalledWith(
+            'v3/channel/channels/ada/unfollow/',
+            {},
+            {
+                accountId: 'acc-1',
+            },
+        )
+
+        await channelApi.follow('ada', true, 'acc-1')
+        expect(post).toHaveBeenLastCalledWith(
+            'v3/channel/channels/ada/follow/',
+            { notification: true },
+            { accountId: 'acc-1' },
+        )
+
+        await channelApi.pinChannel('ada', 'acc-1')
+        expect(post).toHaveBeenLastCalledWith('v3/channel/channels/ada/pin/', undefined, {
+            accountId: 'acc-1',
+        })
+
+        await channelApi.unpinChannel('ada', 'acc-1')
+        expect(post).toHaveBeenLastCalledWith('v3/channel/channels/ada/unpin/', undefined, {
+            accountId: 'acc-1',
+        })
+    })
+
+    /** The slug comes off the URL, so it is encoded at every use (DoD §8) — pin included. */
+    it('encodes the slug in the pin routes', async () => {
+        post.mockResolvedValue({})
+        await channelApi.pinChannel('a b/c')
+        expect(post).toHaveBeenLastCalledWith(
+            'v3/channel/channels/a%20b%2Fc/pin/',
+            undefined,
+            undefined,
+        )
     })
 })
 
@@ -192,6 +255,35 @@ describe('blocks', () => {
 
         await channelApi.unblockUser('user 9/../x')
         expect(del).toHaveBeenCalledWith('v3/channel/my-channel/blocks/user%209%2F..%2Fx/')
+    })
+
+    it('sends the first page unfiltered, and omits `q` rather than sending an empty one', async () => {
+        get.mockResolvedValue({ results: [], count: 0, next: null })
+        await channelApi.getBlockedAccounts({})
+        expect(get).toHaveBeenCalledWith(
+            'v3/channel/my-channel/blocks/',
+            { page: ['1'], page_size: ['20'] },
+            { signal: undefined },
+        )
+    })
+
+    /**
+     * The one that would fail silently: page two's params come from the `next` URL, and a `q`
+     * dropped there widens the list mid-scroll — filtered rows above, the whole list below,
+     * and nothing in the UI to say so.
+     */
+    it('carries `q` onto a cursor page without disturbing the cursor', async () => {
+        get.mockResolvedValue({ results: [], count: 0, next: null })
+        await channelApi.getBlockedAccounts({
+            cursor: { page: ['3'], page_size: ['20'] },
+            q: 'ada',
+            accountId: 'acc-1',
+        })
+        expect(get).toHaveBeenCalledWith(
+            'v3/channel/my-channel/blocks/',
+            { page: ['3'], page_size: ['20'], q: 'ada' },
+            { signal: undefined, accountId: 'acc-1' },
+        )
     })
 })
 

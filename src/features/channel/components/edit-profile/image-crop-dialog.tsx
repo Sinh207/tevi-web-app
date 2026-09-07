@@ -283,6 +283,7 @@ export function ImageCropDialog({
                      * failure the rule exists to prevent rather than the one it is reporting.
                      */}
                     <div
+                        data-testid="channel-crop-frame"
                         ref={attachFrame}
                         role="application"
                         aria-label={t('profile_crop_frame')}
@@ -455,6 +456,7 @@ export function ImageCropDialog({
                     {/* ── zoom ──────────────────────────────────────────────────────────────── */}
                     <div className="flex items-center gap-2">
                         <ZoomButton
+                            testId="channel-crop-zoom-out"
                             icon="search-minus"
                             label={t('profile_crop_zoom_out')}
                             disabled={!natural || zoom <= MIN_ZOOM}
@@ -467,6 +469,7 @@ export function ImageCropDialog({
                          * screen-reader-complete for free.
                          */}
                         <input
+                            data-testid="channel-crop-zoom"
                             type="range"
                             min={MIN_ZOOM}
                             max={MAX_ZOOM}
@@ -479,6 +482,7 @@ export function ImageCropDialog({
                             className="h-1 min-w-0 flex-auto cursor-pointer accent-(--button-primary-bg) disabled:cursor-not-allowed disabled:opacity-50"
                         />
                         <ZoomButton
+                            testId="channel-crop-zoom-in"
                             icon="search-plus"
                             label={t('profile_crop_zoom_in')}
                             disabled={!natural || zoom >= MAX_ZOOM}
@@ -495,6 +499,7 @@ export function ImageCropDialog({
                             {t('profile_crop_hint')}
                         </p>
                         <Button
+                            data-testid="channel-crop-reset"
                             type="button"
                             variant="ghost"
                             size="small"
@@ -514,6 +519,7 @@ export function ImageCropDialog({
 
                 <DialogFooter layout="side-by-side">
                     <Button
+                        data-testid="channel-crop-cancel"
                         type="button"
                         variant="secondary"
                         size="large"
@@ -523,6 +529,7 @@ export function ImageCropDialog({
                         {t('common_close')}
                     </Button>
                     <Button
+                        data-testid="channel-crop-confirm"
                         type="button"
                         variant="primary"
                         size="large"
@@ -550,15 +557,19 @@ function ZoomButton({
     label,
     disabled,
     onClick,
+    testId,
 }: {
     icon: 'search-minus' | 'search-plus'
     label: string
     disabled: boolean
     onClick: () => void
+    /** Passed, not spread — a closed prop list would drop a `data-testid` silently. */
+    testId?: string
 }) {
     return (
         <button
             type="button"
+            data-testid={testId}
             disabled={disabled}
             onClick={onClick}
             title={label}

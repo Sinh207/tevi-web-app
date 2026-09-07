@@ -1,13 +1,25 @@
 'use client'
 
 import { useAccountSwitcher, useAuth, useRequireAuth } from '@features/auth'
-import { useBalanceDisplay } from '@features/balance'
+import { useBalanceDisplay, useCurrency } from '@features/balance'
+import { useFollowRequestsCount, useMyChannel } from '@features/channel'
 import { type IdentityState, useIdentityStatus } from '@features/identification'
+import { useMiniApp } from '@features/mini-app'
+/*
+ * The path, from the import-free module — never `@features/payment`'s barrel, which would pull
+ * Stripe's loader and the whole checkout graph into the drawer to read one string. Same call
+ * `lib/menu-rows.ts` makes for `menu_card_management`.
+ */
+import { GET_STAR_PATH } from '@features/payment/routes'
+import { PAYOUT_REQUEST_PATH } from '@features/payout/routes'
+import { usePermission } from '@features/permission'
+import { CurrencyList } from '@shared/components/currency-list'
+import { PickerList, type PickerOption } from '@shared/components/picker-list'
 import { toLocale } from '@shared/i18n/settings'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
-import { Avatar, avatarImageClass } from '@shared/ui/avatar'
-import { Card, CardTrailing } from '@shared/ui/card'
+import { NotificationBadge } from '@shared/ui/badge'
+import { Card } from '@shared/ui/card'
 import { ConfirmDialog } from '@shared/ui/confirm-dialog'
 import { FieldLabel } from '@shared/ui/field-label'
 import { Icon } from '@shared/ui/icon'
@@ -19,25 +31,27 @@ import {
     LeftBarBalanceRule,
     LeftBarBalanceStats,
     LeftBarList,
-    LeftBarProfileContent,
-    LeftBarProfileHandle,
-    LeftBarProfileMeta,
     LeftBarRow,
     LeftBarSection,
-    leftBarProfileCopyClass,
 } from '@shared/ui/left-bar'
 import { ListSeparator } from '@shared/ui/list'
-import Image from 'next/image'
+import { Skeleton } from '@shared/ui/skeleton'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
-import { useAvatarUrl } from '../../hooks/use-avatar-url'
 import { useDrawerNavigate } from '../../hooks/use-drawer-navigate'
 import { isPathActive, isViewActive, MENU_ROW_ACTIVE_CLASS } from '../../lib/menu-active'
-import { MENU_SECTIONS, OTHER_SETTINGS_ROWS, type Row, THEME_OPTIONS } from '../../lib/menu-rows'
+import {
+    MENU_SECTIONS,
+    menuRowTestId,
+    OTHER_SETTINGS_ROWS,
+    type Row,
+    THEME_OPTIONS,
+} from '../../lib/menu-rows'
 import { type DrawerView, useMenu } from '../../providers/menu-state'
 import { DataStorageScreen } from './data-storage-screen'
-import { DrawerScreen, DrawerSubScreen, PickerList, type PickerOption } from './drawer-screen'
+import { DrawerScreen, DrawerSubScreen } from './drawer-screen'
+import { MenuProfileCard } from './menu-profile-card'
 import { PrivacySecurityScreen } from './privacy-security-screen'
 
 /**
@@ -46,13 +60,15 @@ import { PrivacySecurityScreen } from './privacy-security-screen'
  * (claude.ai/design/p/87e00715-ad01-43ad-9a23-20469b60276d):
  *
  *   · a `Personal` heading, since on web the drawer is a panel rather than a screen
- *   · the profile row is `Card type="basic"`, not the DS's `premium` gradient
+ *   · the profile row is `Card type="basic"` unless the account has Premium, where the DS's
+ *     purple `premium` card is right and legacy shows it too (see `menu-profile-card.tsx`)
  *   · the balance card takes a visible border
  *   · every row ends in a drilldown chevron
  *   · 24 of top padding instead of the DS's 64 — that 64 is a mobile status-bar inset
  *
  * This file is the composition only. What the rows *are* lives in `lib/menu-rows.ts`, the
- * screen-stack layers and the pick-one list in `drawer-screen.tsx`, and which screen is
+ * screen-stack layers and the pick-one list in `drawer-screen.tsx`, the profile card and its
+ * three session states in `menu-profile-card.tsx`, and which screen is
  * showing in `providers/menu-state.tsx` — `AppSide` sizes the drawer's frame from that
  * last one (a pushed screen is full-bleed on mobile).
  */
@@ -69,12 +85,16 @@ const IDENTITY_VALUE_KEY: Record<IdentityState, string> = {
 
 export function MenuDrawer() {
     const { t, currentLanguage, LANGUAGES, changeLanguage } = useTranslation()
-    const { signOut, isSigningOut, isAuthenticated } = useAuth()
+    const { signOut, isSigningOut, isAuthenticated, isBootstrapping } = useAuth()
     const [confirmingSignOut, setConfirmingSignOut] = useState(false)
     const requireAuth = useRequireAuth()
     const openAccountSwitcher = useAccountSwitcher()
-    const avatar = useAvatarUrl()
     const { close, open, view, push, pop } = useMenu()
+    /*
+     * The Mini App Center row. `openCenter` composes `useRequireAuth` itself, so this row needs no
+     * gating of its own beyond closing the drawer — see `handleMiniAppCenter`.
+     */
+    const { openCenter } = useMiniApp()
     /*
      * Not fetched for a guest or an anonymous session (see `useIdentityStatus`), so the
      * drawer costs a signed-out visitor no request — and gated on `open`, so it costs a
@@ -101,7 +121,65 @@ export function MenuDrawer() {
      * Already formatted, and `—` rather than `0` while unknown: that decision belongs to the
      * feature that owns the unit, not to this file. See `useBalanceDisplay`.
      */
-    const { star: starBalance, usd: usdBalance } = useBalanceDisplay()
+    const { currency, currencies, isListLoading, rate, isRateKnown, selectCurrency } = useCurrency({
+        enabled: open,
+    })
+    const {
+        star: starBalance,
+        usd: usdBalance,
+        isKnown: isBalanceKnown,
+    } = useBalanceDisplay({
+        currency,
+        /*
+         * `null`, not the standing-in `1`, until the rate is real — otherwise the first frame after the
+         * drawer opens labels a USD figure `₫` and understates a Vietnamese creator's balance by four
+         * orders of magnitude. `useBalanceDisplay` prints `—` for it, which is what this drawer already
+         * shows for a figure it does not have. `/my-wallet` makes the opposite call on purpose: there the
+         * balance is the screen's subject rather than a summary line.
+         */
+        rate: isRateKnown ? rate : null,
+    })
+    /*
+     * The Follow requests badge. Gated on `open` for the same measured reason as
+     * `useIdentityStatus` — this drawer is mounted in the shell on every page, and an ungated
+     * query here would be a request at bootstrap for every signed-in visitor to fill in a badge
+     * most of them never look at. Unlike the balance, nothing outside this drawer reads it.
+     */
+    const { count: followRequestCount, isKnown: followRequestCountKnown } = useFollowRequestsCount({
+        enabled: open,
+    })
+    /*
+     * `can()` and not `useCapability()`: this is a **list**, and the trade-off between the two is
+     * stated once in `features/permission` — a row wants the boolean and a screen wants the four
+     * states. Read here rather than in `menu-rows.ts` so that file stays JSX-free and hook-free, which
+     * is the same reason the Star figure above is read here.
+     */
+    const { can } = usePermission()
+    /**
+     * The MCN row's gate — see `Row.mcnOnly`.
+     *
+     * `useMyChannel()` costs nothing here: `MyChannelProvider` holds that body app-wide and this
+     * drawer is mounted inside it, so this is a context read rather than a request. It is also why
+     * the gate can be a fact about the account rather than a fourth query.
+     *
+     * **Fails closed**, like `can()` above: `myChannel` is `undefined` until the body lands, so the
+     * row is absent while the answer is unknown instead of appearing and being taken away. A managed
+     * creator sees it a beat late; nobody sees it wrongly.
+     */
+    const { myChannel } = useMyChannel()
+    const isMcnMember = Boolean(myChannel?.mcn) && !myChannel?.mcn?.is_owner
+    /**
+     * Whether the drawer should draw its account-scoped half at all — the balance card and every
+     * `authOnly` row.
+     *
+     * `isBootstrapping` counts as a session on purpose. Resolving one is a client-side round trip,
+     * so for its duration a returning account looks exactly like a guest; hiding two thirds of the
+     * menu and putting it back is the same wrong-identity flash `MenuProfileCard` renders a
+     * skeleton to avoid, and it would fire on every cold load. Nothing becomes reachable: those
+     * rows carry `requiresAuth`, so pressing one in that window raises the sign-in dialog.
+     */
+    const hasSession = isAuthenticated || isBootstrapping
+
     // `i18n.language` is whatever was negotiated, which is not always one of the eight
     // codes the switcher lists — a region tag, or a locale we ship but don't surface.
     // Clamping it is what makes both the row's value and the check land on a real row.
@@ -186,6 +264,22 @@ export function MenuDrawer() {
     }
 
     /**
+     * Open the Mini App Center — Tevi's directory of mini apps, which is itself a mini app.
+     *
+     * Closed first, in both branches, for the reason above: the player is an overlay and the
+     * sign-in dialog it raises for a guest is another one, and a drawer left standing behind
+     * either stacks two panels on one another. Unlike a sub-screen there is nothing to come back
+     * to inside the drawer — the app is the destination.
+     *
+     * No gate here: `openCenter` composes `useRequireAuth`, so a guest gets the sign-in dialog and
+     * no player, and a second check would be the same decision written twice.
+     */
+    const handleMiniAppCenter = () => {
+        close()
+        openCenter()
+    }
+
+    /**
      * Picking a language applies it and closes, as legacy does — the switch repaints the
      * whole shell, so leaving the drawer standing on the list you just used would show
      * you a screen mid-swap instead of the app in the language you asked for. Closing
@@ -203,6 +297,16 @@ export function MenuDrawer() {
     const selectLanguage = (code: string) => {
         void changeLanguage(code)
         close()
+    }
+
+    /**
+     * Picking a currency pops back to the root rather than closing, unlike the language picker: what
+     * changed is one figure on the card you pressed to get here, so returning to it *is* the
+     * confirmation. Closing the drawer would hide the only thing that moved.
+     */
+    const selectCurrencyAndReturn = (code: string) => {
+        selectCurrency(code)
+        pop()
     }
 
     /**
@@ -260,6 +364,9 @@ export function MenuDrawer() {
         if (row.action === 'switch-account') {
             return { onClick: handleSwitchAccount } as const
         }
+        if (row.action === 'mini-app-center') {
+            return { onClick: handleMiniAppCenter } as const
+        }
         if (row.view) {
             const view = row.view
             return {
@@ -276,6 +383,40 @@ export function MenuDrawer() {
      * the chevron the other rows get.
      */
     const rowTrailing = (row: Row) => {
+        /*
+         * The one row whose trailing content is not text: a red count pill, which is what legacy
+         * puts here and what a queue of pending decisions warrants — the number is the reason to
+         * press the row, not a description of its current setting.
+         *
+         * Rendered only when the count is **known and non-zero**: an unfetched count is not
+         * entitled to claim zero (see `useFollowRequestsCount`), and the absence of a badge is
+         * exactly what zero looks like, so there is nothing to draw either way.
+         *
+         * Capped at `9+`, as legacy caps it. The pill sits in a row beside a chevron, so its
+         * width is not free — and past nine the exact figure stops being the point.
+         *
+         * The number alone says nothing to a screen reader — "Follow requests, 3" leaves the 3
+         * unexplained, and `9+` is not a number at all. So the digits are `aria-hidden` and the
+         * sentence is an `sr-only` sibling **inside** the pill.
+         *
+         * ⚠ Not `aria-label` on the badge, which is what this first shipped as and is silently
+         * useless: the pill is a `<span>`, i.e. `role="generic"`, and an accessible name on a
+         * generic element is ignored — so that version *removed* the count from the accessible
+         * row instead of describing it. `sr-only` text is read as content, which a generic
+         * element does contribute. It is clipped, not laid out, so the pill's width is the
+         * digits'.
+         */
+        if (row.key === 'menu_follow_requests') {
+            if (!followRequestCountKnown || followRequestCount === 0) return undefined
+            return (
+                <NotificationBadge type="count" size="small">
+                    <span aria-hidden>{followRequestCount > 9 ? '9+' : followRequestCount}</span>
+                    <span className="sr-only">
+                        {t('menu_follow_requests_pending', { count: followRequestCount })}
+                    </span>
+                </NotificationBadge>
+            )
+        }
         if (row.valueText !== undefined) {
             return <span className="type-dense-default text-(--text-body)">{row.valueText}</span>
         }
@@ -329,6 +470,7 @@ export function MenuDrawer() {
             <div data-slot="menu-stack" className="relative h-full">
                 <DrawerScreen depth="root" active={view === 'root'}>
                     <LeftBar
+                        data-testid="navigation-menu"
                         as="aside"
                         aria-label={t('menu_title')}
                         className="w-full min-h-full bg-(--background-surface) pt-6"
@@ -336,121 +478,230 @@ export function MenuDrawer() {
                         <h1 className="type-title-t1-bold mb-2 text-(--text-title)">
                             {t('menu_personal')}
                         </h1>
-                        <Card type="basic" className="cursor-pointer items-center">
-                            <Avatar size="large" type={avatar ? 'image' : 'placeholder'}>
-                                {avatar ? (
-                                    <Image
-                                        alt=""
-                                        src={avatar}
-                                        width={48}
-                                        height={48}
-                                        className={avatarImageClass}
-                                    />
-                                ) : (
-                                    <Icon name="user-simple-alt" size={24} />
-                                )}
-                            </Avatar>
-                            <LeftBarProfileContent>
-                                <LeftBarProfileHandle
-                                    name={t('menu_profile_name')}
-                                    at={t('menu_profile_at')}
-                                />
-                                <LeftBarProfileMeta>
-                                    <span>{t('menu_profile_id', { id: '—' })}</span>
-                                    <Icon
-                                        name="pages"
-                                        weight="filled"
-                                        size={16}
-                                        className={leftBarProfileCopyClass}
-                                        title={t('menu_copy_id')}
-                                    />
-                                </LeftBarProfileMeta>
-                            </LeftBarProfileContent>
-                            <CardTrailing type="option">
-                                <Icon name="angle-right" size={20} className="rtl:-scale-x-100" />
-                            </CardTrailing>
-                        </Card>
+                        <MenuProfileCard />
 
-                        <Card
-                            type="balance-overview"
-                            className="border border-(--separator-default)"
-                        >
-                            <LeftBarBalanceStats>
-                                <LeftBarBalanceItem
-                                    label={t('menu_balance_star')}
-                                    value={starBalance}
-                                />
-                                <LeftBarBalanceItem
-                                    label={t('menu_balance_usd')}
-                                    value={usdBalance}
-                                />
-                            </LeftBarBalanceStats>
-                            <ListSeparator size="medium" />
-                            {/*
-                             * ## Both halves still lead nowhere, and stay visibly so
-                             *
-                             * Legacy's card links these to `/get-star` and
-                             * `/my-wallet/payout-request`. Neither exists in this app yet —
-                             * buying Star and requesting a payout are later passes — so they
-                             * keep the repo's rule for a control whose destination is not
-                             * built: dimmed and `disabled`, not silently inert.
-                             * `channel-owner-actions.tsx` states it, and
-                             * `features/balance`'s own action rows follow the same one.
-                             *
-                             * They are **not** pointed at `/my-star` and `/my-wallet` as a
-                             * stand-in. "Get Star" is a purchase, not a balance screen; a
-                             * button that says one thing and does another is worse than one
-                             * that admits it is not ready.
-                             */}
-                            <LeftBarBalanceActions>
-                                <LeftBarBalanceAction
-                                    disabled
-                                    title={t('balance_action_unavailable')}
-                                >
-                                    {t('menu_get_star')}
-                                </LeftBarBalanceAction>
-                                <LeftBarBalanceRule />
-                                <LeftBarBalanceAction
-                                    disabled
-                                    title={t('balance_action_unavailable')}
-                                >
-                                    {t('menu_withdraw')}
-                                </LeftBarBalanceAction>
-                            </LeftBarBalanceActions>
-                        </Card>
+                        {/*
+                         * The balance card is for an account that has one. Legacy renders it only
+                         * behind `isAuthenticated` and so does this: signed out, both figures are
+                         * `—`, the currency switcher opens a picker over nothing, and Withdraw is a
+                         * withdrawal form with no balance behind it — a card whose every field is a
+                         * placeholder is worse than the space it takes. The rows below follow the
+                         * same rule (see the filter), and `hasSession` keeps the bootstrap window
+                         * showing the signed-in shape for the same reason it does there.
+                         */}
+                        {hasSession && (
+                            <Card
+                                type="balance-overview"
+                                className="border border-(--separator-default)"
+                            >
+                                <LeftBarBalanceStats>
+                                    <LeftBarBalanceItem
+                                        /*
+                                         * Held at the height of the pill opposite it, so both figures sit
+                                         * on one line. The DS draws two plain label strings here; the
+                                         * moment one of them becomes a control with a border, the other
+                                         * has to match its box or the two columns' values are 4px apart —
+                                         * which reads as a rendering slip on a card whose whole job is
+                                         * two numbers side by side.
+                                         */
+                                        label={
+                                            <span className="flex h-6 items-center">
+                                                {t('menu_balance_star')}
+                                            </span>
+                                        }
+                                        value={starBalance}
+                                    />
+                                    <LeftBarBalanceItem
+                                        /*
+                                         * The column's label is the **switcher**, which is where legacy puts
+                                         * it (`components/btnCurrency` sits in exactly this slot) and what
+                                         * makes the figure below it readable to a creator who is not paid in
+                                         * dollars. The DS comp draws a plain `USD` string here; it draws no
+                                         * switcher anywhere, and the wallet card's own chip is the same
+                                         * app-authored control.
+                                         *
+                                         * Leading `arrows-repeat`, matching `CurrencyChip` on `/my-wallet` —
+                                         * one glyph for "these figures can be shown in another unit" across
+                                         * both places it is offered. Not a trailing caret: this is not a
+                                         * dropdown, it pushes a screen.
+                                         *
+                                         * Gated on the *action* like every other account-scoped control in
+                                         * this drawer, so a guest gets the sign-in dialog rather than a
+                                         * picker over a balance of `—`.
+                                         *
+                                         * ## It wears a hairline capsule, and that is not decoration
+                                         *
+                                         * Text plus a glyph was the first cut and it failed the only test
+                                         * that matters here: nobody could tell it was pressable, which is
+                                         * the whole complaint the control exists to answer. The capsule is
+                                         * the app's own — the DS has no chip for a card label — and it is
+                                         * built from the tokens the DS *does* define for a neutral press:
+                                         * a `--separator-default` hairline at rest, the ghost button's own
+                                         * hover fill, and Title ink on hover. Both flip with the theme, so
+                                         * this reads the same in Dark, where a `--button-secondary-bg`
+                                         * chip would have been the exact colour of the card behind it.
+                                         */
+                                        label={
+                                            <button
+                                                data-testid="navigation-menu-currency-trigger"
+                                                type="button"
+                                                onClick={pushGated('currency')}
+                                                aria-label={`${currency.code}, ${t('balance_change_currency')}`}
+                                                className={cn(
+                                                    'type-dense-default -ms-2 inline-flex h-6 cursor-pointer items-center gap-1',
+                                                    'rounded-[var(--radius-fill)] border border-(--separator-default) bg-transparent px-2',
+                                                    'text-(--text-body) transition-colors duration-150',
+                                                    'hover:border-(--separator-strong) hover:bg-(--button-ghost-bg-hover) hover:text-(--text-title)',
+                                                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)',
+                                                )}
+                                            >
+                                                <Icon name="arrows-repeat" size={16} />
+                                                {currency.code}
+                                            </button>
+                                        }
+                                        /*
+                                         * A shimmer, not the em dash, for the one case where the two
+                                         * mean different things: the balance is in hand and only the
+                                         * *rate* is in flight — which is every first open after picking
+                                         * a new currency. `—` is this drawer's word for "we do not have
+                                         * this"; a figure that is one request away is not that, and a
+                                         * card that blanks and then fills reads as an error that
+                                         * corrected itself. The box is reserved at the value's own line
+                                         * height (18 × 1.5), so nothing moves when the number lands.
+                                         */
+                                        value={
+                                            isBalanceKnown && !isRateKnown ? (
+                                                <span className="flex h-[27px] items-center">
+                                                    <Skeleton w={96} />
+                                                </span>
+                                            ) : (
+                                                usdBalance
+                                            )
+                                        }
+                                    />
+                                </LeftBarBalanceStats>
+                                <ListSeparator size="medium" />
+                                {/*
+                                 * ## Both halves lead somewhere
+                                 *
+                                 * Legacy's card links these to `/get-star` and
+                                 * `/my-wallet/payout-request`, and both screens exist here now, so both
+                                 * are real `<a>`s through the same handlers the rows above use: close
+                                 * the drawer, then push. Without the close, the reader lands on the
+                                 * destination with the drawer still over it, which is the bug
+                                 * `handleSwitchAccount` documents for dialogs.
+                                 *
+                                 * The two handlers differ, and it is the screen behind each that
+                                 * decides which. `/get-star` shows its prices to a guest and gates the
+                                 * **press**, so `navigate` sends anybody there and the page works.
+                                 * `/my-wallet/payout-request` is a withdrawal form over a bearer — a
+                                 * guest has no balance, no methods and no quote — so it takes
+                                 * `navigateGated`: pressing it signed out raises the sign-in dialog
+                                 * instead of navigating away. Gated on the **action**, not the route;
+                                 * a modified click still opens the URL and the page handles the guest.
+                                 *
+                                 * Withdraw was `disabled` here while `features/payout` was unbuilt.
+                                 * That is the repo's rule for a control with no destination
+                                 * (`channel-owner-actions.tsx`), and it stops applying the moment the
+                                 * destination lands — `/my-wallet`'s own action row already links to
+                                 * this same path.
+                                 */}
+                                <LeftBarBalanceActions>
+                                    <LeftBarBalanceAction
+                                        data-testid="navigation-menu-get-star"
+                                        href={GET_STAR_PATH}
+                                        onClick={navigate(GET_STAR_PATH)}
+                                    >
+                                        {t('menu_get_star')}
+                                    </LeftBarBalanceAction>
+                                    <LeftBarBalanceRule />
+                                    <LeftBarBalanceAction
+                                        data-testid="navigation-menu-withdraw"
+                                        href={PAYOUT_REQUEST_PATH}
+                                        onClick={navigateGated(PAYOUT_REQUEST_PATH)}
+                                    >
+                                        {t('menu_withdraw')}
+                                    </LeftBarBalanceAction>
+                                </LeftBarBalanceActions>
+                            </Card>
+                        )}
 
-                        {MENU_SECTIONS.map(section => (
-                            <LeftBarSection key={section.label}>
-                                <FieldLabel className="h-[32px]">{t(section.label)}</FieldLabel>
-                                <LeftBarList
-                                    inset={section.inset}
-                                    featured={section.featured}
-                                    bordered={!section.featured}
+                        {MENU_SECTIONS.map(section => {
+                            /*
+                             * Two filters, and a section that loses all of its rows drops its
+                             * heading with them — otherwise SERVICES would render as a label with
+                             * nothing under it for every ordinary creator, and a signed-out drawer
+                             * would carry six empty headings.
+                             *
+                             * `authOnly` drops the rows a guest has no account to use, which is
+                             * legacy's own table (`Row.authOnly` carries the list and the reasoning).
+                             * It reads `hasSession`, not `isAuthenticated`, so the bootstrap window
+                             * shows the signed-in set: the session is resolved on the client, so a
+                             * returning account is briefly indistinguishable from a guest, and
+                             * collapsing the menu to four rows and back on every cold load is the
+                             * same flash `MenuProfileCard` renders a skeleton to avoid. Nothing is
+                             * reachable in that window that would not be anyway — every one of those
+                             * rows carries `requiresAuth`, so the press is gated regardless.
+                             *
+                             * `can()` **fails closed**, so a row is hidden while the grants are still
+                             * loading and stays hidden if the request failed. That is the documented
+                             * trade for a list (`features/permission`): an unlisted row costs nothing,
+                             * where a listed one leads to a screen the backend would refuse. The
+                             * screen behind it makes the opposite call, because there a wrong denial
+                             * is the whole bug.
+                             */
+                            const rows = section.rows.filter(
+                                row =>
+                                    (!row.authOnly || hasSession) &&
+                                    (!row.capability || can(row.capability)) &&
+                                    /*
+                                     * The third gate, and the only one that reads the account's own
+                                     * body rather than a session or a grant: MCN Partnership is
+                                     * listed only for a creator a network manages. Legacy's own
+                                     * condition — `Row.mcnOnly` carries it and the reasoning.
+                                     */
+                                    (!row.mcnOnly || isMcnMember),
+                            )
+                            if (rows.length === 0) return null
+                            return (
+                                <LeftBarSection
+                                    data-testid="navigation-menu-section"
+                                    data-row-key={section.label}
+                                    key={section.label}
                                 >
-                                    {section.rows.map((row, i) => (
-                                        <LeftBarRow
-                                            key={row.key}
-                                            {...rowAction(row)}
-                                            className={MENU_ROW_ACTIVE_CLASS}
-                                            rule={i > 0}
-                                            title={t(row.key)}
-                                            icon={row.icon}
-                                            brand={
-                                                row.mark ? (
-                                                    <Icon {...row.mark} size={32} />
-                                                ) : undefined
-                                            }
-                                            tile={row.tile}
-                                            glyph={row.glyph}
-                                            // A row that fires in place has nothing to drill into, so
-                                            // it loses the chevron the navigating rows carry.
-                                            chevron={row.action === undefined}
-                                            trailing={rowTrailing(row)}
-                                        />
-                                    ))}
-                                </LeftBarList>
-                            </LeftBarSection>
-                        ))}
+                                    <FieldLabel className="h-[32px]">{t(section.label)}</FieldLabel>
+                                    <LeftBarList
+                                        inset={section.inset}
+                                        featured={section.featured}
+                                        bordered={!section.featured}
+                                    >
+                                        {rows.map((row, i) => (
+                                            <LeftBarRow
+                                                data-testid="navigation-menu-row"
+                                                data-row-key={menuRowTestId(row)}
+                                                key={row.key}
+                                                {...rowAction(row)}
+                                                className={MENU_ROW_ACTIVE_CLASS}
+                                                rule={i > 0}
+                                                title={t(row.key)}
+                                                icon={row.icon}
+                                                brand={
+                                                    row.mark ? (
+                                                        <Icon {...row.mark} size={32} />
+                                                    ) : undefined
+                                                }
+                                                tile={row.tile}
+                                                glyph={row.glyph}
+                                                // A row that fires in place has nothing to drill into, so
+                                                // it loses the chevron the navigating rows carry.
+                                                chevron={row.action === undefined}
+                                                trailing={rowTrailing(row)}
+                                            />
+                                        ))}
+                                    </LeftBarList>
+                                </LeftBarSection>
+                            )
+                        })}
                     </LeftBar>
                 </DrawerScreen>
 
@@ -463,6 +714,8 @@ export function MenuDrawer() {
                         <LeftBarList bordered>
                             {OTHER_SETTINGS_ROWS.map((row, i) => (
                                 <LeftBarRow
+                                    data-testid="navigation-menu-other-row"
+                                    data-row-key={menuRowTestId(row)}
                                     key={row.key}
                                     {...rowAction(row)}
                                     className={MENU_ROW_ACTIVE_CLASS}
@@ -540,17 +793,56 @@ export function MenuDrawer() {
                  * in CSS with nothing to remount, so staying put lets you see the choice land and
                  * try another. Closing would be throwing the picker away mid-comparison.
                  */}
-                <DrawerScreen depth="pushed" active={view === 'appearance'}>
+                <DrawerScreen depth="pushed" active={open && view === 'appearance'}>
                     <DrawerSubScreen
                         title={t('menu_appearance')}
                         backLabel={t('common_back')}
                         onBack={pop}
                     >
                         <PickerList
+                            testId="navigation-menu-appearance"
                             label={t('menu_appearance')}
                             options={themeOptions}
                             value={activeTheme}
                             onSelect={setTheme}
+                            /*
+                             * A pushed screen stays **mounted** while parked, so the list has to be
+                             * told when it is the one on screen — otherwise its scroll-to-selection
+                             * runs against a drawer nobody is looking at. Three rows never scroll, so
+                             * this is belt and braces here and load-bearing on Language.
+                             */
+                            active={view === 'appearance'}
+                        />
+                    </DrawerSubScreen>
+                </DrawerScreen>
+
+                {/*
+                 * Currency — the exchange service's list, reached from the balance card's own label
+                 * rather than from a settings row (`DrawerView` notes why). Legacy opens a dialog from
+                 * that press; a pushed screen is this drawer's equivalent, and it is the same
+                 * back-arrow-and-centred-title header legacy's dialog has.
+                 */}
+                <DrawerScreen depth="pushed" active={view === 'currency'}>
+                    <DrawerSubScreen
+                        title={t('balance_change_currency')}
+                        backLabel={t('common_back')}
+                        onBack={pop}
+                    >
+                        <CurrencyList
+                            testId="navigation-menu-currency"
+                            active={open && view === 'currency'}
+                            currencies={currencies}
+                            selected={currency}
+                            isLoading={isListLoading}
+                            onSelect={selectCurrencyAndReturn}
+                            /* The App Bar above it is sticky at 0 and a fixed `h-[60px]`, so the
+                               field sits exactly under it with no gap for rows to show through. */
+                            stickyClassName="top-[60px]"
+                            /* Cancels `DrawerSubScreen`'s own 16px column gap. The field carries its
+                               own 12px above the pill (it has to — see the note there), and the two
+                               together put 28px under the App Bar at rest and 12px once the list
+                               scrolls, i.e. the header would appear to grow as you scrolled it. */
+                            className="-mt-4"
                         />
                     </DrawerSubScreen>
                 </DrawerScreen>
@@ -562,17 +854,20 @@ export function MenuDrawer() {
                  * the active one; the flag takes the `brand` slot, since a flag brings its own paint
                  * and a coloured DS tile behind it would only fight it.
                  */}
-                <DrawerScreen depth="pushed" active={view === 'language'}>
+                <DrawerScreen depth="pushed" active={open && view === 'language'}>
                     <DrawerSubScreen
                         title={t('menu_language')}
                         backLabel={t('common_back')}
                         onBack={pop}
                     >
                         <PickerList
+                            testId="navigation-menu-language"
                             label={t('menu_language')}
                             options={languageOptions}
                             value={activeLocale}
                             onSelect={selectLanguage}
+                            // Eight locales in a panel that can be shorter than they are — see above.
+                            active={view === 'language'}
                         />
                     </DrawerSubScreen>
                 </DrawerScreen>
@@ -582,6 +877,7 @@ export function MenuDrawer() {
             so the drawer never clips it. Kept mounted so the pending state survives the
             round trip. */}
             <ConfirmDialog
+                testId="navigation-menu-sign-out-confirm"
                 open={confirmingSignOut}
                 onOpenChange={setConfirmingSignOut}
                 title={t('auth_logout_title')}

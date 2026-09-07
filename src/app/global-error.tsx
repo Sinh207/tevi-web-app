@@ -28,7 +28,7 @@ export default function GlobalError({
                 }}
             >
                 <h1>Something went wrong</h1>
-                <button type="button" onClick={reset}>
+                <button data-testid="app-global-error-retry" type="button" onClick={reset}>
                     Try again
                 </button>
             </body>

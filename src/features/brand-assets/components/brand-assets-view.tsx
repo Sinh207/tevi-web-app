@@ -57,6 +57,7 @@ export async function BrandAssetsView({
             {/* `px-4 md:px-0` was baked into the old bespoke component; it is the page's own
                 gutter, so it is passed in now rather than living in the shared one. */}
             <StickyTabs
+                testId="brand-assets-tabs"
                 label={t('brand_assets_tabs_label')}
                 stickyOffset={stickyOffset}
                 barClassName="px-4 md:px-0"

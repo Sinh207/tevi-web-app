@@ -38,9 +38,10 @@ import { PasswordStepHeader, PasswordStepProgress } from './password-step-header
  *
  * ## `purpose: 'verify'`
  *
- * Not `'setup'`, which no legacy code path sends. This flow is legacy's
- * `useConnectEmail` → `useVerifyCode` pair, and both send `verify`. See `OtpPurpose` in
- * `api/auth-api.ts` and B7 in `docs/BACKEND_QUESTIONS.md`.
+ * Not `'setup'` — that value does not exist (B7, answered), and `setup-credentials/` sends
+ * no `purpose` of its own, so `verify` is what the two OTP calls ahead of it carry. This
+ * flow is legacy's `useConnectEmail` → `useVerifyCode` pair, which sends the same. See
+ * `OtpPurpose` in `api/auth-api.ts`.
  */
 
 /**
@@ -224,7 +225,14 @@ export function PasswordSetupFlow({
 
     const stepCopy = {
         email: {
-            icon: { name: 'send', weight: 'filled' } as const,
+            /*
+             * **`envelope`**, which is what this step is about — the inbox to open. It was `send` for
+             * as long as the set had no envelope; upstream Zappicon v1.2.0 does, and it now lives in
+             * `design-system/tevi-icons.extra.svg` (added for the two-step-verification screens,
+             * whose comps draw the same glyph on the same step). Changed here too so the two
+             * connect-email screens in this app are not one real glyph and one stand-in.
+             */
+            icon: { name: 'envelope', weight: 'filled' } as const,
             title: 'password_connect_title',
             description: 'password_connect_description',
         },
@@ -247,7 +255,12 @@ export function PasswordSetupFlow({
          * The field *values* are unaffected — they live in this component's state, one level
          * up, which is what lets the password survive the bounce back to the code step.
          */
-        <form key={step} onSubmit={submit} className="flex w-full flex-col gap-6">
+        <form
+            data-testid="auth-password-setup-form"
+            key={step}
+            onSubmit={submit}
+            className="flex w-full flex-col gap-6"
+        >
             <PasswordStepHeader
                 icon={stepCopy.icon}
                 title={t(stepCopy.title)}
@@ -262,6 +275,7 @@ export function PasswordSetupFlow({
 
                 {step === 'email' && (
                     <AuthTextField
+                        data-testid="auth-password-setup-email"
                         label={t('auth_email')}
                         type="email"
                         inputMode="email"
@@ -307,6 +321,7 @@ export function PasswordSetupFlow({
                             </span>
                         ) : expired ? (
                             <button
+                                data-testid="auth-password-resend"
                                 type="button"
                                 onClick={() => void sendCode(false)}
                                 className="type-caption-meta cursor-pointer self-start text-(--text-link) underline underline-offset-2 hover:no-underline"
@@ -343,6 +358,7 @@ export function PasswordSetupFlow({
                             className="sr-only"
                         />
                         <PasswordField
+                            data-testid="auth-password-setup-new"
                             label={t('password_new_label')}
                             autoComplete="new-password"
                             maxLength={PASSWORD_MAX_LENGTH}
@@ -352,6 +368,7 @@ export function PasswordSetupFlow({
                             footer={<PasswordChecklist checks={checks} className="pt-1" />}
                         />
                         <PasswordField
+                            data-testid="auth-password-setup-confirm"
                             label={t('password_confirm_label')}
                             autoComplete="new-password"
                             maxLength={PASSWORD_MAX_LENGTH}
@@ -383,6 +400,7 @@ export function PasswordSetupFlow({
                     would spend the step disabled and then fire something already done. */}
                 {step !== 'code' ? (
                     <Button
+                        data-testid="auth-password-setup-submit"
                         type="submit"
                         variant="accent"
                         size="large"
@@ -405,6 +423,7 @@ export function PasswordSetupFlow({
                     </Button>
                 ) : (
                     <button
+                        data-testid="auth-password-edit-email"
                         type="button"
                         onClick={editEmail}
                         disabled={busy}

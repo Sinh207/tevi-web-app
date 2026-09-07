@@ -139,6 +139,7 @@ export function ProgramJoinedStep({
                                     {referralUrl}
                                 </span>
                                 <Button
+                                    data-testid="affiliate-copy-link"
                                     variant="primary"
                                     size="small"
                                     className="flex-none rounded-(--radius-fill)"
@@ -158,6 +159,7 @@ export function ProgramJoinedStep({
             <p className="type-dense-default flex flex-wrap items-center justify-center gap-1 text-center text-(--text-subtitle)">
                 {t('affiliate_stop_prompt')}
                 <Button
+                    data-testid="affiliate-leave"
                     variant="ghost"
                     size="small"
                     className="type-dense-strong px-1 text-(--accents-error-active)"

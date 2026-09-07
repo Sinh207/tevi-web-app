@@ -22,7 +22,14 @@ export function SplashGate() {
 
     return (
         <>
-            <Splash leaving={state === 'leaving'} />
+            {/*
+             * The readiness signal QC's suite waits on: present for the whole session bootstrap,
+             * gone when the app is interactive. It is the single highest-value testid in the app —
+             * one `invisibility_of` in a base class removes a whole class of flake — which is why
+             * it is here rather than waiting for the shell sweep. `data-splash` stays: `<noscript>`
+             * and `e2e/splash.spec.ts` already query it. See docs/TEST_IDS.md §8.
+             */}
+            <Splash data-testid="auth-splash" leaving={state === 'leaving'} />
             {/* Without scripting the cover has nothing to remove it, so it would be the entire
                 page — a fixed layer over content that is present, rendered, and unreachable. The
                 rule hides it before it ever paints. `style-src` carries `'unsafe-inline'`

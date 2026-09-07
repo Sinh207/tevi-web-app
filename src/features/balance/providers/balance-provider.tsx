@@ -65,6 +65,15 @@ interface BalanceValue {
      */
     isKnown: boolean
     isLoading: boolean
+    /**
+     * A refetch is in flight over a figure that is already cached.
+     *
+     * `isKnown` deliberately stays **true** through a refetch — the shell must not blank the balance
+     * every 60 seconds — so a screen that has just *changed* the balance needs this instead: after a
+     * redemption or a spend, the cached number is the pre-write one, and printing it as
+     * "current balance" is the receipt contradicting itself (`redeem-result-dialog.tsx`).
+     */
+    isRefreshing: boolean
     isError: boolean
     /** Re-read after anything that spends or adds Star. */
     refresh: () => Promise<void>
@@ -163,6 +172,7 @@ export function BalanceProvider({ children }: { children: React.ReactNode }) {
             star,
             usd: balance?.usd ?? 0,
             isKnown,
+            isRefreshing: query.isFetching && Boolean(balance),
             /*
              * `isBootstrapping` is folded in: a disabled query is not `isLoading` as far as TanStack
              * is concerned, and the session bootstrap is exactly the window in which the shell should
@@ -194,6 +204,7 @@ export function BalanceProvider({ children }: { children: React.ReactNode }) {
         isKnown,
         isBootstrapping,
         isAuthenticated,
+        query.isFetching,
         query.isLoading,
         query.isError,
         refresh,

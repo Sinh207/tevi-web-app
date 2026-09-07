@@ -25,7 +25,7 @@ test.describe('404 — the website', () => {
         // home. That it *is* a link took a fix — Base UI stamps `role="button"` on every non-native
         // button, so this read `button` until `shared/ui/button.tsx` started handing the attribute
         // back for anchors. `button.test.tsx` pins the unit; this pins the page.
-        await expect(page.getByRole('link', { name: /home/i })).toHaveAttribute('href', '/')
+        await expect(page.getByTestId('app-not-found-home')).toHaveAttribute('href', '/')
     })
 })
 

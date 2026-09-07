@@ -1,4 +1,6 @@
-import { AppTopBar } from '@features/navigation'
+import { AppTopBar, MenuProvider } from '@features/navigation'
+import { PREMIUM_PATH } from '@features/premium/routes'
+import { PremiumBadge } from '@shared/components/premium-badge'
 import {
     AppBar,
     AppBarButton,
@@ -38,7 +40,41 @@ export default function AppBarPage() {
                     The home arrangement — what the app ships on mobile
                 </h2>
                 <div className="w-[414px] max-w-full bg-(--background) outline outline-(--separator-default)">
-                    <AppTopBar />
+                    {/*
+                     * `AppTopBar`'s menu button reads `useMenu`, which throws outside the
+                     * provider `(main)/layout.tsx` mounts — and this page sits beside that group,
+                     * so without this wrapper the *whole preview* was replaced by the error
+                     * boundary rather than just the bar. `/dev/left-bar` stands in for the same
+                     * provider for the same reason.
+                     */}
+                    <MenuProvider>
+                        <AppTopBar />
+                    </MenuProvider>
+                </div>
+            </section>
+
+            <section className="flex flex-col gap-2">
+                <h2 className="type-micro-overline text-text-body">
+                    Badge — premium, at the sizes the app uses
+                </h2>
+                <div className="flex flex-wrap items-center gap-10 bg-(--background) p-10 outline outline-(--separator-default)">
+                    <PremiumBadge size={18} label="premium 18" />
+                    <PremiumBadge size={22} label="premium 22" />
+                    <PremiumBadge size={48} label="premium 48" />
+                </div>
+                {/* Beside a display name — the geometry that actually ships, and where a badge
+                    that grows past its own box would start touching the name. */}
+                <div className="flex items-center gap-2 bg-(--background) p-10 outline outline-(--separator-default)">
+                    <span className="type-title-t2-semibold text-text-title">Ada Lovelace</span>
+                    <PremiumBadge size={18} label="premium" />
+                </div>
+                {/* The **link** shape, which is what a channel header renders: same art, same box,
+                    but it is a control. Tab to it to see the focus ring, and note the press target
+                    is 6px larger on every side than the art — an `after:` pseudo-element, so the
+                    name beside it does not move. */}
+                <div className="flex items-center gap-2 bg-(--background) p-10 outline outline-(--separator-default)">
+                    <span className="type-title-t2-semibold text-text-title">Ada Lovelace</span>
+                    <PremiumBadge size={18} href={PREMIUM_PATH} label="premium" />
                 </div>
             </section>
 

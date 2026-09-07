@@ -3,6 +3,7 @@ import {
     type Currency,
     convertFromUsd,
     DEFAULT_CURRENCY,
+    formatAmountWithCode,
     formatFiatAmount,
     formatStarAmount,
 } from './money'
@@ -113,5 +114,67 @@ describe('convertFromUsd', () => {
 
     it('reads an unusable amount as zero', () => {
         expect(convertFromUsd(Number.NaN, 25_400)).toBe(0)
+    })
+})
+
+describe('formatAmountWithCode', () => {
+    it('shows the currency full decimals, so a whole figure does not read as a rounding', () => {
+        expect(formatAmountWithCode(1240.5, 'USD')).toBe('1,240.50 USD')
+        expect(formatAmountWithCode(1240, 'USD')).toBe('1,240.00 USD')
+    })
+
+    /**
+     * **No `.00` on a currency with no minor unit.** VND, JPY and KRW take zero decimals, and `Intl`
+     * ships the ISO 4217 table that says so.
+     *
+     * This test used to assert the opposite. Legacy prints `23,034,486.00 VND` — its eleven payout call
+     * sites all hard-code two decimals with no currency in the decision — and this client reproduced it
+     * on the grounds that `web-app` is the specification. It is, for behaviour; it is not for a figure
+     * that is simply wrong in a currency millions of people are paid in. Changed on a product decision,
+     * and the old assertion is recorded here rather than deleted so the reversal is visible.
+     */
+    it('drops the decimals on a currency with no minor unit', () => {
+        expect(formatAmountWithCode(23_034_486, 'VND')).toBe('23,034,486 VND')
+        expect(formatAmountWithCode(1_500, 'JPY')).toBe('1,500 JPY')
+        expect(formatAmountWithCode(50_000, 'KRW')).toBe('50,000 KRW')
+    })
+
+    /**
+     * **A four-letter code makes `Intl` throw**, and those are the two units these screens show most —
+     * `TEVI` on a wallet ledger, `USDT` on a payout. So the `catch` is load-bearing, and the fallback is
+     * two decimals.
+     */
+    it('falls back to two decimals for a non-ISO code', () => {
+        expect(formatAmountWithCode(4_499, 'USDT')).toBe('4,499.00 USDT')
+        expect(formatAmountWithCode(10, 'TEVI')).toBe('10.00 TEVI')
+    })
+
+    /** An unknown *three*-letter code does not throw — `Intl` answers 2, same as the fallback. */
+    it('gives an unknown three-letter code two decimals', () => {
+        expect(formatAmountWithCode(1_000, 'TVS')).toBe('1,000.00 TVS')
+    })
+
+    /**
+     * The digit count is a property of the **currency**, not the locale: only the group separator moves.
+     * Checked because a per-locale count would mean the same payout reading differently in two languages.
+     */
+    it('keeps the count across locales and only moves the separator', () => {
+        expect(formatAmountWithCode(23_034_486, 'VND', 'vi')).toBe('23.034.486 VND')
+        expect(formatAmountWithCode(23_034_486, 'VND', 'en')).toBe('23,034,486 VND')
+    })
+
+    /** The caller that holds a `Currency` record can override — the backend's `decimal_digits` wins. */
+    it('lets a caller override the digit count', () => {
+        expect(formatAmountWithCode(1_234.5, 'VND', 'en', 2)).toBe('1,234.50 VND')
+        expect(formatAmountWithCode(1_234.56, 'USD', 'en', 0)).toBe('1,235 USD')
+    })
+
+    it('omits the code rather than leaving a trailing space when billy sends none', () => {
+        expect(formatAmountWithCode(12.3, '')).toBe('12.30')
+    })
+
+    it('reads an unusable amount as zero, never as NaN on a money row', () => {
+        expect(formatAmountWithCode(null, 'USD')).toBe('0.00 USD')
+        expect(formatAmountWithCode(Number.NaN, 'USD')).toBe('0.00 USD')
     })
 })

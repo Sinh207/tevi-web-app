@@ -76,15 +76,33 @@ describe('credential payloads', () => {
         const u = { kind: 'email' as const, value: 'sinh@tevi.com' }
         await authApi.sendOtp({ username: u, purpose: 'reset' })
         await authApi.verifyOtp({ username: u, otp: '123456', purpose: 'reset', sid: 's-1' })
-        await authApi.resetPassword({ username: u, otp: '123456', password: 'new', sid: 's-1' })
+        await authApi.resetPassword({ username: u, otp: '123456', new_password: 'new', sid: 's-1' })
         await authApi.setupCredentials({ username: u, otp: '123456', password: 'new', sid: 's-1' })
 
         expect(body(0)).toMatchObject({ purpose: 'reset' })
-        // Without the sid the backend cannot tell which send a code belongs to, so
-        // dropping it silently makes the whole reset flow uncompletable.
+        // `sid` is **required** on every step after the send (B7, answered): without it the
+        // backend cannot tell which send a code belongs to, so dropping it silently makes
+        // the whole reset flow uncompletable.
         expect(body(1).sid).toBe('s-1')
         expect(body(2).sid).toBe('s-1')
         expect(body(3).sid).toBe('s-1')
+    })
+
+    it('spells the new password differently on the two endpoints that set one', async () => {
+        // Confirmed by the API team (B7): `reset-password/` takes `new_password`,
+        // `setup-credentials/` takes `password`. Both screens hold the value in a local
+        // called `password`, so passing it straight through is the natural mistake — and it
+        // costs a 400 on the last screen of a flow the reader cannot restart without a new
+        // code. `tsc` catches it now that the two signatures disagree; this is the fence
+        // against somebody "tidying" them back into agreement.
+        const u = { kind: 'email' as const, value: 'sinh@tevi.com' }
+        await authApi.resetPassword({ username: u, otp: '123456', new_password: 'new', sid: 's' })
+        await authApi.setupCredentials({ username: u, otp: '123456', password: 'new', sid: 's' })
+
+        expect(body(0)).toMatchObject({ new_password: 'new' })
+        expect(body(0)).not.toHaveProperty('password')
+        expect(body(1)).toMatchObject({ password: 'new' })
+        expect(body(1)).not.toHaveProperty('new_password')
     })
 
     it("sends the settings flow's own purpose, `verify`", async () => {

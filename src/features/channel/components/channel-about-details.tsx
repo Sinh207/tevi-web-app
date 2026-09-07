@@ -98,6 +98,8 @@ export function ChannelAboutDetails({ channel }: { channel: Channel }) {
                             return (
                                 <li key={link.id} className="min-w-0">
                                     <a
+                                        data-testid="channel-social-link"
+                                        data-row-key={link.id}
                                         href={href}
                                         target="_blank"
                                         rel="noopener noreferrer"

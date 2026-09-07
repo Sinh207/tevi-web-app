@@ -1,5 +1,6 @@
 'use client'
 
+import { keepFor } from '@shared/lib/api/query-client'
 import { useQuery } from '@tanstack/react-query'
 import { channelApi, channelKeys } from '../api/channel-api'
 
@@ -27,7 +28,7 @@ import { channelApi, channelKeys } from '../api/channel-api'
  */
 
 const OPTIONS_QUERY = {
-    staleTime: 60 * 60_000,
+    ...keepFor(60 * 60_000),
     // These fill pickers on a form. Nothing about them is worth a toast — see the note above.
     meta: undefined,
 } as const
