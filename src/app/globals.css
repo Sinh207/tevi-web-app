@@ -475,6 +475,229 @@
     --text-on-brand: var(--primary-700);
 }
 
+/* ==================================================================== *
+ * `.theme-light` — pin a subtree to Light, whatever the document says.
+ *
+ * next-themes toggles `.dark` on <html> and every token above cascades from
+ * there, so a screen cannot opt out of the theme by writing literals: the
+ * literals stay put while every shared component inside it inverts. That is
+ * what onboarding (`create-channel-gate.tsx`) did — the one surface that ships
+ * its own light art and is deliberately NOT themed. In Dark its card stayed
+ * `#F3F3F3` while `TextField` painted `--input-bg` black, `--text-title` went white
+ * under the suggestions heading and the Sign out button, and the Link hint
+ * dropped to `#d4d4d8` on near-white.
+ *
+ * **It re-declares the whole token layer, not the subset `.dark` overrides** —
+ * and that distinction is the trap, because the subset version *looks* like it
+ * works. A custom property is substituted where it is **declared**, not where
+ * it is used: `--input-bg: var(--zinc-50)` computes on `:root`, so overriding
+ * `--zinc-50` on a descendant does nothing to it. The first attempt here copied
+ * the 80 tokens `.dark` sets, and fixed exactly the ones written as literals —
+ * the avatar disc and the suggestions heading went light while the three
+ * inputs stayed black. Every rung has to be re-stated at this level.
+ *
+ * `color-scheme` comes with it, for the native bits the tokens cannot reach:
+ * scrollbars, the file input, `showPicker()`.
+ *
+ * ⚠ **Portals escape a subtree.** base-ui renders `Dialog` and `Popover` into
+ * <body>, so a surface that raises either has to put this class on `<html>` too
+ * — see the effect in `create-channel-gate.tsx` for why that is the honest
+ * scope rather than a workaround. Which makes source order load-bearing:
+ * `.theme-light` and `.dark` are both one class, so this block wins on <html>
+ * only because it is declared **after** the two dark blocks. Do not move it up.
+ *
+ * A token added to `:root` and not here is a value that still inverts inside a
+ * pinned subtree, and nothing fails — `globals-theme-light.test.ts` is what
+ * catches it.
+ *
+ * This is not a second theme and not a user-facing mode. Do not reach for it to
+ * "fix" contrast on an ordinary screen — that is a token bug.
+ * ==================================================================== */
+.theme-light {
+    color-scheme: light;
+
+    --white: #ffffff;
+    --black: #000000;
+    --zinc-50: #fafafa;
+    --zinc-100: #f4f4f5;
+    --zinc-200: #e4e4e7;
+    --zinc-300: #d4d4d8;
+    --zinc-400: #a1a1aa;
+    --zinc-500: #71717a;
+    --zinc-600: #52525b;
+    --zinc-700: #3f3f46;
+    --zinc-800: #27272a;
+    --zinc-900: #18181b;
+    --zinc-950: #09090b;
+    --primary-0: #ffffff;
+    --primary-50: #f6f2fe;
+    --primary-100: #ede4fd;
+    --primary-200: #d9c7fb;
+    --primary-300: #be9cf7;
+    --primary-400: #8a4fe3;
+    --primary-500: #501bc0;
+    --primary-600: #4316a0;
+    --primary-700: #371282;
+    --primary-800: #2c0e69;
+    --primary-900: #210b52;
+    --primary-950: #140735;
+    --primary-1000: #000000;
+    --accents-indigo-active: #007aff;
+    --accents-indigo-focus: #0062cc;
+    --accents-indigo-disabled: #a3cfff;
+    --accents-indigo-bg-active: #ebf4ff;
+    --accents-indigo-bg-focus: #d6e8ff;
+    --accents-indigo-bg-disabled: #f5f9ff;
+    --accents-error-active: #ff3636;
+    --accents-error-focus: #d51818;
+    --accents-error-disabled: #fca5a5;
+    --accents-error-bg-active: #fef2f2;
+    --accents-error-bg-focus: #fee2e2;
+    --accents-error-bg-disabled: #fdf5f5;
+    --accents-success-active: #26bb26;
+    --accents-success-focus: #1e941e;
+    --accents-success-disabled: #9ce29c;
+    --accents-success-bg-active: #e6f9e6;
+    --accents-success-bg-focus: #cbf1cb;
+    --accents-success-bg-disabled: #f3fcf3;
+    --accents-warning-active: #ca8a04;
+    --accents-warning-focus: #a26e03;
+    --accents-warning-disabled: #fde68a;
+    --accents-warning-bg-active: #fefce8;
+    --accents-warning-bg-focus: #fef9c3;
+    --accents-warning-bg-disabled: #fffdf4;
+    --accents-nsfw: #f43fca;
+    --accents-yellow: #ffe013;
+    --opacity-white-10: #ffffff1a;
+    --opacity-white-25: #ffffff40;
+    --opacity-white-50: #ffffff80;
+    --opacity-white-75: #ffffffbf;
+    --opacity-black-10: #0000001a;
+    --opacity-black-25: #00000040;
+    --opacity-black-50: #00000080;
+    --opacity-black-75: #000000bf;
+    --opacity-labels-55: #3c3c438c;
+    --background: var(--zinc-100);
+    --background-surface: var(--white);
+    --background-elevated: var(--white);
+    --background-subtle: var(--zinc-100);
+    --background-disabled: var(--zinc-100);
+    --background-overlay: var(--opacity-black-50);
+    --background-message: var(--zinc-900);
+    --background-reply-message: var(--zinc-800);
+    --background-segment: #edeeef;
+    --background-segment-focus: var(--white);
+    --background-tabbar: #ffffffcc;
+    --background-listing: var(--white);
+    --background-topbar-action: #fcfcfbd9;
+    --overlay-default: var(--opacity-black-75);
+    --text-title: var(--zinc-950);
+    --text-body: var(--zinc-500);
+    --text-subtitle: var(--zinc-700);
+    --text-disabled: var(--zinc-300);
+    --text-placeholder: var(--zinc-400);
+    --text-link: var(--accents-indigo-active);
+    --text-link-hover: var(--accents-indigo-focus);
+    --text-on-primary: var(--white);
+    --text-on-accent: var(--white);
+    --text-error: var(--accents-error-active);
+    --text-success: var(--accents-success-active);
+    --text-warning: var(--accents-warning-active);
+    --icon-default: var(--text-title);
+    --icon-secondary: var(--text-body);
+    --icon-disabled: var(--text-disabled);
+    --button-primary-bg: var(--zinc-950);
+    --button-primary-bg-hover: var(--zinc-900);
+    --button-primary-bg-disabled: var(--zinc-500);
+    --button-primary-text: var(--text-on-primary);
+    --button-primary-text-disabled: var(--zinc-400);
+    --button-secondary-bg: var(--zinc-100);
+    --button-secondary-bg-hover: var(--zinc-200);
+    --button-secondary-bg-disabled: var(--zinc-100);
+    --button-secondary-text: var(--text-title);
+    --button-secondary-text-disabled: var(--text-disabled);
+    --button-secondary-border: var(--separator-strong);
+    --button-ghost-bg: #ffffff00;
+    --button-ghost-bg-hover: var(--zinc-200);
+    --button-ghost-text: var(--text-title);
+    --button-ghost-text-disabled: var(--text-disabled);
+    --button-accent-bg: var(--primary-500);
+    --button-accent-bg-hover: var(--primary-600);
+    --button-accent-bg-disabled: var(--primary-100);
+    --button-accent-text: var(--white);
+    --button-accent-text-disabled: var(--primary-300);
+    --button-destructive-bg: var(--accents-error-active);
+    --button-destructive-bg-hover: var(--accents-error-focus);
+    --button-destructive-bg-disabled: var(--accents-error-bg-disabled);
+    --button-destructive-text: var(--white);
+    --button-destructive-text-disabled: var(--accents-error-disabled);
+    --button-topbar-border: #e0e0e0;
+    --separator-default: var(--zinc-200);
+    --separator-strong: var(--zinc-300);
+    --input-bg: var(--zinc-50);
+    --input-bg-hover: var(--zinc-100);
+    --input-bg-disabled: var(--zinc-100);
+    --input-border: var(--zinc-200);
+    --input-border-hover: var(--zinc-300);
+    --input-border-focus: var(--zinc-500);
+    --input-border-error: var(--accents-error-active);
+    --input-text: var(--text-title);
+    --input-placeholder: var(--zinc-400);
+    --badge-bg: var(--accents-error-active);
+    --badge-text: var(--white);
+    --focus-ring: #0050ff;
+    --elevation-xs: 0 0 2px 0 rgba(24, 24, 27, 0.05);
+    --elevation-sm: 0 1px 3px 0 rgba(24, 24, 27, 0.1), 0 -1px 2px 0 rgba(24, 24, 27, 0.06);
+    --elevation-md: 0 4px 8px -2px rgba(24, 24, 27, 0.1), 0 -2px 4px -2px rgba(24, 24, 27, 0.06);
+    --elevation-lg: 0 8px 16px -4px rgba(24, 24, 27, 0.1), 0 -4px 16px -2px rgba(24, 24, 27, 0.1);
+    --elevation-xl: 0 12px 24px -6px rgba(24, 24, 27, 0.08), 0 -8px 8px -4px rgba(24, 24, 27, 0.03);
+    --elevation-2xl: 0 24px 48px -12px rgba(24, 24, 27, 0.18);
+    --elevation-3xl: 0 32px 54px -12px rgba(24, 24, 27, 0.14);
+    --elevation-label: 0 8px 24px -4px rgba(68, 68, 68, 0.04),
+        0 -4px 24px -2px rgba(68, 68, 68, 0.1);
+    --shadow-xs: var(--elevation-xs);
+    --shadow-sm: var(--elevation-sm);
+    --shadow-md: var(--elevation-md);
+    --shadow-lg: var(--elevation-lg);
+    --shadow-xl: var(--elevation-xl);
+    --shadow-2xl: var(--elevation-2xl);
+    --shadow-3xl: var(--elevation-3xl);
+    --shadow-label: var(--elevation-label);
+    --gradient-brand-sweep: linear-gradient(
+        93.2deg,
+        #cd7ef4 2%,
+        #8766e9 53.81%,
+        #cd7ef4 99.09%
+    );
+    --gradient-premium-name: linear-gradient(
+        143.49deg,
+        var(--primary-600) 6.44%,
+        var(--accents-indigo-active) 107.62%
+    );
+    --foreground: var(--text-title);
+    --card: var(--background-surface);
+    --card-foreground: var(--text-title);
+    --popover: var(--background-elevated);
+    --popover-foreground: var(--text-title);
+    --primary: var(--button-primary-bg);
+    --primary-foreground: var(--button-primary-text);
+    --secondary: var(--button-secondary-bg);
+    --secondary-foreground: var(--button-secondary-text);
+    --muted: var(--background-subtle);
+    --muted-foreground: var(--text-body);
+    --accent: var(--background-subtle);
+    --accent-foreground: var(--text-title);
+    --destructive: var(--button-destructive-bg);
+    --destructive-foreground: var(--button-destructive-text);
+    --border: var(--separator-default);
+    --input: var(--input-border);
+    --ring: var(--focus-ring);
+    --brand: var(--primary-500);
+    --text-brand: var(--primary-500);
+    --background-brand: var(--primary-200);
+    --text-on-brand: var(--primary-500);
+}
+
 @theme inline {
     /* ---- fonts ---- */
     --font-cjk-thai:

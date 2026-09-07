@@ -202,3 +202,53 @@ export const MCN_PARTNERSHIP_PANEL = cn(
     // the card the wall stands on, matching the cards it is standing in for.
     'md:rounded-2xl md:border md:border-(--separator-default) md:bg-(--background-surface)',
 )
+
+/**
+ * `/invitation/verify`'s column — 612 from `md`, full width below it, **no side padding**.
+ *
+ * The counterpart to `MCN_PARTNERSHIP_CONTAINER` right above, and deliberately the *other* branch of
+ * `docs/DESIGN_SYSTEM.md` §6: that screen is a stack of cards with page colour between them, this one
+ * is a **single panel** — one document, hero to buttons, with nothing between its blocks. So the
+ * surface runs edge to edge below `md` and there is no padding for page colour to show through;
+ * legacy agrees (`<Container>` with `padding: 0` at every breakpoint, and a `<Paper>` whose radius is
+ * `0` below `md` and 16 above).
+ *
+ * The hero is the reason padding here would be actively wrong rather than merely unnecessary: it is a
+ * full-bleed image, and 12px of page colour either side of it turns the top of the screen into a
+ * floating card on a phone.
+ */
+export const MCN_INVITATION_CONTAINER = 'mx-auto w-full md:max-w-[612px]'
+
+/**
+ * `/invitation/verify`'s surface — **one class in three places**: `<main>`, the sticky bar, and
+ * `loading.tsx`.
+ *
+ * `docs/DESIGN_SYSTEM.md` §6's single-panel rule, and this screen is the clearest instance of it in
+ * the app: below `md` the surface runs from under the bar to the bottom edge and the letter scrolls
+ * *under* a bar of the same colour; from `md` both return to the page colour and
+ * `MCN_INVITATION_PANEL` becomes the card.
+ *
+ * Unlike `MCN_PARTNERSHIP_SCREEN` this does **not** switch on state. There, the ordinary state is
+ * three cards and only the walls are a single block, so the treatment has to follow the state. Here
+ * every state is one block — the letter, the skeleton, the expired-link wall, the sign-in prompt —
+ * so the screen is a panel throughout and the skeleton is painted like the thing it stands in for
+ * rather than being the exception §6 warns about.
+ *
+ * `--background-surface`, never `--background-subtle` — subtle *is* `--background` in Light.
+ */
+export const MCN_INVITATION_SCREEN = 'bg-(--background-surface) md:bg-(--background)'
+
+export const MCN_INVITATION_PANEL = cn(
+    // Fill the column from md, so a short state (the expired wall) does not leave the panel hugging
+    // 200px of content with two thirds of a tall window empty beneath it. Below md it must not grow:
+    // the surface is already full-bleed there and `grow` would fight the sticky footer.
+    'md:grow',
+    /*
+     * ⚠ `overflow-clip`, **not** `overflow-hidden`. The radius has to clip the hero's square top
+     * corners, and `overflow: hidden` makes this element a scroll container — which would park the
+     * screen's sticky action footer at the bottom of the panel instead of following the viewport.
+     * `overflow: clip` clips without establishing a scrollport. Same trap `PROFILE_PANEL` above
+     * records from the other direction, where the fix was to move the clip onto the cover block.
+     */
+    'md:overflow-clip md:rounded-2xl md:border md:border-(--separator-default) md:bg-(--background-surface)',
+)

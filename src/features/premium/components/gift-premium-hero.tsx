@@ -5,7 +5,7 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 import { Trans } from 'react-i18next'
 import { PREMIUM_INSET } from '../lib/container'
 import { PREMIUM_ART } from '../lib/illustrations'
@@ -52,6 +52,7 @@ export function GiftPremiumHero({
     avatar,
     onSeeFeatures,
     sentinelRef,
+    headingRef,
     children,
 }: {
     /** Which of the two messages. See the note above. */
@@ -73,6 +74,15 @@ export function GiftPremiumHero({
     onSeeFeatures?: () => void
     /** Marks the band's last pixel for `useBandPassed`, which is what the bar's ink reads. */
     sentinelRef: (node: HTMLDivElement | null) => void
+    /**
+     * The step's own heading, so the view can move focus here when the step changes.
+     *
+     * A step change on this screen replaces the whole page body without a navigation, and focus was
+     * left on the button that no longer exists — which the browser resolves to `<body>`. Measured: a
+     * keyboard reader who chose a recipient landed nowhere, with nothing announced. Focusing the
+     * heading re-anchors them and names the step they are on.
+     */
+    headingRef?: Ref<HTMLHeadingElement>
     /** The plan grid, on the offer step. Inside the band, because the cards *are* the offer. */
     children?: ReactNode
 }) {
@@ -152,7 +162,16 @@ export function GiftPremiumHero({
                 />
 
                 {state === 'sent' ? (
-                    <h2 className="flex items-center gap-2">
+                    /*
+                     * `tabIndex={-1}`: focusable **programmatically** and not a tab stop, which is
+                     * what a step heading wants — the view focuses it on a step change and nobody
+                     * has to Tab past a title to reach the controls.
+                     */
+                    <h2
+                        ref={headingRef}
+                        tabIndex={-1}
+                        className="flex items-center gap-2 outline-none"
+                    >
                         {/*
                          * The gold, clipped to the glyphs — legacy's treatment for this one heading,
                          * and why `PREMIUM_GOLD_INK` is its own constant. A flat `--text-title` here
@@ -173,7 +192,14 @@ export function GiftPremiumHero({
                      * the same two words. Legacy prints them twice too; what it does not do is give
                      * either of them a heading level.
                      */
-                    <h2 className={cn('type-title-t1-bold text-center', PREMIUM_ON_HERO)}>
+                    <h2
+                        ref={headingRef}
+                        tabIndex={-1}
+                        className={cn(
+                            'type-title-t1-bold text-center outline-none',
+                            PREMIUM_ON_HERO,
+                        )}
+                    >
                         {t('giftpremium_title')}
                     </h2>
                 )}

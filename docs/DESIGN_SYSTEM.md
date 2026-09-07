@@ -322,6 +322,7 @@ while its content is still taller than the space. Measured at 390×844.
 | `/my-wallet/transaction-history` | `MY_WALLET_SCREEN` + `MY_WALLET_PANEL` | a list |
 | `/settings/custom-profile` | `PROFILE_SCREEN` + `PROFILE_PANEL` | a form |
 | `/identification` | `IDENTIFICATION_SCREEN` + `IDENTIFICATION_PANEL` | a form |
+| `/mcn-user-invitation/verify` | `MCN_INVITATION_SCREEN` + `MCN_INVITATION_PANEL` | a letter — **one pair, two routes**: the creator invitation is the same panel and shares both constants |
 
 ✅ **`IDENTIFICATION_PANEL` and `PROFILE_PANEL` were the two carrying an older treatment** — flat on
 `--background` below `md`, i.e. the phone showed page colour and no surface at all, with an identical
@@ -505,11 +506,20 @@ first opaque ancestor background, and applies WCAG's own thresholds: 3:1 for gra
 | *Forgot passcode?* | 4.02 L / 4.41 D | 4.5 | `--text-link` on the card | repo-wide; underlined, so not colour-alone |
 | failure line, bare | 3.60 L | 4.5 | `--text-error` on the card | comps draw it red |
 | failure line, in a block | 3.29 L | 4.5 | `--text-error` on the error tint | the auth feature's pair |
+| a **destructive text button** | 3.60 L / 4.92 D | 4.5 | `--text-error` on the panel | same pair as "failure line, bare" |
 | the valid-address tick | 2.45 L | 3 | `--accents-success-active` on the field | decorative — see below |
 
 None is a token that behaves differently between modes: they are all the **non-flipping accent inks**
 meeting a light ground. That is the single decision to make, and it is not one to make screen by
 screen — which is why nothing above was changed locally.
+
+The last row was added by `/invitation/verify`, whose **Reject** is a `ghost` button on `--text-error`
+— legacy's red text button, and the same ink `ActionMenuItem tone="destructive"` paints its rows with.
+It is recorded here rather than fixed there **because a first pass did try to fix it there**: the red
+was dropped for the ghost's default ink, which passes the ratio, diverges from the only other
+destructive-text surface in the app, and leaves two irreversible answers distinguished by nothing but
+their position in a stack. Exactly the per-screen deviation the paragraph above rules out. If the
+decision goes the other way, it is one token and every surface in this table follows.
 
 The tick is the one exception worth stating: it is `aria-hidden` and sits directly above
 *"You're all set to continue."*, which says the same thing in text. 1.4.11 applies to graphics

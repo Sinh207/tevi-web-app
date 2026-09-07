@@ -4,7 +4,7 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { giftRecipientName } from '../api/gift-types'
 import { useBandPassed } from '../hooks/use-band-passed'
 import { useGiftPackages } from '../hooks/use-gift-packages'
@@ -73,6 +73,38 @@ export function GiftPremiumView() {
     const [showBenefits, setShowBenefits] = useState(false)
 
     /**
+     * **Focus follows the step**, because a step change here is not a navigation.
+     *
+     * The three steps replace the whole body while the URL and the document stay put, so the browser
+     * has nothing to move focus to: it was left on the row or the card that had just been unmounted
+     * and fell to `<body>`. Measured — a keyboard or screen-reader reader who chose a recipient
+     * landed nowhere, with nothing announced, on a screen that had entirely changed.
+     *
+     * The band's heading is the anchor: focusing it names the step. The **first** render is skipped
+     * on purpose — arriving on `/gift-premium`, or returning from Stripe onto the success screen, is
+     * a real page load, and the browser's own focus (the top of the document) is correct there. It is
+     * only the in-page transitions that need help.
+     *
+     * Going *back* needs none: the picker's field is `autoFocus`, so it takes focus when that step
+     * mounts.
+     */
+    const headingRef = useRef<HTMLHeadingElement>(null)
+    const settled = useRef(false)
+    /*
+     * `flow.step` is in the deps and Biome cannot see why: the body does not *read* it, it reacts to
+     * it — the step changing is the whole event. Exactly the shape `useStripScroll` suppresses this
+     * rule for with its `count`, and `clamped-text.tsx` before that.
+     */
+    // biome-ignore lint/correctness/useExhaustiveDependencies: the step changing *is* the trigger
+    useEffect(() => {
+        if (!settled.current) {
+            settled.current = true
+            return
+        }
+        headingRef.current?.focus()
+    }, [flow.step])
+
+    /**
      * What is behind the bar right now — see `GiftBarGround`.
      *
      * The picker's plane is `--background-surface` below `md` (§6's single-panel rule, painted by
@@ -112,7 +144,16 @@ export function GiftPremiumView() {
                 }}
             />
 
-            {flow.step === 'recipient' && <GiftRecipientPicker onSelect={flow.select} />}
+            {flow.step === 'recipient' && (
+                /*
+                 * `isResolvingRecipient` holds the picker back for the one moment it would be wrong:
+                 * a **reload on the offer step**, where `?to=` names somebody the client has not
+                 * read yet. Without it the invitation flashes under a reader who was mid-purchase.
+                 * A slug that comes back unreadable falls through to the picker, which is the honest
+                 * answer to a link naming a space that is not there.
+                 */
+                <GiftRecipientPicker onSelect={flow.select} suspended={flow.isResolvingRecipient} />
+            )}
 
             {flow.step === 'offer' && flow.recipient && (
                 <>
@@ -127,6 +168,7 @@ export function GiftPremiumView() {
                         }}
                         onSeeFeatures={() => setShowBenefits(true)}
                         sentinelRef={band.ref}
+                        headingRef={headingRef}
                     >
                         <GiftPlanGrid onSend={flow.request} disabled={flow.isBusy} />
                     </GiftPremiumHero>
@@ -144,6 +186,7 @@ export function GiftPremiumView() {
                         name={flow.sent.name}
                         /* No avatar sources — see the prop's own note, and `lib/gift-token.ts`. */
                         sentinelRef={band.ref}
+                        headingRef={headingRef}
                     />
                     <GiftTail>
                         <GiftAbout />
@@ -221,15 +264,12 @@ function GiftTail({ children }: { children: React.ReactNode }) {
  *
  * ## Why it is a component and not two lines in the view
  *
- * Because of *when* it may ask. The price is the yearly gift over twelve
- * (`giftMonthlyEquivalent` — legacy's own `packageOneYear.price / 12`), so it needs
- * `useGiftPackages`; and a hook called in `GiftPremiumView` runs on **arrival**, which would fetch
- * the gift catalogue for every visitor who lands on the picker and never chooses anybody. Traced
- * and caught: the screen is supposed to ask the backend nothing until a term is typed.
+ * So that the *panel* owns the query rather than the whole screen. It needs `useGiftPackages` for
+ * the price (the yearly gift over twelve — legacy's own `packageOneYear.price / 12`), and a hook
+ * called in `GiftPremiumView` would run for every step including ones that draw no panel.
  *
- * Rendered only inside the offer and success branches, the request happens exactly when the panel
- * does — and on the offer step it is the same cached query `GiftPlanGrid` already reads, so it costs
- * nothing there at all.
+ * It is the same cached query the picker and the grid already read (`getGiftPackages` is shared and
+ * cached for the day), so wherever this renders the answer is already in hand.
  *
  * ## Why the figure is not `/premium`'s
  *

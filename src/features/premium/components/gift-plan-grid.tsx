@@ -64,8 +64,13 @@ export function GiftPlanGrid({
             >
                 {/* On the hero's violet, so the ink is a fixed white rather than a token that flips
                     — the same reason the hero's own copy is. */}
+                {/*
+                 * The same two sentences the picker draws, for the same reason: a catalogue that
+                 * came back **empty** did not fail to load, and saying it did is untrue. Only the
+                 * failure gets a retry.
+                 */}
                 <p className="type-dense-default max-w-[400px] text-center text-white/80">
-                    {t('giftpremium_unavailable')}
+                    {t(isError ? 'giftpremium_unavailable' : 'giftpremium_no_packages')}
                 </p>
                 {isError && (
                     <Button

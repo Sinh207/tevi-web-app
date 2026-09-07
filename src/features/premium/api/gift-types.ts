@@ -168,23 +168,3 @@ export function normalizeGiftRecipients(results: unknown): GiftRecipient[] {
 export function giftRecipientName(recipient: GiftRecipient): string {
     return recipient.display_name ?? recipient.name ?? ''
 }
-
-/**
- * The `owner_id` out of a channel profile body — `core/v3/channel/channels/{slug}/`.
- *
- * Deliberately **not** `channelSchema`: that models forty-odd fields for a screen this feature does
- * not render, and parsing a profile against it here would mean forty defaults standing in for
- * fields nobody read. One field is wanted, so one field is declared.
- *
- * `null` for a body that does not carry it, which the caller turns into a refusal to charge rather
- * than a checkout with an empty `receiver_user_id` — that would be a 4xx from `checkout/` reading
- * as a payment problem, three steps from the thing that actually went wrong.
- *
- * ⚠ Parsed with `nullableId` and not `nullableText`. The field is a **number** on the wire, and
- * reading it as text is what made every gift refuse itself — see that helper.
- */
-export function toReceiverUserId(body: unknown): string | null {
-    if (!body || typeof body !== 'object') return null
-    const parsed = z.looseObject({ owner_id: nullableId }).safeParse(body)
-    return parsed.success ? parsed.data.owner_id : null
-}

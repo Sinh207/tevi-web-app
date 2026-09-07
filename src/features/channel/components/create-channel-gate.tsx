@@ -12,7 +12,7 @@ import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Logo } from '@shared/ui/logo'
 import Image from 'next/image'
-import { useId } from 'react'
+import { useEffect, useId } from 'react'
 import { useCreateChannel } from '../hooks/use-create-channel'
 import { displayUrl } from '../lib/channel-slug'
 import { AVATAR_ASPECT } from '../lib/profile-form'
@@ -38,9 +38,20 @@ import { ImageCropDialog } from './edit-profile/image-crop-dialog'
  * `display: none` and the form goes full-bleed, losing its frame with it.
  *
  * The frame itself is legacy's one piece of neo-brutalism: `1px solid #191A23` with
- * `box-shadow: 0 5px 0 0 #191A23` — a hard offset, no blur — at `border-radius: 45px`. The literals
- * map to `--text-title`, which is near-black in light and near-white in dark; the shadow is the same
- * token, so the whole card inverts as one rather than keeping a black edge on a dark page.
+ * `box-shadow: 0 5px 0 0 #191A23` — a hard offset, no blur — at `border-radius: 45px`. They stay
+ * **literals**, not `--text-title`: that token inverts, and a card that is pinned to a light fill
+ * must keep its dark edge. This docblock used to claim the opposite and it was never true of the
+ * code below it.
+ *
+ * ## The screen is pinned to Light, and one class is what pins it
+ *
+ * Writing literals only holds the *literals* still. Every field, button and popover here comes from
+ * `shared/`, reads the `--*` ramp, and inverted under `.dark` **on top of the light card**: black
+ * inputs, a black avatar disc, and three strings (the Link hint, the suggestions heading, Sign out)
+ * that resolved to near-white on `#F3F3F3` and simply vanished. `theme-light` on `<main>`
+ * (`globals.css`) re-declares the token set back to its Light values for this subtree, so the
+ * shared components agree with the art instead of fighting it. Read that block before adding a
+ * token to `.dark`.
  *
  * ## The fields are the app's, not this screen's
  *
@@ -53,6 +64,31 @@ import { ImageCropDialog } from './edit-profile/image-crop-dialog'
 export function CreateChannelGate() {
     const { t } = useTranslation()
     const { signOut, isSigningOut } = useAuth()
+
+    /*
+     * The same pin, one level up — because **portals escape a subtree class**.
+     *
+     * `theme-light` on `<main>` (below) is what makes the screen's own tree resolve Light, and it
+     * has to stay there: it is in the first paint, so nothing flashes, and it carries the
+     * `color-scheme` that next-themes writes as an *inline* style on `<html>` and a class there
+     * could not beat. But base-ui renders `Popover` and `Dialog` into `<body>`, outside it — so the
+     * DOB calendar came out as a dark slab in the middle of an all-light screen, and the avatar
+     * cropper with it.
+     *
+     * `<html>` is the one ancestor a portal shares with the page. `.theme-light` and `.dark` are
+     * both one class, so specificity ties and source order decides — `.theme-light` is declared
+     * after the dark blocks in `globals.css`, which is why it wins there and why moving it above
+     * them would silently undo this.
+     *
+     * Pinning the document is the honest scope, not a workaround: this screen *is* the app while it
+     * is mounted. Removing it on unmount is what keeps that true — the next thing rendered is the
+     * real shell, which is themed.
+     */
+    useEffect(() => {
+        document.documentElement.classList.add('theme-light')
+        return () => document.documentElement.classList.remove('theme-light')
+    }, [])
+
     const dobId = useId()
     const avatarId = useId()
     const form = useCreateChannel({
@@ -85,10 +121,14 @@ export function CreateChannelGate() {
          * has a space, it ships its own art, and the art is drawn against that lilac. A dark-mode
          * `--background` behind a light illustration would be worse than not following the theme.
          *
+         * `theme-light` is what makes "not themed" true of the whole subtree rather than only of
+         * the literals — see the block of that name in `globals.css`. It carries `color-scheme`
+         * too, so the file input and the scrollbar of the field stack come out light as well.
+         *
          * `py-10` is legacy's `theme.spacing(5)`.
          */
         <main
-            className="flex min-h-[var(--window-height)] w-full items-stretch justify-center bg-[#FAF8FF] md:h-[var(--window-height)] md:overflow-hidden bg-cover bg-center bg-no-repeat px-0 py-10 md:px-10"
+            className="theme-light flex min-h-[var(--window-height)] w-full items-stretch justify-center bg-[#FAF8FF] md:h-[var(--window-height)] md:overflow-hidden bg-cover bg-center bg-no-repeat px-0 py-10 md:px-10"
             style={{ backgroundImage: 'url(/illustrations/create-space-bg.webp)' }}
         >
             <div className="mx-auto flex w-full max-w-[1200px] items-stretch gap-6">

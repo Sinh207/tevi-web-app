@@ -225,6 +225,63 @@ test.describe('gift premium — picking somebody', () => {
     })
 })
 
+test.describe('gift premium — nothing to sell', () => {
+    /**
+     * **The screen checks it can sell a gift before asking who for.**
+     *
+     * The catalogue used to be fetched by the offer step alone, so an empty one was discovered two
+     * screens in: the reader searched, chose somebody, landed on the offer and was told there was
+     * nothing to send. This is the assertion that the check happens on arrival and replaces the
+     * field rather than sitting behind it.
+     *
+     * The two outcomes carry **different sentences**, which is the other half: a catalogue that came
+     * back empty did not fail to load, and only the failure gets a retry.
+     */
+    test('an empty catalogue replaces the picker, with no retry', async ({ page }) => {
+        await signedIn(page, { ...HANDLERS, 'premium/v1/gift-packages/': { packages: [] } })
+        await page.goto(PATH)
+
+        await expect(page.getByTestId('premium-gift-unavailable')).toBeVisible()
+        // The field is gone: a search that can only lead to an empty offer is worse than a sentence.
+        await expect(page.getByTestId('premium-gift-search')).toHaveCount(0)
+        await expect(page.getByTestId('premium-gift-invite')).toHaveCount(0)
+        // Nothing failed, so there is nothing to retry.
+        await expect(page.getByTestId('premium-gift-catalogue-retry')).toHaveCount(0)
+    })
+
+    test('a failed catalogue says so instead, and offers a retry', async ({ page }) => {
+        await signedIn(page, HANDLERS)
+        // Registered after `signedIn`, which Playwright matches first.
+        await page.route('**/premium/v1/gift-packages/**', route =>
+            route.fulfill({ status: 403, contentType: 'application/json', body: '{}' }),
+        )
+        await page.goto(PATH)
+
+        const wall = page.getByTestId('premium-gift-unavailable')
+        await expect(wall).toBeVisible()
+        await expect(page.getByTestId('premium-gift-catalogue-retry')).toBeVisible()
+        /*
+         * The two states must not share a sentence. Asserted by *difference* rather than by quoting
+         * either one: the copy is nine locales' business, the distinction is this screen's.
+         */
+        const failed = await wall.textContent()
+        await signedIn(page, { ...HANDLERS, 'premium/v1/gift-packages/': { packages: [] } })
+        await page.unroute('**/premium/v1/gift-packages/**')
+        await page.goto(PATH)
+        await expect(page.getByTestId('premium-gift-unavailable')).toBeVisible()
+        expect(await page.getByTestId('premium-gift-unavailable').textContent()).not.toBe(failed)
+    })
+
+    test('a working catalogue is invisible — the picker just opens', async ({ page }) => {
+        // The check must not cost the reader a wait: while it is in flight the picker is usable.
+        await signedIn(page, HANDLERS)
+        await page.goto(PATH)
+
+        await expect(page.getByTestId('premium-gift-invite')).toBeVisible()
+        await expect(page.getByTestId('premium-gift-unavailable')).toHaveCount(0)
+    })
+})
+
 test.describe('gift premium — the charge', () => {
     /**
      * **What actually reaches `checkout/`** — the one assertion that would have caught the bug that
@@ -294,6 +351,104 @@ test.describe('gift premium — the charge', () => {
          * a refused gift never leaves the screen it was refused on.
          */
         expect(new URL(page.url()).pathname).toBe(PATH)
+    })
+})
+
+test.describe('gift premium — the step is in the URL', () => {
+    /**
+     * The four things that were broken while the step was React state alone. All four were measured
+     * on the running screen, and the first is the one that matters: `/gift-premium` had **two Back
+     * affordances that did different things** — the in-page button un-chose the recipient, the
+     * browser's (and the phone's) left the page — and on a phone the gesture is the one people use.
+     */
+    test.beforeEach(async ({ page }) => {
+        await signedIn(page, HANDLERS)
+    })
+
+    const choose = async (page: import('@playwright/test').Page) => {
+        await page.getByTestId('premium-gift-search').fill('ada')
+        await page.locator('[data-channel-slug="ada"]').first().click()
+        await expect(page.getByTestId('premium-gift-hero')).toBeVisible()
+    }
+
+    test('choosing somebody names them in the URL', async ({ page }) => {
+        await page.goto(PATH)
+        await choose(page)
+        expect(new URL(page.url()).searchParams.get('to')).toBe('ada')
+    })
+
+    test('the browser’s Back returns to the picker instead of leaving', async ({ page }) => {
+        // Somewhere to go back *to*, so a failure here is "left the page" rather than "nowhere to go".
+        await page.goto('/')
+        await page.goto(PATH)
+        await choose(page)
+
+        await page.goBack()
+
+        await expect(page.getByTestId('premium-gift-search')).toBeVisible()
+        expect(new URL(page.url()).pathname).toBe(PATH)
+    })
+
+    test('a reload on the offer step keeps the recipient', async ({ page }) => {
+        await page.goto(PATH)
+        await choose(page)
+
+        await page.reload()
+
+        // Resolved from the slug — the same request the charge needs for `owner_id`.
+        await expect(page.getByTestId('premium-gift-hero')).toContainText('@ada')
+        // And the picker must not flash under a reader who was mid-purchase.
+        await expect(page.getByTestId('premium-gift-invite')).toHaveCount(0)
+    })
+
+    test('a `?to=` link opens on that person', async ({ page }) => {
+        await page.goto(`${PATH}?to=ada`)
+        await expect(page.getByTestId('premium-gift-hero')).toContainText('@ada')
+        await expect(page.getByTestId('premium-gift-plans')).toBeVisible()
+    })
+
+    test('a `?to=` that names nobody falls back to the picker', async ({ page }) => {
+        // A renamed or removed space. Better than an offer screen with no name on it.
+        await page.route('**/core/v3/channel/channels/**', route =>
+            route.fulfill({ status: 404, contentType: 'application/json', body: '{}' }),
+        )
+        await page.goto(`${PATH}?to=ghost`)
+        await expect(page.getByTestId('premium-gift-search')).toBeVisible()
+    })
+
+    test('the in-page Back un-chooses without stacking history', async ({ page }) => {
+        await page.goto('/')
+        await page.goto(PATH)
+        await choose(page)
+
+        await page.getByTestId('premium-gift-back').click()
+        await expect(page.getByTestId('premium-gift-search')).toBeVisible()
+        expect(new URL(page.url()).searchParams.get('to')).toBeNull()
+
+        /*
+         * The entry `select` pushed is **popped**, not replaced — so the browser's Back from the
+         * picker goes where the reader came from rather than to a second `/gift-premium` that
+         * changes nothing. Replacing left exactly that dead press behind, which is how this
+         * assertion earned its keep: it failed, and the code was what was wrong.
+         *
+         * A reader who arrived on a `?to=` link instead has no entry of ours to pop, and that branch
+         * replaces — see `pushedRef`.
+         */
+        await page.goBack()
+        expect(new URL(page.url()).pathname).toBe('/')
+    })
+
+    test('focus moves to the step’s heading, not to nowhere', async ({ page }) => {
+        /*
+         * A step change here is not a navigation: the body is replaced while the document stays put,
+         * so the browser had nothing to move focus to and it fell to `<body>` — a keyboard or
+         * screen-reader reader landed nowhere, with nothing announced.
+         */
+        await page.goto(PATH)
+        await choose(page)
+
+        const focused = await page.evaluate(() => document.activeElement?.tagName.toLowerCase())
+        expect(focused).toBe('h2')
     })
 })
 

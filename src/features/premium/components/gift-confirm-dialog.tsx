@@ -37,6 +37,16 @@ export function GiftConfirmDialog({ flow }: { flow: GiftPremiumFlow }) {
     const { t } = useTranslation()
     const { charge } = usePremiumPriceFormats()
 
+    /*
+     * **Not while the error dialog is up.** `confirm()` leaves `pending` set on a pre-charge failure
+     * — deliberately, so the confirmation is there to try again from — but rendering both put *two*
+     * `role="dialog"` in the tree at once, each with its own focus trap and scroll lock. Measured: a
+     * failed receiver lookup produced two stacked modals.
+     *
+     * The confirmation is not lost, only hidden: dismissing the error clears `errorKey` and it comes
+     * straight back, with the same package still pending.
+     */
+    if (flow.errorKey) return null
     if (!flow.pending || !flow.pendingPlan || !flow.recipient) return null
 
     const plan = t(GIFT_PLAN_COPY[flow.pendingPlan].name)

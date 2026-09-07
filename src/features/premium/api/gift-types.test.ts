@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { giftRecipientName, normalizeGiftRecipients, toReceiverUserId } from './gift-types'
+import { giftRecipientName, normalizeGiftRecipients } from './gift-types'
 
 /**
  * The DTO for the one field a **charge** is created against.
@@ -11,35 +11,26 @@ import { giftRecipientName, normalizeGiftRecipients, toReceiverUserId } from './
  * e2e specs and the screenshots all agreed with the bug.
  */
 
-describe('toReceiverUserId', () => {
-    it('reads a **numeric** owner_id, which is what the backend sends', () => {
-        // `features/channel`'s own DTO unions string|number for this field, and B11 records that
-        // `/me` sends `id` as a number. This is the regression that broke Send gift.
-        expect(toReceiverUserId({ owner_id: 123456 })).toBe('123456')
+describe('the receiver id', () => {
+    /**
+     * `receiver_user_id` is what `checkout/gift-premium/` prices the gift against, and it comes off
+     * the channel payload as a **number**. The parser read it as text, dropped it, and every gift
+     * refused itself with "we couldn't reach that creator" — no request failed anywhere. Every
+     * fixture in the repo seeded a string, which is why the tests agreed with the bug.
+     *
+     * It is read through `normalizeGiftRecipients` now rather than a field-picker of its own:
+     * `giftRecipientApi.getRecipient` parses the whole channel body into a recipient, so one request
+     * yields both the id and the person.
+     */
+    it('reads a numeric owner_id', () => {
+        const [row] = normalizeGiftRecipients([{ slug: 'ada', name: 'Ada', owner_id: 123456 }])
+        expect(row?.owner_id).toBe('123456')
     })
 
-    it('reads a string one too', () => {
-        expect(toReceiverUserId({ owner_id: '77' })).toBe('77')
-    })
-
-    it('is null for a body that does not carry one', () => {
-        // The caller turns this into a refusal to charge, rather than a checkout with an empty
-        // `receiver_user_id` — which comes back as a 4xx reading like a payment problem.
-        for (const body of [null, undefined, 'nope', {}, { owner_id: null }, { owner_id: '  ' }]) {
-            expect(toReceiverUserId(body)).toBeNull()
-        }
-    })
-
-    it('ignores the forty other fields a channel payload carries', () => {
-        const channel = {
-            id: 9,
-            slug: 'ada',
-            owner_id: 42,
-            privacy: 'PUBLIC',
-            lives: [],
-            mcn: null,
-        }
-        expect(toReceiverUserId(channel)).toBe('42')
+    it('reads a string one too, and treats blank as absent', () => {
+        expect(normalizeGiftRecipients([{ slug: 'ada', owner_id: '77' }])[0]?.owner_id).toBe('77')
+        expect(normalizeGiftRecipients([{ slug: 'ada', owner_id: '  ' }])[0]?.owner_id).toBeNull()
+        expect(normalizeGiftRecipients([{ slug: 'ada' }])[0]?.owner_id).toBeNull()
     })
 })
 
@@ -49,12 +40,6 @@ describe('normalizeGiftRecipients', () => {
         slug: 'ada',
         name: 'Ada',
         ...over,
-    })
-
-    it('keeps a numeric owner_id on the row, so the lookup can be skipped', () => {
-        // Not a break when it was wrong — `confirm()` falls back to the fetch — but it was a
-        // request per gift that did not need to happen.
-        expect(normalizeGiftRecipients([row({ owner_id: 512 })])[0]?.owner_id).toBe('512')
     })
 
     it('drops a row that cannot be resolved to anybody', () => {

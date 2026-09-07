@@ -42,6 +42,13 @@ export interface UseGiftPackagesResult {
  * helper: a long `staleTime` with the default five-minute `gcTime` is not a long cache — the data is
  * collected five minutes after the last reader unmounts, and this screen unmounts every time
  * somebody steps back to the picker.
+ *
+ * ## Three readers, one request
+ *
+ * The **picker** asks only "is there anything to sell", so that a catalogue with nothing in it is
+ * said on arrival rather than two screens later; the **grid** draws the prices; the **About panel**
+ * takes the per-month figure off the yearly row. All three share this key, so the picker's check is
+ * what warms it and choosing a recipient a second later costs nothing.
  */
 export function useGiftPackages(): UseGiftPackagesResult {
     const { activeId, isAuthenticated } = useAuth()

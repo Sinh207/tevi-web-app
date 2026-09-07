@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-712 ids across 26 surfaces.
+734 ids across 26 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -178,7 +178,7 @@ Also present on every route it is mounted under — `src/features/navigation/com
 
 ## `channel` — Channel / space, following, profile settings
 
-Routes: `/[slug]`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/follow-requests`, `/following`, `/mcn-partnership`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
+Routes: `/[slug]`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
 
 | testid | companions | source |
 |---|---|---|
@@ -198,13 +198,13 @@ Routes: `/[slug]`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`
 | `channel-blocked-sign-in` | — | `src/features/channel/components/blocked-accounts-view.tsx:205` |
 | `channel-campaign` | — | `src/features/channel/components/channel-campaign-banners.tsx:89` |
 | `channel-copy-link` | — | `src/features/channel/components/channel-copy-link.tsx:74` |
-| `channel-create-avatar-file` | — | `src/features/channel/components/create-channel-gate.tsx:248` |
-| `channel-create-dob` | — | `src/features/channel/components/create-channel-gate.tsx:310` |
-| `channel-create-name` | — | `src/features/channel/components/create-channel-gate.tsx:285` |
-| `channel-create-sign-out` | — | `src/features/channel/components/create-channel-gate.tsx:411` |
-| `channel-create-submit` | — | `src/features/channel/components/create-channel-gate.tsx:391` |
-| `channel-create-suggestion` | — | `src/features/channel/components/create-channel-gate.tsx:364` |
-| `channel-create-username` | — | `src/features/channel/components/create-channel-gate.tsx:320` |
+| `channel-create-avatar-file` | — | `src/features/channel/components/create-channel-gate.tsx:288` |
+| `channel-create-dob` | — | `src/features/channel/components/create-channel-gate.tsx:350` |
+| `channel-create-name` | — | `src/features/channel/components/create-channel-gate.tsx:325` |
+| `channel-create-sign-out` | — | `src/features/channel/components/create-channel-gate.tsx:451` |
+| `channel-create-submit` | — | `src/features/channel/components/create-channel-gate.tsx:431` |
+| `channel-create-suggestion` | — | `src/features/channel/components/create-channel-gate.tsx:404` |
+| `channel-create-username` | — | `src/features/channel/components/create-channel-gate.tsx:360` |
 | `channel-crop-cancel` | — | `src/features/channel/components/edit-profile/image-crop-dialog.tsx:522` |
 | `channel-crop-confirm` | — | `src/features/channel/components/edit-profile/image-crop-dialog.tsx:532` |
 | `channel-crop-frame` | — | `src/features/channel/components/edit-profile/image-crop-dialog.tsx:286` |
@@ -245,6 +245,17 @@ Routes: `/[slug]`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`
 | `channel-following-sign-in` | — | `src/features/channel/components/following-view.tsx:254` |
 | `channel-following-sort` | — | `src/features/channel/components/following-view.tsx:444` |
 | `channel-header-loading` | — | `src/features/channel/components/channel-header-skeleton.tsx:26` |
+| `channel-invitation-accept` | — | `src/features/channel/components/mcn-invitation-view.tsx:616` |
+| `channel-invitation-error` | — | `src/features/channel/components/mcn-invitation-view.tsx:96` |
+| `channel-invitation-expired` | — | `src/features/channel/components/mcn-invitation-view.tsx:133` |
+| `channel-invitation-home` | — | `src/features/channel/components/mcn-invitation-view.tsx:150` |
+| `channel-invitation-learn-more` | — | `src/features/channel/components/mcn-invitation-view.tsx:391` |
+| `channel-invitation-rate` | — | `src/features/channel/components/mcn-invitation-view.tsx:447` |
+| `channel-invitation-rates` | — | `src/features/channel/components/mcn-invitation-view.tsx:436` |
+| `channel-invitation-reject` | — | `src/features/channel/components/mcn-invitation-view.tsx:636` |
+| `channel-invitation-retry` | — | `src/features/channel/components/mcn-invitation-view.tsx:104` |
+| `channel-invitation-sign-in` | — | `src/features/channel/components/mcn-invitation-view.tsx:85` |
+| `channel-invitation-signed-out` | — | `src/features/channel/components/mcn-invitation-view.tsx:75` |
 | `channel-live-card-link` | — | `src/features/channel/components/channel-live-now.tsx:270` |
 | `channel-live-card-restricted` | — | `src/features/channel/components/channel-live-now.tsx:258` |
 | `channel-live-channel-link` | — | `src/features/channel/components/channel-live-now.tsx:117` |
@@ -253,6 +264,15 @@ Routes: `/[slug]`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`
 | `channel-live-get-app` | — | `src/features/channel/components/channel-live-restricted-dialog.tsx:108` |
 | `channel-live-restricted` | — | `src/features/channel/components/channel-live-now.tsx:158` |
 | `channel-live-title-link` | — | `src/features/channel/components/channel-live-now.tsx:151` |
+| `channel-manager-invitation-accept` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:572` |
+| `channel-manager-invitation-error` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:119` |
+| `channel-manager-invitation-expired` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:150` |
+| `channel-manager-invitation-home` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:167` |
+| `channel-manager-invitation-learn-more` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:379` |
+| `channel-manager-invitation-reject` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:547` |
+| `channel-manager-invitation-retry` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:127` |
+| `channel-manager-invitation-sign-in` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:108` |
+| `channel-manager-invitation-signed-out` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:97` |
 | `channel-mcn-cancel` | — | `src/features/channel/components/channel-about-mcn.tsx:144` |
 | `channel-mcn-cancel-confirm` | — | `src/features/channel/components/channel-about-mcn.tsx:197` |
 | `channel-mcn-leave` | — | `src/features/channel/components/channel-about-mcn.tsx:106` |
@@ -793,30 +813,32 @@ Routes: `/gift-premium`, `/premium`
 | `premium-benefits` | — | `src/features/premium/components/premium-benefits.tsx:68` |
 | `premium-benefits-skeleton` | — | `src/features/premium/components/premium-benefits.tsx:286` |
 | `premium-confirm` | — | `src/features/premium/components/premium-subscribe-confirm.tsx:50` |
-| `premium-gift-again` | — | `src/features/premium/components/gift-premium-view.tsx:158` |
+| `premium-gift-again` | — | `src/features/premium/components/gift-premium-view.tsx:201` |
 | `premium-gift-back` | — | `src/features/premium/components/gift-premium-top-bar.tsx:105` |
 | `premium-gift-bar` | — | `src/features/premium/components/gift-premium-top-bar.tsx:70` |
-| `premium-gift-confirm` | — | `src/features/premium/components/gift-confirm-dialog.tsx:52` |
-| `premium-gift-empty` | — | `src/features/premium/components/gift-recipient-picker.tsx:207` |
-| `premium-gift-error` | — | `src/features/premium/components/gift-recipient-picker.tsx:178` |
-| `premium-gift-error-dialog` | — | `src/features/premium/components/gift-confirm-dialog.tsx:98` |
+| `premium-gift-catalogue-retry` | — | `src/features/premium/components/gift-recipient-picker.tsx:183` |
+| `premium-gift-confirm` | — | `src/features/premium/components/gift-confirm-dialog.tsx:62` |
+| `premium-gift-empty` | — | `src/features/premium/components/gift-recipient-picker.tsx:282` |
+| `premium-gift-error` | — | `src/features/premium/components/gift-recipient-picker.tsx:253` |
+| `premium-gift-error-dialog` | — | `src/features/premium/components/gift-confirm-dialog.tsx:108` |
 | `premium-gift-following` | — | `src/features/premium/components/gift-following-strip.tsx:89` |
 | `premium-gift-following-loading` | — | `src/features/premium/components/gift-following-strip.tsx:409` |
-| `premium-gift-form` | — | `src/features/premium/components/gift-recipient-picker.tsx:140` |
-| `premium-gift-hero` | — | `src/features/premium/components/gift-premium-hero.tsx:84` |
-| `premium-gift-home` | — | `src/features/premium/components/gift-premium-view.tsx:167` |
-| `premium-gift-invite` | — | `src/features/premium/components/gift-recipient-picker.tsx:323` |
+| `premium-gift-form` | — | `src/features/premium/components/gift-recipient-picker.tsx:215` |
+| `premium-gift-hero` | — | `src/features/premium/components/gift-premium-hero.tsx:94` |
+| `premium-gift-home` | — | `src/features/premium/components/gift-premium-view.tsx:210` |
+| `premium-gift-invite` | — | `src/features/premium/components/gift-recipient-picker.tsx:403` |
 | `premium-gift-loading` | — | `src/features/premium/components/gift-recipient-skeleton.tsx:39` |
 | `premium-gift-plan` | `data-option-key`, `data-package-id` | `src/features/premium/components/gift-plan-card.tsx:169` |
-| `premium-gift-plans` | — | `src/features/premium/components/gift-plan-grid.tsx:85` |
+| `premium-gift-plans` | — | `src/features/premium/components/gift-plan-grid.tsx:90` |
 | `premium-gift-plans-empty` | — | `src/features/premium/components/gift-plan-grid.tsx:62` |
-| `premium-gift-plans-retry` | — | `src/features/premium/components/gift-plan-grid.tsx:72` |
-| `premium-gift-plans-skeleton` | — | `src/features/premium/components/gift-plan-grid.tsx:122` |
+| `premium-gift-plans-retry` | — | `src/features/premium/components/gift-plan-grid.tsx:77` |
+| `premium-gift-plans-skeleton` | — | `src/features/premium/components/gift-plan-grid.tsx:127` |
 | `premium-gift-recipient` | `data-channel-slug` | `src/features/premium/components/gift-following-strip.tsx:317` |
-| `premium-gift-results` | — | `src/features/premium/components/gift-recipient-picker.tsx:266` |
-| `premium-gift-retry` | — | `src/features/premium/components/gift-recipient-picker.tsx:186` |
-| `premium-gift-search` | — | `src/features/premium/components/gift-recipient-picker.tsx:148` |
-| `premium-gift-see-features` | — | `src/features/premium/components/gift-premium-hero.tsx:208` |
+| `premium-gift-results` | — | `src/features/premium/components/gift-recipient-picker.tsx:342` |
+| `premium-gift-retry` | — | `src/features/premium/components/gift-recipient-picker.tsx:261` |
+| `premium-gift-search` | — | `src/features/premium/components/gift-recipient-picker.tsx:223` |
+| `premium-gift-see-features` | — | `src/features/premium/components/gift-premium-hero.tsx:234` |
+| `premium-gift-unavailable` | — | `src/features/premium/components/gift-recipient-picker.tsx:172` |
 | `premium-hero` | — | `src/features/premium/components/premium-hero.tsx:65` |
 | `premium-manage` | — | `src/features/premium/components/premium-manage-button.tsx:73` |
 | `premium-plan` | `data-option-key`, `data-package-id` | `src/features/premium/components/premium-plan-card.tsx:158` |

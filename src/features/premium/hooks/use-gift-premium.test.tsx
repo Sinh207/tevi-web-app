@@ -42,13 +42,20 @@ vi.mock('@features/auth', () => ({
         },
 }))
 
-const router = vi.hoisted(() => ({ replace: vi.fn() }))
+/**
+ * The router, with both writers the hook uses: `push` for choosing somebody (so the browser's Back
+ * has an entry to come back to) and `replace` for un-choosing and for sweeping `?gift_token=`.
+ *
+ * Neither fires `popstate`, which is why the hook sets its own state as well — the tests below rely
+ * on that, and the listener is exercised by dispatching the event directly.
+ */
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }))
 vi.mock('next/navigation', () => ({
     useRouter: () => router,
     usePathname: () => '/gift-premium',
 }))
 
-const api = vi.hoisted(() => ({ resolveReceiverId: vi.fn() }))
+const api = vi.hoisted(() => ({ getRecipient: vi.fn() }))
 vi.mock('../api/gift-recipient-api', async importOriginal => ({
     ...(await importOriginal<typeof import('../api/gift-recipient-api')>()),
     giftRecipientApi: api,
@@ -111,9 +118,11 @@ beforeEach(() => {
     payment.state = { kind: 'idle' }
     session.isAuthenticated = true
     session.openLoginDialog.mockReset()
+    router.push.mockReset()
     router.replace.mockReset()
-    api.resolveReceiverId.mockReset()
-    api.resolveReceiverId.mockResolvedValue('77')
+    router.back.mockReset()
+    api.getRecipient.mockReset()
+    api.getRecipient.mockResolvedValue(recipient({ owner_id: '77' }))
     window.history.replaceState({}, '', '/gift-premium')
 })
 
@@ -129,6 +138,85 @@ describe('useGiftPremium — the step', () => {
         act(() => seen.current?.back())
         expect(seen.current?.step).toBe('recipient')
         expect(seen.current?.recipient).toBeNull()
+    })
+
+    it('names the recipient in the URL, and **pushes** so Back has somewhere to go', () => {
+        /*
+         * The whole reason the step is in the URL: the browser's (and the phone's) Back used to leave
+         * `/gift-premium` from the offer step, while the in-page Back un-chose the recipient. One
+         * screen, two Backs, different outcomes — and on a phone the gesture is the one people use.
+         */
+        const { seen } = probe()
+        act(() => seen.current?.select(recipient()))
+        expect(router.push).toHaveBeenCalledWith('/gift-premium?to=ada', { scroll: false })
+    })
+
+    it('pops the entry it pushed, rather than replacing it', () => {
+        /*
+         * `replace` here leaves the *earlier* plain `/gift-premium` behind, so the browser's Back
+         * then lands on the picker again — one press that changes nothing before it leaves the page.
+         * Caught by an e2e assertion that failed for the right reason.
+         */
+        const { seen } = probe()
+        act(() => seen.current?.select(recipient()))
+        act(() => seen.current?.back())
+
+        expect(router.back).toHaveBeenCalledTimes(1)
+        expect(router.replace).not.toHaveBeenCalled()
+    })
+
+    it('replaces instead for a reader who arrived on a `?to=` link', async () => {
+        // No entry of ours behind them: `back()` would take them off the site.
+        window.history.replaceState({}, '', '/gift-premium?to=ada')
+        const { seen } = probe()
+        await waitFor(() => expect(seen.current?.step).toBe('offer'))
+
+        act(() => seen.current?.back())
+
+        expect(router.replace).toHaveBeenCalledWith('/gift-premium', { scroll: false })
+        expect(router.back).not.toHaveBeenCalled()
+    })
+
+    it('follows the browser back and forward buttons', async () => {
+        // Neither `push` nor `replace` fires `popstate`, so the listener is only ever exercised by
+        // the two history buttons — dispatched here directly.
+        const { seen } = probe()
+        act(() => seen.current?.select(recipient()))
+        expect(seen.current?.step).toBe('offer')
+
+        window.history.replaceState({}, '', '/gift-premium')
+        await act(async () => {
+            window.dispatchEvent(new PopStateEvent('popstate'))
+        })
+        expect(seen.current?.step).toBe('recipient')
+    })
+
+    it('opens on the person a `?to=` link names, fetching them once', async () => {
+        window.history.replaceState({}, '', '/gift-premium?to=ada')
+        const { seen } = probe()
+
+        await waitFor(() => expect(seen.current?.step).toBe('offer'))
+        expect(seen.current?.recipient?.slug).toBe('ada')
+        expect(api.getRecipient).toHaveBeenCalledTimes(1)
+    })
+
+    it('falls back to the picker for a `?to=` that names nobody', async () => {
+        // A renamed or removed space. The picker is the honest answer to a link that resolves to
+        // nothing — better than an offer screen with no name on it.
+        api.getRecipient.mockResolvedValue(null)
+        window.history.replaceState({}, '', '/gift-premium?to=ghost')
+        const { seen } = probe()
+
+        await waitFor(() => expect(seen.current?.isResolvingRecipient).toBe(false))
+        expect(seen.current?.step).toBe('recipient')
+    })
+
+    it('does not fetch a recipient it was handed', () => {
+        // Picking hands over the whole row, so the URL only has to record which one — the query
+        // stays disabled and the prefetch fires only for a row with no `owner_id`.
+        const { seen } = probe()
+        act(() => seen.current?.select(recipient({ owner_id: '512' })))
+        expect(api.getRecipient).not.toHaveBeenCalled()
     })
 
     it('shows a settled gift over a recipient that is still chosen', async () => {
@@ -273,14 +361,14 @@ describe('useGiftPremium — confirming', () => {
         })
 
         await waitFor(() => expect(payment.checkout).toHaveBeenCalled())
-        expect(api.resolveReceiverId).not.toHaveBeenCalled()
+        expect(api.getRecipient).not.toHaveBeenCalled()
         expect(payment.checkout.mock.calls[0]?.[0]).toMatchObject({ receiverUserId: '512' })
     })
 
     it('does not charge when the receiver cannot be resolved, and says so in its own words', async () => {
         // Deliberately **not** routed through the checkout machine: nothing was charged, so a dialog
         // headed by a payment error would describe the wrong event.
-        api.resolveReceiverId.mockResolvedValue(null)
+        api.getRecipient.mockResolvedValue(recipient({ owner_id: null }))
         const { seen } = probe()
         act(() => seen.current?.select(recipient()))
         act(() => seen.current?.request(YEAR))
@@ -296,7 +384,7 @@ describe('useGiftPremium — confirming', () => {
     })
 
     it('does not charge when the lookup itself fails', async () => {
-        api.resolveReceiverId.mockRejectedValue(new Error('502'))
+        api.getRecipient.mockRejectedValue(new Error('502'))
         const { seen } = probe()
         act(() => seen.current?.select(recipient()))
         act(() => seen.current?.request(YEAR))
@@ -319,14 +407,14 @@ describe('useGiftPremium — confirming', () => {
          * here to isolate what `confirm` does. The claim is that the encode check runs **first**: a
          * handle that cannot be written into a return URL costs no request at all.
          */
-        api.resolveReceiverId.mockClear()
+        api.getRecipient.mockClear()
 
         await act(async () => {
             seen.current?.confirm()
         })
 
         expect(seen.current?.errorKey).toBe('giftpremium_error_recipient')
-        expect(api.resolveReceiverId).not.toHaveBeenCalled()
+        expect(api.getRecipient).not.toHaveBeenCalled()
         expect(payment.checkout).not.toHaveBeenCalled()
     })
 })

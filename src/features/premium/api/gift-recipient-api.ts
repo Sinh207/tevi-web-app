@@ -7,7 +7,7 @@ import {
     GIFT_RECIPIENT_FIRST_PAGE,
     type GiftRecipientPage,
 } from '../lib/gift-recipient-page'
-import { type GiftRecipient, normalizeGiftRecipients, toReceiverUserId } from './gift-types'
+import { type GiftRecipient, giftRecipientSchema, normalizeGiftRecipients } from './gift-types'
 
 /**
  * Finding the person a gift is for — **three calls on two services this feature does not own.**
@@ -56,9 +56,9 @@ const channelService = createApiModel({ apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN
  * account (blocked spaces first), and an unscoped key hands account B whatever account A saw the
  * moment somebody uses the switcher — which on this screen is two taps away and mid-purchase.
  *
- * `receiver` is account-scoped for a harder reason: it is the id a **charge** is created against.
- * A cached value that outlived the account that fetched it would be a gift bought for the wrong
- * person with no way for either of them to tell.
+ * `recipient` is account-scoped for a harder reason: it carries the id a **charge** is created
+ * against. A cached value that outlived the account that fetched it would be a gift bought for the
+ * wrong person with no way for either of them to tell.
  */
 export const giftRecipientKeys = {
     all: ['gift-premium', 'recipients'] as const,
@@ -66,8 +66,9 @@ export const giftRecipientKeys = {
         [...giftRecipientKeys.all, 'search', q, accountId ?? 'anon'] as const,
     following: (q: string, accountId: string | null) =>
         [...giftRecipientKeys.all, 'following', q, accountId ?? 'anon'] as const,
-    receiver: (slug: string, accountId: string | null) =>
-        [...giftRecipientKeys.all, 'receiver', slug, accountId ?? 'anon'] as const,
+    /** One space, by slug — the charge's `receiver_user_id` and the deep link's recipient. */
+    recipient: (slug: string, accountId: string | null) =>
+        [...giftRecipientKeys.all, 'one', slug, accountId ?? 'anon'] as const,
 }
 
 export const giftRecipientApi = {
@@ -140,35 +141,39 @@ export const giftRecipientApi = {
     },
 
     /**
-     * The **user id** behind a space — `GET core/v3/channel/channels/{slug}/`, read for one field.
+     * One space, as a recipient — `GET core/v3/channel/channels/{slug}/`.
      *
-     * ## Why a whole request for one string
+     * ## Two facts, one request
      *
-     * `checkout/v3/checkout/gift-premium/` is priced against `receiver_user_id`, which is a *user*
-     * and not the channel the reader pressed. Neither list this screen draws from is contracted to
-     * carry `owner_id` — `followedChannelSchema` says in writing that it does not, and the search
-     * payload is a projection — so the id has to be asked for. Legacy makes the same call from
-     * inside its checkout handler, one line before it charges.
+     * This used to be `resolveReceiverId`, which fetched the whole channel payload and read exactly
+     * one field off it. Both of the things this screen needs about a person it did not get from a
+     * list are in that body:
      *
-     * It is fetched **when the recipient is chosen** rather than at the press, which is the one
-     * behavioural difference: by the time a package is confirmed the answer is in the query cache,
-     * so the charge does not wait on a round trip that could have happened while the reader was
-     * reading prices. `useGiftPremium.confirm` still goes through `fetchQuery`, so a cold cache is
-     * correct rather than merely unlikely.
+     * - **`owner_id`** — a *user* id, which is what `checkout/v3/checkout/gift-premium/` prices the
+     *   gift against. Neither list is contracted to send it (`followedChannelSchema` says in writing
+     *   that it does not, and the search payload is a projection), so it has to be asked for.
+     * - **the recipient itself** — name, avatar, marks — for the case where nobody was *picked*:
+     *   a reload on the offer step, or a `/gift-premium?to=ada` link. The step lives in the URL now,
+     *   and a slug is all the URL carries.
      *
-     * `null` when the body carries no `owner_id`, and the caller refuses to charge on it. An empty
-     * `receiver_user_id` would come back as a 4xx from `checkout/` and read to the reader as a
-     * payment failure, three steps away from what actually went wrong.
+     * Parsed with `giftRecipientSchema`, which the channel payload satisfies: it is a superset of a
+     * list row. So the deep-link path costs nothing the charge was not going to spend anyway, and
+     * the two readers share one cache entry.
+     *
+     * `null` for a body this client cannot read — a renamed or removed space. The caller turns that
+     * into a refusal to charge rather than a checkout with an empty `receiver_user_id`, which would
+     * come back as a 4xx reading like a payment problem three steps from what went wrong.
      */
-    async resolveReceiverId(
+    async getRecipient(
         slug: string,
         { accountId, signal }: { accountId?: string | null; signal?: AbortSignal } = {},
-    ): Promise<string | null> {
+    ): Promise<GiftRecipient | null> {
         const body = await channelService.get<unknown>(
             `v3/channel/channels/${encodeURIComponent(slug)}/`,
             undefined,
             { signal, ...(accountId ? { accountId } : {}) },
         )
-        return toReceiverUserId(body)
+        const parsed = giftRecipientSchema.safeParse(body)
+        return parsed.success && parsed.data.slug !== '' ? parsed.data : null
     },
 }

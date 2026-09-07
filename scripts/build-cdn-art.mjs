@@ -134,6 +134,46 @@ const SOURCES = [
         box: { width: 190, height: 127 },
         scale: 2,
     },
+    /*
+     * The MCN-invitation hero, and the **first `cover` background** this script has had to encode —
+     * which is why its `box` is not the box the app draws it in.
+     *
+     * Legacy paints it as a CSS `background-image` with `background-size: cover` in a band that is
+     * `100%` wide (so at most 612) and **172px tall**. A CSS background is never optimised by
+     * anything, so the browser fetches all **2.31 MB** of a 1536×1024 PNG to fill a 612×172 strip.
+     *
+     * `box: 612×408` is that width at the **source's own 3:2 aspect**, not `612×172`. Encoding the
+     * drawn box would have to bake the crop in, and the crop is width-dependent: `cover` into
+     * 612×172 keeps a 431px-tall band of the source, into 360×172 an 1100px-wide one. Bake the
+     * desktop crop and every phone re-crops the already-cropped strip, losing a third of the picture
+     * legacy shows. So the aspect is preserved here and `object-cover` does the crop at render time,
+     * exactly as legacy's `background-size` does — the only thing that changes is the byte count.
+     *
+     * That also means the rasteriser's straight `drawImage` is a no-op distortion here: 612×408 *is*
+     * 3:2, so nothing is squashed. Do not "correct" this row to the 172 the component declares.
+     */
+    {
+        name: 'invitation-banner',
+        out: 'channel/invitation-banner.webp',
+        url: `${CDN}/web/web-app/images/bg-invitation.png`,
+        box: { width: 612, height: 408 },
+        scale: 2,
+    },
+    /*
+     * "This invitation link has expired or is invalid" — legacy's `channel/not-found.svg`, drawn at
+     * 227×225.
+     *
+     * The third Figma image-layer-as-SVG in this feature (1.71 MB of base64 PNG behind a
+     * `<pattern>`), so the same trade as the two walls above: `next/image` passes a remote SVG
+     * through untouched, and this one is 1.71 MB to say a link has expired.
+     */
+    {
+        name: 'channel-not-found',
+        out: 'channel/not-found.webp',
+        url: `${CDN}/web/web-app/channel/not-found.svg`,
+        box: { width: 227, height: 225 },
+        scale: 2,
+    },
     {
         name: 'identity-intro',
         out: 'identification/intro.webp',

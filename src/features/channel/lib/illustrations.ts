@@ -139,3 +139,35 @@ export const REPORT_ART = {
 export const FOLLOWING_ART = {
     empty: { src: '/illustrations/theo-search.svg', width: 94, height: 118 },
 } as const
+
+/**
+ * `/invitation/verify`'s two pictures — the hero band and the expired-link wall.
+ *
+ * ## The hero is the first `cover` **background** in this repo, and that changes the numbers
+ *
+ * Legacy paints it as a CSS `background-image` with `background-size: cover` in a band 172px tall,
+ * which is the worst case for this rule twice over: a CSS background is never optimised by anything
+ * (not `next/image`, not the loader), and the file is a **2.31 MB** 1536×1024 PNG. So every creator
+ * opening an invitation downloads 2.31 MB to fill a 612×172 strip.
+ *
+ * `width`/`height` here are the **asset's**, not the box's — 612×408, the drawn width at the source's
+ * own 3:2 aspect. Everywhere else in this file the two are the same thing, and it is worth saying why
+ * they are not here: the crop `cover` performs depends on the box's width, so baking the 612×172 crop
+ * into the file would leave a phone re-cropping an already-cropped strip and losing a third of the
+ * picture legacy shows. The aspect is preserved in the file and `object-cover` does the crop at
+ * render time, exactly as `background-size` did. The declared box is therefore the reservation for
+ * the *image*, and the 172 the band is actually tall lives at the call site with the crop.
+ *
+ * ## The wall is the third image-layer-as-SVG in this feature
+ *
+ * `channel/not-found.svg`, **1.71 MB** of base64 PNG behind a `<pattern>` — the same shape as the
+ * `suspended` and `unpublished` walls above, and the same trade: rasterised at 2× the 227×225 box
+ * legacy draws it in, it is 56 KB. Legacy reuses its space-not-found art for this state rather than
+ * commissioning one, and so does this.
+ *
+ * Both rows are in `scripts/build-cdn-art.mjs`, so `pnpm art` reproduces them.
+ */
+export const MCN_INVITATION_ART = {
+    hero: { src: '/illustrations/channel/invitation-banner.webp', width: 612, height: 408 },
+    invalid: { src: '/illustrations/channel/not-found.webp', width: 227, height: 225 },
+} as const

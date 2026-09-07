@@ -6,6 +6,7 @@ import {
     FOLLOW_REQUESTS_ART,
     FOLLOWING_ART,
     LIVE_EVENTS_ART,
+    MCN_INVITATION_ART,
     REPORT_ART,
 } from './illustrations'
 
@@ -25,6 +26,8 @@ const ART = [
     ['wall: protected', CHANNEL_WALL_ART.protected.src],
     ['wall: blocked', CHANNEL_WALL_ART.blocked.src],
     ['report submitted', REPORT_ART.submitted.src],
+    ['invitation hero', MCN_INVITATION_ART.hero.src],
+    ['invitation invalid', MCN_INVITATION_ART.invalid.src],
 ] as const
 
 describe('channel illustrations', () => {
@@ -49,6 +52,13 @@ describe('channel illustrations', () => {
     it('keeps the re-encoded walls out of SVG, and leaves the vector ones alone', () => {
         expect(CHANNEL_WALL_ART.suspended.src).not.toMatch(/\.svg$/)
         expect(CHANNEL_WALL_ART.unpublished.src).not.toMatch(/\.svg$/)
+        /*
+         * The invitation pair is the same case: a 2.31 MB PNG behind a CSS `background-image` (which
+         * no optimiser touches at all) and a 1.71 MB image-layer-as-SVG. Pointing either back at the
+         * CDN looks identical on screen, which is why it is an assertion and not a review note.
+         */
+        expect(MCN_INVITATION_ART.hero.src).not.toMatch(/\.svg$/)
+        expect(MCN_INVITATION_ART.invalid.src).not.toMatch(/\.svg$/)
         expect(CHANNEL_WALL_ART.protected.src).toMatch(/\.svg$/)
         expect(CHANNEL_WALL_ART.blocked.src).toMatch(/\.svg$/)
     })

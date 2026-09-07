@@ -178,6 +178,22 @@ wanted four. Now that this is the *default* for every write, the home is
 callers. `shared/` may not import `features/`, and the predicate depends on nothing but `ApiError`,
 so it belongs there.
 
+**That file now exists**, with `error-message.test.ts` pinning the union, the three skipped statuses
+and the cap. It landed with `/invitation/verify`, whose accept/reject is the write that needed it
+(the refusals there are all things only the backend knows — *"this invitation was already
+answered"*), and it was written rather than a sixth copy on this section's own instruction.
+
+**Two things are deliberately still undone**, because each changes behaviour well outside that
+screen and neither belongs to it:
+
+1. `mutationCache.onError` does not call it yet, so `meta.showErrorToast`'s string is still an
+   *override* rather than a fallback for the ~34 call sites using it. `useMcnInvitation` therefore
+   sets no `meta` and toasts in its own `onError` — which is the pattern the last part of this
+   section describes for the three hooks that cannot use a static meta string.
+2. The five copies above are untouched. Collapsing them is one commit and the tests to move with it
+   are named in [§6](#6-tests); `use-create-channel.ts`'s missing status filter and cap is the one
+   that is a live defect rather than a duplication.
+
 **The shared helper must read the *union* of the four field lists, in the order given in
 [§2](#2-what-counts-as-a-message-from-the-api), with one cap of 200.** This is the one part of the
 migration that can go wrong silently. `body.detail` is DRF's spelling and billy sends it; a helper

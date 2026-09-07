@@ -2687,7 +2687,9 @@ Encoded in `features/share/api/share-link-api.ts`, `lib/share-channels.ts`, `hoo
 ## B98 — the **MCN partnership**: what is in `mcn`, and what does `media-space/` answer? · **`/mcn-partnership` renders four guessed fields**
 
 `/mcn-partnership` is built and reads two services. The commercial half comes from `my-channel/`'s
-`mcn` block; the presentational half from the organization record on a **different base**:
+`mcn` block; the presentational half from the organization record on a **different base**. **B100** is
+the other end of the same relationship — the invitation that creates the partnership this screen
+renders — and the fractions-vs-percentages question below applies to both:
 
 ```
 GET  core/v3/channel/my-channel/          → { …, mcn: { name, is_owner, creator_rate, mcn_revenue_rate, identifier?, joined_at? } }
@@ -2732,6 +2734,116 @@ which is the only description of either that exists (`/business` publishes no Op
 
 Encoded in `features/channel/api/organization-api.ts`, `api/types.ts` (`mcn`),
 `hooks/use-mcn-partnership.ts`, `lib/mcn-partnership-state.ts`.
+
+## B100 — the **MCN invitation**: the payload, the expiry window, and the two numbers in the letter · **`/invitation/verify` counts down to a deadline it invented**
+
+`/invitation/verify` is built. One token off an email, one read, one write:
+
+```
+GET   core/v1/organization/invitations/{invite_token}/           → { organization: { id, name }, created_at, mcn_revenue_rate }
+POST  core/v1/organization/invitations/{invite_token}/?action=accept|reject   → 2xx
+```
+
+Nobody in this repo has ever received one, so the payload has not been seen on the wire — the shape is
+read out of legacy's `containers/invitation/components/content`, which accesses exactly three fields
+and is the only description that exists (`core/schema/` is signature-gated, so there is no OpenAPI
+document to check). Sibling of **B98**, which covers the partnership the *accepted* invitation creates.
+
+- ⚠ **How long is a link good for?** The payload carries `created_at` and **no expiry**, so both apps
+  compute the deadline as `created_at + 72h` and legacy prints the remainder **inside the Agree
+  button's label**. That is a live timer counting down to a moment this client made up: if the real
+  window is 48 hours it reads 24 hours high for the whole of the second day. The client's countdown is
+  deliberately **informational and does not gate the buttons** (`canAnswerInvitation`) — the server is
+  the authority on expiry — so a wrong constant costs a wrong *number*, never a wrong outcome. Best
+  answer is a field: `expires_at` on the payload and the constant is deleted.
+- ⚠ **"within 3 days" and "at least 60 days" — where do those come from?** Nowhere. Both are literals
+  in legacy's JSX and are now literals in this client's `Trans` values. The first at least agrees with
+  the 72-hour countdown beside it; the **60** does not appear anywhere else in either app, and it is a
+  commitment stated to a creator on the screen where they agree to it. If the lock-in is configurable
+  per network, or is 30 days, this letter is a promise the platform does not keep.
+- ⚠ **Is `mcn_revenue_rate` a percentage, and can it be null?** Legacy `parseFloat`s it, so it arrives
+  as a **string**; the client accepts both spellings. Rendered as two figures — the network's rate and
+  `100 −` it. **`null` withholds both** rather than printing 0: legacy's `parseFloat(x) || 0` renders
+  **Creator Rate 100% · MCN Rate 0%** for a payload missing the field, which is a commercial term
+  nobody agreed printed as fact. Out-of-range values are refused for the same reason (140 would print a
+  creator share of −40%). Same fractions-vs-percentages question as B98.
+- ⚠ **What does a spent or expired token answer?** The client treats **404 and 410 as data** — the
+  expired-link wall — and rethrows everything else into an error state with a Retry. 410 is a guess at
+  "this token was already redeemed"; if that case comes back as a **200 with a status field**, or as a
+  4xx with a `code`, the wall is right for the wrong reason and the reason is worth having (the code
+  would map to a translated key ahead of the API sentence — see `docs/API_ERRORS.md` §3).
+- ⚠ **Is `action` really a query parameter?** Legacy sends `ApiModel.post(path, {}, { action })`, whose
+  third argument is params, so the body is `{}` and the verb rides on the URL. Reproduced exactly.
+  Unusual enough for a state-changing call that it is worth confirming rather than inferring — a body
+  `{ action }` would be the conventional shape and legacy's own code is the only evidence either way.
+- **Does `POST` answer anything a screen should read?** The client reads nothing and navigates to `/`
+  (legacy's destination). If the response carries the created partnership, an accept could land on
+  `/mcn-partnership` with the terms already in cache instead of a home page that has to re-read
+  `my-channel/`.
+- **Is there a way to *list* pending invitations?** No endpoint is known, so this screen is reachable
+  only from the emailed link — there is no inbox row, no drawer entry and no way back to it once the
+  mail is lost. Legacy is the same.
+
+Encoded in `features/channel/api/invitation-api.ts`, `lib/invitation-state.ts`,
+`hooks/use-mcn-invitation.ts`.
+
+---
+
+## B101 — the **MCN manager invitation**: a second invitation nobody has described · **`/mcn-user-invitation/verify` guesses the payload and states two terms as fact**
+
+Sibling of **B100**, and please answer them together — they are two screens, two endpoints and two
+emails that a reader cannot tell apart from the outside. This is the one that invites somebody to be
+a **manager** of a network rather than one of its creators:
+
+```
+GET   core/v1/organization/user-invitations/{token}/                       → { organization: { id, name }, created_at }
+POST  core/v1/organization/user-invitations/{token}/?action=accept|reject  → 2xx
+```
+
+Nobody in this repo has ever received one, so the payload has not been seen on the wire — the shape is
+read out of legacy's `containers/mcnUserInvitation/components/content`, which accesses exactly two
+fields, and `core/schema/` is signature-gated so there is no OpenAPI document to check. Everything in
+B100's list about the two calls' *mechanics* applies here unchanged (404/410 read as data, `action` as
+a query parameter, nothing read out of the `POST` body); what follows is only what differs.
+
+- ⚠ **The two invitations disagree on the query-parameter name, and the client cannot normalise it.**
+  The creator link carries `?invite_token=`, this one carries `?token=`. Both spellings are in mail
+  already sent, so both are reproduced exactly — and a token redeemed against the *other* endpoint
+  404s, which this client renders as *the invitation link has expired*: a live invitation reported
+  dead. If the two can ever be served by one endpoint, say so and one of these screens goes away.
+  Until then, please do not change either spelling.
+- ⚠ **"this invitation link will expire in 72 hours" — is that the real window?** The payload carries
+  `created_at` and **no expiry**, exactly as B100's does. This screen at least does not count down:
+  legacy states the window as a flat sentence and so does this client, so a wrong constant is a wrong
+  sentence rather than a live timer lying by the second. Best answer is still a field — `expires_at`,
+  and `USER_INVITATION_WINDOW_HOURS` is deleted.
+- ⚠ **The two bullets are the terms somebody is agreeing to, and neither is in any payload.** Legacy
+  hard-codes *"Cannot join other MCN as a Creator"* and *"Can manage this MCN user according to their
+  group permission"*, and this client quotes both verbatim rather than paraphrasing them. The first is
+  a **restriction on the reader's own account** stated on the screen where they accept it; if it is not
+  true — or is conditional, or is per-network — this letter is a promise the platform does not keep.
+  The second names a *group permission* that no endpoint this client calls has ever mentioned.
+- ⚠ **What does accepting change about `/me` and `my-channel/`?** Unknown, so the client evicts
+  `my-channel/` (query **and** ETag record) after either answer and navigates to `/`. That is a
+  deliberate over-reach: one conditional GET on a screen that is leaving anyway, taken because the
+  alternative — assuming nothing changed — is the assumption that was wrong on `my-channel/`,
+  `premium-info/` and `my-subscriptions/`. If a manager role surfaces in the `mcn` block, in
+  `features/permission`'s grants, or nowhere at all, say which and the eviction narrows to it.
+- ⚠ **Is a manager a creator?** The first bullet implies the roles are exclusive, which would mean this
+  endpoint can refuse an account that is already in an MCN as a creator — and that refusal is the one
+  case worth a stable `code` (**B90**), because "you are already managed by a network as a creator" is
+  a sentence the client could translate. Today it shows the API's own message in English.
+- **Is there a way to *list* pending manager invitations?** No endpoint is known, so this screen is
+  reachable only from the emailed link — no inbox row, no drawer entry, and no way back once the mail
+  is lost. Legacy is the same, and B100 asks the same for the creator half.
+- **Does anything distinguish the two mails?** If both templates ever point at one path with a role in
+  the query string, that is the fix worth making — one screen, one parameter, and the mis-redeem
+  failure above stops existing.
+
+Encoded in `features/channel/api/user-invitation-api.ts`, `lib/user-invitation-state.ts`,
+`hooks/use-mcn-user-invitation.ts`.
+
+---
 
 ---
 

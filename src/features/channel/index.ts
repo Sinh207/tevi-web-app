@@ -111,8 +111,19 @@ export { FollowingLimitNotice } from './components/following-limit-notice'
 export { FollowingLiveRow } from './components/following-live-row'
 export { FollowingSkeleton } from './components/following-skeleton'
 export { FollowingView } from './components/following-view'
+/**
+ * `/invitation/verify`'s screen. The skeleton is deliberately **not** here — a `loading.tsx` takes
+ * it from `./skeleton`, and that file says why.
+ */
+export { McnInvitationView } from './components/mcn-invitation-view'
 export { McnPartnershipSkeleton } from './components/mcn-partnership-skeleton'
 export { McnPartnershipView } from './components/mcn-partnership-view'
+/**
+ * `/mcn-user-invitation/verify`'s screen — the **manager** invitation, a different endpoint and a
+ * different query parameter from `McnInvitationView` above. Its skeleton is deliberately **not**
+ * here: a `loading.tsx` takes it from `./skeleton`, and that file says why.
+ */
+export { McnUserInvitationView } from './components/mcn-user-invitation-view'
 export { MySpaceRedirect } from './components/my-space-redirect'
 /**
  * Exported for `/dev/space-visibility` — the card's selected, saving and locked states need a

@@ -2,7 +2,8 @@
 
 import { useAuth, useRequireAuth } from '@features/auth'
 import { DEFAULT_GATEWAY_ID, usePayment } from '@features/payment'
-import { useQueryClient } from '@tanstack/react-query'
+import { keepFor } from '@shared/lib/api/query-client'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { giftRecipientApi, giftRecipientKeys } from '../api/gift-recipient-api'
@@ -14,6 +15,37 @@ import { decodeGiftToken, encodeGiftToken, type SentGift } from '../lib/gift-tok
 /**
  * `/gift-premium`'s whole machine — **three steps, and every one of them derived.**
  *
+ * ## The chosen recipient lives in the **URL**, and that is what makes Back work
+ *
+ * `?to=<slug>` on the offer step. Three things were broken while the step was React state alone,
+ * and all three are one defect wearing three faces — measured, not supposed:
+ *
+ * | | before | now |
+ * |---|---|---|
+ * | the browser's / phone's Back on the offer step | **left `/gift-premium` entirely** | returns to the picker |
+ * | a reload on the offer step | dropped the recipient, back to the picker | stays on the offer |
+ * | `/gift-premium?to=ada` | nothing | opens on that person |
+ *
+ * The first is the one that matters: the in-page Back button un-chooses the recipient while the
+ * system gesture left the flow, so one screen had two Backs that did different things — and on a
+ * phone the gesture is the one people use.
+ *
+ * `select` **pushes** (so there is an entry to come back to) and the in-page Back **replaces** (so
+ * un-choosing does not stack history). The URL is read from `window.location` and re-read on
+ * `popstate` rather than through `useSearchParams()`: that hook opts the whole route into dynamic
+ * rendering or demands a Suspense boundary, which this otherwise-static page does not need — the
+ * same trade `useGetStar` and `useCheckoutCallback` document, and the same mechanism this hook
+ * already uses for `?gift_token=`. `router.push` does not fire `popstate`, so the two writers set
+ * the state themselves and the listener exists only for back and forward.
+ *
+ * ## The recipient is state *and* a slug, and neither is the source alone
+ *
+ * Picking somebody hands over a whole row, so there is nothing to fetch — the object is held and the
+ * URL records which one it is. Arriving with `?to=` and no such object (a reload, a link, a forward
+ * press) is the case that fetches: `giftRecipientApi.getRecipient` reads the channel behind the
+ * slug, which is the **same request the charge needs anyway** for `owner_id`. So the deep link costs
+ * nothing extra and the two paths share one cache entry.
+ *
  * ## The step is not stored
  *
  * Legacy holds `statusPage` in a `useState` beside `sendGiftSuccess`, `channelSelected`,
@@ -24,8 +56,8 @@ import { decodeGiftToken, encodeGiftToken, type SentGift } from '../lib/gift-tok
  * matter**, so it cannot disagree with them:
  *
  * ```
- * a gift just settled  → 'sent'
- * a recipient is chosen → 'offer'
+ * a gift just settled   → 'sent'
+ * `?to=` names somebody → 'offer'
  * otherwise             → 'recipient'
  * ```
  *
@@ -90,8 +122,15 @@ export interface GiftPremiumFlow {
     step: GiftPremiumStep
     /** The gift that just settled, off the URL. `null` on an ordinary arrival. */
     sent: SentGift | null
-    /** Who the gift is for. `null` until somebody is picked. */
+    /** Who the gift is for. `null` until somebody is picked, or while a `?to=` is resolving. */
     recipient: GiftRecipient | null
+    /**
+     * A `?to=` from the URL is still being resolved — a reload or a link, never the picked path.
+     *
+     * Exposed so the picker can hold its invitation back for that moment instead of flashing it
+     * under a reader who is on the offer step and reloading it.
+     */
+    isResolvingRecipient: boolean
 
     /** A row in the picker was pressed. Choosing costs nothing and is not gated. */
     select: (recipient: GiftRecipient) => void
@@ -122,6 +161,19 @@ export interface GiftPremiumFlow {
 const GIFT_TOKEN_PARAM = 'gift_token'
 
 /**
+ * `?to=<slug>` — who the gift is for, and therefore which step the screen is on.
+ *
+ * Short and readable, because it ends up in an address bar and in shared links.
+ *
+ * ⚠ It **survives a checkout's return URL**, and that is worth knowing rather than assuming either
+ * way: `checkoutReturnUrl` strips the *gateway's* callback parameters and leaves the screen's own.
+ * On the **fail** URL that is what you want — the reader lands back on the offer with the recipient
+ * still chosen. On the **success** URL it is spent, so the token's own sweep drops it too; see the
+ * effect below.
+ */
+const GIFT_RECIPIENT_PARAM = 'to'
+
+/**
  * The checkout states in which this screen's own confirmation must step aside.
  *
  * The same rule, and the same list, `useSubscribePremium` and `useStarPurchase` write down: `card`
@@ -149,12 +201,38 @@ export function useGiftPremium(): GiftPremiumFlow {
     const { checkout, state, isBusy: isCheckoutBusy } = usePayment()
 
     const [sent, setSent] = useState<SentGift | null>(null)
-    const [recipient, setRecipient] = useState<GiftRecipient | null>(null)
+    /**
+     * Whose slug the URL names — the offer step's identity, mirrored into state so a render can read
+     * it synchronously.
+     *
+     * Seeded from `window.location` in an effect (never during render: the server's HTML carries no
+     * query, and reading it while rendering is a hydration mismatch), and kept in step with back and
+     * forward by the `popstate` listener below.
+     */
+    const [slug, setSlug] = useState<string | null>(null)
+    /**
+     * The row that was **picked**, if the reader picked one.
+     *
+     * Held rather than re-fetched: `select` is handed a whole recipient, so the only thing the URL
+     * has to carry is which one. It is discarded the moment the URL names somebody else, which is
+     * what stops a stale object surviving a forward press onto a different person.
+     */
+    const [picked, setPicked] = useState<GiftRecipient | null>(null)
     const [pending, setPending] = useState<PremiumPackage | null>(null)
     const [errorKey, setErrorKey] = useState<GiftPremiumErrorKey | null>(null)
     /** The receiver-id lookup between "Yes" and the checkout. Part of `isBusy`, so nothing races. */
     const [isResolving, setResolving] = useState(false)
 
+    /**
+     * Whether the entry the reader is standing on is **ours** — pushed by `select` in this session.
+     *
+     * It decides what the in-page Back does, and both branches are needed. `replace` on an entry we
+     * pushed leaves the *earlier* plain `/gift-premium` behind it, so the browser's Back then lands
+     * on the picker again: one press that changes nothing before it leaves the page. `back()` avoids
+     * that — but for a reader who arrived on a `?to=` link there is no entry of ours behind them and
+     * it would take them off the site. So: pop what we pushed, replace what we did not.
+     */
+    const pushedRef = useRef(false)
     /** See the ⚠ in this hook's note: this is what makes the token be read exactly once. */
     const readToken = useRef(false)
 
@@ -163,10 +241,26 @@ export function useGiftPremium(): GiftPremiumFlow {
         readToken.current = true
 
         const params = new URLSearchParams(window.location.search)
+        // The recipient the URL names, on this first read. Back and forward are the listener's.
+        // A settled gift below overrides it — that step is finished with the offer.
+        setSlug(params.get(GIFT_RECIPIENT_PARAM))
+
         const token = params.get(GIFT_TOKEN_PARAM)
         if (!token) return
 
+        /*
+         * **`?to=` goes with it.** It survives the round trip — `checkoutReturnUrl` strips only the
+         * gateway's own callback parameters — and on the *failure* URL that is exactly right: the
+         * reader comes back to the offer with the recipient still chosen. On the **success** URL it
+         * is spent: the offer step is over, and leaving it there makes the browser's Back do nothing
+         * (the token has already set `sent`, which outranks it) before leaving the page on the second
+         * press. Traced, not supposed.
+         */
         params.delete(GIFT_TOKEN_PARAM)
+        params.delete(GIFT_RECIPIENT_PARAM)
+        setSlug(null)
+        // The gateway navigated here, so nothing on this entry is ours to pop.
+        pushedRef.current = false
         const rest = params.toString()
         router.replace(rest ? `${pathname}?${rest}` : pathname, { scroll: false })
 
@@ -178,6 +272,22 @@ export function useGiftPremium(): GiftPremiumFlow {
         const gift = decodeGiftToken(token)
         if (gift) setSent(gift)
     }, [pathname, router])
+
+    /**
+     * Back and forward, which are the only events that change the URL without this hook doing it.
+     *
+     * `router.push` and `router.replace` do **not** fire `popstate` — they update the App Router's
+     * own state — so `select` and `back` set `slug` themselves and this listener exists purely for
+     * the two history buttons. Without it the pushed entry would pop and the screen would not move.
+     */
+    useEffect(() => {
+        const onPop = () => {
+            const params = new URLSearchParams(window.location.search)
+            setSlug(params.get(GIFT_RECIPIENT_PARAM))
+        }
+        window.addEventListener('popstate', onPop)
+        return () => window.removeEventListener('popstate', onPop)
+    }, [])
 
     /*
      * The confirmation steps aside once another dialog owns the flow — and closes when the reader
@@ -203,37 +313,90 @@ export function useGiftPremium(): GiftPremiumFlow {
     const isBusy = isCheckoutBusy || isResolving
 
     /**
-     * Choosing somebody, and **warming the one thing the charge will need.**
+     * The recipient the URL names, when nobody was picked in this session.
+     *
+     * The **only** case that fetches: a reload on the offer step, a `?to=` link, or a forward press
+     * onto somebody the held object is not. It is the same request the charge needs anyway
+     * (`getRecipient` reads `owner_id` off the same body), so the two share this key and the deep
+     * link costs nothing extra.
+     *
+     * `enabled` is what keeps the ordinary path free: picking somebody hands over the whole row, so
+     * `picked` already matches the slug and this never runs.
+     */
+    const needsFetch = slug !== null && picked?.slug !== slug
+    const fetched = useQuery({
+        queryKey: giftRecipientKeys.recipient(slug ?? '', activeId),
+        queryFn: ({ signal }) =>
+            giftRecipientApi.getRecipient(slug ?? '', { accountId: activeId, signal }),
+        enabled: needsFetch,
+        ...keepFor(5 * 60_000),
+    })
+
+    /**
+     * Who the gift is for — **the URL decides, the held object only supplies the detail.**
+     *
+     * `null` while a `?to=` is still being resolved, and `null` for a slug that came back unreadable
+     * (a renamed or removed space). Both land the screen on the picker, which is the honest answer
+     * to a link naming somebody who is not there.
+     */
+    const recipient: GiftRecipient | null =
+        slug === null ? null : picked?.slug === slug ? picked : (fetched.data ?? null)
+
+    /**
+     * Choosing somebody: hold the row, name it in the URL, and **warm the charge's one lookup.**
+     *
+     * `push` and not `replace`, because the point is that there is an entry to come back to — the
+     * browser's Back used to leave the page from here (see this hook's note).
      *
      * `receiver_user_id` is a *user* id and neither list carries it reliably, so it has to be asked
-     * for (`resolveReceiverId`). Asked for here rather than at the press, the round trip happens
-     * while the reader is reading three prices instead of standing on a spinner after saying "Yes" —
-     * and because it is the same query key, `confirm`'s `fetchQuery` is then a cache read.
-     *
-     * A failed prefetch is silent: `confirm` asks again and *that* is where a failure is worth
-     * telling somebody about.
+     * for. Asked for here rather than at the press, the round trip happens while the reader is
+     * reading three prices instead of standing on a spinner after saying "Yes"; and because it is the
+     * same key the deep-link path uses, `confirm`'s `fetchQuery` is then a cache read. A failed
+     * prefetch is silent — `confirm` asks again, and *that* is where a failure is worth telling
+     * somebody about.
      */
     const select = useCallback(
         (next: GiftRecipient) => {
             setErrorKey(null)
-            setRecipient(next)
+            setPicked(next)
+            setSlug(next.slug)
+            pushedRef.current = true
+            router.push(`${pathname}?${GIFT_RECIPIENT_PARAM}=${encodeURIComponent(next.slug)}`, {
+                scroll: false,
+            })
             if (next.owner_id) return
             void queryClient.prefetchQuery({
-                queryKey: giftRecipientKeys.receiver(next.slug, activeId),
+                queryKey: giftRecipientKeys.recipient(next.slug, activeId),
                 queryFn: ({ signal }) =>
-                    giftRecipientApi.resolveReceiverId(next.slug, { accountId: activeId, signal }),
+                    giftRecipientApi.getRecipient(next.slug, { accountId: activeId, signal }),
             })
         },
-        [activeId, queryClient],
+        [activeId, pathname, queryClient, router],
     )
 
-    /** Back and "send another gift" are the same reset, minus one field. Hence two lines, not ten. */
+    /**
+     * Back to the picker — **pop the entry if we pushed it, replace it if we did not.**
+     *
+     * See `pushedRef`: `replace` alone leaves the earlier plain `/gift-premium` behind and costs the
+     * reader a Back press that changes nothing; `back()` alone throws a reader who arrived on a
+     * `?to=` link off the site. Measured both ways.
+     *
+     * The state is cleared here as well as by the `popstate` the pop will fire, so the step moves in
+     * the same frame as the press rather than a tick later.
+     */
     const back = useCallback(() => {
         if (isBusy) return
-        setRecipient(null)
+        setPicked(null)
+        setSlug(null)
         setPending(null)
         setErrorKey(null)
-    }, [isBusy])
+        if (pushedRef.current) {
+            pushedRef.current = false
+            router.back()
+            return
+        }
+        router.replace(pathname, { scroll: false })
+    }, [isBusy, pathname, router])
 
     const again = useCallback(() => {
         setSent(null)
@@ -303,14 +466,16 @@ export function useGiftPremium(): GiftPremiumFlow {
             try {
                 const receiverUserId =
                     recipient.owner_id ??
-                    (await queryClient.fetchQuery({
-                        queryKey: giftRecipientKeys.receiver(recipient.slug, activeId),
-                        queryFn: ({ signal }) =>
-                            giftRecipientApi.resolveReceiverId(recipient.slug, {
-                                accountId: activeId,
-                                signal,
-                            }),
-                    }))
+                    (
+                        await queryClient.fetchQuery({
+                            queryKey: giftRecipientKeys.recipient(recipient.slug, activeId),
+                            queryFn: ({ signal }) =>
+                                giftRecipientApi.getRecipient(recipient.slug, {
+                                    accountId: activeId,
+                                    signal,
+                                }),
+                        })
+                    )?.owner_id
 
                 if (!receiverUserId) {
                     setErrorKey('giftpremium_error_recipient')
@@ -349,6 +514,7 @@ export function useGiftPremium(): GiftPremiumFlow {
          * page whose picker was still mounted must show the congratulation, not the offer.
          */
         step: sent ? 'sent' : recipient ? 'offer' : 'recipient',
+        isResolvingRecipient: needsFetch && fetched.isPending,
         sent,
         recipient,
         select,

@@ -1,5 +1,7 @@
+import type { GiftRecipient } from './api/gift-types'
 import type { PremiumBenefit, PremiumPackage } from './api/types'
 
+export type { GiftRecipient } from './api/gift-types'
 export type { PremiumBenefit, PremiumPackage } from './api/types'
 /**
  * Internals and fixtures for the `/dev/premium` harness, and for nothing else.
@@ -180,5 +182,179 @@ export const DEV_BENEFITS: PremiumBenefit[] = [
         banner: null,
         tag: null,
         details: [],
+    },
+]
+
+/* ============================== /dev/gift-premium ============================== */
+
+/**
+ * Internals and fixtures for the `/dev/gift-premium` harness.
+ *
+ * The gift screen has more states that no URL can reach than `/premium` does, because three of them
+ * are properties of *other people's* data:
+ *
+ * - **the catalogue's two unavailable answers.** Empty and failed are one sentence apart and one
+ *   retry button apart, and neither is reproducible on demand — `premium/v1/gift-packages/` is
+ *   whatever the backoffice is selling today.
+ * - **the picker's five states.** The invitation, the two-part skeleton, "nothing matched" and a
+ *   failed search. The skeleton is a few hundred milliseconds on a warm cache, and the two failures
+ *   need a service to be down.
+ * - **the Following strip with enough tiles to overflow.** Its arrows only exist when there is
+ *   somewhere to scroll, so on the real screen you need to follow six or more people whose names all
+ *   match one term. That is not a workflow either.
+ * - **the success screen.** Reachable only by actually paying, or by hand-crafting a `?gift_token=`.
+ *   Here it is one press.
+ *
+ * Kept out of `index.ts` so nothing in production imports a fixture.
+ */
+export { GiftFollowingStrip, GiftFollowingStripSkeleton } from './components/gift-following-strip'
+export { GiftFeaturedPlanCard, GiftPlanCard } from './components/gift-plan-card'
+export { GiftPlanGridSkeleton } from './components/gift-plan-grid'
+export { GiftPremiumHero } from './components/gift-premium-hero'
+export { GiftRecipientRow } from './components/gift-recipient-row'
+export { GiftRecipientSkeleton } from './components/gift-recipient-skeleton'
+export {
+    GIFT_PREMIUM_PANEL,
+    GIFT_PREMIUM_PICKER_SCREEN,
+    GIFT_PREMIUM_STATE_MIN,
+} from './lib/container'
+export { GIFT_PLAN_ORDER, giftMonthlyEquivalent, groupGiftPlans } from './lib/gift-plans'
+export { GIFT_PREMIUM_ART } from './lib/illustrations'
+
+/**
+ * The gift catalogue — **the real prices**, the ones in the screenshots: 3/6/12 months at
+ * $24.99 / $49.99 / $99.99.
+ *
+ * Real rather than round, and that is what makes the harness worth looking at: those three are the
+ * **same $8.33 a month**, which is the finding behind the cards' second line (`lib/gift-plans.ts`).
+ * A fixture with invented prices would show a discount the catalogue does not have — which is
+ * exactly how the derived-percentage version of these cards came to look confirmed.
+ *
+ * `product_id` is a Stripe **Price** id shape, so the field is honest even though nothing here can
+ * be pressed.
+ */
+export const DEV_GIFT_PACKAGES: PremiumPackage[] = [
+    {
+        id: '21',
+        product_id: 'price_1SgiftQ3mBfiRzT30LKq90d',
+        price: 24.99,
+        currency: 'USD',
+        duration_days: 90,
+        is_active: true,
+        sort_order: 1,
+    },
+    {
+        id: '22',
+        product_id: 'price_1SgiftH6mBfiRzT30LK180d',
+        price: 49.99,
+        currency: 'USD',
+        duration_days: 180,
+        is_active: true,
+        sort_order: 2,
+    },
+    {
+        id: '23',
+        product_id: 'price_1SgiftY1mBfiRzT30LK365d',
+        price: 99.99,
+        currency: 'USD',
+        duration_days: 365,
+        is_active: true,
+        sort_order: 3,
+    },
+]
+
+/**
+ * Seven people, shaped like the two payloads the picker reads — and picked to cover what a row and a
+ * tile can be handed.
+ *
+ * `avatar_video` and `thumb` are `null` throughout: the real ones are on a CDN, and a harness that
+ * reaches one fails on a train. So every face is initials, which is also the shape the **success
+ * screen** always draws (no image URL travels in `?gift_token=`).
+ *
+ * Seven is not arbitrary — at 76px a tile plus its gap, six overflow a 612 column, so this is the
+ * fixture that makes the strip's arrows appear at all. The names are deliberately long, short and
+ * CJK so the tile's truncation is visible rather than theoretical.
+ */
+export const DEV_GIFT_RECIPIENTS: GiftRecipient[] = [
+    {
+        id: 'ada-id',
+        slug: 'ada',
+        name: 'Ada Lovelace',
+        display_name: null,
+        images: { thumb: null, avatar_video: null },
+        verified_tick_badge: null,
+        is_premium: true,
+        is_nsfw: false,
+        owner_id: '123456',
+    },
+    {
+        id: 'adam-id',
+        slug: 'adam',
+        name: 'Adam',
+        display_name: null,
+        images: { thumb: null, avatar_video: null },
+        verified_tick_badge: null,
+        is_premium: false,
+        is_nsfw: false,
+        /** Absent, which is the case `resolveReceiverId` exists for. */
+        owner_id: null,
+    },
+    {
+        id: 'adaline-id',
+        slug: 'adaline',
+        name: 'Adaline Kim',
+        display_name: null,
+        images: { thumb: null, avatar_video: null },
+        verified_tick_badge: null,
+        is_premium: false,
+        /** The one sensitive space: the row marks it and the tile puts a pink disc on the avatar. */
+        is_nsfw: true,
+        owner_id: null,
+    },
+    {
+        id: 'adan-id',
+        slug: 'adan',
+        name: 'Adan Nguyễn Thị Hoàng Anh',
+        display_name: null,
+        images: { thumb: null, avatar_video: null },
+        verified_tick_badge: null,
+        is_premium: false,
+        is_nsfw: false,
+        owner_id: null,
+    },
+    {
+        id: 'adair-id',
+        slug: 'adair',
+        /** `display_name` wins over `name` where both are present. */
+        name: 'adair_chen',
+        display_name: 'Adair Chen',
+        images: { thumb: null, avatar_video: null },
+        verified_tick_badge: null,
+        is_premium: false,
+        is_nsfw: false,
+        owner_id: null,
+    },
+    {
+        id: 'adalyn-id',
+        slug: 'adalyn',
+        /** No name at all: the row and the tile fall back to `@slug`. */
+        name: null,
+        display_name: null,
+        images: { thumb: null, avatar_video: null },
+        verified_tick_badge: null,
+        is_premium: false,
+        is_nsfw: false,
+        owner_id: null,
+    },
+    {
+        id: 'adar-id',
+        slug: 'adar',
+        name: '雪の女王',
+        display_name: null,
+        images: { thumb: null, avatar_video: null },
+        verified_tick_badge: null,
+        is_premium: false,
+        is_nsfw: false,
+        owner_id: null,
     },
 ]

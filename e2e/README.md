@@ -44,6 +44,17 @@ indexable and that a crawler receives its pitch from the first response, plus th
 money the screen computes itself (a card per package the catalogue offers and no more, and the annual
 discount against the year it was derived from).
 
+And [`mcn-user-invitation.spec.ts`](mcn-user-invitation.spec.ts) — the MCN **manager** invitation,
+which is the one screen in this app reached **only from an email**: the whole spec exists because the
+token travels URL → server prop → hook → request path, with no unit-test surface anywhere along it,
+and because a neighbouring screen reads a *different* parameter (`invite_token`) off a *different*
+endpoint (`organization/invitations/`). Cross the two and a live invitation renders the expired-link
+wall — a screen that looks perfect while being completely wrong. So it pins the parameter name, the
+endpoint segment, `?action=` as a query parameter on both answers, and that a 500 is told apart from
+a spent token. It also caught a defect no rendered test could: two `fullWidth` DS buttons in a flex
+row overflow to 200% (`Button` is `shrink-0`), putting **Accept** off the screen's edge where it
+cannot be pressed.
+
 And [`create-action.spec.ts`](create-action.spec.ts) — the shell's `+` / FAB, the only control on
 *every* page: both navigation shells are mounted at once and each renders its own Create list, so
 the claim is that a press reaches **its** shell's surface and not the other's, that the option whose
