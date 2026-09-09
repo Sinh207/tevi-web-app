@@ -35,6 +35,33 @@ import { Icon, type IconGlyphProps } from '@shared/ui/icon'
  * `--background-surface` fill to sit on. The hover and press states are additions — Figma has no
  * interaction layer.
  *
+ * ## The hairline is not decoration — without it the disc disappears on half the app's bars
+ *
+ * The fill is `--background-surface`, and a sub-page bar is **not always** page-coloured: every
+ * screen following `docs/DESIGN_SYSTEM.md` §6's single-panel rule paints its bar with that same
+ * surface below `md`. On those the disc was surface-on-surface — measured **1.00** — so the control
+ * read as a bare chevron floating in the bar, on `/my-wallet/transaction-history`,
+ * `/redeem-gift-code`, `/identification` and every other aligned screen. It only ever looked right on
+ * the page-coloured half.
+ *
+ * This is §6a's rule applied to the one component it kept catching out: *a disc's ground is chosen
+ * against the surface it lands on*, and here the surface is not knowable at the call site — the same
+ * bar is page-coloured at one breakpoint and surface at the other. So the disc carries its own edge
+ * instead of relying on a ground it cannot predict, and one hairline is right on both.
+ *
+ * **A border, not legacy's shadow.** Legacy solves the same problem with
+ * `boxShadow: '0px 2px 10px rgba(0,0,0,0.1)'` — a soft dark halo, which is very nearly invisible on a
+ * dark surface and would leave this broken in the theme legacy does not have.
+ * The token is **`--button-secondary-border`** — what the DS already draws every `secondary` button's
+ * edge with, so this disc's outline is the same hairline as every other bordered control rather than
+ * a third opinion. It resolves to `--separator-strong` (`--zinc-300`), a ramp that flips with the
+ * mode, so the edge is there at both ends. `--separator-default` was measurably too faint: **1.19**
+ * against a dark surface bar.
+ *
+ * It is added **here** rather than on the screen that surfaced it, because a per-screen fix is
+ * exactly the deviation §6b records being tried and reversed: two bars a scroll apart, visibly not
+ * the same control, is the bug this component exists to prevent.
+ *
  * The 40px box is a deliberate 4 under Apple's HIG and Material's 44, and well over WCAG 2.5.8's
  * 24×24 minimum; the bar's own 16 padding keeps it clear of the screen edge either way.
  *
@@ -80,7 +107,9 @@ export function BarIconButton({
             iconOnly
             aria-label={label}
             className={cn(
-                'size-10 rounded-full bg-(--background-surface) hover:not-disabled:bg-(--background-segment) active:scale-[0.95]',
+                'size-10 rounded-full active:scale-[0.95]',
+                'border border-(--button-secondary-border) bg-(--background-surface)',
+                'hover:not-disabled:bg-(--background-segment)',
                 className,
             )}
             {...props}

@@ -1,7 +1,9 @@
 import { committedArt } from '@shared/lib/committed-art'
 import { describe, expect, it } from 'vitest'
 import {
+    ADD_HOME_SCREEN_ART,
     BLOCKED_ACCOUNTS_ART,
+    CHANNEL_NOT_FOUND_ART,
     CHANNEL_WALL_ART,
     FOLLOW_REQUESTS_ART,
     FOLLOWING_ART,
@@ -26,8 +28,10 @@ const ART = [
     ['wall: protected', CHANNEL_WALL_ART.protected.src],
     ['wall: blocked', CHANNEL_WALL_ART.blocked.src],
     ['report submitted', REPORT_ART.submitted.src],
+    ['space not found', CHANNEL_NOT_FOUND_ART.space.src],
     ['invitation hero', MCN_INVITATION_ART.hero.src],
     ['invitation invalid', MCN_INVITATION_ART.invalid.src],
+    ['add to home screen', ADD_HOME_SCREEN_ART.phone.src],
 ] as const
 
 describe('channel illustrations', () => {
@@ -59,6 +63,24 @@ describe('channel illustrations', () => {
          */
         expect(MCN_INVITATION_ART.hero.src).not.toMatch(/\.svg$/)
         expect(MCN_INVITATION_ART.invalid.src).not.toMatch(/\.svg$/)
+        /*
+         * One file, two states: the space-not-found wall is where this picture comes from and the
+         * invitation wall reuses it, exactly as legacy does. Pinned as an equality rather than left
+         * to a review, because two constants pointing at one asset is precisely the arrangement
+         * someone "tidies up" into two encodes of the same bytes.
+         */
+        expect(CHANNEL_NOT_FOUND_ART.space).toEqual(MCN_INVITATION_ART.invalid)
+        /*
+         * The home-screen mock-up is a JPEG upstream, so it could never have been served as `.svg`
+         * — what this line guards is the other direction: it must stay a raster the optimiser can
+         * process, and its box must keep the source's aspect, because the avatar overlay is
+         * positioned as a percentage of it.
+         */
+        expect(ADD_HOME_SCREEN_ART.phone.src).toMatch(/\.webp$/)
+        expect(ADD_HOME_SCREEN_ART.phone.width / ADD_HOME_SCREEN_ART.phone.height).toBeCloseTo(
+            1143 / 1280,
+            2,
+        )
         expect(CHANNEL_WALL_ART.protected.src).toMatch(/\.svg$/)
         expect(CHANNEL_WALL_ART.blocked.src).toMatch(/\.svg$/)
     })

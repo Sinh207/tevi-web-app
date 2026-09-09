@@ -37,8 +37,22 @@ export function useTranslation() {
      * fine for callers — nothing renders differently until the bundle is in — and a failed fetch
      * leaves the current language alone rather than switching to a screen of raw keys.
      *
-     * Storage, cookie and the `<html>` attributes are written **after** the switch lands, so a
-     * failure cannot persist a language the app is not actually showing.
+     * Nothing is persisted until the bundle is in hand, so a failed fetch cannot leave behind a
+     * language the app is not actually showing.
+     *
+     * ## ⚠ The **cookie** is written before the switch, and that order is load-bearing
+     *
+     * `i18n.changeLanguage` repaints **client** components and nothing else. Every string rendered
+     * on the server — `getServerT()`, in 80 files, including whole pages (`terms`, `privacy`,
+     * `letter`), every `loading.tsx` and both 404s — was resolved from the `tevi.locale` cookie
+     * during *that* request's render, and a client-side switch cannot reach back into HTML that has
+     * already been sent. So `LocaleProvider` asks the router to re-request the route's RSC payload
+     * when it sees the language move away from the one the server rendered — and it learns that from
+     * i18next's own `languageChanged`, which fires *inside* the call below. A cookie written after
+     * that line is a cookie written after the refresh has already been requested, i.e. a server
+     * re-render in the language being left behind.
+     *
+     * `storage` and the `<html>` attributes are not in that race and stay after the switch.
      */
     const changeLanguage = useCallback(
         async (code: string) => {
@@ -48,8 +62,6 @@ export function useTranslation() {
                 if (!bundle) return
                 i18n.addResourceBundle(lng, DEFAULT_NS, bundle, false, true)
             }
-            await i18n.changeLanguage(lng)
-            storage.set(STORAGE_KEYS.locale, lng)
             try {
                 Cookies.set(COOKIE_NAME, lng, {
                     domain: getCookieDomain(),
@@ -59,6 +71,8 @@ export function useTranslation() {
             } catch {
                 // ignore
             }
+            await i18n.changeLanguage(lng)
+            storage.set(STORAGE_KEYS.locale, lng)
             if (typeof document !== 'undefined') {
                 document.documentElement.lang = lng
                 document.documentElement.dir = htmlDir(lng)

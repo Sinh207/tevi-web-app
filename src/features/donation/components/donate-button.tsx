@@ -1,10 +1,11 @@
 'use client'
 
+import { channelBasePath, parseChannelIntent } from '@features/channel/routes'
+import { useUrlIntent } from '@shared/hooks/use-url-intent'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
-import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import type { DonationTarget } from '../api/types'
 import { useDonateFlow } from '../hooks/use-donate-flow'
 import { hasStarPrice } from '../lib/donation-amount'
@@ -28,18 +29,26 @@ import { DonationArt } from './donation-art'
  * 3. **The offer failed to load.** Also nothing: an error message where a Donate button would go
  *    tells the reader about our infrastructure rather than about the creator.
  *
- * ## `?action=direct_donation` is opened **here** and nowhere else
+ * ## The donation deep link is opened **here** and nowhere else
  *
- * `proxy.ts` already rewrites legacy's `/@ada/direct-donation` into this query parameter, so the
- * deep link works today and the old URL keeps resolving after the cutover. The handler has to live
- * on exactly one component, though: the About tab's support card mounts the same flow, and both
+ * `/@ada/direct-donation` is a route of its own (and legacy's `?action=direct_donation` still
+ * resolves), so the link works before and after the cutover. `parseChannelIntent` reads either
+ * spelling; this component is the one that acts on it.
+ *
+ * It has to be exactly one component: the About tab's support card mounts the same flow, and both
  * listening would open two dialogs from one link. The action row is the right host because it is
  * mounted on every space page, while the About panel is not (`mountAll={false}`).
  *
- * The parameter is stripped with `history.replaceState`, not `router.replace` — for the two reasons
- * `use-channel-tab.ts` sets out: the route reads `searchParams`, so a Next navigation would re-run
- * the server component, and the back button should mean "leave this space" rather than walking back
- * through a dialog that has already been dismissed.
+ * `useUrlIntent` is what makes "once" true — its `consume()` answers `true` a single time, so
+ * neither React's development double-effect nor an unstable `open` identity can open a second
+ * dialog. It also takes the deep link back out of the address bar with `history.replaceState`
+ * rather than `router.replace`, for the two reasons `use-channel-tab.ts` sets out: a Next
+ * navigation would re-run the route's server component, and the back button should mean "leave
+ * this space" rather than walking back through a dialog that has already been dismissed.
+ *
+ * ⚠ That happens when the dialog **opens**, not when it closes — so the shareable URL is replaced
+ * by `/@ada` a beat after arrival. Deliberate, and the cheaper of the two: keeping it would mean
+ * wiring the address bar to the dialog's lifecycle for a URL nobody re-copies mid-donation.
  */
 export function DonateButton({
     target,
@@ -49,26 +58,19 @@ export function DonateButton({
     className?: string
 }) {
     const { t } = useTranslation()
-    const pathname = usePathname()
-    const searchParams = useSearchParams()
     const flow = useDonateFlow(target)
     const { offer, open } = flow
 
-    const deeplinked = useRef(false)
-    const wanted = searchParams.get('action') === 'direct_donation'
+    const { intent, consume } = useUrlIntent(parseChannelIntent, channelBasePath)
     const canOpen = Boolean(offer && hasStarPrice(offer))
 
     useEffect(() => {
-        // Once per page, and only once the offer is known — before that there is nothing to open.
-        if (!wanted || !canOpen || deeplinked.current) return
-        deeplinked.current = true
-
-        const params = new URLSearchParams(searchParams.toString())
-        params.delete('action')
-        const query = params.toString()
-        window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
+        // Only once the offer is known — before that there is nothing to open, and `consume` must
+        // not be spent on a beat where the answer would be "nothing happens".
+        if (intent !== 'direct_donation' || !canOpen) return
+        if (!consume()) return
         open()
-    }, [wanted, canOpen, open, pathname, searchParams])
+    }, [intent, canOpen, consume, open])
 
     if (!canOpen || !offer) return null
 

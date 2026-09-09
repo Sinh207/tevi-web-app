@@ -34,6 +34,17 @@ const schema = z.object({
      * Include the path prefix; the model appends `v3/channel/...` to it.
      */
     INTERNAL_CHANNEL_API: z.string().url().optional(),
+    /**
+     * The **image proxy** that resizes a creator's avatar into the square icons a PWA install
+     * needs — base URL only, no trailing slash, e.g. `https://imge.cdn.flowstreamx.com/unsafe`.
+     * `shared/lib/thumbor.ts` appends `<w>x<h>/<source url>` and owns the fallback when this is
+     * unset, so nothing here has to be set for the feature to work.
+     *
+     * Server-only rather than `NEXT_PUBLIC_`: the URLs it builds are public (they go into a
+     * manifest and a `<link>`), but the *base* is only ever read while rendering, so there is
+     * nothing to inline into the client bundle.
+     */
+    THUMBOR_IMAGE_BASE: z.string().url().optional(),
 })
 
 export type ServerEnv = z.infer<typeof schema>
@@ -51,6 +62,7 @@ export function serverEnv(): ServerEnv {
     if (cached) return cached
     const parsed = schema.safeParse({
         INTERNAL_CHANNEL_API: process.env.INTERNAL_CHANNEL_API,
+        THUMBOR_IMAGE_BASE: process.env.THUMBOR_IMAGE_BASE,
     })
     if (!parsed.success) {
         console.warn(

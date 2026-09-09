@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-734 ids across 26 surfaces.
+811 ids across 27 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -55,9 +55,12 @@ Also present on every route it is mounted under — `src/app/error.tsx`.
 
 | testid | companions | source |
 |---|---|---|
-| `app-error-retry` | — | `src/app/error.tsx:25` |
+| `app-error` | — | `src/app/error.tsx:42` |
+| `app-error-retry` | — | `src/app/error.tsx:47` |
 | `app-global-error-retry` | — | `src/app/global-error.tsx:31` |
-| `app-not-found-home` | — | `src/app/not-found.tsx:40` |
+| `app-not-found` | — | `src/app/not-found.tsx:48` |
+| `app-not-found-home` | — | `src/app/not-found.tsx:80` |
+| `app-not-found-safe-space` | — | `src/app/not-found.tsx:72` |
 
 ## `auth` — Sign in, sign up, password — and the global sign-in dialog and splash
 
@@ -178,17 +181,19 @@ Also present on every route it is mounted under — `src/features/navigation/com
 
 ## `channel` — Channel / space, following, profile settings
 
-Routes: `/[slug]`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
+Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/membership/[[...tier]]`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
 
 | testid | companions | source |
 |---|---|---|
 | `channel-activity-more` | — | `src/features/channel/components/channel-about-activity.tsx:140` |
+| `channel-add-home-screen` | — | `src/features/channel/components/add-home-screen-guide.tsx:64` |
+| `channel-add-home-screen-item` | — | `src/features/channel/components/add-home-screen-guide.tsx:206` |
 | `channel-auto-follow-now` | — | `src/features/channel/components/channel-auto-follow.tsx:141` |
 | `channel-auto-follow-skip` | — | `src/features/channel/components/channel-auto-follow.tsx:131` |
 | `channel-back` | — | `src/features/channel/components/channel-top-bar.tsx:117` |
-| `channel-bio-link` | — | `src/features/channel/components/channel-bio.tsx:196` |
-| `channel-bio-nsfw` | — | `src/features/channel/components/channel-bio.tsx:128` |
-| `channel-bio-social` | — | `src/features/channel/components/channel-bio.tsx:239` |
+| `channel-bio-link` | — | `src/features/channel/components/channel-bio.tsx:202` |
+| `channel-bio-nsfw` | — | `src/features/channel/components/channel-bio.tsx:134` |
+| `channel-bio-social` | — | `src/features/channel/components/channel-bio.tsx:245` |
 | `channel-block` | — | `src/features/channel/components/channel-viewer-menu.tsx:177` |
 | `channel-block-confirm` | — | `src/features/channel/components/channel-viewer-menu.tsx:210` |
 | `channel-blocked-loading` | — | `src/features/channel/components/blocked-accounts-skeleton.tsx:33` |
@@ -277,29 +282,30 @@ Routes: `/[slug]`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`
 | `channel-mcn-cancel-confirm` | — | `src/features/channel/components/channel-about-mcn.tsx:197` |
 | `channel-mcn-leave` | — | `src/features/channel/components/channel-about-mcn.tsx:106` |
 | `channel-mcn-leave-confirm` | — | `src/features/channel/components/channel-about-mcn.tsx:177` |
-| `channel-mcn-partnership-cancel` | — | `src/features/channel/components/mcn-partnership-view.tsx:558` |
-| `channel-mcn-partnership-cancel-confirm` | — | `src/features/channel/components/mcn-partnership-view.tsx:289` |
-| `channel-mcn-partnership-contact` | — | `src/features/channel/components/mcn-partnership-view.tsx:624` |
-| `channel-mcn-partnership-empty` | — | `src/features/channel/components/mcn-partnership-view.tsx:136` |
-| `channel-mcn-partnership-error` | — | `src/features/channel/components/mcn-partnership-view.tsx:115` |
-| `channel-mcn-partnership-leave` | — | `src/features/channel/components/mcn-partnership-view.tsx:223` |
-| `channel-mcn-partnership-leave-confirm` | — | `src/features/channel/components/mcn-partnership-view.tsx:266` |
-| `channel-mcn-partnership-menu` | — | `src/features/channel/components/mcn-partnership-view.tsx:203` |
-| `channel-mcn-partnership-retry` | — | `src/features/channel/components/mcn-partnership-view.tsx:123` |
-| `channel-mcn-partnership-sign-in` | — | `src/features/channel/components/mcn-partnership-view.tsx:104` |
-| `channel-mcn-partnership-signed-out` | — | `src/features/channel/components/mcn-partnership-view.tsx:94` |
-| `channel-mcn-partnership-space` | — | `src/features/channel/components/mcn-partnership-view.tsx:403` |
+| `channel-mcn-partnership-cancel` | — | `src/features/channel/components/mcn-partnership-view.tsx:606` |
+| `channel-mcn-partnership-cancel-confirm` | — | `src/features/channel/components/mcn-partnership-view.tsx:309` |
+| `channel-mcn-partnership-contact` | — | `src/features/channel/components/mcn-partnership-view.tsx:672` |
+| `channel-mcn-partnership-empty` | — | `src/features/channel/components/mcn-partnership-view.tsx:137` |
+| `channel-mcn-partnership-error` | — | `src/features/channel/components/mcn-partnership-view.tsx:116` |
+| `channel-mcn-partnership-leave` | — | `src/features/channel/components/mcn-partnership-view.tsx:243` |
+| `channel-mcn-partnership-leave-confirm` | — | `src/features/channel/components/mcn-partnership-view.tsx:286` |
+| `channel-mcn-partnership-menu` | — | `src/features/channel/components/mcn-partnership-view.tsx:220` |
+| `channel-mcn-partnership-retry` | — | `src/features/channel/components/mcn-partnership-view.tsx:124` |
+| `channel-mcn-partnership-sign-in` | — | `src/features/channel/components/mcn-partnership-view.tsx:105` |
+| `channel-mcn-partnership-signed-out` | — | `src/features/channel/components/mcn-partnership-view.tsx:95` |
+| `channel-mcn-partnership-space` | — | `src/features/channel/components/mcn-partnership-view.tsx:423` |
 | `channel-menu-follow` | — | `src/features/channel/components/channel-viewer-menu.tsx:143` |
 | `channel-message` | — | `src/features/channel/components/channel-viewer-actions.tsx:293` |
 | `channel-my-space-no-channel` | — | `src/features/channel/components/my-space-redirect.tsx:157` |
 | `channel-my-space-retry` | — | `src/features/channel/components/my-space-redirect.tsx:165` |
 | `channel-my-space-sign-in` | — | `src/features/channel/components/my-space-redirect.tsx:133` |
 | `channel-my-space-signed-out` | — | `src/features/channel/components/my-space-redirect.tsx:117` |
-| `channel-not-found-home` | — | `src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:39` |
-| `channel-not-found-search` | — | `src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:47` |
+| `channel-not-found` | — | `src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:44` |
+| `channel-not-found-discover` | — | `src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:75` |
+| `channel-not-found-home` | — | `src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:83` |
 | `channel-notify` | — | `src/features/channel/components/channel-viewer-menu.tsx:124` |
-| `channel-owner-edit` | — | `src/features/channel/components/channel-owner-actions.tsx:75` |
-| `channel-owner-share` | — | `src/features/channel/components/channel-owner-actions.tsx:105` |
+| `channel-owner-edit` | — | `src/features/channel/components/channel-owner-actions.tsx:85` |
+| `channel-owner-share` | — | `src/features/channel/components/channel-owner-actions.tsx:115` |
 | `channel-premium-badge` | — | `src/features/channel/components/channel-identity.tsx:115` |
 | `channel-profile-about` | — | `src/features/channel/components/edit-profile/edit-profile-view.tsx:505` |
 | `channel-profile-avatar-file` | — | `src/features/channel/components/edit-profile/profile-media-fields.tsx:292` |
@@ -355,13 +361,15 @@ Routes: `/[slug]`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`
 
 ## `donation` — Donate — button and dialogs, on a channel
 
+Routes: `/monetization/donation`
+
 Also present on every route it is mounted under — `src/features/channel/components/channel-viewer-actions.tsx`.
 
 | testid | companions | source |
 |---|---|---|
 | `donation-back` | — | `src/features/donation/components/donate-dialogs.tsx:532` |
 | `donation-breakdown` | — | `src/features/donation/components/donate-dialogs.tsx:746` |
-| `donation-button` | — | `src/features/donation/components/donate-button.tsx:83` |
+| `donation-button` | — | `src/features/donation/components/donate-button.tsx:85` |
 | `donation-close` | — | `src/features/donation/components/donate-dialogs.tsx:606` |
 | `donation-confirm` | — | `src/features/donation/components/donate-dialogs.tsx:541` |
 | `donation-currency` | `data-currency-code` | `src/features/donation/components/donate-dialogs.tsx:243` |
@@ -427,7 +435,7 @@ Routes: `/app/community-guidelines`, `/app/letter`, `/app/moderation`, `/app/pri
 
 ## `membership` — Memberships
 
-Routes: `/app/[channelSlug]/membership/[packageId]`, `/app/dev-checkout`, `/my-membership`
+Routes: `/[slug]/membership/[[...tier]]`, `/app/[channelSlug]/membership/[packageId]`, `/app/dev-checkout`, `/monetization/membership`, `/my-membership`
 
 | testid | companions | source |
 |---|---|---|
@@ -446,7 +454,7 @@ Routes: `/app/[channelSlug]/membership/[packageId]`, `/app/dev-checkout`, `/my-m
 | `membership-filter` | — | `src/features/membership/components/holdings/my-membership-view.tsx:218` |
 | `membership-filter-trigger` | — | `src/features/membership/components/holdings/my-membership-view.tsx:232` |
 | `membership-history-retry` | — | `src/features/membership/components/holdings/membership-detail-dialog.tsx:699` |
-| `membership-join` | — | `src/features/membership/components/join/become-a-member-button.tsx:157` |
+| `membership-join` | — | `src/features/membership/components/join/become-a-member-button.tsx:155` |
 | `membership-join-back` | — | `src/features/membership/components/join/become-a-member-dialogs.tsx:366` |
 | `membership-join-close` | — | `src/features/membership/components/join/become-a-member-dialogs.tsx:413` |
 | `membership-join-confirm` | — | `src/features/membership/components/join/become-a-member-dialogs.tsx:375` |
@@ -461,7 +469,7 @@ Routes: `/app/[channelSlug]/membership/[packageId]`, `/app/dev-checkout`, `/my-m
 | `membership-search` | — | `src/features/membership/components/holdings/my-membership-view.tsx:509` |
 | `membership-sign-in` | — | `src/features/membership/components/holdings/my-membership-view.tsx:333` |
 | `membership-tabs` | — | `src/features/membership/components/holdings/my-membership-view.tsx:519` |
-| `membership-view-detail` | — | `src/features/membership/components/join/become-a-member-button.tsx:128` |
+| `membership-view-detail` | — | `src/features/membership/components/join/become-a-member-button.tsx:126` |
 
 ## `mini-app` — Mini-app player — window, tabs, top-up
 
@@ -493,6 +501,84 @@ Also present on every route it is mounted under — `src/app/session-providers.t
 | `mini-app-topup-cancel` | — | `src/features/mini-app/components/topup-confirm-dialog.tsx:93` |
 | `mini-app-topup-confirm` | — | `src/features/mini-app/components/topup-confirm-dialog.tsx:102` |
 | `mini-app-topup-terms` | — | `src/features/mini-app/components/topup-confirm-dialog.tsx:80` |
+
+## `monetization` — Monetization hub and its method screens
+
+Routes: `/monetization`, `/monetization/donation`, `/monetization/membership`
+
+| testid | companions | source |
+|---|---|---|
+| `monetization-analytics-banner` | — | `src/features/monetization/components/analytics-banner.tsx:75` |
+| `monetization-analytics-banner-cta` | — | `src/features/monetization/components/analytics-banner.tsx:101` |
+| `monetization-balance-value` | — | `src/features/monetization/components/revenue-card.tsx:127` |
+| `monetization-banner` | — | `src/features/monetization/components/start-earning-banner.tsx:52` |
+| `monetization-donation-activation` | — | `src/features/monetization/components/donation-setup-form.tsx:286` |
+| `monetization-donation-amount` | — | `src/features/monetization/components/donation-setup-form.tsx:194` |
+| `monetization-donation-display-count` | — | `src/features/monetization/components/donation-setup-form.tsx:277` |
+| `monetization-donation-edit` | — | `src/features/monetization/components/donation-actions-menu.tsx:85` |
+| `monetization-donation-error` | — | `src/features/monetization/components/donation-dashboard.tsx:210` |
+| `monetization-donation-intro` | — | `src/features/monetization/components/donation-dashboard.tsx:261` |
+| `monetization-donation-loading` | — | `src/features/monetization/components/donation-dashboard-skeleton.tsx:40` |
+| `monetization-donation-menu` | — | `src/features/monetization/components/donation-actions-menu.tsx:69` |
+| `monetization-donation-range` | — | `src/features/monetization/components/donation-dashboard.tsx:362` |
+| `monetization-donation-range-trigger` | — | `src/features/monetization/components/donation-dashboard.tsx:373` |
+| `monetization-donation-retry` | — | `src/features/monetization/components/donation-dashboard.tsx:216` |
+| `monetization-donation-save` | — | `src/features/monetization/components/donation-setup-form.tsx:323` |
+| `monetization-donation-save-error` | — | `src/features/monetization/components/donation-setup-form.tsx:314` |
+| `monetization-donation-share` | — | `src/features/monetization/components/donation-actions-menu.tsx:77` |
+| `monetization-donation-sign-in` | — | `src/features/monetization/components/donation-dashboard.tsx:239` |
+| `monetization-donation-signed-out` | — | `src/features/monetization/components/donation-dashboard.tsx:233` |
+| `monetization-donation-start` | — | `src/features/monetization/components/donation-dashboard.tsx:311` |
+| `monetization-donation-supporter` | `data-donation-id` | `src/features/monetization/components/supporter-row.tsx:105` |
+| `monetization-donation-supporter-count` | — | `src/features/monetization/components/donation-dashboard.tsx:390` |
+| `monetization-donation-supporter-note` | — | `src/features/monetization/components/supporter-row.tsx:139` |
+| `monetization-donation-supporters-empty` | — | `src/features/monetization/components/donation-dashboard.tsx:475` |
+| `monetization-donation-supporters-error` | — | `src/features/monetization/components/donation-dashboard.tsx:454` |
+| `monetization-donation-supporters-retry` | — | `src/features/monetization/components/donation-dashboard.tsx:461` |
+| `monetization-donation-term` | `data-option-value` | `src/features/monetization/components/donation-setup-form.tsx:237` |
+| `monetization-donation-thanks` | — | `src/features/monetization/components/donation-setup-form.tsx:256` |
+| `monetization-donation-unit` | `data-option-value` | `src/features/monetization/components/donation-setup-form.tsx:158` |
+| `monetization-loading` | — | `src/app/(web)/(main)/(rail)/monetization/loading.tsx:31` |
+| `monetization-membership-delete` | — | `src/features/monetization/components/membership-actions-menu.tsx:122` |
+| `monetization-membership-delete-confirm` | — | `src/features/monetization/components/membership-actions-menu.tsx:140` |
+| `monetization-membership-description` | — | `src/features/monetization/components/membership-setup-form.tsx:155` |
+| `monetization-membership-edit` | — | `src/features/monetization/components/membership-actions-menu.tsx:107` |
+| `monetization-membership-error` | — | `src/features/monetization/components/membership-dashboard.tsx:188` |
+| `monetization-membership-fee` | — | `src/features/monetization/components/membership-setup-form.tsx:174` |
+| `monetization-membership-loading` | — | `src/features/monetization/components/membership-dashboard-skeleton.tsx:24` |
+| `monetization-membership-member` | `data-membership-id` | `src/features/monetization/components/member-row.tsx:162` |
+| `monetization-membership-member-message` | — | `src/features/monetization/components/member-row.tsx:183` |
+| `monetization-membership-members-empty` | — | `src/features/monetization/components/membership-dashboard.tsx:442` |
+| `monetization-membership-members-error` | — | `src/features/monetization/components/membership-dashboard.tsx:421` |
+| `monetization-membership-members-retry` | — | `src/features/monetization/components/membership-dashboard.tsx:428` |
+| `monetization-membership-menu` | — | `src/features/monetization/components/membership-actions-menu.tsx:90` |
+| `monetization-membership-name` | — | `src/features/monetization/components/membership-setup-form.tsx:87` |
+| `monetization-membership-price` | — | `src/features/monetization/components/price-ladder.tsx:139` |
+| `monetization-membership-price-reselect` | — | `src/features/monetization/components/membership-setup-form.tsx:138` |
+| `monetization-membership-retry` | — | `src/features/monetization/components/membership-dashboard.tsx:194` |
+| `monetization-membership-save` | — | `src/features/monetization/components/membership-setup-form.tsx:208` |
+| `monetization-membership-save-error` | — | `src/features/monetization/components/membership-setup-form.tsx:199` |
+| `monetization-membership-search` | — | `src/features/monetization/components/membership-dashboard.tsx:391` |
+| `monetization-membership-setup-wall` | — | `src/features/monetization/components/membership-dashboard.tsx:234` |
+| `monetization-membership-share` | — | `src/features/monetization/components/membership-actions-menu.tsx:98` |
+| `monetization-membership-sign-in` | — | `src/features/monetization/components/membership-dashboard.tsx:217` |
+| `monetization-membership-signed-out` | — | `src/features/monetization/components/membership-dashboard.tsx:211` |
+| `monetization-membership-start` | — | `src/features/monetization/components/membership-dashboard.tsx:256` |
+| `monetization-membership-tab` | `data-tab-id` | `src/features/monetization/components/membership-dashboard.tsx:363` |
+| `monetization-membership-tier` | — | `src/features/monetization/components/membership-tier-card.tsx:52` |
+| `monetization-membership-tier-name` | — | `src/features/monetization/components/membership-tier-card.tsx:78` |
+| `monetization-membership-tier-price` | — | `src/features/monetization/components/membership-tier-card.tsx:86` |
+| `monetization-methods` | — | `src/features/monetization/components/monetization-view.tsx:196` |
+| `monetization-methods-loading` | — | `src/features/monetization/components/monetization-view.tsx:193` |
+| `monetization-revenue` | — | `src/features/monetization/components/revenue-card.tsx:66` |
+| `monetization-revenue-explain` | — | `src/features/monetization/components/revenue-card.tsx:101` |
+| `monetization-revenue-info` | — | `src/features/monetization/components/revenue-info-dialog.tsx:103` |
+| `monetization-revenue-info-contact` | — | `src/features/monetization/components/revenue-info-dialog.tsx:86` |
+| `monetization-revenue-retry` | — | `src/features/monetization/components/monetization-view.tsx:171` |
+| `monetization-revenue-value` | — | `src/features/monetization/components/revenue-card.tsx:87` |
+| `monetization-sign-in` | — | `src/features/monetization/components/monetization-view.tsx:99` |
+| `monetization-signed-out` | — | `src/features/monetization/components/monetization-view.tsx:93` |
+| `monetization-withdraw` | — | `src/features/monetization/components/revenue-card.tsx:141` |
 
 ## `my-star` — Star balance and ledger, and choosing who to gift Star to
 
@@ -540,7 +626,7 @@ Routes: `/my-wallet`, `/my-wallet/payout-method`, `/my-wallet/payout-request`, `
 
 ## `navigation` — Shell — rail, top bar, tab bar, account drawer, end rail
 
-Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
+Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
 
 Also present on every route it is mounted under — `src/app/(web)/(main)/layout.tsx`.
 
@@ -814,8 +900,8 @@ Routes: `/gift-premium`, `/premium`
 | `premium-benefits-skeleton` | — | `src/features/premium/components/premium-benefits.tsx:286` |
 | `premium-confirm` | — | `src/features/premium/components/premium-subscribe-confirm.tsx:50` |
 | `premium-gift-again` | — | `src/features/premium/components/gift-premium-view.tsx:201` |
-| `premium-gift-back` | — | `src/features/premium/components/gift-premium-top-bar.tsx:105` |
-| `premium-gift-bar` | — | `src/features/premium/components/gift-premium-top-bar.tsx:70` |
+| `premium-gift-back` | — | `src/features/premium/components/gift-premium-top-bar.tsx:117` |
+| `premium-gift-bar` | — | `src/features/premium/components/gift-premium-top-bar.tsx:71` |
 | `premium-gift-catalogue-retry` | — | `src/features/premium/components/gift-recipient-picker.tsx:183` |
 | `premium-gift-confirm` | — | `src/features/premium/components/gift-confirm-dialog.tsx:62` |
 | `premium-gift-empty` | — | `src/features/premium/components/gift-recipient-picker.tsx:282` |
@@ -840,7 +926,7 @@ Routes: `/gift-premium`, `/premium`
 | `premium-gift-see-features` | — | `src/features/premium/components/gift-premium-hero.tsx:234` |
 | `premium-gift-unavailable` | — | `src/features/premium/components/gift-recipient-picker.tsx:172` |
 | `premium-hero` | — | `src/features/premium/components/premium-hero.tsx:65` |
-| `premium-manage` | — | `src/features/premium/components/premium-manage-button.tsx:73` |
+| `premium-manage` | — | `src/features/premium/components/premium-manage-button.tsx:102` |
 | `premium-plan` | `data-option-key`, `data-package-id` | `src/features/premium/components/premium-plan-card.tsx:158` |
 | `premium-plans` | — | `src/features/premium/components/premium-plans.tsx:107` |
 | `premium-plans-empty` | — | `src/features/premium/components/premium-plans.tsx:73` |
@@ -887,13 +973,13 @@ Also present on every route it is mounted under — `src/features/channel/compon
 
 | testid | companions | source |
 |---|---|---|
-| `share-channel` | `data-option-value` | `src/features/share/components/share-dialog.tsx:186` |
-| `share-channels-next` | — | `src/features/share/components/share-dialog.tsx:438` |
-| `share-channels-prev` | — | `src/features/share/components/share-dialog.tsx:431` |
-| `share-preview` | — | `src/features/share/components/share-dialog.tsx:563` |
-| `share-qr-code` | — | `src/features/share/components/share-dialog.tsx:165` |
-| `share-sheet` | — | `src/features/share/components/share-dialog.tsx:142` |
-| `share-sheet-header` | — | `src/features/share/components/share-dialog.tsx:158` |
+| `share-channel` | `data-option-value` | `src/features/share/components/share-dialog.tsx:190` |
+| `share-channels-next` | — | `src/features/share/components/share-dialog.tsx:442` |
+| `share-channels-prev` | — | `src/features/share/components/share-dialog.tsx:435` |
+| `share-preview` | — | `src/features/share/components/share-dialog.tsx:574` |
+| `share-qr-code` | — | `src/features/share/components/share-dialog.tsx:169` |
+| `share-sheet` | — | `src/features/share/components/share-dialog.tsx:146` |
+| `share-sheet-header` | — | `src/features/share/components/share-dialog.tsx:162` |
 
 ## `star-transfer` — Star transfer
 

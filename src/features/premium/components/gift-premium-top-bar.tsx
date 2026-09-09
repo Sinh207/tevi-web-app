@@ -4,6 +4,7 @@ import { BarIconButton } from '@shared/components/bar-icon-button'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
+import { PREMIUM_CONTROL_FLIP, PREMIUM_CONTROL_ON_HERO } from '../lib/premium-surface'
 import { PremiumManageButton } from './premium-manage-button'
 
 /**
@@ -78,24 +79,35 @@ export function GiftPremiumTopBar({
              * and never wires to any state at all. This is that wiring, at its own duration.
              */
             /*
-             * **`md:px-0` — the bar's side padding is the *content's*, not the DS bar's.**
+             * **The bar's side inset follows the *step*, because the two steps are two different
+             * shapes of screen** — and this is the one place this bar cannot copy `/premium`'s.
              *
-             * `AppBar` carries `px-4`, drawn for a phone where the bar is the full width of the
-             * screen and the content under it is inset 16 by its own row padding. From `md` this
-             * screen stops being full-width — it is a 612 column — and that 16px then measures
-             * from the *column's* edge rather than the screen's, so the back disc sat inset from
-             * a band and a card that do not. Measured at 1280: 16px in on both, against 0 on
-             * `/search` and every other sub-page, which get this from `PageBackBar`.
+             * The rule underneath both is `PageBackBar`'s: the back disc lines up with **the edge of
+             * whatever plane the content sits on**, and it is the plane that differs.
              *
-             * That component's own note is the rule and it applies unchanged here — the reason
-             * these two bars missed it is that they are hand-rolled (the DS title takes
-             * `--text-title`, which is unreadable on the band, and `PageBackBar` cannot be handed
-             * a different ink). Everything else about them is `PageBackBar`; this was the one
-             * line that did not come across.
+             * - **The offer and the success step are `/premium`'s arrangement**: the column is
+             *   `disableGutters` so the *band* can reach its edges, and the content on it is inset by
+             *   `PREMIUM_INSET` — 16 — at every width. The band's edge is not a plane the disc can
+             *   align to (nothing else on the screen does), so the bar keeps `AppBar`'s own `px-4`
+             *   and the disc lands where the mark, the copy and the plan cards start. `md:px-0` put
+             *   it 16px outboard of all three; measured at 1280 it sat at 334 against their 350.
+             * - **The picker is the single-panel shape** (`docs/DESIGN_SYSTEM.md` §6): from `md` its
+             *   content *is* one card, and that card runs the full width of the column — measured at
+             *   1280, 334→946, the same box as the bar. So here the column's edge **is** the plane's
+             *   edge, and 16 pushes the disc inboard of the card it belongs to while the card's own
+             *   corner sits outside it. `md:px-0` is right on this step for exactly the reason it is
+             *   wrong on the other.
+             *
+             * Below `md` neither case has a choice to make: the picker's panel is full-bleed and its
+             * field and rows carry 16 of their own (`GIFT_PREMIUM_FIELD_INSET`), which is what
+             * `AppBar` already gives. So this is a `md:` difference only, and it changes on a **step
+             * change** — a whole-screen transition — rather than under a scroll, which is what keeps
+             * it from reading as the bar twitching.
              */
             className={cn(
                 'sticky top-0 z-20 backdrop-blur-[10px] transition-colors duration-300',
-                'md:px-0',
+                // The picker's plane is the column itself from `md` — see the note above.
+                ground === 'surface' && 'md:px-0',
                 ground === 'page' && 'bg-(--background)',
                 ground === 'surface' && 'bg-(--background-surface) md:bg-(--background)',
             )}
@@ -107,6 +119,15 @@ export function GiftPremiumTopBar({
                     weight="filled"
                     mirrored
                     label={backLabel}
+                    /*
+                     * Glass on the band, the surface disc on the other two grounds — the same flip
+                     * `/premium`'s bar makes, driven here by the step rather than by a sentinel. See
+                     * `PREMIUM_CONTROL_ON_HERO`.
+                     */
+                    className={cn(
+                        PREMIUM_CONTROL_FLIP,
+                        ground === 'brand' && PREMIUM_CONTROL_ON_HERO,
+                    )}
                     onClick={onBack}
                 />
             </AppBarCluster>
@@ -153,7 +174,7 @@ export function GiftPremiumTopBar({
              * only in a DOM id.
              */}
             <AppBarCluster>
-                <PremiumManageButton />
+                <PremiumManageButton onBrand={ground === 'brand'} />
             </AppBarCluster>
         </AppBar>
     )

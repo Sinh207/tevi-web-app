@@ -9,18 +9,25 @@
  *
  * ## What is in scope
  *
- * One question — *how does this URL reach another person* — answered six ways, plus the mint that
- * turns a public URL into an attributed one (`POST v1/links`, one link per channel, which is what
- * makes "shares by channel" a real figure rather than a guess).
+ * One question — *how does this URL reach another person* — answered seven ways (six where this
+ * deployment has no Meta app id, which drops the Messenger row), plus the mint that turns a public
+ * URL into an attributed one (`POST v1/links`, one link per channel, which is what makes "shares by
+ * channel" a real figure rather than a guess).
  *
  * ## Where it is opened from
  *
- * Four surfaces, all of which legacy opens its own `<Share>` from: the space bar
+ * Six, all but one of which legacy opens its own `<Share>` from: the space bar
  * (`channel-top-bar.tsx`), the follow-requests empty state (`share-profile-button.tsx`), an event's
- * kebab menu (`channel-event-menu.tsx`) and the donation support card
- * (`donate-support-card.tsx`). Each owns its own `open` state and passes the link, the title, the
- * thumbnail and — where it can name the content — a `ShareContext`. There is no provider: the
- * payload differs per press, and a global one would need a store to hold what a prop already says.
+ * kebab menu (`channel-event-menu.tsx`), the donation support card (`donate-support-card.tsx`) and
+ * the two monetization `⋯` menus (`membership-actions-menu.tsx`, `donation-actions-menu.tsx`). The
+ * event menu is the one with no legacy twin. Each owns its own `open` state and passes the link,
+ * the title, the thumbnail and — where it can name the content — a `ShareContext`. There is no
+ * provider: the payload differs per press, and a global one would need a store to hold what a prop
+ * already says.
+ *
+ * **Every one of them passes `image`**, including the two menus, which legacy leaves to a fallback
+ * inside the preview. `share-dialog.tsx`'s `SharePreview` says why that fallback is not ported and
+ * why the obligation therefore lands here.
  *
  * `features/channel`'s `useShareSpace` (the platform sheet with a clipboard fallback) is **gone**
  * with that change: it existed because there was nothing to open, and two gestures for one control

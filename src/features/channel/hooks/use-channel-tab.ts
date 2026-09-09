@@ -14,8 +14,9 @@ export type ChannelTabId = 'posts' | 'media' | 'live' | 'about'
  * change that: *"a `?tab=` would need the panel ids to become part of the page's public contract,
  * and this page has no such links pointing into it yet"*. This page does. Legacy already deep-links
  * it (its creator hook seeds `tabActive` from `router.query.tab` and re-syncs on change), and
- * `?action=custom_profile` / `?action=become_a_member` live in the same query string — which
- * `proxy.ts` writes. These search params are already the page's contract.
+ * legacy's `?action=custom_profile` / `?action=become_a_member` still resolve in the same query
+ * string (`parseChannelIntent` reads them; `proxy.ts` no longer writes them, because those two are
+ * routes of their own now). These search params are already the page's contract.
  *
  * One deviation from legacy, deliberate: legacy reads `?tab=` **only for the owner**, so a shared
  * `/@ada?tab=media` link silently opens Posts for everyone else. Here it works for both — a link to

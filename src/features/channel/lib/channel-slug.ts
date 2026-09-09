@@ -99,16 +99,27 @@ export function toChannelPath(slug: string): string {
  * `/@ada` are the same channel at two URLs. Left alone that splits SEO signals and produces
  * two cache entries; hence a redirect to whichever spelling the API returned.
  *
- * **The query string has to survive.** `permanentRedirect()` does not carry it, and this
- * page's search params are part of its contract — `proxy.ts` rewrites `/@ada/direct-donation`
- * into `/@ada?action=direct_donation`, so dropping the query here would swallow the very
- * intent the visitor arrived with. A lone `?` with nothing after it is dropped rather than
- * reproduced, matching legacy's `buildRedirectDestination`.
+ * **`suffix` is what keeps a deep link a deep link.** `/@ADA/direct-donation` has to land on
+ * `/@Ada/direct-donation` and not on the space, or the correction would silently swallow what the
+ * visitor came to do. The sub-path goes between the slug and the query, which is the only place it
+ * can go and still be a URL.
+ *
+ * **`search` no longer has a caller in the app, and that is the point.** It used to be load-bearing:
+ * the space page read `searchParams` purely so that `?action=` — legacy's spelling of the same deep
+ * link — survived a case correction, and reading them is what made the route dynamic, which cost a
+ * real 404 and the full-route cache. Now that the intent lives in the path, the page passes nothing
+ * and is static again. The parameter stays because this function is the general answer to "where
+ * does this URL belong", and a caller that does hold a query should not have to rebuild the join.
+ * The one thing lost with it is a URL that is *both* misspelled and carrying `?action=`: it lands on
+ * the right space without opening the dialog. A lone `?` with nothing after it is dropped rather
+ * than reproduced, matching legacy's `buildRedirectDestination`.
  */
 export function canonicalChannelRedirect(
     requestedSlug: string,
     canonicalSlug: string,
     search?: string | URLSearchParams | null,
+    /** A sub-path under the space, with its leading slash — `/direct-donation`, `/membership/12`. */
+    suffix = '',
 ): string | null {
     if (!canonicalSlug || requestedSlug === canonicalSlug) return null
 
@@ -117,5 +128,6 @@ export function canonicalChannelRedirect(
     // to the canonical one is still the right answer.
     const query =
         search instanceof URLSearchParams ? search.toString() : (search ?? '').replace(/^\?/, '')
-    return query ? `${toChannelPath(canonicalSlug)}?${query}` : toChannelPath(canonicalSlug)
+    const path = `${toChannelPath(canonicalSlug)}${suffix}`
+    return query ? `${path}?${query}` : path
 }

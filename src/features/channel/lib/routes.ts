@@ -13,6 +13,18 @@
  */
 
 /**
+ * The channel namespace's own paths and its deep-link vocabulary live one level up, in the feature
+ * root's `routes.ts`, and are re-exported here so nothing inside the feature has to know which of
+ * the two files a constant is in.
+ *
+ * They are up there because **another feature imports them without going through `index.ts`**:
+ * `features/donation` and `features/membership` recognise a deep link into a space, and a path from
+ * this file to them would run through the barrel and close a cycle. The root file imports nothing,
+ * which is what makes `@features/channel/routes` safe to reach for. See its header.
+ */
+export * from '../routes'
+
+/**
  * Legacy's URL, unchanged — `pages/settings/space-visibility` in the old app.
  *
  * Kept verbatim because links to it exist outside this repo (the mobile app's menu, support

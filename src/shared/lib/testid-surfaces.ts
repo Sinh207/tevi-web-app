@@ -67,6 +67,7 @@ export const TESTID_SURFACES: Record<string, TestIdSurface> = {
         kind: 'screen',
         label: 'Star balance and ledger, and choosing who to gift Star to',
     },
+    monetization: { kind: 'screen', label: 'Monetization hub and its method screens' },
     'my-wallet': { kind: 'screen', label: 'Wallet' },
     notification: { kind: 'screen', label: 'Notifications' },
     payment: { kind: 'screen', label: 'Buy Star, cards, checkout' },

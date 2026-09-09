@@ -9,12 +9,12 @@ import { useState } from 'react'
  * Dev-only harness for the share sheet: `pnpm dev`, then `/dev/share`. 404s in production, and
  * `proxy.ts` blocks `/dev/*` outright so the status is a real 404.
  *
- * ## Why it needs a harness rather than a screen
+ * ## Why it needs a harness even though six screens open it
  *
- * Nothing raises the sheet in the app yet — the space bar and the follow-requests empty state still
- * open the platform share sheet (`features/share/index.ts` says why that swap is a product decision).
- * So this is the only place it can be looked at, and the two cases below are the ones that behave
- * differently rather than two examples of the same thing:
+ * Every real call site is behind a session, a space and a `sharable_url` — the two monetization
+ * menus additionally behind a creator who has published an offer — so looking at the sheet costs a
+ * sign-in and a fixture. This raises it in one press, and the two cases below are the ones that
+ * behave differently rather than two examples of the same thing:
  *
  * - **With a context** → `POST v1/links` per channel, so pressing Telegram and then X mints two
  *   links and the analytics can tell them apart.

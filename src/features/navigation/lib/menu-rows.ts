@@ -19,6 +19,7 @@ import { FOLLOW_REQUESTS_PATH, MCN_PARTNERSHIP_PATH } from '@features/channel/li
 import { GIFT_CODE_PATH } from '@features/gift-code/routes'
 import { IDENTIFICATION_PATH } from '@features/identification/routes'
 import { MY_MEMBERSHIP_PATH } from '@features/membership/routes'
+import { MONETIZATION_PATH } from '@features/monetization/routes'
 import { MY_STAR_PATH } from '@features/my-star/routes'
 import { MY_WALLET_PATH } from '@features/my-wallet/routes'
 import { CARD_MANAGEMENT_PATH, GET_STAR_PATH } from '@features/payment/routes'
@@ -297,6 +298,14 @@ export const MENU_SECTIONS: {
                 authOnly: true,
                 icon: { name: 'dollar-sign', weight: 'filled' },
                 tile: TILE.success,
+                href: MONETIZATION_PATH,
+                /*
+                 * Gated on the *action*, like every other creator row: the hub's figures are the
+                 * bearer's channel stats and the bearer's balance, so a guest pressing it would
+                 * arrive at a sign-in wall. Raising the dialog here leaves whatever they were
+                 * reading in place.
+                 */
+                requiresAuth: true,
             },
             {
                 key: 'menu_space_tier',

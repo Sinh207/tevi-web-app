@@ -20,12 +20,22 @@ test.describe('404 — the website', () => {
         const response = await page.goto('/a/b/c')
 
         expect(response?.status()).toBe(404)
-        await expect(page.getByRole('heading', { level: 1 })).toHaveText('404')
+        /*
+         * By testid, not by the headline's words. The h1 used to be the literal string `404` and
+         * could be asserted directly; it is now `notfound_title`, which is a different sentence in
+         * each of the nine locales — exactly the nine-selector problem `shared/lib/test-id.ts`
+         * exists to stop. The screen's own id says "the 404 frame rendered" in every language.
+         */
+        await expect(page.getByTestId('app-not-found')).toBeVisible()
         // By role, which is the assertion worth making: it is announced as a link and it goes
         // home. That it *is* a link took a fix — Base UI stamps `role="button"` on every non-native
         // button, so this read `button` until `shared/ui/button.tsx` started handing the attribute
         // back for anchors. `button.test.tsx` pins the unit; this pins the page.
         await expect(page.getByTestId('app-not-found-home')).toHaveAttribute('href', '/')
+        // Legacy's second way out — `web-app` sends a reader who followed a dead link to Tevi's own
+        // space rather than to the home feed. Pinned because it is a bare literal in `not-found.tsx`
+        // (there is no `features/channel/routes.ts` to import), so nothing else would catch a typo.
+        await expect(page.getByTestId('app-not-found-safe-space')).toHaveAttribute('href', '/@tevi')
     })
 })
 
@@ -40,7 +50,7 @@ test.describe('404 — a webview screen', () => {
         const response = await page.goto('/app/screen-that-never-shipped?lang=vi&theme=dark')
 
         expect(response?.status()).toBe(404)
-        await expect(page.getByRole('heading', { level: 1 })).toHaveText('404')
+        await expect(page.getByTestId('app-not-found')).toBeVisible()
         // No way out at all: asserted as `a[href]` rather than by role, so that a link wearing
         // some other role would still fail it. The native header already has the back button, and a
         // link here takes the WebView onto the public site.

@@ -2845,6 +2845,173 @@ Encoded in `features/channel/api/user-invitation-api.ts`, `lib/user-invitation-s
 
 ---
 
+## B102 — the **monetization hub**: is `income_usd` a 30-day figure, and is there a per-method state? · **`/monetization` prints a window the payload never states, over a list nothing can switch on**
+
+`/monetization` is legacy's hub, ported. It owns no endpoint: the headline figure is `income_usd`
+from `GET /analytics/v2/channel/{slug}/stats/` (the same call the channel page makes), the balance is
+`balance/`, and the four methods are a hard-coded array. Three things about that are guesses.
+
+**1. The window.** The caption under the figure reads *"Estimated revenue in the last 30 days"* —
+legacy interpolates a literal `30` (`.replace('[%s]', 30)`) into a sentence describing a field the
+stats payload states no period for. `income_usd` sits beside `follower_count`, `member_count` and
+`post_count`, none of which is windowed, which makes **lifetime** the more natural reading of the
+group. If it is lifetime, then every creator on Tevi has been shown a sentence that understates
+nothing and overstates the recency of everything — a figure of `$4,400` read as *this month* when it
+is *since I started*. The client cannot tell the two apart from the payload.
+
+- **If it is 30 days:** nothing changes. `REVENUE_WINDOW_DAYS` in
+  `features/monetization/lib/methods.ts` already says so in one place.
+- **If it is lifetime:** the copy is wrong in nine locales and the fix is a string, not a query —
+  but somebody has to say which.
+- **If it is configurable:** the window belongs in the payload (`income_window_days`), and the
+  caption should interpolate it rather than a constant.
+
+**2. Is there a per-method state?** Legacy's `useHub.js` carries, verbatim:
+
+```js
+// TODO: Replace with real API data
+const INITIAL_METHODS = [
+    { key: 'membership', isSetup: true },
+    { key: 'donation', isSetup: false },
+    …
+]
+```
+
+…and nothing reads `isSetup` — `MethodItem` renders every row identically. So the heading *"ACTIVE
+monetization methods"* is currently a claim the screen cannot back: it lists four methods whether or
+not the creator has switched any of them on. If an endpoint exists that says which are configured,
+the rows want a trailing state and the heading becomes true; if none does, the heading is the string
+to change. This client ships the list unconditionally, which is legacy's behaviour, and
+`lib/methods.ts` is where the field would land.
+
+**3. Does `income_usd` reach a non-owner?** This is **B18** asked from the other side. The hub reads
+the reader's *own* slug so it is safe as written, but B18's answer decides whether the field may be
+rendered server-side, and therefore whether this screen's first paint can carry a number.
+
+Encoded in `features/monetization/lib/methods.ts` (`REVENUE_WINDOW_DAYS`, and the note on why the
+list is a constant), `hooks/use-monetization-hub.ts`.
+
+---
+
+## B103 — the **creator's membership tier**: five endpoints nobody has described · **`/monetization/membership` guesses a payload, two field spellings and a fee**
+
+`/monetization/membership` is legacy's creator dashboard, ported. It reads and writes
+`billy/v3/subscription/my-packages/` and reads `billy/v3/subscription/my-channel-subscriptions/`,
+and none of those five calls is in a schema this client has seen. Everything below is legacy's shape,
+kept verbatim because it is the only contract available.
+
+**1. `sharable_url`, with one `e` missing.** Legacy reads exactly that key off a package and the
+Share action has nothing to offer without it. It is kept verbatim — a wire key is not a word — but
+if the API also serves `shareable_url`, or renames it, Share silently becomes a dead row rather
+than an error.
+
+**2. The `prices` array has two different types for the same field.** Legacy posts Star as a
+**number** and USD as a **string**:
+
+```json
+{ "prices": [{ "amount": 1000, "amount_currency": "TVS" },
+             { "amount": "10", "amount_currency": "USD" }] }
+```
+
+Pinned in `lib/membership-tier.test.ts` precisely because it reads like a bug, so the next reader's
+instinct is to tidy it — and a tidied write that the backend rejects surfaces as a save button that
+does nothing. Is either spelling required? Is the order?
+
+**3. Is `description: ''` the same as omitting it?** Legacy omits the key when the field is blank, so
+this client does too. If they differ, a creator who clears their description does not clear it.
+
+**4. Can a creator have more than one tier?** `my-packages/` is a paginated list, legacy asks for 100
+and renders `results[0]`. The whole screen is built for exactly one tier. If a second is possible,
+this is a list screen and not a detail one.
+
+**5. Is the 15% system fee served anywhere?** The setup form states *"Revenues from Membership will
+be deducted 15% as System Fee"* with the number hard-coded, as legacy hard-codes it. It is **not**
+`features/membership`'s `membership-fee.ts` (5.9% + $0.30) — that is the *buyer's* card processing
+fee and this is the *seller's* revenue share, two numbers about two sides of one charge. A creator
+reading a stale rate is being told the wrong thing about their own income.
+
+**6. Does `my-channel-subscriptions/` carry `next`?** The list infers the end from a short page, the
+same assumption **B38** records for billy's other paginated endpoints. And `user=` is the search
+parameter's name (legacy's), which reads like an id filter and is a free-text query.
+
+**7. `package_price` versus the tier's current price.** The client renders the per-member figure on
+the assumption that a member who joined at an older price keeps paying it until renewal. If billy
+instead rewrites `package_price` when the tier changes, the "you cannot edit a tier while members
+are paying" gate is unnecessary — and if it does not, that gate is load-bearing and should be
+enforced server-side too, since it is a billing change.
+
+Encoded in `features/monetization/api/types.ts`, `api/membership-api.ts`, `lib/membership-tier.ts`
+and its test, `hooks/use-membership-tier-form.ts`.
+
+---
+
+## B104 — the **creator's donation offer**: mostly **answered by the schema**, and four questions left · **one of which is a `date_range` legacy has been sending wrong**
+
+Unusually for this file, most of this one is already answered. billy publishes the four endpoints
+`/monetization/donation` uses — `https://api.tevi.dev/billy/docs/schema/v4/?format=json`, donation
+half byte-identical in `v5` — and reading it settled four things legacy gets wrong or leaves open.
+Those are recorded here as **findings**, not questions; the four real questions follow.
+
+### Answered by the schema, and acted on
+
+**`date_range` is `1m | 30d | 60d | 7d | thisMonth`.** Legacy sends **`this_month`**, a value in no
+enum, on both `summary/` and `donations/`, every time a creator picks *This month* — so DRF answers
+the default or a 400, and either way the choice does nothing. This client sends `thisMonth`
+(`DONATION_RANGES`, pinned in `lib/donation-setting.test.ts`). Worth checking whether the same
+spelling is wrong in the mobile apps.
+
+**`name` is `maxLength: 50` and `thank_you_msg` is `maxLength: 500`.** Legacy enforces neither and
+lets billy refuse the write, which surfaces as a save button that fails with nothing pointing at the
+field. Both are enforced in the form.
+
+**`icon` and `button_text` are closed enums** (`pizza | coffee | book | rose`, `Donate | Tip`).
+Legacy indexes art by `icon` with no guard; this client falls back rather than rendering nothing.
+
+**`GET summary/` is mis-annotated** as returning `ResponseMyDonationSetting`, which it plainly does
+not — legacy reads `unique_supporter_count` off it and so does this client. A drf-spectacular
+annotation bug rather than a contract question, but it means the summary's *real* shape is still
+unwritten anywhere: question 2 below.
+
+### Still open
+
+**1. How does `donations/` page?** It answers a DRF envelope (`count`, `next`, `previous`,
+`results`) and documents **one** query parameter, `date_range`. So there are no paging parameters to
+send, and legacy sends none — it renders `results` whole. A creator with more supporters than one
+page therefore sees the first page and has no way to reach the rest, in both clients. Are `page` /
+`page_size` accepted? What is the default page size? The client already reads `count`, so answering
+this is a small change here and a real one for anybody with an audience.
+
+**2. What else is on `summary/`?** `unique_supporter_count` is the only field either client reads,
+and it is read on legacy's word. Is there a total amount, a period comparison, a donation count? The
+overview prints one figure above a list and the design has room for more.
+
+**3. Does a donation row's `user` carry `channel_slug` and `channel_verified_tick_badge`?** The
+schema's `User` is `{ id, display_name, avatar }` and legacy's row reads both of the others off it.
+Both are modelled optional here, so a row that carries a slug is a link to `/@slug` and a row that
+does not is a plain name — but if they are always present this is a link that sometimes silently
+is not one, and if they are never present the whole supporters list is unpressable.
+
+**4. What is the `payout_status` vocabulary?** `readOnly` free text, no enum. Legacy maps
+`success → done` and keeps `refunded` and `pending`, painting anything else as the **raw wire value
+in grey** — so a backend that starts sending `on_hold` puts that string on a creator's dashboard.
+This client renders no badge at all for a value it has no word for, which is honest but silent. The
+full list would let the three become four.
+
+### Two fields nobody writes, and one endpoint nobody calls
+
+`allow_monthly_donation` and `allow_post_donation` are real booleans on the setting that **no
+client sets** — not legacy's form, not this one. Are they live? `GET metadata/` is declared in
+legacy's `DonationModel`, called from nowhere, and has no response body in the schema.
+
+`DELETE setting/` exists and legacy wraps it (`handleDeleteSetting`) without ever calling it — the
+settings menu has two rows. Not ported, since *Activate Donation* is already the off switch; noted
+here because the endpoint's existence will read as an omission otherwise.
+
+Encoded in `features/monetization/api/donation-types.ts`, `api/donation-api.ts`,
+`lib/donation-setting.ts` and its test.
+
+---
+
 ---
 
 ## Auth surface not ported

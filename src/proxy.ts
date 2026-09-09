@@ -9,31 +9,29 @@ import { COOKIE_NAME as LOCALE_COOKIE } from '@shared/i18n/settings'
 import { type NextRequest, NextResponse } from 'next/server'
 
 /**
- * Legacy URL rewrites (ported from the old app). No auth here — auth is client-side.
+ * Legacy paths that moved to a different path in this app. No auth here — auth is client-side.
  *
- * **The `@` is required.** Without it these patterns match *any* two-segment path, so
- * `/foo/direct-donation` bounces to `/foo?action=direct_donation` and then 404s — two requests and a
- * bogus URL in history, and a redirect that works as a probe for arbitrary paths. Channel URLs always
- * carry the `@` (see `features/channel/lib/channel-slug.ts` for why the namespace depends on it), so
- * requiring it here costs nothing and keeps the rule honest.
+ * ## What used to be here: `/@{slug}/direct-donation` and `/@{slug}/membership/{id}`
+ *
+ * A second list turned those two into `/@{slug}?action=…`, matching legacy's own `middleware.js`.
+ * Both are now **real routes** (`app/(web)/(main)/(rail)/[slug]/direct-donation` and
+ * `…/membership/[[...tier]]`), which is what buys a share card describing the offer and lets the
+ * space page go back to static rendering — `channel-page.tsx`'s header has the reasoning.
+ *
+ * Do not put them back. Proxy runs **before** route resolution, so a redirect here would intercept
+ * the request and those routes would never be reached; the only symptom is that the new pages
+ * appear to do nothing, which is a long way from the cause. `proxy.test.ts` pins it.
+ *
+ * Two things fall out of the move. The old rule required a literal `@` — without it the pattern
+ * matched *any* two-segment path, so `/foo/direct-donation` bounced to a bogus URL and 404'd, which
+ * also made it a probe for arbitrary paths. And it only ever matched `@`, so `/%40ada/direct-donation`
+ * missed; `[slug]` accepts both spellings, so that URL now works. `?action=` itself is unaffected and
+ * still opens its dialog — see `parseChannelIntent`.
  *
  * Note there is deliberately **no** `/{slug}` → `/@{slug}` rule. Proxy runs before route resolution,
  * so a pattern like `/^\/([^/]+)$/` would swallow `/following`, `/search`, `/settings` and every
  * future single-segment static route before Next ever resolved them — a failure that only surfaces
  * the day someone ships one of those and finds it permanently unreachable.
- */
-const REDIRECTS: { pattern: RegExp; action: string }[] = [
-    { pattern: /^\/(@[^/]+)\/direct-donation$/, action: 'direct_donation' },
-    { pattern: /^\/(@[^/]+)\/membership\/[^/]+$/, action: 'become_a_member' },
-]
-
-/**
- * Legacy paths that moved to a different path in this app.
- *
- * A second list rather than a widening of `REDIRECTS`: that one exists to turn a channel sub-path
- * into `/@{slug}?action=…`, so every entry needs a capture group and a query parameter. These are
- * plain path-to-path moves with neither, and folding them in would mean a discriminated union in a
- * loop that currently reads in one glance.
  *
  * **`/my-wallet` itself is not here.** It still exists — the design kept the address and narrowed
  * it to the earnings half (`features/balance/routes.ts` says why), and the mobile apps link to it.
@@ -93,6 +91,46 @@ const PATH_REDIRECTS: {
     { from: /^\/tos\/miniapp\/?$/, to: () => '/tos/mini-app', keepSearch: true },
 ]
 
+/**
+ * Legacy's **"add this space to your home screen"** URL, and the one rewrite in this file.
+ *
+ * `/@ada?startapp&addToHomeScreen` is an instruction screen, not the space: legacy replaces the
+ * whole page with it (`[channelSlug]/index.js`'s `getLayout`, which returns `AddHomeScreenLayout`
+ * when **both** markers are present) and gives it no chrome at all. This app cannot express that
+ * from inside a page — a page cannot opt out of the layouts above it — so the request is rewritten
+ * onto a route that sits outside them: `app/add-home-screen/[slug]`, which is outside `(web)` and
+ * therefore mounts no session and no navigation, for the same reason `/app/*` does not.
+ *
+ * A **rewrite** and not a redirect, so the address stays the channel's. That URL is the contract:
+ * it is what legacy's manifest pointed installs at, and any link already shared has to keep
+ * working. It is also why the chrome matters — the mobile tab bar would otherwise sit exactly
+ * where step 1 tells the reader to look ("in the bottom bar", meaning Safari's).
+ *
+ * Both markers are required, matching legacy's `'startapp' in query && 'addToHomeScreen' in
+ * query`. `?startapp` alone is what an installed space launches with (see `channelStartUrl` in
+ * `features/channel/lib/channel-manifest.ts`) and must render the space itself.
+ */
+const CHANNEL_ROOT_PATH = /^\/((?:@|%40)[^/]+)\/?$/
+
+/**
+ * Structurally typed rather than taking `NextURL`: that class only exists at
+ * `next/dist/server/web/next-url`, and a deep import into Next's build output is a dependency on
+ * a path they rename between minors. These two fields are all this needs.
+ */
+function addHomeScreenRewrite(url: {
+    pathname: string
+    searchParams: URLSearchParams
+}): string | null {
+    // The `@` may arrive percent-encoded — `parseChannelSlug` documents why `%40ada` is a URL a
+    // person can legitimately hold — and the rewritten segment is handed to that same parser.
+    const match = url.pathname.match(CHANNEL_ROOT_PATH)
+    if (!match) return null
+    // `has`, not a value: legacy's markers are bare (`?startapp&addToHomeScreen`), so the value is
+    // the empty string and any test on it would fail.
+    if (!url.searchParams.has('startapp') || !url.searchParams.has('addToHomeScreen')) return null
+    return `/add-home-screen/${match[1]}`
+}
+
 /** A year — the app re-sends the params on every open, so this is only a fallback. */
 const WEBVIEW_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
@@ -130,6 +168,20 @@ function withCsp(request: NextRequest, headers: Headers): string | null {
     return csp
 }
 
+/**
+ * Both policies, on whatever response the request ends up with — a pass-through, a webview
+ * pass-through or the one rewrite. Three call sites setting two headers by hand is three places
+ * for the report-only header to go missing, which is invisible: the page renders either way and
+ * only the Trusted Types reports stop arriving.
+ */
+function withPolicies<T extends NextResponse>(response: T, csp: string | null): T {
+    if (csp) {
+        response.headers.set(CSP_HEADER, csp)
+        response.headers.set(CSP_REPORT_ONLY_HEADER, CSP_REPORT_ONLY)
+    }
+    return response
+}
+
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
 
@@ -152,17 +204,6 @@ export function proxy(request: NextRequest) {
         }
     }
 
-    for (const { pattern, action } of REDIRECTS) {
-        const match = pathname.match(pattern)
-        if (match) {
-            const channelSlug = match[1]
-            const url = request.nextUrl.clone()
-            url.pathname = `/${channelSlug}`
-            url.searchParams.set('action', action)
-            return NextResponse.redirect(url)
-        }
-    }
-
     for (const { from, to, when, keepSearch } of PATH_REDIRECTS) {
         if (!from.test(pathname)) continue
         if (when && !when(request.nextUrl.searchParams)) continue
@@ -172,12 +213,16 @@ export function proxy(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    const response = NextResponse.next({ request: { headers } })
-    if (csp) {
-        response.headers.set(CSP_HEADER, csp)
-        response.headers.set(CSP_REPORT_ONLY_HEADER, CSP_REPORT_ONLY)
+    const rewrite = addHomeScreenRewrite(request.nextUrl)
+    if (rewrite) {
+        const url = request.nextUrl.clone()
+        url.pathname = rewrite
+        // The query rides along untouched: it is what got us here, and the screen is reached at
+        // its own address too (`/add-home-screen/@ada`), where there is none.
+        return withPolicies(NextResponse.rewrite(url, { request: { headers } }), csp)
     }
-    return response
+
+    return withPolicies(NextResponse.next({ request: { headers } }), csp)
 }
 
 /**
@@ -203,11 +248,7 @@ function withWebviewContext(request: NextRequest, headers: Headers, csp: string 
     if (context.platform) headers.set(WEBVIEW_HEADERS.platform, context.platform)
     if (context.version) headers.set(WEBVIEW_HEADERS.version, context.version)
 
-    const response = NextResponse.next({ request: { headers } })
-    if (csp) {
-        response.headers.set(CSP_HEADER, csp)
-        response.headers.set(CSP_REPORT_ONLY_HEADER, CSP_REPORT_ONLY)
-    }
+    const response = withPolicies(NextResponse.next({ request: { headers } }), csp)
     const options = { path: '/', maxAge: WEBVIEW_COOKIE_MAX_AGE, sameSite: 'lax' } as const
     if (context.locale) response.cookies.set(LOCALE_COOKIE, context.locale, options)
     if (context.theme) response.cookies.set(WEBVIEW_THEME_COOKIE, context.theme, options)

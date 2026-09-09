@@ -12,9 +12,9 @@ Auth is Bearer-JWT via the Authorization header; tokens live in localStorage und
 migration upgrades legacy keys, e.g. `user_logged_list` / `user_id`, on first load).
 
 **Where the port stands:** the foundation is done and business features are landing on top of it —
-26 feature modules today (payment/Stripe, premium, membership, donation, payout, gift-code,
-star-transfer, affiliate, analytics, notification, search, channel, identification, mini-app…). What is *not* built
-yet is read out of the legacy app, which lives at `../tevi-web-app` and stays the reference for
+28 feature modules today (payment/Stripe, premium, membership, donation, payout, gift-code,
+star-transfer, affiliate, analytics, monetization, notification, search, channel, identification,
+mini-app…). What is *not* built yet is read out of the legacy app, which lives at `../tevi-web-app` and stays the reference for
 behavior/parity questions. Per-feature open items live in `docs/` — see the map below.
 
 ## Stack
@@ -99,6 +99,14 @@ src/
                             plus the dialogs, the splash and `MiniAppHost`
     (web)/      the website. `(web)/layout.tsx` is the one place the session stack is mounted.
       (main)/   the DS shell (navbar / tab bar); `login/`, `signup/`, `dev/` sit beside it.
+    add-home-screen/[slug]/   the "add {space} to your home screen" instructions. A **rewrite**
+                target: `proxy.ts` sends `/@ada?startapp&addToHomeScreen` here (legacy's URL, so
+                shared links keep working) and the route sits outside `(web)`, mounting no session
+                and no shell — legacy replaces the whole page too, and our own tab bar would land
+                exactly where step 1 says to look. The space's **own PWA manifest** is a route
+                beside the space page (`[slug]/manifest.webmanifest`), so installing a space gives
+                its name and avatar rather than Tevi's; `shared/config/web-manifest.ts` holds what
+                it shares with the site's, and `shared/lib/thumbor.ts` squares the avatar.
     app/        `/app/*` webview screens — no shell and **no session** (below).
     api/        route handlers, and there is deliberately almost nothing here. `client-ip/` is the
                 only one: the caller's public IP — which the QR panel prints so the phone can see
@@ -140,12 +148,16 @@ mounted per top-level route: sibling layouts unmount on a client-side navigation
 - A feature must NOT import another feature's internals — only via a barrel. `index.ts` is the
   main one; **four narrower barrels at the feature root are sanctioned**, each so a cheap consumer
   does not pay for the whole feature:
-  - `routes.ts` — the feature's paths and nothing else, **with no imports of its own** (9 features,
-    33 cross-feature imports). `features/navigation/lib/menu-rows.ts` is a data module with no JSX
+  - `routes.ts` — the feature's paths and nothing else, **with no imports of its own** (13 features,
+    62 cross-feature imports). `features/navigation/lib/menu-rows.ts` is a data module with no JSX
     or hooks; routed through `index.ts` its link would close a cycle between two barrels, which ESM
     resolves by handing one side a half-initialised module — not a build error, an `undefined is not
     a function` at render time. So: `@features/payment/routes`, never `@features/payment`. A
     `lib/routes.ts` inside the feature only re-exports it.
+    `features/channel/routes.ts` carries one thing more, for the same reason: the space page's
+    **deep-link vocabulary** (`direct_donation`, `become_a_member`, `custom_profile`) and the parser
+    that reads it off a URL. `features/donation` and `features/membership` both need it, and the
+    main barrel would close a cycle through `channel-viewer-actions.tsx`.
   - `skeleton.ts` — the container/shell constants a route's `loading.tsx` needs (6 features), so a
     skeleton does not drag the feature's component tree into the loading chunk.
   - `dev.ts` — fixtures and pieces for the `/dev/*` harnesses (7 features), kept out of `index.ts`
@@ -626,6 +638,17 @@ Self-managed in-repo (no Crowdin): one flat `locales/<lng>/translation.json` per
 Client: `useTranslation()` from `@shared/i18n/use-translation` (adds `changeLanguage`, which syncs
 storage + cookie + `<html lang|dir>`). RSC: `getServerT()` / `getT(locale)`.
 
+⚠ **That resolution is why every route in this app is dynamically rendered.** `app/layout.tsx`
+awaits `cookies()` and `headers()`, which are Dynamic APIs, and a page cannot opt out of its own
+root layout. The consequence worth knowing before chasing it: a `notFound()` raised **during** a
+render can no longer set the status, so every one of them is a **soft 404** — 200 with the
+not-found body. Measured on four unrelated routes, including one that calls `notFound()` on a pure
+path check with no fetch and no search params (`add-home-screen/[slug]`). Only an **unmatched**
+path (`/a/b/c`) gets a real 404, because Next sets that before any render. `[slug]/page.tsx` has
+table and the two ways out, neither free. Also: a `notFound()` branch must return **no** `robots`
+from `generateMetadata` — Next emits its own `noindex` on that render, and a second tag beside
+it is two tags where one is expected.
+
 **One locale reaches the browser, not nine.** `resources.ts` (all nine, ~820 KB of JSON) is
 **server-only**; `client.ts` bundles **English alone** — it is `FALLBACK_LNG`, so it stands behind
 any key a locale has not translated. All nine are complete and stay in lockstep (`ar` additionally
@@ -691,12 +714,19 @@ Full pipeline + runbook: [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md).
   [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) before changing any of it** — it covers the
   pipeline, the runbook, and the silent-failure traps (sprite aliases, Tailwind inlining shadow
   values, manifest icons pointing at nothing).
-- **Screen surfaces — the single-panel rule.** A screen that is one block of content in the 612
-  column paints `--background-surface` **full-bleed below `md`** (on `<main>`, on the sticky bar and
-  in `loading.tsx`) and becomes a card from `md` up; the column carries no padding of its own, and
-  filling it is `md:grow`, **never a `min-height`**. Empty states inside that panel follow it, with
-  a 16/600 title and a `max-w-[400px]` body. Reference pairs, the two screens not yet aligned, and
-  the token traps: [`docs/DESIGN_SYSTEM.md` §6](docs/DESIGN_SYSTEM.md#6-screen-surfaces--the-single-panel-rule).
+- **Screen surfaces — decide this before writing a screen, not after review.** Below `md` a screen
+  paints `--background-surface` **full-bleed** — on `<main>`/the column, on the sticky bar **and** in
+  `loading.tsx` — and becomes a card from `md` up. The column carries no padding of its own, and
+  filling it is `md:grow`, **never a `min-height`**.
+  The **one** case that keeps the page colour is a screen with a plain `--background-surface` card
+  floating in its column (`/my-wallet`, `/my-star`): there the gaps between cards *are* the
+  separation, so painting the screen dissolves them, and only the bottom-most block takes `fullBleed`.
+  Blocks that are tinted, outlined, or full-bleed to the bottom carry their own edges, so a screen
+  made only of those is painted whatever its block count (`/monetization/membership`). Empty states
+  follow the panel, with a 16/600 title and a `max-w-[400px]` body.
+  The decision table, the reference pairs and the traps — a skeleton block that goes *invisible* on
+  the surface rather than merely mismatched, and `overflow-clip` vs `overflow-hidden` under a sticky
+  header: [`docs/DESIGN_SYSTEM.md` §6](docs/DESIGN_SYSTEM.md#6-screen-surfaces--the-single-panel-rule).
   The DS draws no page layout, so this is a product rule rather than a port — do not look for it in
   Figma.
 - **Dialog dismiss — trailing on a card, leading on a screen.** The DS dialog draws no close

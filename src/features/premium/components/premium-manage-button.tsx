@@ -7,6 +7,7 @@ import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Loader } from '@shared/ui/loader'
 import { useBillingPortal } from '../hooks/use-billing-portal'
+import { PREMIUM_CONTROL_FLIP, PREMIUM_CONTROL_ON_HERO } from '../lib/premium-surface'
 
 /**
  * "Manage in Stripe" — the trailing control on **both** Premium bars (`/premium` and
@@ -43,17 +44,33 @@ import { useBillingPortal } from '../hooks/use-billing-portal'
  *
  * ## The shape is legacy's, and the icon is **trailing**
  *
- * A white pill with dark ink and the "opens elsewhere" glyph after the label — legacy's
- * `backgroundColor: '#ffffff'`, `color: '#131313'`, `borderRadius: 24`, `height: 32` and its
+ * A pill with the "opens elsewhere" glyph after the label — legacy's `borderRadius: 24` and its
  * `endIcon`. That geometry is not a stylistic preference here: this button sits on the brand band at
  * rest, where a DS `secondary` (a bordered surface at the DS radius, glyph first) reads as a form
  * control dropped onto artwork rather than as the overlay affordance the design draws. The **back
- * button on the same bars is already a white disc** (`BarIconButton`), so the pill is the pair to it
- * and the two ends of the bar match.
+ * button on the same bars is the disc of the same pair** (`BarIconButton`), so the two ends of the
+ * bar are one object in two shapes — same height, same edge, same paint in each state.
  *
- * `--background-surface` rather than a literal white, so it is the elevated surface in Dark too —
- * the band is the same near-black-to-violet in both modes, and a fixed `#fff` would be the only
- * thing on the screen that did not flip.
+ * ## The paint is the bar's state, not legacy's white
+ *
+ * Legacy is `backgroundColor: '#ffffff'`, `color: '#131313'` at every scroll position. **Deliberate
+ * divergence:** on the band the pill is frosted glass instead (`PREMIUM_CONTROL_ON_HERO`, where the
+ * reasoning and the measured contrast live), and it takes the surface-and-hairline paint below only
+ * once the band has gone past. Two opaque white pills are the brightest thing on a near-black band,
+ * which puts the chrome ahead of the mark, the pitch and the price.
+ *
+ * ⚠ **40 tall, not legacy's `height: 32` — because the pair is what the eye measures.** The two ends
+ * of the bar are one control each and they are read against each other: a 32px pill beside a 40px
+ * disc is visibly the smaller half, and below `sm`, where this collapses to a disc of its own, the
+ * two sit at the same height as an obviously mismatched pair. Legacy's 32 is the number for a bar
+ * whose back control is *not* a 40px disc; ours is (`BarIconButton`, whose own note explains the 40).
+ * So the height follows the disc, and the glyph goes to 20 in the icon-only state so the smaller
+ * drawing does not re-open the same mismatch inside a matched box.
+ *
+ * Off the band it is `--background-surface` rather than a literal white, so it is the elevated
+ * surface in Dark too — a fixed `#fff` would be the only thing on the screen that did not flip. On
+ * the band the paint goes the other way and is fixed `white/*`: the band itself does not flip, so a
+ * token there would be wrong in one of the two modes (`PREMIUM_CONTROL_ON_HERO`).
  *
  * ## The label goes away below `sm`, the button does not
  *
@@ -61,7 +78,19 @@ import { useBillingPortal } from '../hooks/use-billing-portal'
  * *labelled control* for a screen reader either way — the text is `sr-only`, never absent, so this is
  * never an unlabelled icon.
  */
-export function PremiumManageButton() {
+export function PremiumManageButton({
+    /**
+     * Is the brand band behind the bar right now?
+     *
+     * A **required** prop with no default, because there is no answer that is right when a caller
+     * forgets it: `false` puts an opaque pill on the violet and `true` puts white-on-white on the
+     * page ground. The two bars each know it for their own reason — `/premium` from the band
+     * sentinel, `/gift-premium` from the step it is drawing — and neither can be derived here.
+     */
+    onBrand,
+}: {
+    onBrand: boolean
+}) {
     const { t } = useTranslation()
     const { isAuthenticated, isAnonymous } = useAuth()
     const portal = useBillingPortal()
@@ -82,10 +111,29 @@ export function PremiumManageButton() {
             disabled={portal.isPending}
             onClick={portal.open}
             className={cn(
-                'h-8 rounded-full bg-(--background-surface) px-3 text-(--text-title)',
+                PREMIUM_CONTROL_FLIP,
+                'h-10 rounded-full bg-(--background-surface) px-4 text-(--text-title)',
+                /*
+                 * The same hairline `BarIconButton` carries, for the reason written there and
+                 * measured on this bar's *other* ground: `/gift-premium`'s picker step paints the
+                 * bar `--background-surface` below `md` (§6's single-panel rule), and this pill's
+                 * fill is that same token — surface on surface, contrast **1.00**, so the control
+                 * read as a bare glyph floating in the bar. The band hides it and the surface does
+                 * not, and the ground is the bar's choice rather than this button's, so the edge
+                 * comes with the button. `Button`'s base is already `border border-transparent`,
+                 * so this only paints an edge that was always in the box — nothing moves.
+                 */
+                'border-(--button-secondary-border)',
                 'hover:not-disabled:bg-(--background-segment) active:scale-[0.98]',
-                // A 32px disc on a phone, where the label is `sr-only` and there is nothing to pad.
-                'max-sm:w-8 max-sm:px-0',
+                // A 40px disc on a phone, where the label is `sr-only` and there is nothing to pad —
+                // the same box as the back disc at the other end of the bar.
+                'max-sm:w-10 max-sm:px-0',
+                /*
+                 * Last, so the glass overrides the three paints above it — `twMerge` keeps the later
+                 * utility of a conflicting pair, and fill, edge and ink are each stated in both
+                 * halves for exactly that reason.
+                 */
+                onBrand && PREMIUM_CONTROL_ON_HERO,
             )}
         >
             {/*
@@ -97,10 +145,10 @@ export function PremiumManageButton() {
             {/*
              * The loader replaces the glyph rather than joining it, so the button's width does not
              * change while the link is being minted — a control that grows under the pointer as it
-             * is pressed is the one thing a 32px target cannot afford.
+             * is pressed is the one thing a 40px target cannot afford.
              */}
             {portal.isPending ? (
-                <Loader className="size-4" label={t('common_loading')} />
+                <Loader className="size-4 max-sm:size-5" label={t('common_loading')} />
             ) : (
                 /*
                  * `arrow-up-right-from-square` is the sprite's "opens elsewhere" glyph, and it is
@@ -108,7 +156,17 @@ export function PremiumManageButton() {
                  * RTL — an arrow that means "off to another site" is not a direction of travel in
                  * the reading order, and the DS draws it the same way in both.
                  */
-                <Icon name="arrow-up-right-from-square" size={16} />
+                /*
+                 * 16 beside the label, 20 in the icon-only disc — `size-*` in the class rather than
+                 * the `size` prop alone, because `Button` styles any glyph *without* a `size-` class
+                 * to `size-4` and would win (`BarIconButton`'s trap 1). The attribute stays at the
+                 * larger of the two so the SVG's own box never crops the drawing.
+                 */
+                <Icon
+                    name="arrow-up-right-from-square"
+                    size={20}
+                    className="size-4 max-sm:size-5"
+                />
             )}
         </Button>
     )

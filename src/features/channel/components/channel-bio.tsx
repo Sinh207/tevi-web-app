@@ -24,15 +24,21 @@ export function ChannelBio({
     /** The reader owns this space — the NSFW row then offers the appeal. See `ChannelNsfwLabel`. */
     isOwner = false,
     /**
-     * A sensitive space whose gate is unanswered: the **creator's own writing and destinations** are
+     * A sensitive space whose gate is unanswered: the **destinations** the creator points at are
      * withheld with the art.
      *
-     * The two rows that go are the two the creator authored — the description and every link
-     * (the named custom one and the platform marks alike). A bio is free text and a link is a place
-     * the reader has not agreed to be sent yet, so the gate cannot both withhold the cover and leave
-     * a paragraph plus a row of taps to somewhere else standing above it.
+     * What goes is every link — the named custom one and the platform marks alike. A link is a place
+     * the reader has not agreed to be sent yet, and the gate cannot withhold the cover while leaving
+     * a row of taps to somewhere else standing above it.
      *
-     * The two that stay are ours, not theirs: the joined date is a fact about the account, and the
+     * **The description stays.** It used to go with the links, on the grounds that it is the
+     * creator's own writing; but the gate's question is whether the reader wants to *see this
+     * space*, and a paragraph saying what the space is is the one thing that helps them answer it.
+     * Withholding it left a page that named the space and then refused to say what it was. Free text
+     * is not the risk the art is: it is rendered as text (`ChannelDescription`), it opens nothing,
+     * and it is already subject to the same moderation as the rest of the profile.
+     *
+     * The rest that stays is ours, not theirs: the joined date is a fact about the account, and the
      * NSFW label is the gate's own subject — hiding *that* would take away the one line explaining
      * why the rest is missing. The identity block above (name, handle, the space's own address) is
      * untouched for the reason in `ChannelNsfwGate` — hiding it only hid the address.
@@ -56,7 +62,7 @@ export function ChannelBio({
 
     return (
         <div className="flex min-w-0 flex-col gap-3">
-            {!withheld && channel.description && <ChannelDescription text={channel.description} />}
+            {channel.description && <ChannelDescription text={channel.description} />}
 
             {!withheld && customLink && <ChannelMetaLink link={customLink} />}
 

@@ -90,8 +90,9 @@ describe('canonicalChannelRedirect', () => {
     })
 
     /**
-     * `proxy.ts` turns `/@ada/direct-donation` into `/@ada?action=direct_donation`, so a
-     * redirect that drops the query swallows the intent the visitor arrived with.
+     * No route passes a query any more — the space page is static and reads none. Kept because a
+     * caller that does hold one should not have to rebuild the join, and because `?action=` is
+     * still a URL the app accepts, just not one this redirect has to preserve.
      */
     it('carries the query string through', () => {
         expect(canonicalChannelRedirect('ADA', 'ada', '?action=direct_donation')).toBe(
@@ -108,6 +109,25 @@ describe('canonicalChannelRedirect', () => {
         for (const search of ['', '?', null, undefined, new URLSearchParams()]) {
             expect(canonicalChannelRedirect('ADA', 'ada', search)).toBe('/@ada')
         }
+    })
+
+    /**
+     * The deep-link routes: a case correction must land on the same sub-page, or `/@ADA/membership`
+     * would quietly become the space and the reader would never see the dialog they followed a link
+     * for.
+     */
+    it('carries a sub-path through', () => {
+        expect(canonicalChannelRedirect('ADA', 'ada', null, '/direct-donation')).toBe(
+            '/@ada/direct-donation',
+        )
+        expect(canonicalChannelRedirect('ADA', 'ada', null, '/membership/12')).toBe(
+            '/@ada/membership/12',
+        )
+        // The sub-path goes between the slug and the query — the only place it can go and still
+        // be a URL.
+        expect(canonicalChannelRedirect('ADA', 'ada', 'tab=media', '/membership')).toBe(
+            '/@ada/membership?tab=media',
+        )
     })
 
     it('does not redirect to an empty slug when the payload had none', () => {

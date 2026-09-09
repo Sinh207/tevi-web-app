@@ -5,6 +5,7 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
 import { useRouter } from 'next/navigation'
+import { PREMIUM_CONTROL_FLIP, PREMIUM_CONTROL_ON_HERO } from '../lib/premium-surface'
 import { PremiumManageButton } from './premium-manage-button'
 
 /**
@@ -19,9 +20,12 @@ import { PremiumManageButton } from './premium-manage-button'
  * it, so a caller cannot reach it. Everything else is the same bar — the DS `AppBar` frame, the
  * shared `BarIconButton`, the same 60px height, the same trailing cluster.
  *
- * (Legacy's back button is a **white 32px disc with a dark glyph** even over the violet, so
- * `BarIconButton` is the faithful control rather than the DS's `overlay` theme, which would put a
- * dark translucent pill there instead.)
+ * (Legacy's back button is a **white 32px disc with a dark glyph** even over the violet, and this
+ * bar's controls are `BarIconButton` and its pill rather than the DS's `overlay` theme, which is
+ * drawn for a bar over photography and would put a dark translucent plate on an already near-black
+ * band. What they do take from that theme is its hairline of light: on the band both controls wear
+ * `PREMIUM_CONTROL_ON_HERO` — frosted glass, white ink — and they cross to the surface-and-hairline
+ * paint with the rest of the bar. That constant carries the reasoning and the measured contrast.)
  *
  * ## `stuck` is the band's news, so the band is what decides it
  *
@@ -48,24 +52,20 @@ export function PremiumTopBar({
         <AppBar
             data-stuck={stuck || undefined}
             /*
-             * **`md:px-0` — the bar's side padding is the *content's*, not the DS bar's.**
+             * **The bar keeps `AppBar`'s own `px-4` at every width — no `md:px-0` here.**
              *
-             * `AppBar` carries `px-4`, drawn for a phone where the bar is the full width of the
-             * screen and the content under it is inset 16 by its own row padding. From `md` this
-             * screen stops being full-width — it is a 612 column — and that 16px then measures
-             * from the *column's* edge rather than the screen's, so the back disc sat inset from
-             * a band and a card that do not. Measured at 1280: 16px in on both, against 0 on
-             * `/search` and every other sub-page, which get this from `PageBackBar`.
-             *
-             * That component's own note is the rule and it applies unchanged here — the reason
-             * these two bars missed it is that they are hand-rolled (the DS title takes
-             * `--text-title`, which is unreadable on the band, and `PageBackBar` cannot be handed
-             * a different ink). Everything else about them is `PageBackBar`; this was the one
-             * line that did not come across.
+             * `PageBackBar`'s rule is to drop the bar's inset from `md`, because on those screens
+             * the *column* carries the 16 below `md` and a card carries it above, so 0 lines the
+             * back disc up with the panel's edge. This screen is the other shape: the column is
+             * `disableGutters` (the **band** has to reach its edges) and the content is inset by
+             * `PREMIUM_INSET` — 16 — at *every* width. So `md:px-0` did not align the disc with
+             * anything; measured at 1280 it sat at the band's edge (334) while the mark, the copy
+             * and the plan cards sat 16 further in (350), which reads as a control falling off the
+             * band. 16 at every width is this screen's content inset, and it is the number the
+             * band's own children use.
              */
             className={cn(
                 'sticky top-0 z-20 backdrop-blur-[10px] transition-colors duration-300',
-                'md:px-0',
                 stuck && 'bg-(--background)',
             )}
         >
@@ -76,6 +76,14 @@ export function PremiumTopBar({
                     weight="filled"
                     mirrored
                     label={t('common_back')}
+                    /*
+                     * The two ends of the bar flip together — see `PREMIUM_CONTROL_ON_HERO`. It is
+                     * passed as a class here and as a prop to the pill because that is what each
+                     * control accepts: `BarIconButton` is a `className` component by design (its own
+                     * note: the disc's ground is not knowable at the call site), while the pill has a
+                     * second paint of its own to switch and takes the answer typed.
+                     */
+                    className={cn(PREMIUM_CONTROL_FLIP, !stuck && PREMIUM_CONTROL_ON_HERO)}
                     onClick={() => {
                         /*
                          * `history.length` is the only signal available for "is there anywhere to go
@@ -113,7 +121,7 @@ export function PremiumTopBar({
             </AppBarTitle>
 
             <AppBarCluster>
-                <PremiumManageButton />
+                <PremiumManageButton onBrand={!stuck} />
             </AppBarCluster>
         </AppBar>
     )

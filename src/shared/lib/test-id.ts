@@ -181,6 +181,13 @@ export const TESTID_COMPANIONS = [
     'data-currency-code',
     'data-date',
     /**
+     * A received donation's id — the supporters list on `/monetization/donation`, whose rows are all
+     * `monetization-donation-supporter`. The sibling of `data-membership-id` below, for the other
+     * creator dashboard, and separate from it because the two lists carry different objects: one row
+     * is a subscription and the other is a single payment.
+     */
+    'data-donation-id',
+    /**
      * A form field's **wire key** — `account_number`, `corp_ein`, `bank_name`.
      *
      * For a form whose fields are derived from a payload rather than written out: the payout setup

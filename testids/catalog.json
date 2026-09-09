@@ -2,8 +2,8 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 734,
-        "surfaces": 26
+        "ids": 811,
+        "surfaces": 27
     },
     "surfaces": {
         "affiliate": {
@@ -69,9 +69,11 @@
             "label": "Channel / space, following, profile settings",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -87,7 +89,9 @@
             "kind": "shared",
             "label": "Donate — button and dialogs, on a channel",
             "mountedBy": "src/features/channel/components/channel-viewer-actions.tsx",
-            "routes": []
+            "routes": [
+                "/monetization/donation"
+            ]
         },
         "earnings": {
             "kind": "screen",
@@ -141,8 +145,10 @@
             "kind": "screen",
             "label": "Memberships",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ]
         },
@@ -155,6 +161,15 @@
                 "/app/tos/mini-app",
                 "/privacy/mini-app",
                 "/tos/mini-app"
+            ]
+        },
+        "monetization": {
+            "kind": "screen",
+            "label": "Monetization hub and its method screens",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
             ]
         },
         "my-star": {
@@ -196,6 +211,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -438,6 +454,25 @@
             ],
             "source": "src/features/analytics/components/dashboard-analytics-view.tsx:199"
         },
+        "app-error": {
+            "scope": "app",
+            "routes": [
+                "/app/[channelSlug]/membership/[packageId]",
+                "/app/community-guidelines",
+                "/app/dev-checkout",
+                "/app/letter",
+                "/app/moderation",
+                "/app/privacy",
+                "/app/privacy-settings",
+                "/app/privacy/mini-app",
+                "/app/privacy/tevi-premium",
+                "/app/safety",
+                "/app/terms",
+                "/app/terms/tevi-premium",
+                "/app/tos/mini-app"
+            ],
+            "source": "src/app/error.tsx:42"
+        },
         "app-error-retry": {
             "scope": "app",
             "routes": [
@@ -455,7 +490,7 @@
                 "/app/terms/tevi-premium",
                 "/app/tos/mini-app"
             ],
-            "source": "src/app/error.tsx:25"
+            "source": "src/app/error.tsx:47"
         },
         "app-global-error-retry": {
             "scope": "app",
@@ -476,6 +511,25 @@
             ],
             "source": "src/app/global-error.tsx:31"
         },
+        "app-not-found": {
+            "scope": "app",
+            "routes": [
+                "/app/[channelSlug]/membership/[packageId]",
+                "/app/community-guidelines",
+                "/app/dev-checkout",
+                "/app/letter",
+                "/app/moderation",
+                "/app/privacy",
+                "/app/privacy-settings",
+                "/app/privacy/mini-app",
+                "/app/privacy/tevi-premium",
+                "/app/safety",
+                "/app/terms",
+                "/app/terms/tevi-premium",
+                "/app/tos/mini-app"
+            ],
+            "source": "src/app/not-found.tsx:48"
+        },
         "app-not-found-home": {
             "scope": "app",
             "routes": [
@@ -493,7 +547,26 @@
                 "/app/terms/tevi-premium",
                 "/app/tos/mini-app"
             ],
-            "source": "src/app/not-found.tsx:40"
+            "source": "src/app/not-found.tsx:80"
+        },
+        "app-not-found-safe-space": {
+            "scope": "app",
+            "routes": [
+                "/app/[channelSlug]/membership/[packageId]",
+                "/app/community-guidelines",
+                "/app/dev-checkout",
+                "/app/letter",
+                "/app/moderation",
+                "/app/privacy",
+                "/app/privacy-settings",
+                "/app/privacy/mini-app",
+                "/app/privacy/tevi-premium",
+                "/app/safety",
+                "/app/terms",
+                "/app/terms/tevi-premium",
+                "/app/tos/mini-app"
+            ],
+            "source": "src/app/not-found.tsx:72"
         },
         "auth-account-add": {
             "scope": "auth",
@@ -1505,9 +1578,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1520,13 +1595,57 @@
             ],
             "source": "src/features/channel/components/channel-about-activity.tsx:140"
         },
+        "channel-add-home-screen": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/add-home-screen-guide.tsx:64"
+        },
+        "channel-add-home-screen-item": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/add-home-screen-guide.tsx:206"
+        },
         "channel-auto-follow-now": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1543,9 +1662,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1562,9 +1683,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1581,9 +1704,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1594,15 +1719,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-bio.tsx:196"
+            "source": "src/features/channel/components/channel-bio.tsx:202"
         },
         "channel-bio-nsfw": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1613,15 +1740,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-bio.tsx:128"
+            "source": "src/features/channel/components/channel-bio.tsx:134"
         },
         "channel-bio-social": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1632,15 +1761,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-bio.tsx:239"
+            "source": "src/features/channel/components/channel-bio.tsx:245"
         },
         "channel-block": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1657,9 +1788,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1676,9 +1809,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1695,9 +1830,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1714,9 +1851,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1736,9 +1875,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1755,9 +1896,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1774,9 +1917,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1793,9 +1938,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1812,9 +1959,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1831,9 +1980,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1850,9 +2001,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1869,9 +2022,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1888,9 +2043,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1907,9 +2064,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1926,9 +2085,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1945,9 +2106,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1964,9 +2127,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -1983,9 +2148,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2002,9 +2169,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2021,9 +2190,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2040,9 +2211,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2059,9 +2232,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2078,9 +2253,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2097,9 +2274,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2116,9 +2295,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2135,9 +2316,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2154,9 +2337,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2173,9 +2358,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2192,9 +2379,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2211,9 +2400,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2230,9 +2421,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2249,9 +2442,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2268,9 +2463,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2290,9 +2487,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2312,9 +2511,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2331,9 +2532,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2350,9 +2553,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2369,9 +2574,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2388,9 +2595,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2407,9 +2616,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2426,9 +2637,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2445,9 +2658,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2464,9 +2679,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2483,9 +2700,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2502,9 +2721,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2521,9 +2742,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2540,9 +2763,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2559,9 +2784,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2578,9 +2805,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2600,9 +2829,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2619,9 +2850,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2638,9 +2871,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2660,9 +2895,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2679,9 +2916,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2698,9 +2937,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2717,9 +2958,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2736,9 +2979,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2755,9 +3000,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2774,9 +3021,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2793,9 +3042,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2812,9 +3063,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2831,9 +3084,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2850,9 +3105,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2869,9 +3126,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2888,9 +3147,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2907,9 +3168,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2926,9 +3189,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2945,9 +3210,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2964,9 +3231,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -2983,9 +3252,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3002,9 +3273,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3024,9 +3297,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3043,9 +3318,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3062,9 +3339,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3081,9 +3360,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3100,9 +3381,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3119,9 +3402,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3138,9 +3423,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3157,9 +3444,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3176,9 +3465,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3195,9 +3486,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3214,9 +3507,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3233,9 +3528,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3252,9 +3549,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3271,9 +3570,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3290,9 +3591,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3309,9 +3612,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3328,9 +3633,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3341,15 +3648,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:558"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:606"
         },
         "channel-mcn-partnership-cancel-confirm": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3360,15 +3669,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:289"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:309"
         },
         "channel-mcn-partnership-contact": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3379,15 +3690,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:624"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:672"
         },
         "channel-mcn-partnership-empty": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3398,15 +3711,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:136"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:137"
         },
         "channel-mcn-partnership-error": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3417,15 +3732,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:115"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:116"
         },
         "channel-mcn-partnership-leave": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3436,15 +3753,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:223"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:243"
         },
         "channel-mcn-partnership-leave-confirm": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3455,15 +3774,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:266"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:286"
         },
         "channel-mcn-partnership-menu": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3474,15 +3795,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:203"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:220"
         },
         "channel-mcn-partnership-retry": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3493,15 +3816,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:123"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:124"
         },
         "channel-mcn-partnership-sign-in": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3512,15 +3837,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:104"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:105"
         },
         "channel-mcn-partnership-signed-out": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3531,15 +3858,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:94"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:95"
         },
         "channel-mcn-partnership-space": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3550,15 +3879,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/mcn-partnership-view.tsx:403"
+            "source": "src/features/channel/components/mcn-partnership-view.tsx:423"
         },
         "channel-menu-follow": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3575,9 +3906,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3594,9 +3927,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3613,9 +3948,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3632,9 +3969,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3651,9 +3990,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3666,13 +4007,57 @@
             ],
             "source": "src/features/channel/components/my-space-redirect.tsx:117"
         },
+        "channel-not-found": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:44"
+        },
+        "channel-not-found-discover": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:75"
+        },
         "channel-not-found-home": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3683,34 +4068,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:39"
-        },
-        "channel-not-found-search": {
-            "scope": "channel",
-            "routes": [
-                "/[slug]",
-                "/[slug]/earnings-report",
-                "/[slug]/earnings-report/[dateTs]",
-                "/[slug]/event/[code]",
-                "/follow-requests",
-                "/following",
-                "/invitation/verify",
-                "/mcn-partnership",
-                "/mcn-user-invitation/verify",
-                "/my-space",
-                "/settings/blocked-accounts",
-                "/settings/custom-profile",
-                "/settings/space-visibility"
-            ],
-            "source": "src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:47"
+            "source": "src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:83"
         },
         "channel-notify": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3727,9 +4095,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3740,15 +4110,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-owner-actions.tsx:75"
+            "source": "src/features/channel/components/channel-owner-actions.tsx:85"
         },
         "channel-owner-share": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3759,15 +4131,17 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-owner-actions.tsx:105"
+            "source": "src/features/channel/components/channel-owner-actions.tsx:115"
         },
         "channel-premium-badge": {
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3784,9 +4158,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3803,9 +4179,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3822,9 +4200,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3841,9 +4221,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3860,9 +4242,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3879,9 +4263,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3901,9 +4287,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3920,9 +4308,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3939,9 +4329,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3958,9 +4350,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3977,9 +4371,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -3996,9 +4392,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4015,9 +4413,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4034,9 +4434,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4053,9 +4455,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4072,9 +4476,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4091,9 +4497,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4110,9 +4518,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4129,9 +4539,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4148,9 +4560,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4167,9 +4581,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4186,9 +4602,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4205,9 +4623,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4224,9 +4644,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4243,9 +4665,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4262,9 +4686,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4281,9 +4707,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4300,9 +4728,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4319,9 +4749,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4338,9 +4770,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4357,9 +4791,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4376,9 +4812,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4395,9 +4833,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4414,9 +4854,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4433,9 +4875,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4452,9 +4896,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4471,9 +4917,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4490,9 +4938,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4512,9 +4962,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4531,9 +4983,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4550,9 +5004,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4569,9 +5025,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4588,9 +5046,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4607,9 +5067,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4626,9 +5088,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4645,9 +5109,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4664,9 +5130,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4683,9 +5151,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4702,9 +5172,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4721,9 +5193,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4740,9 +5214,11 @@
             "scope": "channel",
             "routes": [
                 "/[slug]",
+                "/[slug]/direct-donation",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
                 "/invitation/verify",
@@ -4757,32 +5233,44 @@
         },
         "donation-back": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-dialogs.tsx:532"
         },
         "donation-breakdown": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-dialogs.tsx:746"
         },
         "donation-button": {
             "scope": "donation",
-            "routes": [],
-            "source": "src/features/donation/components/donate-button.tsx:83"
+            "routes": [
+                "/monetization/donation"
+            ],
+            "source": "src/features/donation/components/donate-button.tsx:85"
         },
         "donation-close": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-dialogs.tsx:606"
         },
         "donation-confirm": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-dialogs.tsx:541"
         },
         "donation-currency": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "companions": [
                 "data-currency-code"
             ],
@@ -4790,37 +5278,51 @@
         },
         "donation-message": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-dialogs.tsx:417"
         },
         "donation-quantity": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-dialogs.tsx:358"
         },
         "donation-quantity-down": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-dialogs.tsx:305"
         },
         "donation-quantity-up": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-dialogs.tsx:333"
         },
         "donation-review": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-dialogs.tsx:464"
         },
         "donation-share": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-support-card.tsx:96"
         },
         "donation-support-donate": {
             "scope": "donation",
-            "routes": [],
+            "routes": [
+                "/monetization/donation"
+            ],
             "source": "src/features/donation/components/donate-support-card.tsx:83"
         },
         "earnings-day": {
@@ -5112,8 +5614,10 @@
         "membership-cancel": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:494"
@@ -5121,8 +5625,10 @@
         "membership-cancel-confirm": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:533"
@@ -5130,8 +5636,10 @@
         "membership-checkout-dismiss": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/webview/membership-checkout-screen.tsx:220"
@@ -5139,8 +5647,10 @@
         "membership-checkout-done": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/webview/membership-checkout-screen.tsx:240"
@@ -5148,8 +5658,10 @@
         "membership-checkout-failure-dismiss": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/webview/membership-checkout-screen.tsx:270"
@@ -5157,8 +5669,10 @@
         "membership-checkout-failure-retry": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/webview/membership-checkout-screen.tsx:262"
@@ -5166,8 +5680,10 @@
         "membership-checkout-retry": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/webview/membership-checkout-screen.tsx:162"
@@ -5175,8 +5691,10 @@
         "membership-clear-filters": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/my-membership-view.tsx:411"
@@ -5184,8 +5702,10 @@
         "membership-currency": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "companions": [
@@ -5196,8 +5716,10 @@
         "membership-description-expand": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:243"
@@ -5205,8 +5727,10 @@
         "membership-detail-channel-link": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:333"
@@ -5214,8 +5738,10 @@
         "membership-detail-close": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:303"
@@ -5223,8 +5749,10 @@
         "membership-filter": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/my-membership-view.tsx:218"
@@ -5232,8 +5760,10 @@
         "membership-filter-trigger": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/my-membership-view.tsx:232"
@@ -5241,8 +5771,10 @@
         "membership-history-retry": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:699"
@@ -5250,17 +5782,21 @@
         "membership-join": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/join/become-a-member-button.tsx:157"
+            "source": "src/features/membership/components/join/become-a-member-button.tsx:155"
         },
         "membership-join-back": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:366"
@@ -5268,8 +5804,10 @@
         "membership-join-close": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:413"
@@ -5277,8 +5815,10 @@
         "membership-join-confirm": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:375"
@@ -5286,8 +5826,10 @@
         "membership-join-review": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:303"
@@ -5295,8 +5837,10 @@
         "membership-loading": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/my-membership-skeleton.tsx:32"
@@ -5304,8 +5848,10 @@
         "membership-order-privacy": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/webview/order-card.tsx:191"
@@ -5313,8 +5859,10 @@
         "membership-order-terms": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/webview/order-card.tsx:183"
@@ -5322,8 +5870,10 @@
         "membership-renew": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:475"
@@ -5331,8 +5881,10 @@
         "membership-renew-options": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:442"
@@ -5340,8 +5892,10 @@
         "membership-retry": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/my-membership-view.tsx:376"
@@ -5349,8 +5903,10 @@
         "membership-row": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/membership-row.tsx:177"
@@ -5358,8 +5914,10 @@
         "membership-search": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/my-membership-view.tsx:509"
@@ -5367,8 +5925,10 @@
         "membership-sign-in": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/my-membership-view.tsx:333"
@@ -5376,8 +5936,10 @@
         "membership-tabs": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
             "source": "src/features/membership/components/holdings/my-membership-view.tsx:519"
@@ -5385,11 +5947,13 @@
         "membership-view-detail": {
             "scope": "membership",
             "routes": [
+                "/[slug]/membership/[[...tier]]",
                 "/app/[channelSlug]/membership/[packageId]",
                 "/app/dev-checkout",
+                "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/join/become-a-member-button.tsx:128"
+            "source": "src/features/membership/components/join/become-a-member-button.tsx:126"
         },
         "mini-app-add-tab": {
             "scope": "mini-app",
@@ -5616,6 +6180,660 @@
                 "/tos/mini-app"
             ],
             "source": "src/features/mini-app/components/topup-confirm-dialog.tsx:80"
+        },
+        "monetization-analytics-banner": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/analytics-banner.tsx:75"
+        },
+        "monetization-analytics-banner-cta": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/analytics-banner.tsx:101"
+        },
+        "monetization-balance-value": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/revenue-card.tsx:127"
+        },
+        "monetization-banner": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/start-earning-banner.tsx:52"
+        },
+        "monetization-donation-activation": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-setup-form.tsx:286"
+        },
+        "monetization-donation-amount": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-setup-form.tsx:194"
+        },
+        "monetization-donation-display-count": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-setup-form.tsx:277"
+        },
+        "monetization-donation-edit": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-actions-menu.tsx:85"
+        },
+        "monetization-donation-error": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:210"
+        },
+        "monetization-donation-intro": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:261"
+        },
+        "monetization-donation-loading": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard-skeleton.tsx:40"
+        },
+        "monetization-donation-menu": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-actions-menu.tsx:69"
+        },
+        "monetization-donation-range": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:362"
+        },
+        "monetization-donation-range-trigger": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:373"
+        },
+        "monetization-donation-retry": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:216"
+        },
+        "monetization-donation-save": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-setup-form.tsx:323"
+        },
+        "monetization-donation-save-error": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-setup-form.tsx:314"
+        },
+        "monetization-donation-share": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-actions-menu.tsx:77"
+        },
+        "monetization-donation-sign-in": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:239"
+        },
+        "monetization-donation-signed-out": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:233"
+        },
+        "monetization-donation-start": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:311"
+        },
+        "monetization-donation-supporter": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "companions": [
+                "data-donation-id"
+            ],
+            "source": "src/features/monetization/components/supporter-row.tsx:105"
+        },
+        "monetization-donation-supporter-count": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:390"
+        },
+        "monetization-donation-supporter-note": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/supporter-row.tsx:139"
+        },
+        "monetization-donation-supporters-empty": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:475"
+        },
+        "monetization-donation-supporters-error": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:454"
+        },
+        "monetization-donation-supporters-retry": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-dashboard.tsx:461"
+        },
+        "monetization-donation-term": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "companions": [
+                "data-option-value"
+            ],
+            "source": "src/features/monetization/components/donation-setup-form.tsx:237"
+        },
+        "monetization-donation-thanks": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/donation-setup-form.tsx:256"
+        },
+        "monetization-donation-unit": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "companions": [
+                "data-option-value"
+            ],
+            "source": "src/features/monetization/components/donation-setup-form.tsx:158"
+        },
+        "monetization-loading": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/app/(web)/(main)/(rail)/monetization/loading.tsx:31"
+        },
+        "monetization-membership-delete": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-actions-menu.tsx:122"
+        },
+        "monetization-membership-delete-confirm": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-actions-menu.tsx:140"
+        },
+        "monetization-membership-description": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-setup-form.tsx:155"
+        },
+        "monetization-membership-edit": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-actions-menu.tsx:107"
+        },
+        "monetization-membership-error": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:188"
+        },
+        "monetization-membership-fee": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-setup-form.tsx:174"
+        },
+        "monetization-membership-loading": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard-skeleton.tsx:24"
+        },
+        "monetization-membership-member": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "companions": [
+                "data-membership-id"
+            ],
+            "source": "src/features/monetization/components/member-row.tsx:162"
+        },
+        "monetization-membership-member-message": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/member-row.tsx:183"
+        },
+        "monetization-membership-members-empty": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:442"
+        },
+        "monetization-membership-members-error": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:421"
+        },
+        "monetization-membership-members-retry": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:428"
+        },
+        "monetization-membership-menu": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-actions-menu.tsx:90"
+        },
+        "monetization-membership-name": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-setup-form.tsx:87"
+        },
+        "monetization-membership-price": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/price-ladder.tsx:139"
+        },
+        "monetization-membership-price-reselect": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-setup-form.tsx:138"
+        },
+        "monetization-membership-retry": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:194"
+        },
+        "monetization-membership-save": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-setup-form.tsx:208"
+        },
+        "monetization-membership-save-error": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-setup-form.tsx:199"
+        },
+        "monetization-membership-search": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:391"
+        },
+        "monetization-membership-setup-wall": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:234"
+        },
+        "monetization-membership-share": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-actions-menu.tsx:98"
+        },
+        "monetization-membership-sign-in": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:217"
+        },
+        "monetization-membership-signed-out": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:211"
+        },
+        "monetization-membership-start": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:256"
+        },
+        "monetization-membership-tab": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "companions": [
+                "data-tab-id"
+            ],
+            "source": "src/features/monetization/components/membership-dashboard.tsx:363"
+        },
+        "monetization-membership-tier": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-tier-card.tsx:52"
+        },
+        "monetization-membership-tier-name": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-tier-card.tsx:78"
+        },
+        "monetization-membership-tier-price": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/membership-tier-card.tsx:86"
+        },
+        "monetization-methods": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/monetization-view.tsx:196"
+        },
+        "monetization-methods-loading": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/monetization-view.tsx:193"
+        },
+        "monetization-revenue": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/revenue-card.tsx:66"
+        },
+        "monetization-revenue-explain": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/revenue-card.tsx:101"
+        },
+        "monetization-revenue-info": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/revenue-info-dialog.tsx:103"
+        },
+        "monetization-revenue-info-contact": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/revenue-info-dialog.tsx:86"
+        },
+        "monetization-revenue-retry": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/monetization-view.tsx:171"
+        },
+        "monetization-revenue-value": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/revenue-card.tsx:87"
+        },
+        "monetization-sign-in": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/monetization-view.tsx:99"
+        },
+        "monetization-signed-out": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/monetization-view.tsx:93"
+        },
+        "monetization-withdraw": {
+            "scope": "monetization",
+            "routes": [
+                "/monetization",
+                "/monetization/donation",
+                "/monetization/membership"
+            ],
+            "source": "src/features/monetization/components/revenue-card.tsx:141"
         },
         "my-star-actions": {
             "scope": "my-star",
@@ -5964,6 +7182,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6000,6 +7219,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6036,6 +7256,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6072,6 +7293,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6108,6 +7330,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6144,6 +7367,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6180,6 +7404,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6216,6 +7441,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6252,6 +7478,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6288,6 +7515,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6324,6 +7552,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6360,6 +7589,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6396,6 +7626,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6432,6 +7663,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6468,6 +7700,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6504,6 +7737,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6540,6 +7774,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6576,6 +7811,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6612,6 +7848,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6648,6 +7885,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6684,6 +7922,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6720,6 +7959,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6756,6 +7996,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6792,6 +8033,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6831,6 +8073,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6870,6 +8113,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6909,6 +8153,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6948,6 +8193,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -6984,6 +8230,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7020,6 +8267,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7059,6 +8307,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7095,6 +8344,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7131,6 +8381,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7167,6 +8418,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7203,6 +8455,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7239,6 +8492,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7278,6 +8532,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7314,6 +8569,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7350,6 +8606,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7386,6 +8643,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7422,6 +8680,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7458,6 +8717,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7494,6 +8754,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7530,6 +8791,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7566,6 +8828,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7602,6 +8865,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7638,6 +8902,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7674,6 +8939,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7710,6 +8976,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7746,6 +9013,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7782,6 +9050,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7821,6 +9090,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7857,6 +9127,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7893,6 +9164,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7929,6 +9201,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -7965,6 +9238,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -8001,6 +9275,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -8037,6 +9312,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -8073,6 +9349,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -8109,6 +9386,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -8145,6 +9423,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -8181,6 +9460,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -8217,6 +9497,7 @@
                 "/identification",
                 "/letter",
                 "/moderation",
+                "/monetization",
                 "/my-space",
                 "/my-star",
                 "/my-wallet",
@@ -9942,7 +11223,7 @@
                 "/gift-premium",
                 "/premium"
             ],
-            "source": "src/features/premium/components/gift-premium-top-bar.tsx:105"
+            "source": "src/features/premium/components/gift-premium-top-bar.tsx:117"
         },
         "premium-gift-bar": {
             "scope": "premium",
@@ -9950,7 +11231,7 @@
                 "/gift-premium",
                 "/premium"
             ],
-            "source": "src/features/premium/components/gift-premium-top-bar.tsx:70"
+            "source": "src/features/premium/components/gift-premium-top-bar.tsx:71"
         },
         "premium-gift-catalogue-retry": {
             "scope": "premium",
@@ -10157,7 +11438,7 @@
                 "/gift-premium",
                 "/premium"
             ],
-            "source": "src/features/premium/components/premium-manage-button.tsx:73"
+            "source": "src/features/premium/components/premium-manage-button.tsx:102"
         },
         "premium-plan": {
             "scope": "premium",
@@ -10354,37 +11635,37 @@
             "companions": [
                 "data-option-value"
             ],
-            "source": "src/features/share/components/share-dialog.tsx:186"
+            "source": "src/features/share/components/share-dialog.tsx:190"
         },
         "share-channels-next": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:438"
+            "source": "src/features/share/components/share-dialog.tsx:442"
         },
         "share-channels-prev": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:431"
+            "source": "src/features/share/components/share-dialog.tsx:435"
         },
         "share-preview": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:563"
+            "source": "src/features/share/components/share-dialog.tsx:574"
         },
         "share-qr-code": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:165"
+            "source": "src/features/share/components/share-dialog.tsx:169"
         },
         "share-sheet": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:142"
+            "source": "src/features/share/components/share-dialog.tsx:146"
         },
         "share-sheet-header": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:158"
+            "source": "src/features/share/components/share-dialog.tsx:162"
         },
         "star-transfer-amount": {
             "scope": "star-transfer",

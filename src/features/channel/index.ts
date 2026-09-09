@@ -70,11 +70,23 @@ export { FOLLOWED_ORDERINGS } from './api/types'
  * are otherwise unreachable without a signed-in account that has actually blocked someone.
  * Same reason `features/identification` exports `IdentityOutcome`.
  */
+/**
+ * The instruction screen behind `/@ada?startapp&addToHomeScreen`, rendered by
+ * `app/add-home-screen/[slug]` — a route outside `(web)` and therefore outside the shell, which is
+ * why the screen is a component here rather than markup in the page.
+ */
+export { AddHomeScreenGuide } from './components/add-home-screen-guide'
 export { BlockedAccountRow } from './components/blocked-account-row'
 export { BlockedAccountsSkeleton } from './components/blocked-accounts-skeleton'
 export { BlockedAccountsView } from './components/blocked-accounts-view'
 export { ChannelEmptyState } from './components/channel-empty-state'
 export { ChannelLiveEventScreen } from './components/channel-live-event-screen'
+/**
+ * The space's manifest link, which has to be put in `<head>` by hand — Next streams metadata into
+ * the body and Chromium only reads a manifest that is a child of the head. The component's
+ * docblock carries the measurement.
+ */
+export { ChannelManifestLink } from './components/channel-manifest-link'
 /**
  * Exported for the account drawer's profile card, which writes the signed-in account's own
  * name and has to put the same mark after it as the channel header does. The rule it encodes
@@ -133,6 +145,23 @@ export { MySpaceRedirect } from './components/my-space-redirect'
 export { SpaceVisibilityOption } from './components/space-visibility-option'
 export { SpaceVisibilityView } from './components/space-visibility-view'
 /**
+ * The follower / member / post counts and the owner's `income_usd`, for a slug.
+ *
+ * Exported for **`features/monetization`**, whose hub is legacy's `useChannelStats(myChannel.slug)`
+ * verbatim — the headline figure on `/monetization` is this endpoint's `income_usd` and nothing else.
+ *
+ * It sits above the "deliberately not exported" list below rather than in it, and the distinction is
+ * the one that list is really about: what is withheld is `channelStatsApi`, so nobody calls axios
+ * from a component. A sibling feature reaching for the **hook** gets the query key too, which is the
+ * whole point — `/monetization` and a creator's own space then share one cache entry instead of
+ * asking the same microservice twice under two keys, which is the disagreement the socket note in
+ * `CLAUDE.md` warns about in the other direction.
+ *
+ * `app/` still may not use it: a page mounts a feature's view, and every view that needs these
+ * numbers is inside one.
+ */
+export { useChannelStats } from './hooks/use-channel-stats'
+/**
  * Shared with `features/navigation`, whose Privacy & security screen prints the number in a
  * sentence. One constant, because a duration that is prose in one place and behaviour in another is
  * the drift this codebase keeps paying for — see the note on the constant itself.
@@ -164,7 +193,13 @@ export {
  * rule itself is stated on `movePinnedFollowedChannel`.
  */
 export { movePinnedRow } from './lib/following-page'
-export { BLOCKED_ACCOUNTS_ART, FOLLOW_REQUESTS_ART, FOLLOWING_ART } from './lib/illustrations'
+export {
+    BLOCKED_ACCOUNTS_ART,
+    /** The space-not-found wall's picture — read by `(rail)/[slug]/not-found.tsx`. */
+    CHANNEL_NOT_FOUND_ART,
+    FOLLOW_REQUESTS_ART,
+    FOLLOWING_ART,
+} from './lib/illustrations'
 /**
  * The routes the account drawer's "Space visibility", "Blocked accounts" and "Follow requests"
  * rows point at.
@@ -187,7 +222,7 @@ export { MyChannelProvider, useMyChannel } from './providers/my-channel-provider
 
 /**
  * Deliberately **not** exported, so `app/` cannot reach past the feature's own composition:
- * `channelApi`, `channelStatsApi`, `useChannel`, `useChannelStats`, `useChannelOwnership`,
+ * `channelApi`, `channelStatsApi`, `useChannel`, `useChannelOwnership`,
  * `channelVisibility`, `paramsFromNextUrl`, and every formatting helper. A component calling
  * `channelApi` directly is exactly what CLAUDE.md's "never call axios from components" forbids,
  * and exporting it is the invitation.

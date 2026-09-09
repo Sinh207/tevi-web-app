@@ -4,10 +4,11 @@ import { useRequireAuth } from '@features/auth'
 import { PageBackBar } from '@features/navigation'
 import {
     ActionMenu,
+    ActionMenuAnchor,
     ActionMenuContent,
     ActionMenuItem,
-    ActionMenuTrigger,
 } from '@shared/components/action-menu'
+import { BarIconButton } from '@shared/components/bar-icon-button'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
@@ -199,25 +200,44 @@ export function McnPartnershipView() {
                              * this app that carries a page-level action carries it as a kebab.
                              */
                             <ActionMenu>
-                                <ActionMenuTrigger
-                                    data-testid="channel-mcn-partnership-menu"
-                                    aria-label={t('mcn_partnership_actions')}
-                                    /*
-                                     * `aria-disabled` while a request is in flight, and the kebab
-                                     * **stays mounted** — the distinction this repo draws wherever
-                                     * a control opens a dialog. The dialog returns focus here when
-                                     * it closes; unmounting the trigger at that exact moment (which
-                                     * is what gating the render on `isBusy` did) drops focus to the
-                                     * document and sends a keyboard reader to the top of the page
-                                     * by their own confirmation.
-                                     *
-                                     * Nothing slips through: reopening the menu mid-flight reaches
-                                     * a dialog whose Confirm is `disabled` while `pending`.
-                                     */
-                                    aria-disabled={isBusy || undefined}
-                                >
-                                    <Icon name="more-vertical" size={20} className="size-5" />
-                                </ActionMenuTrigger>
+                                {/*
+                                 * `ActionMenuAnchor` + `BarIconButton`, which is what every other
+                                 * **bar** menu in this app is — `NotificationBarActions`,
+                                 * `MembershipActionsMenu`, `DonationActionsMenu`,
+                                 * `ChannelViewerMenu`. It was `ActionMenuTrigger` with a
+                                 * `more-vertical`: the row-sized kebab the primitive draws for a
+                                 * *list row*, which in the bar's trailing cluster is a bare glyph
+                                 * with no disc, sitting opposite a 40px back button — visibly not
+                                 * the same kind of control. The anchor paints nothing and still
+                                 * stamps `aria-haspopup` / `aria-expanded`, so the skin is the
+                                 * sub-page bar's own disc and the ARIA contract is unchanged.
+                                 * `more-horizontal` for the same reason: it is the glyph the four
+                                 * bars above use, and it is symmetric under RTL.
+                                 */}
+                                <ActionMenuAnchor
+                                    render={
+                                        <BarIconButton
+                                            data-testid="channel-mcn-partnership-menu"
+                                            name="more-horizontal"
+                                            label={t('mcn_partnership_actions')}
+                                            /*
+                                             * `aria-disabled` while a request is in flight, and the
+                                             * kebab **stays mounted** — the distinction this repo
+                                             * draws wherever a control opens a dialog. The dialog
+                                             * returns focus here when it closes; unmounting the
+                                             * trigger at that exact moment (which is what gating
+                                             * the render on `isBusy` did) drops focus to the
+                                             * document and sends a keyboard reader to the top of
+                                             * the page by their own confirmation.
+                                             *
+                                             * Nothing slips through: reopening the menu mid-flight
+                                             * reaches a dialog whose Confirm is `disabled` while
+                                             * `pending`.
+                                             */
+                                            aria-disabled={isBusy || undefined}
+                                        />
+                                    }
+                                />
                                 <ActionMenuContent>
                                     <ActionMenuItem
                                         data-testid="channel-mcn-partnership-leave"
@@ -447,17 +467,24 @@ function RevenueSplitCard({
 
             {/*
              * The fee caveat. Legacy tints it `gray.25` and paints the mark `#FFB800`; the DS pair
-             * for "a note you should read, and it is not an error" is the warning tint block, whose
-             * ink and ground are drawn to sit together — `docs/DESIGN_SYSTEM.md` and this repo's own
-             * note that an accent *ink* on the page ground fails AA in Light.
+             * for "a note you should read, and it is not an error" is the warning tint block.
+             *
+             * ⚠ **The tint is warning; the sentence is not.** `--accents-warning-active` on
+             * `--accents-warning-bg-active` measures **2.84** in Light — `docs/DESIGN_SYSTEM.md` §6b
+             * is about exactly this, and its heading is the rule: the accent inks *are for marks*.
+             * They also do not flip, so the pair only reads as broken at one end (5.81 in Dark),
+             * which is why a dark-mode screenshot passes it. `--text-body` is **4.67 / 6.66**, and it
+             * is what legacy actually paints this line (`gray.500` on `gray.25`, 5.50) as well as
+             * what `FollowingLimitNotice` — the same feature's other warning notice — settled on for
+             * the same reason. The **glyph** keeps the accent: that is the mark §6b means.
              */}
             <div className="px-3 pb-3">
-                <p className="type-caption-meta flex items-start gap-2 rounded-(--radius-lg) bg-(--accents-warning-bg-active) p-2 text-(--accents-warning-active)">
+                <p className="type-caption-meta flex items-start gap-2 rounded-(--radius-lg) bg-(--accents-warning-bg-active) p-2 text-(--text-body)">
                     <Icon
                         name="exclamation-triangle"
                         weight="filled"
                         size={16}
-                        className="mt-px flex-none"
+                        className="mt-px flex-none text-(--accents-warning-active)"
                         aria-hidden="true"
                     />
                     <span>{t('mcn_partnership_fees_note')}</span>
@@ -545,11 +572,32 @@ function LeavePendingCard({
                 )}
 
                 <div className="flex items-center gap-3">
-                    <p className="type-caption-meta flex flex-1 items-start gap-2 rounded-(--radius-lg) bg-(--accents-indigo-bg-active) p-3 text-(--accents-indigo-active)">
+                    {/*
+                     * **The tint stays, the sentence does not take the accent** — the same
+                     * correction as the fee caveat above, so the screen's two notes are one
+                     * treatment rather than two.
+                     *
+                     * It shipped as `--accents-indigo-active` on the indigo tint: **3.62 in Light
+                     * and 4.40 in Dark**, the only block on the screen failing AA in *both* modes,
+                     * and the one that exists to be read. `--text-title` is
+                     * `docs/DESIGN_SYSTEM.md` §6b's named pair for exactly this shape — a tinted
+                     * note block, as `TwoStepVerificationDialog`'s reset note and
+                     * `PayoutConfirmDialog`'s ETA strip both draw it — and measures **17.92 /
+                     * 17.69**. The **glyph** keeps the accent: §6b's heading is that the accent inks
+                     * are for marks.
+                     *
+                     * Legacy's own pair here is brand purple on `#EEE9F9`, and
+                     * `--background-brand` / `--text-on-brand` would port that literally (5.98 /
+                     * 4.99, §6a). Not taken: in Dark that tint is `--primary-400`, which put a block
+                     * the same weight as the accent button beside it — measured on the comps' own
+                     * layout, the note read as a second CTA. The hue this screen shipped is kept and
+                     * only the ink is corrected.
+                     */}
+                    <p className="type-caption-meta flex flex-1 items-start gap-2 rounded-(--radius-lg) bg-(--accents-indigo-bg-active) p-3 text-(--text-title)">
                         <Icon
                             name="info-circle"
                             size={18}
-                            className="mt-px flex-none"
+                            className="mt-px flex-none text-(--accents-indigo-active)"
                             aria-hidden="true"
                         />
                         <span>{t('mcn_partnership_pending_note')}</span>

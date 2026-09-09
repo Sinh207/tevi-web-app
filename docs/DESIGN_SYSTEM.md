@@ -334,6 +334,30 @@ Neither has a `loading.tsx`, so there was no third place to paint — check for 
 anything else, because a skeleton on the page colour under a surface-coloured screen is the visible
 half of getting this wrong.
 
+⚠ **And the skeleton's own blocks have to survive the ground they land on.** The mismatch this
+section warns about is a *colour* mismatch; the one that actually shipped is worse and quieter — a
+`--background-surface` placeholder on a surface-painted screen is not the wrong colour, it is
+**invisible**, so the block silently stops being reserved and everything under it moves when the data
+arrives. `MembershipDashboardSkeleton` draws its hero in the tier card's own tint for that reason.
+
+✅ **`BarIconButton`'s disc was invisible on every screen this rule aligned.** The 40px disc every
+sub-page bar wears is filled `--background-surface` — which is the bar's *own* colour below `md` on
+any screen following this section, measured at **1.00** on `/my-wallet/transaction-history`,
+`/redeem-gift-code` and `/identification`. The control read as a bare chevron, and it only ever looked
+right on the page-coloured half of the rule. **Fixed 2026-09-09** in
+`shared/components/bar-icon-button.tsx`, not per screen: the disc carries a
+`--button-secondary-border` hairline, so it has its own edge instead of relying on a ground it cannot
+predict from the call site. See §6a — this is that rule applied to the one component it kept catching.
+
+| border token | bar `#ffffff` | bar `#f4f4f5` | bar `#18181b` | bar `#000000` |
+|---|---|---|---|---|
+| `--separator-default` | 1.27 | 1.15 | 1.19 | 1.41 |
+| **`--button-secondary-border`** | **1.48** | **1.34** | **1.70** | **2.01** |
+
+Short of 1.4.11's 3:1, and deliberately: that clause covers what *identifies* a control, which here is
+the glyph (**19.9** Light / **17.7** Dark against the fill). The disc is shaping. A hairline heavy
+enough to hit 3:1 against white is `--zinc-400`, which is a border nobody drew.
+
 The codebase is no longer mixed on this rule. If a screen turns up flat on `--background` below `md`,
 it is either a **multi-block** screen (below) or it was missed.
 
@@ -345,9 +369,35 @@ and painting `<main>` with the surface there would be wrong rather than merely d
 rows are `--background-surface` themselves, so the gaps between the blocks would stop reading as gaps.
 
 That arrangement is `web-app`'s (`tabCurrency/index.js` is a `Stack gap='12px'` of cards on an
-ungutter'd container, and its own hero is a gradient, its options card `#FFFFFF`), so the boundary
-between the two treatments is: **one block of content → the screen is the surface; several → the page
-colour separates them.**
+ungutter'd container, and its own hero is a gradient, its options card `#FFFFFF`).
+
+### …unless none of its blocks is a plain surface card
+
+**The count of blocks is not the test.** Re-read the paragraph above: what makes the surface wrong on
+`/my-wallet` is that the action rows *are* `--background-surface`, so painting the screen with it
+dissolves the gaps. A multi-block screen whose blocks do not have that property has no such failure,
+and then the phone gets what the top of this section says a phone should get — one plane from the
+status bar down.
+
+`/monetization/membership` is the worked example (`MEMBERSHIP_SCREEN` + `MEMBERSHIP_PANEL` +
+`MEMBERSHIP_LIST_PANEL` in `features/monetization/lib/container.ts`). It stacks a tier card over a
+members list and still paints every state's plane below `md`, because:
+
+- the **tier card** is `--primary-50` inside a `--primary-300` hairline, so it reads as its own object
+  against any ground and never needed page colour to separate it;
+- the **members list** is the one block running to the bottom and is already `fullBleed`, so merging
+  with the plane is the behaviour this section asks for rather than a lost gap. The panel's own
+  `ListHeader` rule is what divides the two.
+
+So the question to ask, in order:
+
+1. **Is every block either tinted, outlined, or full-bleed to the bottom?** → paint the screen. The
+   gaps were never carrying the separation.
+2. **Is any block a plain `--background-surface` card floating in the column?** → page colour, and
+   only the bottom-most block takes `fullBleed`. `/my-wallet` and `/my-star`.
+
+Pinned in `e2e/wallet.spec.ts` for the second case, so "make the two wallet routes match" still fails
+a test.
 
 What those two screens *do* share with the rule is the panel's two ends. `LedgerPanel`'s **`fullBleed`**
 makes the ledger full-bleed below `md` (`-mx-4 rounded-none`) and a card from `md` up — the same pair,

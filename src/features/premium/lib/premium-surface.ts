@@ -147,6 +147,59 @@ export const PREMIUM_ON_HERO = 'text-white'
 export const PREMIUM_ON_HERO_MUTED = 'text-white/80'
 
 /**
+ * **The paint a bar control wears while the band is behind it** — the frosted-glass treatment both
+ * ends of the Premium bars take, and the one place its four values live.
+ *
+ * ## Why the controls are not simply white
+ *
+ * Legacy's back button is a solid white disc over the violet, and this repo ported it as one
+ * (`BarIconButton`, whose fill is `--background-surface`). It is *faithful* and it is the wrong
+ * object on this screen: two opaque white pills are the brightest thing on a near-black band, so the
+ * eye lands on the chrome before the mark, the pitch and the price — the three things the band
+ * exists to show. Glass puts them back in the right order without making either control harder to
+ * find, which is what "more premium" means here in a form that can be measured rather than argued.
+ *
+ * ## Light glass on a dark ground, not the DS's dark scrim
+ *
+ * The DS *does* draw an on-media treatment — `App Bar`'s `Theme=Overlay`, a `#1d1d1dd9` fill under a
+ * `#ffffff33` hairline — and it is the wrong half of the pair here. That scrim is drawn for a bar
+ * over **photography**, where the ground's brightness is unknown and a dark plate is the only thing
+ * that can guarantee white ink reads. This band's ground is known and it is *already* near-black
+ * (`PREMIUM_HERO_RAMP` holds `#040013` for the bar's whole height), so a dark scrim on it is a disc
+ * that disappears. The hairline is the DS's idea, lifted: an edge of light is what makes glass an
+ * object rather than a smudge.
+ *
+ * `white/14` over the band's `#040013`–`#14003a` composites to about `#2b1f52`, so white ink sits at
+ * roughly 11:1 — well past AA — and the `white/30` edge reads about 1.9 against its own fill, which
+ * is the ratio `bar-icon-button.tsx` measured its way to (`--separator-default`'s 1.19 was the one
+ * that vanished). Fixed `white/*` and not a token, for the reason the whole file gives: the band is
+ * the same near-black-to-violet in both themes, so anything that flipped with the mode would be
+ * wrong in one of them.
+ *
+ * **No `backdrop-blur` of its own.** Glass here is the *paint*, not a filter: what is behind these
+ * two controls is a flat vertical gradient, and blurring a gradient returns the same gradient. The
+ * bar already carries legacy's `blur(10px)` for the content that scrolls under it, which is the only
+ * place a blur has anything to do.
+ *
+ * ⚠ It is only ever half of a pair — see {@link PREMIUM_CONTROL_FLIP}. A control that took this
+ * paint unconditionally would be white-on-white the moment the band scrolled away.
+ */
+export const PREMIUM_CONTROL_ON_HERO = cn(
+    'border-white/30 bg-white/[0.14] text-white',
+    'hover:not-disabled:bg-white/25',
+)
+
+/**
+ * What a bar control carries in **both** states: the bar's own 300ms colour transition.
+ *
+ * The bar cross-fades its ground and its title over 300ms (legacy's `transition: background 0.3s`,
+ * finally wired — see either bar's note), and a control that flipped at `Button`'s own 120ms would
+ * arrive at the new paint while the bar was still crossing to it. Same duration, same easing, so the
+ * whole bar reads as one object changing state rather than three.
+ */
+export const PREMIUM_CONTROL_FLIP = 'transition-colors duration-300'
+
+/**
  * How thick the Premium mark is, in px — the width of the edge `PremiumMark` turns onto.
  *
  * 9 against a 100px face, which is a little under a tenth: enough to read as a solid object at the

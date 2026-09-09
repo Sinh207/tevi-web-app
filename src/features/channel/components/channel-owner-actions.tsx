@@ -12,6 +12,7 @@ import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import Link from 'next/link'
 import type { Channel } from '../api/types'
+import { useOwnerDeepLink } from '../hooks/use-owner-deep-link'
 import { CUSTOM_PROFILE_PATH } from '../lib/routes'
 
 /**
@@ -36,9 +37,18 @@ import { CUSTOM_PROFILE_PATH } from '../lib/routes'
  * one already in props avoids a second source of truth for the address in the link — and the
  * report screen compares the two again on arrival anyway, because the endpoint ignores the slug
  * entirely (`features/earnings/api/earnings-api.ts`).
+ *
+ * ## It also answers the space's deep links, for the owner
+ *
+ * `/@ada/direct-donation` and `/@ada/membership` open a dialog for a visitor and mean something else
+ * entirely for the creator, who cannot buy from themselves — `useOwnerDeepLink` sends them to the
+ * screen that manages the thing instead. It lives on this row for the reason that hook sets out at
+ * length: this component *is* the set of readers the redirect is right for, so every wall that hides
+ * the row withholds it for free.
  */
 export function ChannelOwnerActions({ channel }: { channel: Channel }) {
     const { t } = useTranslation()
+    useOwnerDeepLink()
 
     return (
         /*

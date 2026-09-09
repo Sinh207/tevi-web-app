@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { STORAGE_KEYS, storage } from '@shared/lib/storage'
 import { render, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from './locale-provider'
 import { bundles } from './resources'
 import { useTranslation } from './use-translation'
@@ -28,6 +28,38 @@ import { useTranslation } from './use-translation'
  * does not translate, so the assertion was reading the English fallback and would have passed
  * against a switch that did nothing.
  */
+/**
+ * The server's half of the switch.
+ *
+ * `LocaleProvider` re-requests the route's RSC payload whenever the language moves away from the
+ * one the server rendered, because `getServerT()` resolved every server-rendered string from the
+ * `tevi.locale` cookie during a request that is already over. Mocked here rather than provided, so
+ * the call itself is the assertion — without it a screen whose text is entirely server-rendered
+ * ignores the picker.
+ */
+const refresh = vi.fn()
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }))
+
+/**
+ * A one-shot switch that makes the *next* chunk fetch fail, with the real loader behind it — the
+ * other tests in this file need the genuine dynamic import, so the module is wrapped rather than
+ * replaced.
+ */
+const failNextLoad = vi.hoisted(() => ({ value: false }))
+vi.mock('./locale-bundles', async importOriginal => {
+    const actual = await importOriginal<typeof import('./locale-bundles')>()
+    return {
+        ...actual,
+        loadLocaleBundle: async (lng: string) => {
+            if (failNextLoad.value) {
+                failNextLoad.value = false
+                return null
+            }
+            return actual.loadLocaleBundle(lng)
+        },
+    }
+})
+
 const KEY = Object.keys(bundles.ko).find(
     key => key in bundles.vi && bundles.ko[key] !== bundles.vi[key],
 ) as string
@@ -48,6 +80,7 @@ function renderProbe(locale: string, bundle = bundles[locale] ?? null) {
 
 beforeEach(() => {
     storage.remove(STORAGE_KEYS.locale)
+    refresh.mockClear()
 })
 
 describe('the locale the page was served in', () => {
@@ -102,6 +135,46 @@ describe('switching to a locale the client was not shipped', () => {
         expect(storage.get(STORAGE_KEYS.locale)).toBe('ko')
         expect(document.documentElement.lang).toBe('ko')
         expect(document.documentElement.dir).toBe('ltr')
+    })
+
+    /**
+     * The half `i18n.changeLanguage` cannot reach: 80 files render their strings with
+     * `getServerT()`, from the cookie, on the server.
+     *
+     * The cookie assertion is the ordering one, and it is the whole reason `changeLanguage` writes
+     * it before the switch: the refresh is triggered *by* `languageChanged`, so a cookie written
+     * afterwards would have the server re-render in the language being left behind — a bug that
+     * looks exactly like no fix at all.
+     */
+    it('re-requests the server-rendered half, with the new cookie already written', async () => {
+        const read = renderProbe('vi')
+        await read().changeLanguage('ko')
+        expect(refresh).toHaveBeenCalledTimes(1)
+        expect(document.cookie).toContain('tevi.locale=ko')
+    })
+
+    /** Switching back to the locale the server rendered needs no second round trip. */
+    it('does not refresh when the client agrees with the server again', async () => {
+        const read = renderProbe('vi')
+        await read().changeLanguage('ko')
+        refresh.mockClear()
+        await read().changeLanguage('vi')
+        expect(refresh).not.toHaveBeenCalled()
+    })
+
+    /**
+     * A chunk that never arrives leaves the language alone, so there is nothing for the server to
+     * re-render either — and a refresh there would replace the screen with one in the *old*
+     * language while the reader is still looking at their own choice failing.
+     */
+    it('does not refresh when the bundle could not be loaded', async () => {
+        const read = renderProbe('vi')
+        failNextLoad.value = true
+        // `id`, and not one of the locales the tests above switch to: a bundle already registered
+        // on the shared i18next instance is never fetched, so the failure would not be reached.
+        await read().changeLanguage('id')
+        expect(refresh).not.toHaveBeenCalled()
+        expect(read().currentLanguage).toBe('vi')
     })
 
     /** `ar` is supported for RTL but not offered in the switcher; a switch to it still flips dir. */

@@ -107,6 +107,23 @@ export const CHANNEL_WALL_ART = {
 } as const
 
 /**
+ * "Uh-oh! This Space isn't available!" — the wall behind `/@{slug}`'s `not-found.tsx`.
+ *
+ * Legacy's `IMAGES_STATIC.channel.notFound` (`channel/not-found.svg`), drawn at **227×225** in
+ * `containers/channel/.../viewer/components/noData`. This screen is where that picture comes from;
+ * `MCN_INVITATION_ART.invalid` below is legacy *reusing* it for the expired-invitation wall, so the
+ * two states share **one** file and the row in `build-cdn-art.mjs` (`channel-not-found`) is the
+ * same one — 1.71 MB of base64 PNG behind an SVG `<pattern>` upstream, 56 KB rasterised at 2× the
+ * box it is drawn in.
+ *
+ * Two constants over one shared name on purpose: they are two product states, and the day Brand
+ * draws a dedicated picture for either, only that line moves.
+ */
+export const CHANNEL_NOT_FOUND_ART = {
+    space: { src: '/illustrations/channel/not-found.webp', width: 227, height: 225 },
+} as const
+
+/**
  * "Thanks for reporting" — the confirmation after a report is filed.
  *
  * Real vector art (6.7 KB of paths, no raster anywhere), so it is committed as `.svg` and served
@@ -163,11 +180,35 @@ export const FOLLOWING_ART = {
  * `channel/not-found.svg`, **1.71 MB** of base64 PNG behind a `<pattern>` — the same shape as the
  * `suspended` and `unpublished` walls above, and the same trade: rasterised at 2× the 227×225 box
  * legacy draws it in, it is 56 KB. Legacy reuses its space-not-found art for this state rather than
- * commissioning one, and so does this.
+ * commissioning one, and so does this — it is the *same file* `CHANNEL_NOT_FOUND_ART` above points
+ * at, and that is where the picture belongs.
  *
  * Both rows are in `scripts/build-cdn-art.mjs`, so `pnpm art` reproduces them.
  */
 export const MCN_INVITATION_ART = {
     hero: { src: '/illustrations/channel/invitation-banner.webp', width: 612, height: 408 },
     invalid: { src: '/illustrations/channel/not-found.webp', width: 227, height: 225 },
+} as const
+
+/**
+ * The phone mock-up on the "add this space to your home screen" screen — a home screen with one
+ * **empty slot**, which `AddHomeScreenGuide` fills with the creator's own avatar.
+ *
+ * Legacy's `IMAGES_STATIC.addToHomeScreen.addToHomeScreenBanner`, and the one piece of art in this
+ * feature whose source is a **JPEG** rather than a raster-in-an-SVG (17.6 KB, 1143×1280) — so it is
+ * committed for the second reason `docs/STATIC_ASSETS.md` gives rather than the first: there is
+ * nothing to rescue, but a screen whose only content is a picture and two sentences should not wait
+ * on the optimiser fetching another host.
+ *
+ * ⚠ **329 tall, where legacy declares 323.** That is the source's own aspect at 294 wide, and here
+ * it is load-bearing rather than pedantic: the avatar is positioned as a percentage of this box, so
+ * a box whose ratio is not the picture's slides it off the slot. The `build-cdn-art.mjs` row says
+ * the same thing from the encoder's side.
+ *
+ * The picture's ground is **white and it has no alpha** — it is a photograph of a home screen, not
+ * a cut-out — which is why the component draws it on a `--white` tile in both themes instead of on
+ * the page. Recolouring it is not on the table: this script changes bytes, not pictures.
+ */
+export const ADD_HOME_SCREEN_ART = {
+    phone: { src: '/illustrations/channel/add-home-screen.webp', width: 294, height: 329 },
 } as const

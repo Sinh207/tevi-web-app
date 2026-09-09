@@ -1,10 +1,11 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import type { Channel } from '../api/types'
 import { liveEvents } from '../lib/channel-live'
 import { isExternalArrival } from '../lib/live-entry'
+import { parseChannelIntent } from '../routes'
 
 /**
  * Takes a visitor who arrived **from outside** at a space that is **on air** straight to the live.
@@ -28,13 +29,27 @@ import { isExternalArrival } from '../lib/live-entry'
  *
  * The ref guard is for React's development double-effect, which would otherwise fire the navigation
  * twice.
+ *
+ * ## A deep link outranks it
+ *
+ * `/@ada/direct-donation` is a stated intent; being on air is a fact about the space. Sending
+ * someone who followed a donation link into a live room answers a question they did not ask, and
+ * the dialog they came for never opens — it is mounted on the space page they were taken off.
+ *
+ * This is not new behaviour being fixed so much as newly visible: legacy's `?action=` deep links
+ * were swallowed the same way, silently, because nothing on the way in could tell an intent from an
+ * ordinary arrival. The intent is only **read** here, never consumed — the control that owns the
+ * dialog is the one that spends it.
  */
 export function ChannelLiveRedirect({ channel }: { channel: Channel }) {
     const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
     const fired = useRef(false)
+    const deepLinked = parseChannelIntent(pathname, searchParams) !== null
 
     useEffect(() => {
-        if (fired.current) return
+        if (fired.current || deepLinked) return
         const live = liveEvents(channel)[0]
         if (!live?.code) return
         if (
@@ -48,7 +63,7 @@ export function ChannelLiveRedirect({ channel }: { channel: Channel }) {
         }
         fired.current = true
         router.replace(`/@${channel.slug}/event/${encodeURIComponent(live.code)}`)
-    }, [channel, router])
+    }, [channel, deepLinked, router])
 
     return null
 }

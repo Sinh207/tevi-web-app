@@ -21,6 +21,14 @@ function get(url: string) {
     })
 }
 
+/** The path a rewrite renders, or `null` when the response is not one. */
+function rewriteTarget(response: Response): string | null {
+    // `NextResponse.rewrite` says so with this header rather than a status — from the outside a
+    // rewritten request is an ordinary 200, which is the whole point of using one here.
+    const target = response.headers.get('x-middleware-rewrite')
+    return target ? new URL(target).pathname : null
+}
+
 /** Where a response sends the reader, or `null` when it lets the request through. */
 function redirectTarget(response: Response): string | null {
     if (response.status < 300 || response.status >= 400) return null
@@ -54,5 +62,89 @@ describe('proxy — the ledger paths', () => {
     it('leaves /my-wallet itself alone', () => {
         // The design narrowed this address rather than moving it, and the mobile apps link to it.
         expect(redirectTarget(proxy(get('/my-wallet')))).toBeNull()
+    })
+})
+
+describe('proxy — the space deep links', () => {
+    /**
+     * The same regression as the ledger above, in the direction that is easy to re-introduce.
+     *
+     * These two paths used to be redirects to `/@{slug}?action=…`, matching legacy. They are real
+     * routes now, and a redirect in front of a real route is invisible from the code that renders
+     * it: the page compiles, the URL answers, and the reader never reaches it.
+     */
+    it('serves the donation and membership deep links rather than redirecting them', () => {
+        expect(redirectTarget(proxy(get('/@ada/direct-donation')))).toBeNull()
+        expect(redirectTarget(proxy(get('/@ada/membership')))).toBeNull()
+        expect(redirectTarget(proxy(get('/@ada/membership/12')))).toBeNull()
+    })
+
+    /** The old rule matched only a literal `@`, so this spelling used to miss it and 404. */
+    it('serves the percent-encoded spelling too', () => {
+        expect(redirectTarget(proxy(get('/%40ada/direct-donation')))).toBeNull()
+    })
+
+    /** Legacy's query spelling is not a proxy concern at all — the page reads it. */
+    it('leaves ?action= alone', () => {
+        expect(redirectTarget(proxy(get('/@ada?action=direct_donation')))).toBeNull()
+        expect(rewriteTarget(proxy(get('/@ada?action=become_a_member')))).toBeNull()
+    })
+})
+
+describe('proxy — the add-to-home-screen screen', () => {
+    /**
+     * `/@ada?startapp&addToHomeScreen` is legacy's instruction screen, and the URL is the contract:
+     * legacy's manifest pointed installs at it and shared links carry it. A **rewrite** is what
+     * keeps that address while rendering a route outside the shell — a redirect would move the
+     * reader off the space's URL, and rendering it in place would put our own tab bar over the
+     * "bottom bar" step 1 tells them to look at.
+     */
+    it('renders the guide for the channel URL carrying both markers', () => {
+        expect(rewriteTarget(proxy(get('/@ada?startapp&addToHomeScreen')))).toBe(
+            '/add-home-screen/@ada',
+        )
+        /*
+         * Bare markers, which is how legacy writes them (`'startapp' in query`) — so the value is
+         * the empty string and any test on a value would miss. Order does not matter either.
+         *
+         * The trailing slash survives: `NextURL` re-applies the request's own to whatever pathname
+         * is assigned. It costs nothing — measured against the dev server, `/@ada/?…` answers a 308
+         * to the slash-less URL (`trailingSlash: false`) and *that* request rewrites cleanly.
+         */
+        expect(rewriteTarget(proxy(get('/@ada/?addToHomeScreen&startapp')))).toBe(
+            '/add-home-screen/@ada/',
+        )
+        // The `@` may arrive percent-encoded; `parseChannelSlug` decodes the segment downstream.
+        expect(rewriteTarget(proxy(get('/%40ada?startapp&addToHomeScreen')))).toBe(
+            '/add-home-screen/%40ada',
+        )
+    })
+
+    /**
+     * `?startapp` alone is what an **installed** space launches with (`channelStartUrl`), so it has
+     * to render the space itself. This is the assertion that keeps a home-screen icon from opening
+     * the instructions for creating it.
+     */
+    it('leaves the space alone without both markers', () => {
+        expect(rewriteTarget(proxy(get('/@ada?startapp')))).toBeNull()
+        expect(rewriteTarget(proxy(get('/@ada?addToHomeScreen')))).toBeNull()
+        expect(rewriteTarget(proxy(get('/@ada')))).toBeNull()
+    })
+
+    /**
+     * The `@` is required, exactly as it is for the two `REDIRECTS` above: without it the pattern
+     * matches every single-segment path, and `/settings?startapp&addToHomeScreen` would render a
+     * space's instruction screen for a route that is not a space.
+     */
+    it('needs a channel URL, not any single segment', () => {
+        expect(rewriteTarget(proxy(get('/settings?startapp&addToHomeScreen')))).toBeNull()
+        expect(rewriteTarget(proxy(get('/?startapp&addToHomeScreen')))).toBeNull()
+        // Two segments is a sub-page of a space, not the space.
+        expect(rewriteTarget(proxy(get('/@ada/event?startapp&addToHomeScreen')))).toBeNull()
+    })
+
+    /** The screen's own address answers directly too, and must not be rewritten onto itself. */
+    it('does not rewrite the route it rewrites onto', () => {
+        expect(rewriteTarget(proxy(get('/add-home-screen/@ada')))).toBeNull()
     })
 })

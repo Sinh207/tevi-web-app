@@ -21,11 +21,11 @@ import { useNsfwGate } from '../hooks/use-nsfw-gate'
  * `220px` spacer standing in for a header nobody could see — and the only way out was a Close button
  * that left the site.
  *
- * As a panel, the space renders its **identity**: name, handle, stats. What is withheld is the
- * content — the tabs are replaced by this — along with the art and the creator's own writing: the
- * cover and avatar are blurred and the description and links are not drawn at all (the caller's
- * call; on a space it is `ChannelHeader`'s `blurred`). The reader can see whose space it is and
- * decide.
+ * As a panel, the space renders its **identity**: name, handle, stats, and the description that
+ * says what it is. What is withheld is the content — the tabs are replaced by this — along with the
+ * art and the creator's destinations: the cover and avatar are blurred and the links are not drawn
+ * at all (the caller's call; on a space it is `ChannelHeader`'s `blurred`). The reader can see
+ * whose space it is and decide.
  *
  * ## Two faces, and they are mutually exclusive
  *

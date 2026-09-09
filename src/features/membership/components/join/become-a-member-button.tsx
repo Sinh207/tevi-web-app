@@ -1,11 +1,12 @@
 'use client'
 
+import { channelBasePath, parseChannelIntent } from '@features/channel/routes'
+import { useUrlIntent } from '@shared/hooks/use-url-intent'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
-import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { MembershipTarget } from '../../api/types'
 import { useJoinFlow } from '../../hooks/join/use-join-flow'
 /*
@@ -70,13 +71,17 @@ import { BecomeAMemberDialogs } from './become-a-member-dialogs'
  * post's unlock sheet, a live room's exclusive rail) calls that hook and mounts
  * `<BecomeAMemberDialogs/>` itself rather than reaching for this button.
  *
- * ## `?action=become_a_member` is opened here
+ * ## The membership deep link is opened here
  *
- * `proxy.ts` already rewrites legacy's `/@ada/membership/{id}` into this query parameter, so the old
- * URL keeps resolving after the cutover. Stripped with `history.replaceState` rather than
- * `router.replace` for the two reasons `use-channel-tab.ts` sets out — the route reads
- * `searchParams`, so a Next navigation would re-run the server component, and the back button should
- * mean "leave this space".
+ * `/@ada/membership` is a route of its own, and legacy's `/@ada/membership/{id}` and
+ * `?action=become_a_member` both still resolve to it — `parseChannelIntent` reads every spelling and
+ * ignores the tier id, since there is one offer per space for it to select from.
+ *
+ * `useUrlIntent().consume()` answers `true` exactly once, which is what keeps React's development
+ * double-effect and an unstable `open` identity from opening two dialogs. It takes the link back out
+ * of the address bar with `history.replaceState` rather than `router.replace`, for the two reasons
+ * `use-channel-tab.ts` sets out — a Next navigation would re-run the route's server component, and
+ * the back button should mean "leave this space".
  */
 export function BecomeAMemberButton({
     target,
@@ -90,14 +95,11 @@ export function BecomeAMemberButton({
     className?: string
 }) {
     const { t } = useTranslation()
-    const pathname = usePathname()
-    const searchParams = useSearchParams()
     const flow = useJoinFlow(target)
     const { offer, isMember, membership, canOffer, open } = flow
     const [detailOpen, setDetailOpen] = useState(false)
 
-    const deeplinked = useRef(false)
-    const wanted = searchParams.get('action') === 'become_a_member'
+    const { intent, consume } = useUrlIntent(parseChannelIntent, channelBasePath)
     /*
      * The link lands on whichever dialog the press would have opened — legacy routes both through one
      * `handleClick`, so a member following an old `/@ada/membership/{id}` URL sees their membership
@@ -106,17 +108,13 @@ export function BecomeAMemberButton({
     const deeplinkTarget = isMember && membership ? 'detail' : canOffer ? 'join' : null
 
     useEffect(() => {
-        // Once per page, and only once there is something to open — before that, nothing to do.
-        if (!wanted || !deeplinkTarget || deeplinked.current) return
-        deeplinked.current = true
-
-        const params = new URLSearchParams(searchParams.toString())
-        params.delete('action')
-        const query = params.toString()
-        window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
+        // Only once there is something to open — before that, `consume` must not be spent on a beat
+        // where the answer would be "nothing happens".
+        if (intent !== 'become_a_member' || !deeplinkTarget) return
+        if (!consume()) return
         if (deeplinkTarget === 'detail') setDetailOpen(true)
         else open()
-    }, [wanted, deeplinkTarget, open, pathname, searchParams])
+    }, [intent, deeplinkTarget, consume, open])
 
     // A member keeps the control even with nothing on sale — see the note above.
     if (!offer && !isMember) return null

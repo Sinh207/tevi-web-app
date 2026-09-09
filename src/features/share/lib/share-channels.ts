@@ -17,13 +17,6 @@ import type { TeviIconName } from '@shared/ui/icon-names'
  *
  * ## What is deliberately not here
  *
- * - **WhatsApp.** Legacy's third-most prominent row, and the design system has **no WhatsApp
- *   glyph** — not in the Figma library and not in `tevi-icons.extra.svg`. `CLAUDE.md` allows pulling
- *   a missing glyph from upstream Zappicon only where a screen cannot work without it (a two-state
- *   toggle, where one drawing cannot express two states); a share row works with one row fewer, so
- *   the honest answer is to say the glyph is missing rather than substitute a shape or hand-draw a
- *   path. Adding it later is one entry in this array: `wire: 'whatsapp'`,
- *   `target: url => 'https://wa.me/?text=' + …`, brand `#25D366`.
  * - **WhatsApp.** Legacy's third-most prominent row, and it cannot be ported as it stands: the
  *   design system has **no WhatsApp glyph** (not in the Figma library, and upstream Zappicon v1.2.0
  *   was checked — it carries no brand marks at all), and legacy's own button does not have one

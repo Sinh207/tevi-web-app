@@ -17,10 +17,10 @@ import { CHANNEL_PADDING } from '../lib/container'
  *
  * Now the space renders: name, handle, stats, the follow button — everything except what the gate is
  * actually about. **The tabs are replaced by this**; the cover and avatar come through blurred and
- * the description and links do not come through at all (`ChannelHeader`'s `blurred`, `ChannelBio`'s
- * `withheld`). What is withheld is the content, the art and whatever the creator wrote or points
- * at, which is what "sensitive" refers to; a display name is not sensitive, and hiding it only hid
- * the address.
+ * the links do not come through at all (`ChannelHeader`'s `blurred`, `ChannelBio`'s `withheld`).
+ * What is withheld is the content, the art and wherever the creator points, which is what
+ * "sensitive" refers to; a display name is not sensitive and neither is the line saying what the
+ * space is — hiding those only hid the address and the answer to the gate's own question.
  *
  * Legacy renders the real space behind its dialog and blurs the backdrop, so the same information is
  * on screen — but its content is *there*, merely out of focus, which a blur cannot be trusted to

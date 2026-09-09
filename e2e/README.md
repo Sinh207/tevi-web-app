@@ -62,6 +62,25 @@ flow is not built is a real `disabled` control rather than a faded one that stil
 that only the app-only option raises the QR prompt — plus the auth-gated-action rule above (a guest
 gets the login dialog and keeps the URL).
 
+And [`add-home-screen.spec.ts`](add-home-screen.spec.ts) — **installing a space**, which is three
+claims with no other surface. The space's manifest must *replace* the site's rather than sit beside
+it (two `<link rel="manifest">` tags render identically and the browser uses the first, so the
+assertion is a **count**); the instruction screen is reached by a proxy **rewrite**, so what proves
+it works is one URL answering with another route's markup while keeping its own address; and
+`?startapp` **alone** — what an installed space launches with — must still render the space, because
+the alternative is a home-screen icon that opens the instructions for creating it. That last one is
+also the feature's one deliberate divergence from legacy, whose `start_url` does exactly that.
+
+And [`channel-deep-link.spec.ts`](channel-deep-link.spec.ts) — the space's **deep links**,
+`/@{slug}/direct-donation` and `/@{slug}/membership[/{id}]`, which used to be `proxy.ts` redirects
+into `/@{slug}?action=…`. Three claims with no other surface: a redirect put back in front of either
+route is invisible from the code that renders it (the page compiles, the URL answers, the reader
+lands elsewhere), so the assertion is the **response's** own URL; the share card is server-rendered
+metadata, and describing the offer rather than the space is the entire reason these are routes; and
+a **stale tier id** must answer 200 rather than 404, since one offer per space means the id selects
+nothing and old shared links carry deleted ones. Legacy's `?action=` spelling is pinned beside them,
+because those URLs are in histories and cannot be retired.
+
 Two things worth knowing before adding a spec:
 
 - The server starts from `next build && next start`, not `next dev`, because `generateMetadata`,

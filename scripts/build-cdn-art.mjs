@@ -438,12 +438,205 @@ const SOURCES = [
         box: { width: 400, height: 250 },
         scale: 2,
     },
+    /*
+     * `/monetization/membership`'s four pieces — the creator's own membership dashboard.
+     *
+     * `crown` and `membership-banner` are the two halves of the hero card (a mark bleeding off the
+     * leading edge, a mascot on the trailing one); `membership-overview` is the wall an account with
+     * no tier sees; `no-paid-post` is the "no members yet" mark inside the list. All four are PNGs
+     * legacy points `<Image>` at, so they are here for the reason every raster row here is — the
+     * optimiser fetching and decoding cross-origin on a screen somebody is waiting on — and because
+     * a rendering screen may depend on no other host.
+     *
+     * ⚠ **Three of the four declare a height legacy does not.** Legacy passes `width`/`height` pairs
+     * that do not match the source's aspect (229×153 over a 408×323 file), which squashes them in
+     * MUI; Tailwind's preflight sets `height: auto`, so here the browser would draw the real ratio
+     * into a box reserved at the wrong shape and everything under it would jump. Each height below is
+     * therefore the source's own ratio at legacy's width — the same call `no-payouts-yet` makes, and
+     * for the same reason.
+     */
+    {
+        name: 'membership-overview',
+        out: 'monetization/membership-overview.webp',
+        url: `${CDN}/web/web-app/monetization/img-membership-overview.png`,
+        // 229 is legacy's width; 181 is that width at the source's own 408×323.
+        box: { width: 229, height: 181 },
+        scale: 2,
+    },
+    {
+        name: 'membership-banner',
+        out: 'monetization/membership-banner.webp',
+        url: `${CDN}/web/web-app/monetization/img-membership-banner.png`,
+        // Legacy draws it `width: 170, height: 'auto'`; 92 is 170 at the source's 427×232.
+        box: { width: 170, height: 92 },
+        scale: 2,
+    },
+    {
+        name: 'membership-crown',
+        out: 'monetization/crown.webp',
+        url: `${CDN}/web/web-app/monetization/img-crown.png`,
+        /*
+         * Legacy puts this in a 140×140 box with `object-fit: contain`, so 140 square is the *slot*
+         * and not the drawing: contained, a 358×254 source paints 140×99. Encoding the slot would
+         * bake in two transparent bands and reserve a box a third taller than the mark.
+         */
+        box: { width: 140, height: 99 },
+        scale: 2,
+    },
+    {
+        name: 'no-members-yet',
+        out: 'monetization/no-members.webp',
+        url: `${CDN}/web/web-app/monetization/img-no-paid-post.png`,
+        // 380×254 is exactly 2× legacy's 190×127 box, like `no-follow-requests`. Nothing to rescue.
+        box: { width: 190, height: 127 },
+        scale: 2,
+    },
+    /*
+     * `/monetization/donation`'s two pieces — the creator's own direct-donation dashboard.
+     *
+     * `donation` is the wall an account with no donation setting sees; `no-supporters` is the mark
+     * inside the supporters list. Both are PNGs legacy points `<Image>` at, so they are here for the
+     * reason every raster row here is, and because a rendering screen may depend on no other host.
+     *
+     * ⚠ **Neither declares a height legacy does not** — unusually for this block. `img-donation.png`
+     * is 748×420 and legacy draws it 374×210, which is exactly half, and `img-no-active-members.png`
+     * is 193×194 against legacy's 95×95 square. So the three-row warning above does not apply to
+     * these two: the boxes are legacy's *and* the sources' own ratio, and `scale: 2` lands inside
+     * both sources with nothing upscaled.
+     */
+    {
+        name: 'donation-intro',
+        out: 'monetization/donation.webp',
+        url: `${CDN}/web/web-app/monetization/img-donation.png`,
+        box: { width: 374, height: 210 },
+        scale: 2,
+    },
+    {
+        name: 'no-supporters',
+        out: 'monetization/no-supporters.webp',
+        /*
+         * **`img-no-active-members.png`, and it is not `no-members.webp`'s source.** That row above
+         * takes `img-no-paid-post.png`, because legacy's *membership* list draws that one. Legacy's
+         * supporters list draws this one, and the two are different files at different resolutions —
+         * so pointing this at the existing WebP would be a quiet substitution of one design's mark
+         * for another's.
+         */
+        url: `${CDN}/web/web-app/monetization/img-no-active-members.png`,
+        box: { width: 95, height: 95 },
+        scale: 2,
+    },
+    /*
+     * `/monetization`'s two pieces — the "Start earning with Tevi" banner mark and the illustration
+     * over the revenue explainer. Both are PNGs legacy points `<Image>` at, so `next/image` already
+     * serves a small AVIF; they are here for the other half of the cost every raster row here is here
+     * for, and because CLAUDE.md's rule is that a rendering screen depends on no other host.
+     */
+    {
+        name: 'monetization-banner',
+        out: 'monetization/banner.webp',
+        /*
+         * Legacy draws it `width: 100, height: 'auto'` in the banner's bottom-trailing corner, so the
+         * height is the source's own 272×182 ratio at that width rather than a number off the comp.
+         * 2× lands on 200×134, inside the source, so nothing is upscaled.
+         */
+        box: { width: 100, height: 67 },
+        url: `${CDN}/web/web-app/monetization/img-banner.png`,
+        scale: 2,
+    },
+    {
+        name: 'paid-interactions',
+        out: 'monetization/paid-interactions.webp',
+        /*
+         * The revenue-info dialog's illustration: legacy renders it 229 wide inside a 131-tall stack.
+         * `scale: 2` asks for 458 and the source is 440, so the clamp trims it to the source's own
+         * resolution — which is the point of the clamp and not a miss.
+         */
+        box: { width: 229, height: 131 },
+        url: `${CDN}/web/web-app/monetization/img-paid-interactions.png`,
+        scale: 2,
+    },
     ...[1, 2, 3].map(n => ({
         name: `brand-logo-${n}`,
         out: `brand-assets/logo-${n}.svg`,
         url: `${CDN}/web/web-landing/brand-assets/logo-${n}.svg`,
         mode: 'copy',
     })),
+    /*
+     * The 404 and 500 screens — `app/not-found.tsx` and `app/error.tsx`.
+     *
+     * Both illustrations are the familiar shape: a Figma **image** layer exported as SVG, so 186 KB
+     * and **696 KB** of base64 PNG behind a `<pattern>` that `next/image` passes through untouched.
+     * Rasterised at 2x the boxes legacy draws them in they are a few tens of KB each.
+     *
+     * These two matter more than the rest of this file, not less. A 500 is by definition a page
+     * rendered while something upstream is unwell, and a 404 is the one screen a crawler is
+     * guaranteed to fetch; neither can afford to depend on a second host being healthy. Committing
+     * them is the difference between "the error page" and "the error page, without its picture".
+     */
+    {
+        name: 'error-404',
+        out: 'errors/404.webp',
+        url: `${CDN}/web/web-app/errors/404.svg`,
+        // Legacy's own `width`/`height`. The embedded raster is 1198 wide, so 2x (1072) does not clamp.
+        box: { width: 536, height: 312 },
+        scale: 2,
+    },
+    {
+        name: 'error-500',
+        out: 'errors/500.webp',
+        url: `${CDN}/web/web-app/errors/500.svg`,
+        /*
+         * 328x312 is legacy's declared box against a file whose own viewBox is 328x313 — a
+         * one-pixel squash that is legacy's, kept for the reason `identity-intro` keeps its five
+         * percent: this script changes the bytes, not the picture on the screen.
+         */
+        box: { width: 328, height: 312 },
+        scale: 2,
+    },
+    /*
+     * The pastel mesh behind both of them — legacy's `errors/bg.png`, a **CSS `background-image`
+     * with `cover`**, which means no optimiser ever sees it and the browser downloads all 844 KB of
+     * a 2880x2048 PNG to tint one screen.
+     *
+     * `box` is half the source at its own 1.406 ratio and `scale: 1`, the same call
+     * `membership/tier-bg`, `star-transfer/balance-bg` and `premium/backdrop` make: a `cover`
+     * background on a viewport-width element has no fixed box to encode against, and this
+     * particular picture is nothing but smooth gradients, which is the one thing WebP encodes
+     * almost for free. Halving it costs nothing visible even upscaled across a 2560px desktop.
+     *
+     * It is drawn **in Light only** — see `ERROR_ART` in `shared/lib/error-art.ts` for why a mesh
+     * of near-white pastels cannot be the ground of a dark page.
+     */
+    {
+        name: 'error-backdrop',
+        out: 'errors/backdrop.webp',
+        url: `${CDN}/web/web-app/errors/bg.png`,
+        box: { width: 1440, height: 1024 },
+        scale: 1,
+    },
+    /*
+     * The phone mock-up on the "add this space to your home screen" screen — a home screen with one
+     * empty slot, which the component fills with the creator's own avatar.
+     *
+     * The **first JPEG** this script has been given (17.6 KB, 1143×1280), which is why `mimeOf` and
+     * `rasterWidth` now know about the format: before, `mimeOf` threw on it by design and
+     * `rasterWidth` would have reported "no ceiling" for anything that is not a PNG.
+     *
+     * `box` is 294 wide — legacy's own — but **329 tall rather than its 323**, which is the source's
+     * own 1143×1280 ratio at that width. Everywhere else in this file legacy's squash is kept
+     * deliberately, and here it cannot be: the avatar is positioned as a *percentage of this box*,
+     * so a box whose aspect is not the picture's would slide the avatar off the empty slot it is
+     * supposed to sit in. Legacy has the same 2% to spend and spends it by overflowing its
+     * container instead (`layout='responsive'` keeps the ratio and renders 294×329 inside a 323-tall
+     * div).
+     */
+    {
+        name: 'add-home-screen',
+        out: 'channel/add-home-screen.webp',
+        url: `${CDN}/home/image-add-to-home-screen.jpeg`,
+        box: { width: 294, height: 329 },
+        scale: 2,
+    },
 ]
 
 /** The gift-code and star-transfer scripts' 0.85 — same kind of art, checked by eye at 2×. */
@@ -460,15 +653,44 @@ function rasterWidth(bytes) {
     const png = buffer => (buffer.subarray(0, 8).toString('binary') === '\x89PNG\r\n\x1a\n'
         ? buffer.readUInt32BE(16)
         : null)
-    const direct = png(bytes)
+    const direct = png(bytes) ?? jpegWidth(bytes)
     if (direct !== null) return direct
 
     const embedded = /base64,([A-Za-z0-9+/=]+)/.exec(bytes.toString('utf8'))
     return embedded ? png(Buffer.from(embedded[1], 'base64')) : null
 }
 
+/**
+ * A JPEG's width, by walking its marker segments to the frame header.
+ *
+ * There is no fixed offset to read: a JPEG is a chain of `FF xx <length>` segments and the
+ * dimensions live in whichever start-of-frame comes first — `FFC0` for a baseline file, `FFC2` for
+ * a progressive one, and the CDN's is progressive. Returning `null` for anything else keeps this
+ * honest: `rasterWidth`'s `null` means "no ceiling", so guessing here would let a `scale` bump
+ * silently upscale a source.
+ */
+function jpegWidth(bytes) {
+    if (bytes.readUInt16BE(0) !== 0xffd8) return null
+    let offset = 2
+    while (offset + 9 < bytes.length) {
+        if (bytes[offset] !== 0xff) return null
+        const marker = bytes[offset + 1]
+        // SOF0/1/2/3 and the arithmetic-coded 9/10/11 — but never C4 (Huffman tables), C8
+        // (reserved) or CC (arithmetic tables), which sit in the same range and are not frames.
+        if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+            return bytes.readUInt16BE(offset + 7)
+        }
+        // Length includes its own two bytes and excludes the marker's.
+        offset += 2 + bytes.readUInt16BE(offset + 2)
+    }
+    return null
+}
+
 function mimeOf(url, bytes) {
     if (url.endsWith('.svg')) return 'image/svg+xml'
+    // Before the `add-home-screen` row this function threw on a JPEG. The check is on the bytes,
+    // not the extension, because the SVG-wrapping-a-PNG sources here are named `.svg`.
+    if (bytes.readUInt16BE(0) === 0xffd8) return 'image/jpeg'
     if (rasterWidth(bytes) !== null) return 'image/png'
     throw new Error(`${url}: cannot tell what this is — add a case here rather than guessing`)
 }

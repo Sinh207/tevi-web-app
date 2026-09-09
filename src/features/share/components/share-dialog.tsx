@@ -133,10 +133,14 @@ export function ShareDialog({
     return (
         <Dialog open={open} onOpenChange={close}>
             {/*
-             * 512, which is legacy's `maxWidth` — not the DS dialog's 370. Six discs at legacy's own
-             * measurements (48 wide, 16 apart) need 464 of clear width, and the preview's 64px
-             * thumbnail plus two lines of text needs the rest. At 370 the row would scroll on a
-             * desktop, which is the one width legacy never scrolls at.
+             * 512, which is legacy's `maxWidth` — not the DS dialog's 370.
+             *
+             * It does not make the channel row fit, and nothing would: legacy runs that row on a
+             * Swiper (`freeMode`, six slides per view at ≥900 and five below) over eight buttons, so
+             * it scrolls at every width it has ever shipped at. 512 is what keeps the *preview*
+             * whole — a 64px thumbnail plus a full short link on one line — and what puts six of the
+             * seven discs on screen, which is legacy's own desktop count. `ChannelRow` below owns
+             * the seventh and the arrows that reach it.
              */}
             <DialogContent
                 data-testid="share-sheet"
@@ -548,6 +552,13 @@ function ChannelRowArrow({
  * A missing thumbnail collapses the slot instead of drawing a placeholder square: legacy falls back
  * to *the signed-in reader's own* channel thumb (`myChannel.images.thumb`), which is how a shared
  * post ends up previewed with the sharer's face. Nothing is a better fallback than the wrong thing.
+ *
+ * That refusal has a cost, and it is the caller's to pay. Legacy leans on the fallback at three of
+ * its own call sites — the two monetization settings menus and the DM setting pass no `image` at
+ * all — and there the fallback is *right*, because the sharer owns the thing being shared. Dropping
+ * it silently drops the picture, which is a banner with a hole in it rather than a visible bug. So
+ * every caller here passes `image` explicitly, the two menus passing `myChannel.images.thumb`
+ * themselves; a new one that can name its content must do the same.
  */
 function SharePreview({
     title,
