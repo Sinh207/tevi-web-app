@@ -3,6 +3,7 @@ import { ApiError } from '@shared/lib/api/errors'
 import { ANON_SCOPE, invalidateETagCache } from '@shared/lib/api/interceptors/etag'
 import { createApiModel } from '@shared/lib/api/model'
 import { type PageCursor, paramsFromNextUrl } from '@shared/lib/api/page-cursor'
+import { count, nullableText, nullableTimestamp } from '@shared/lib/api/wire'
 import { z } from 'zod'
 
 /**
@@ -57,34 +58,13 @@ export const nsfwAppealKeys = {
         ['nsfw-appeal', 'posts', accountId ?? 'anon', cursor ?? null] as const,
 }
 
-/** ISO out, seconds or milliseconds in — the same normalisation `features/channel` applies. */
-const nullableTimestamp = z
-    .unknown()
-    .transform(value => {
-        const raw =
-            typeof value === 'number'
-                ? value
-                : typeof value === 'string' && /^\d+$/.test(value.trim())
-                  ? Number(value.trim())
-                  : null
-        if (raw !== null) {
-            if (!Number.isFinite(raw) || raw <= 0) return null
-            const date = new Date(raw < 1e11 ? raw * 1000 : raw)
-            return Number.isNaN(date.getTime()) ? null : date.toISOString()
-        }
-        if (typeof value !== 'string') return null
-        const trimmed = value.trim()
-        if (trimmed === '') return null
-        return Number.isNaN(new Date(trimmed).getTime()) ? null : trimmed
-    })
-    .catch(null)
-
-const nullableText = z
-    .unknown()
-    .transform(v => (typeof v === 'string' && v.trim() ? v.trim() : null))
-    .catch(null)
-
-const count = z.coerce.number().int().nonnegative().catch(0)
+/*
+ * `nullableTimestamp`, `nullableText` and `count` were declared here as hand-copies of
+ * `features/channel`'s. They now come from `@shared/lib/api/wire`, which is where they moved
+ * *because* of this copy: the one here had drifted (a one-expression trim, and no `nullableId` at
+ * all), and since every one of these helpers fails by returning `null`, a wrong copy discards a
+ * field rather than throwing.
+ */
 
 /** `{ h, w, uri }` — the post payload's own picture shape, used by `images[]` and `cover_image`. */
 const pictureSchema = z.looseObject({ uri: nullableText })

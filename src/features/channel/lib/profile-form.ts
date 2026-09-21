@@ -452,38 +452,14 @@ export function buildChannelPatch(
 
 // ── uploads ───────────────────────────────────────────────────────────────────────────────
 
-/**
- * The extension for an object key, from the blob's MIME type.
- *
- * `image/jpeg` → `jpg` and `video/quicktime` → `mov`, both because that is what the storage
- * bucket and every player expect to see. Anything unrecognised falls back to the subtype, and a
- * blob with no type at all falls back to `jpg` — legacy's behaviour, and the only wrong outcome
- * it can produce is an oddly-named object.
+/*
+ * `fileExtension`, `UploadKind` and `uploadKey` moved to `@shared/lib/api/upload-key` when a second
+ * feature needed to name an object and could not import this one — see that file's header. They are
+ * re-exported here so this feature's own call sites are unchanged, and because a bucket-key shape
+ * shared with a shipped app should have exactly one definition.
  */
-export function fileExtension(file: Blob): string {
-    const type = file.type
-    if (!type) return 'jpg'
-    const [kind, subtype = ''] = type.split('/')
-    if (kind === 'image') return subtype === 'jpeg' ? 'jpg' : subtype || 'jpg'
-    if (kind === 'video') return subtype === 'quicktime' ? 'mov' : subtype || 'mp4'
-    return subtype || 'jpg'
-}
-
-/** What kind of object a key names. `ct` thumb, `cc` cover, `ctv` thumb video — legacy's. */
-export type UploadKind = 'ct' | 'cc' | 'ctv'
-
-/**
- * The storage object name — `{channelId}-{kind}-{timestamp}.{ext}`, exactly legacy's shape.
- *
- * The timestamp is load-bearing rather than decorative: these URLs are served from a CDN, and an
- * avatar written to a stable key would keep serving the previous picture from every edge that
- * still had it cached. A changed image has to change its URL.
- */
-export function uploadKey(
-    channelId: string,
-    kind: UploadKind,
-    extension: string,
-    now: number = Date.now(),
-): string {
-    return `${channelId}-${kind}-${now}.${extension}`
-}
+export {
+    fileExtension,
+    type UploadKind,
+    uploadKey,
+} from '@shared/lib/api/upload-key'

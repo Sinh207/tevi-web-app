@@ -3038,6 +3038,108 @@ misses them.
 
 ---
 
+## B105 — the **post payload**: nine viewer-relative fields, and a price that can be `0` · **`features/post` parses six fields nothing documents**
+
+`core/v1/posts/…` is the widest payload in the product and no schema covers it. `api/types.ts`
+transcribes legacy's spellings; these are the ones the card's behaviour actually turns on.
+
+1. **Can a gated post carry `price: 0`?** `postUnlockPrice` refuses it — a confirmation reading
+   "unlock for 0" is a charge nobody agreed to — so such a post shows a bare *Unlock* pill and its
+   press falls through to whatever `postIntent` found. If `0` is real and means *free*, the post
+   should not be gated at all and the answer is a backend fix, not a client one. If it is a
+   placeholder for "not set", confirm and we keep refusing.
+2. **Is `viewer` a closed set?** The client tests exactly one value — `'STARGAZERS'` — because that
+   is the only one legacy tests. `isLocked` therefore reads *"gated **and** the backend says
+   STARGAZERS **and** `need_unlock_package`"*, and any other value means **unlocked**. A new value
+   meaning *still locked* opens every paywalled post to everybody. What else can it be?
+3. **`need_unlock_package` describes the post, not the reader** — it stays `true` after a purchase.
+   Confirmed by the payload that produced the `POST_PURCHASED` fixture. Please confirm it is
+   intentional and not a bug being relied on, because the client now depends on it.
+4. **`_insights` is author-only.** Modelled as `{ post_total_revenue }` and nullable; the card hides
+   the strip at `0`. Is the figure in **USD** or in the account's own earnings currency? It is
+   currently multiplied by the reader's exchange rate, which assumes USD.
+5. **`channel.promote`** — `{ referral_url, app_name, app_icon_url }`. Only `referral_url` is treated
+   as required. Are the other two guaranteed when `promote` is present?
+6. **`channel.has_mini_app` / `mini_app_url` / `mini_app_id`** — the client requires all three
+   together (legacy's own gate). Can the flag ever be `true` with either of the others absent, and
+   if so what should the banner do?
+
+Encoded in: `features/post/api/types.ts`, `lib/post-access.ts`, `lib/post-intent.ts`.
+
+---
+
+## B106 — the bookmark `success` flag: can a 2xx mean "did not land"? · **the client treats a 2xx without it as a failure**
+
+`POST v1/posts/bookmark/` answers `201`, `DELETE v1/posts/{id}/bookmark/` answers `200`, and legacy
+flips its local state only when the body *also* carries `success: true`. Ported as-is, which is why
+bookmarking is confirm-then-flip where reacting is optimistic.
+
+Two questions, and the second is the one that costs something:
+
+- **Can `success` be `false` on a 2xx at all?** If not, the flag is decoration and the control can
+  flip optimistically like the reaction does.
+- **Is the flag guaranteed present?** The client treats an **absent** flag as a yes, deliberately —
+  the strict reading (`success === true`) would turn every bookmark into a silent failure the day the
+  backend stopped sending it, and nobody would notice until users did.
+
+Also: the two halves disagree about where the id goes — **body** on the add (`{ post_id }`), **path**
+on the delete. Confirmed as intentional (the add endpoint is the same one that *lists* bookmarks, so
+the path is spoken for), but worth stating so nobody "tidies" them into one shape.
+
+Encoded in: `features/post/api/post-api.ts`, `hooks/use-post-bookmark.ts`.
+
+---
+
+## B107 — the **paid-interaction charge**: what `quantity` means, whether the ids are stable, and who reverses a half-finished charge · **money moves on three guesses**
+
+A space can charge Star to react or to comment. The client now takes that Star — before this it drew
+the price and charged nothing, so readers interacted free on spaces that sell interaction.
+
+The charge is `POST billy/v1/ecom/purchase/` with legacy's body verbatim:
+
+```json
+{ "product_id": "…", "price_id": "…", "quantity": 5, "metadata": { "beneficial_channel_id": "…" } }
+```
+
+1. **`quantity` carries the price, not a count.** Legacy passes `paidInteractionStarCost` into that
+   slot (`handlePurchase(channelId, type, cost)`). Transcribed rather than corrected, because a
+   reading of "quantity means how many" would send `1` and charge the wrong amount. Which is it?
+2. **Are the catalogue ids environment-independent?** `REACT_POST` and `COMMENT_POST` are hard-coded
+   UUID pairs from legacy's `constants/productType.js`; there is no endpoint that lists them. If
+   staging and production mint different ids this breaks as a `422`, not as a type error.
+3. **Is there a reversal when the second request fails?** The client charges **first** and reacts
+   second, bailing out if the charge fails — legacy's ordering, and the only one that cannot react
+   for free. But a charge that succeeds followed by a reaction that fails leaves Star spent on
+   nothing, and no client can refund it. Does the backend reverse it, or should the two be one call?
+4. **Does `422 EC0001` mean "not enough Star" here too?** The client branches on it (the same code
+   `features/mini-app` uses on this endpoint) to offer a top-up rather than a failure toast. Confirm
+   the code is stable for this product, since the alternative is a reader told "it failed" when the
+   fix was one tap away.
+
+Encoded in: `features/post/api/post-api.ts` (`INTERACTION_PRODUCTS`, `chargeInteraction`),
+`hooks/use-post-reaction.ts`, `hooks/use-post-unlock.ts`.
+
+---
+
+## B108 — the **post report** body: is `description` optional, and are the reason ids prefixed? · **two report calls in one product disagree**
+
+`POST core/v1/report/report/posts/{id}/`.
+
+- **`description`**: legacy **omits the key** when the note is empty on the *post* endpoint and
+  **always sends it** on the *channel* one. The client sends it unconditionally on both, on the
+  grounds that an empty string is a valid "no note" and one product should not have two shapes for
+  one field. Confirm the post endpoint accepts `""`.
+- **The reason ids**: `GET …/post/contents/` is assumed to return `POST_`-prefixed types, mirroring
+  the channel list's `CHANNEL_`. The prefix is stripped to build the copy key
+  (`post_report_reason_*`), with the backend's own `text` behind it — so a wrong guess costs English
+  labels, not a broken list. What are the real ids?
+- The list is cached **device-wide** (`shared: true`, 24h): it is assumed not to vary by bearer.
+  Correct?
+
+Encoded in: `features/post/api/post-report-api.ts`.
+
+---
+
 ## Closed
 
 Answered and acted on. Kept as one line so the `Bnn` references in the code still resolve; the

@@ -72,6 +72,14 @@ export const TESTID_SURFACES: Record<string, TestIdSurface> = {
     notification: { kind: 'screen', label: 'Notifications' },
     payment: { kind: 'screen', label: 'Buy Star, cards, checkout' },
     payout: { kind: 'screen', label: 'Payout tracking' },
+    /**
+     * The post card is mounted by whatever feed is on screen — the channel page today, home and
+     * search later — rather than by a route of its own, which is why the scope is the feature and
+     * not a segment. A card's identity is `data-card-id`, never part of the id: post ids are
+     * backend-chosen and interpolating one would break the selector on the first id containing a
+     * separator (`docs/TEST_IDS.md` §3).
+     */
+    post: { kind: 'screen', label: 'Post card' },
     premium: {
         kind: 'screen',
         label: 'Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone',

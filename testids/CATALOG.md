@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-811 ids across 27 surfaces.
+811 ids across 28 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -882,6 +882,12 @@ Routes: `/my-wallet/payout-method`, `/my-wallet/payout-request`, `/my-wallet/pay
 | `payout-sign-in` | — | `src/features/payout/components/payout-tracking-view.tsx:107` |
 | `payout-stripe-terms` | — | `src/features/payout/components/payout-config-form.tsx:186` |
 
+## `post` — Post card
+
+_Not attributed._
+
+_No ids yet._
+
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone
 
 Routes: `/gift-premium`, `/premium`
@@ -1033,6 +1039,17 @@ name; you need it to know the element exists.
 | `OtpInput` | `src/features/auth/components/otp-input.tsx` | `-digit` |
 | `TotalBalanceCard` | `src/features/my-wallet/components/total-balance-card.tsx` | `-count` |
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
+| `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
+| `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
+| `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
+| `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
+| `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` |
+| `PostLockPanel` | `src/features/post/components/post-lock-panel.tsx` | `-label` `-title` |
+| `PostMediaLightbox` | `src/features/post/components/post-media-lightbox.tsx` | `-close` `-label` `-next` `-overlay` `-prev` `-slide` |
+| `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-panel` `-remove` `-trigger` |
+| `PostNsfwGuard` | `src/features/post/components/post-nsfw-guard.tsx` | `-close` `-reveal` `-title` `-trigger` |
+| `PostReportDialog` | `src/features/post/components/post-report-dialog.tsx` | `-close` `-confirm` `-description` `-input` `-option` `-retry` `-submit` `-title` |
+| `PostUnlockDialogs` | `src/features/post/components/post-unlock-dialogs.tsx` | `-cancel` `-confirm` `-description` `-next` `-option` `-title` |
 | `CreatorPickerView` | `src/features/search/components/creator-picker-view.tsx` | `-field` `-item` `-retry` |
 | `ShareQrPanel` | `src/features/share/components/share-qr-panel.tsx` | `-copy` `-qr` `-submit` |
 | `ActionRows`, `ActionRowsSkeleton` | `src/shared/components/action-rows.tsx` | `-row` |

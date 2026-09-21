@@ -245,18 +245,11 @@ describe('follow / unfollow / mute', () => {
     })
 })
 
+/*
+ * The block/unblock writes themselves are `@shared/lib/api/blocks-api`'s and are tested there. What
+ * stays here is the **list**, which is this feature's.
+ */
 describe('blocks', () => {
-    /** Keyed by **user** id (`channel.owner_id`), not channel id. See B11. */
-    it('blocks and unblocks by user id', async () => {
-        post.mockResolvedValue({})
-        del.mockResolvedValue({})
-        await channelApi.blockUser('user-9')
-        expect(post).toHaveBeenCalledWith('v3/channel/my-channel/blocks/', { user_id: 'user-9' })
-
-        await channelApi.unblockUser('user 9/../x')
-        expect(del).toHaveBeenCalledWith('v3/channel/my-channel/blocks/user%209%2F..%2Fx/')
-    })
-
     it('sends the first page unfiltered, and omits `q` rather than sending an empty one', async () => {
         get.mockResolvedValue({ results: [], count: 0, next: null })
         await channelApi.getBlockedAccounts({})

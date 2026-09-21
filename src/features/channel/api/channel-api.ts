@@ -586,24 +586,11 @@ export const channelApi = {
         return normalizeSocialPlatforms(body?.results)
     },
 
-    /** Blocks are keyed by **user** id (`channel.owner_id`), not channel id. */
-    blockUser(userId: string) {
-        return api.post('v3/channel/my-channel/blocks/', { user_id: userId })
-    },
-
-    /**
-     * ⚠ **The path segment is not the same identifier `blockUser` posts**, or at least the two
-     * shipped clients disagree about whether it is — see B23.
-     *
-     * The channel page passes `channel.owner_id` (a user id); legacy's blocked-accounts screen,
-     * the only place in either app that lists blocks, passes the **block record's** id. Both
-     * end up here, so the parameter is named for what the endpoint sees rather than for what
-     * either caller thinks it is sending, and neither call site is "fixed" to match the other
-     * on a guess. Whichever is wrong is wrong at the call site, not here.
+    /*
+     * `blockUser` / `unblockUser` moved to `@shared/lib/api/blocks-api` once a post's overflow menu
+     * needed them — see that file's header for the seam. The blocked-accounts list below stays,
+     * because it is one screen's paging and row type rather than an action any surface invokes.
      */
-    unblockUser(blockOrUserId: string) {
-        return api.del(`v3/channel/my-channel/blocks/${encodeURIComponent(blockOrUserId)}/`)
-    },
 
     /**
      * One page of the accounts this bearer has blocked.

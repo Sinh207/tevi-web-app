@@ -1,0 +1,78 @@
+/**
+ * `features/post` — a post as its own entity, for the four surfaces that draw one.
+ *
+ * The barrel is deliberately narrow. What a consumer needs is the **type**, the **schema helpers**
+ * that turn a list payload into rows, the **derivations** that decide what a card shows, and the
+ * card itself. The model and its query keys are exported because the detail page will own a hook
+ * over them; nothing else inside is public.
+ *
+ * **The dialogs and the menu are not exported**, on purpose. `PostMenu`, `PostReportDialog`,
+ * `PostUnlockDialogs`, `PostNsfwGuard` and `PostMediaLightbox` are parts of the card, and a
+ * consumer that could mount one of them separately could mount it *without* the state that drives
+ * it — `PostUnlockDialogs` with no flow is a dialog that never opens, `PostMenu` with its own
+ * `usePostActions` is a second optimistic pin state disagreeing with the header's. The same
+ * reasoning `features/auth` gives for exporting `TwoStepVerificationDialog` as a component and
+ * never its model.
+ *
+ * `shared/` may not import this, and neither may `features/channel` — the dependency runs
+ * channel → post. Anything both need lives under `shared/lib/` already.
+ */
+
+export {
+    INSUFFICIENT_STARS_CODE,
+    type InteractionProduct,
+    postApi,
+    postKeys,
+    REPLIES_PAGE_SIZE,
+} from './api/post-api'
+export { postReportApi, postReportKeys } from './api/post-report-api'
+export {
+    normalizePost,
+    normalizePosts,
+    type Post,
+    type PostAuthor,
+    type PostImage,
+    type PostVideo,
+    type QuotedPost,
+    type UnlockDetail,
+} from './api/types'
+export type { PostMiniAppApp } from './components/post-attachments'
+export { PostCard } from './components/post-card'
+export type { PostActions } from './hooks/use-post-actions'
+export { usePostActions } from './hooks/use-post-actions'
+export { usePostBookmark } from './hooks/use-post-bookmark'
+export { usePostReaction } from './hooks/use-post-reaction'
+export type { PostUnlockFlow } from './hooks/use-post-unlock'
+export { usePostUnlock } from './hooks/use-post-unlock'
+export {
+    canReply,
+    hasReacted,
+    isGated,
+    isLocked,
+    isNsfw,
+    isPurchased,
+    type PostDisplay,
+    type PostGate,
+    postActionVisibility,
+    postDisplay,
+    postGate,
+    postMenuVisibility,
+    replyCost,
+    spaceTierBadge,
+} from './lib/post-access'
+export { formatPostTimestamp } from './lib/post-format'
+export { type PostIntent, postIntent, postUnlockPrice } from './lib/post-intent'
+export { postHref, postPath } from './lib/post-link'
+export {
+    detectAspectRatio,
+    formatDuration,
+    formatDurationPadded,
+    GALLERY_HEIGHT,
+    gallerySlideRatio,
+    imageAspectRatio,
+    lockCoverAspectRatio,
+    lockedSummary,
+    type PostMediaKind,
+    postMediaKind,
+    videoAspectRatio,
+} from './lib/post-media'

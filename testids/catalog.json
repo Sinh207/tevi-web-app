@@ -3,7 +3,7 @@
     "$contract": "docs/TEST_IDS.md",
     "counts": {
         "ids": 811,
-        "surfaces": 27
+        "surfaces": 28
     },
     "surfaces": {
         "affiliate": {
@@ -263,6 +263,11 @@
                 "/my-wallet/payout-tracking/[requestId]",
                 "/my-wallet/setup-payouts"
             ]
+        },
+        "post": {
+            "kind": "screen",
+            "label": "Post card",
+            "routes": []
         },
         "premium": {
             "kind": "screen",
@@ -11929,6 +11934,137 @@
                 "option",
                 "panel",
                 "search"
+            ]
+        },
+        "src/features/post/components/post-actions.tsx": {
+            "accepts": [
+                "PostActions"
+            ],
+            "parts": [
+                "footer",
+                "item",
+                "next",
+                "reveal",
+                "trigger"
+            ]
+        },
+        "src/features/post/components/post-attachments.tsx": {
+            "accepts": [
+                "PostMiniAppBanner",
+                "PostAffiliateCard",
+                "PostInsights"
+            ],
+            "parts": [
+                "label-data",
+                "trigger"
+            ]
+        },
+        "src/features/post/components/post-card.tsx": {
+            "accepts": [
+                "PostCard"
+            ],
+            "parts": [
+                "description",
+                "footer",
+                "group",
+                "item",
+                "message",
+                "next",
+                "overlay",
+                "panel",
+                "row",
+                "slide"
+            ]
+        },
+        "src/features/post/components/post-header.tsx": {
+            "accepts": [
+                "PostHeader"
+            ],
+            "parts": [
+                "header"
+            ]
+        },
+        "src/features/post/components/post-image-gallery.tsx": {
+            "accepts": [
+                "PostImageGallery"
+            ],
+            "parts": [
+                "next",
+                "prev"
+            ]
+        },
+        "src/features/post/components/post-lock-panel.tsx": {
+            "accepts": [
+                "PostLockPanel"
+            ],
+            "parts": [
+                "label",
+                "title"
+            ]
+        },
+        "src/features/post/components/post-media-lightbox.tsx": {
+            "accepts": [
+                "PostMediaLightbox"
+            ],
+            "parts": [
+                "close",
+                "label",
+                "next",
+                "overlay",
+                "prev",
+                "slide"
+            ]
+        },
+        "src/features/post/components/post-menu.tsx": {
+            "accepts": [
+                "PostMenu"
+            ],
+            "parts": [
+                "group",
+                "item",
+                "option",
+                "panel",
+                "remove",
+                "trigger"
+            ]
+        },
+        "src/features/post/components/post-nsfw-guard.tsx": {
+            "accepts": [
+                "PostNsfwGuard"
+            ],
+            "parts": [
+                "close",
+                "reveal",
+                "title",
+                "trigger"
+            ]
+        },
+        "src/features/post/components/post-report-dialog.tsx": {
+            "accepts": [
+                "PostReportDialog"
+            ],
+            "parts": [
+                "close",
+                "confirm",
+                "description",
+                "input",
+                "option",
+                "retry",
+                "submit",
+                "title"
+            ]
+        },
+        "src/features/post/components/post-unlock-dialogs.tsx": {
+            "accepts": [
+                "PostUnlockDialogs"
+            ],
+            "parts": [
+                "cancel",
+                "confirm",
+                "description",
+                "next",
+                "option",
+                "title"
             ]
         },
         "src/features/search/components/creator-picker-view.tsx": {
