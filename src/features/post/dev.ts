@@ -144,7 +144,9 @@ export const POST_VIDEO = makePostFixture({
     text: 'Behind the scenes.',
     video: {
         id: 'v1',
-        playback: 'https://example.invalid/v.m3u8',
+        // The wire shape, not a bare string — see `playbackSchema`. A harness whose fixtures are
+        // friendlier than the payload is how the object form went unnoticed in the first place.
+        playback: { hls: 'https://example.invalid/v.m3u8' },
         thumbnail: '/illustrations/monetization/paid-interactions.webp',
         duration_seconds: 5400,
         width: 1920,
@@ -454,7 +456,9 @@ export const POST_VIDEO_AND_IMAGES = makePostFixture({
     ],
     video: {
         id: 'v2',
-        playback: 'https://example.invalid/v.m3u8',
+        // mp4 only — the branch that plays in every browser with no media engine, and what
+        // `videoSrc` selects when a post carries no manifest.
+        playback: { url: 'https://example.invalid/v.mp4' },
         thumbnail: '/illustrations/monetization/paid-interactions.webp',
         duration_seconds: 42,
         width: 1080,
@@ -631,6 +635,8 @@ export const POST_FOUR_THREE = makePostFixture({
 export const POST_VIDEO_BARE = makePostFixture({
     id: 'video-bare',
     text: 'A clip with no poster and no duration on the wire.',
+    // Keeps the **bare-string** form deliberately: a locally-composed preview produces one before
+    // the upload is transcoded, so the parser has to go on accepting it.
     video: { id: 'v3', playback: 'https://example.invalid/bare.m3u8' },
 })
 

@@ -14,7 +14,7 @@ import { usePostActions } from '../hooks/use-post-actions'
 import { usePostUnlock } from '../hooks/use-post-unlock'
 import { isNsfw, postDisplay } from '../lib/post-access'
 import { postHref } from '../lib/post-link'
-import { formatDuration } from '../lib/post-media'
+import { formatDuration, POST_COLUMN_SIZES, videoSrc } from '../lib/post-media'
 import { PostActions } from './post-actions'
 import {
     PostAffiliateCard,
@@ -85,6 +85,7 @@ export function PostCard({
     onShare,
     onOpenMiniApp,
     onChanged,
+    onAuthorBlocked,
     onSeeMore,
     attachments = true,
     disableDetail = false,
@@ -105,6 +106,13 @@ export function PostCard({
     onOpenMiniApp?: (app: PostMiniAppApp) => void
     /** The owning list's invalidation, called after any write from this card lands. */
     onChanged?: () => void
+    /**
+     * The author was blocked — the space's id, so a feed can drop its rows at once.
+     *
+     * Not foldable into `onChanged`: that fires for a pin and a delete as well, and a list acting on
+     * it would hide a space because somebody pinned a post. `usePostActions` carries the rest.
+     */
+    onAuthorBlocked?: (channelId: string) => void
     /**
      * Legacy's `showSeeMore` — a "See more" footer under the card, used where a surface shows a
      * post as a **teaser**. Absent unless the caller supplies the handler, which is the same rule
@@ -130,7 +138,7 @@ export function PostCard({
      * Owned here and not in the menu: pin's optimistic flag drives a marker in the header *and* a
      * label in the menu, so the hook has to sit above both. `PostMenu`'s prop doc says the rest.
      */
-    const actions = usePostActions(post, { onChanged })
+    const actions = usePostActions(post, { onChanged, onAuthorBlocked })
     const unlock = usePostUnlock(post, { onUnlocked: onChanged })
 
     function onCardClick(event: React.MouseEvent<HTMLElement>) {
@@ -303,7 +311,9 @@ function PostMediaBlock({ post, testId }: { post: Post; testId: string }) {
 
     const images = post.images ?? []
     const video = post.video
-    const hasMedia = images.length > 0 || Boolean(video?.playback)
+    // `videoSrc`, not `video.playback` — the latter is an object and is therefore always truthy,
+    // including on a post whose video carries no playable source at all.
+    const hasMedia = images.length > 0 || Boolean(videoSrc(video))
     if (!hasMedia) return null
 
     const media = (
@@ -315,7 +325,7 @@ function PostMediaBlock({ post, testId }: { post: Post; testId: string }) {
                     testId={subTestId(testId, 'item')}
                 />
             ) : null}
-            {video?.playback ? (
+            {videoSrc(video) ? (
                 <PostVideoTile
                     post={post}
                     onOpen={() => setOpened('video')}
@@ -385,7 +395,7 @@ function PostVideoTile({
                     src={poster}
                     alt=""
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    sizes={POST_COLUMN_SIZES}
                     className="object-cover"
                 />
             ) : null}

@@ -141,10 +141,44 @@ export const postImageSchema = z.looseObject({
 
 export type PostImage = z.infer<typeof postImageSchema>
 
+/**
+ * Where a post's video can actually be fetched from.
+ *
+ * ⚠ **This is an object on the wire, and modelling it as a string loses every video silently.**
+ * The feed sends `playback: { hls: '…m3u8' }` (transcoded posts) or `{ url: '…mp4' }`, and legacy
+ * reads three members — `dash`, `hls`, `url` — in that order. Parsed as `nullableText` the whole
+ * object became `null`, which is not a parse failure: the row survives, `postMediaKind` answers
+ * `'none'`, and the card renders a video post with no video and no error anywhere. Found by running
+ * a real `followed-channels/threads/` page through this parser.
+ *
+ * A bare string is still accepted, because that is what a locally-composed preview produces before
+ * the upload has been transcoded (legacy's `useReviewPost` builds the same field by hand).
+ */
+const playbackSchema = z
+    .unknown()
+    .transform(value => {
+        if (typeof value === 'string') {
+            const trimmed = value.trim()
+            return { dash: null, hls: null, url: trimmed === '' ? null : trimmed }
+        }
+        if (value === null || typeof value !== 'object') {
+            return { dash: null, hls: null, url: null }
+        }
+        const source = value as Record<string, unknown>
+        return {
+            dash: nullableText.parse(source.dash),
+            hls: nullableText.parse(source.hls),
+            url: nullableText.parse(source.url),
+        }
+    })
+    // A fresh object per row rather than a shared constant: these are handed to components, and a
+    // shared identity is a memo that never invalidates.
+    .catch(() => ({ dash: null, hls: null, url: null }))
+
 /** The video on a post. A post carries at most one, unlike images. */
 export const postVideoSchema = z.looseObject({
     id: nullableId,
-    playback: nullableText,
+    playback: playbackSchema,
     thumbnail: nullableText,
     duration_seconds: nullableNumber,
     resolution_max: nullableText,

@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { PostImage, PostVideo } from '../api/types'
+import { videoFallbackSrc, videoSrc } from '../lib/post-media'
 
 /**
  * Media at full size — legacy's `ViewMediaSlide`, at the scope a card actually needs.
@@ -22,13 +23,18 @@ import type { PostImage, PostVideo } from '../api/types'
  *
  * ⚠ **The video plays HLS, and one browser family can do that unaided.**
  *
- * `video.playback` is an `.m3u8` manifest. Safari (and iOS WebViews) play it natively; Chrome and
- * Firefox do **not** without a media-source engine — legacy dynamic-imports **video.js** for
- * exactly this. Adding one is a dependency decision of the same weight as `embla` or
- * `react-day-picker` — the sort `CLAUDE.md` records as "the app's only X engine" — so it is not
- * taken here. What is here instead is honest: `canPlayType` is asked, and a browser that cannot
- * play the manifest is **told so** over the poster rather than being handed a black rectangle with
- * a dead control. See `hlsSupported` below for where an engine plugs in.
+ * `video.playback.hls` is an `.m3u8` manifest and is what the native clients play. Safari (and the
+ * iOS WebViews) play it unaided; Chrome and Firefox do **not** without a media-source engine —
+ * legacy dynamic-imports **video.js** for exactly this. Adding one is a dependency decision of the
+ * same weight as `embla` or `react-day-picker` — the sort `CLAUDE.md` records as "the app's only X
+ * engine" — so it is not taken here.
+ *
+ * Two things stand in for it, in order. First the **mp4**, when the payload carries one: that is
+ * iOS's own `backupAsset`, and `LightboxVideo` picks it from `canPlayType` before the first frame
+ * instead of after a failed `AVPlayerItem`. Only when there is no mp4 either — the common case, as
+ * a transcoded post exposes the manifest alone — is the reader **told so** over the poster rather
+ * than handed a black rectangle with a dead control. See `hlsSupported` below for where an engine
+ * plugs in.
  *
  * ## A portal, because the card is inside a scroll container
  *
@@ -62,7 +68,7 @@ export function PostMediaLightbox({
     // `document` does not exist on the server, so the portal target is resolved after mount.
     useEffect(() => setMounted(true), [])
 
-    const showsVideo = Boolean(video?.playback)
+    const showsVideo = Boolean(videoSrc(video))
     const total = showsVideo ? 1 : images.length
 
     const step = useCallback(
@@ -263,10 +269,24 @@ function isHlsSource(src: string): boolean {
     }
 }
 
+/**
+ * The clip, with iOS's fallback decided before the first frame rather than after a failure.
+ *
+ * `videoSrc` hands back the manifest (what the native clients play). If this browser cannot play
+ * one, the mp4 `videoFallbackSrc` offers is used instead — the web equivalent of `PostVideoView`'s
+ * `backupAsset`, which iOS swaps in from an `AVPlayerItem.status == .failed` observer. `post-media.ts`
+ * carries the comparison. The notice is what is left when there is no mp4 either, which is the case
+ * AVPlayer never reaches.
+ */
 function LightboxVideo({ video, testId }: { video: PostVideo; testId?: string }) {
     const { t } = useTranslation()
+    /** `null` until an element has been measured — see the ref callback. */
+    const [useFallback, setUseFallback] = useState(false)
     const [unplayable, setUnplayable] = useState(false)
-    const src = video.playback ?? ''
+
+    const primary = videoSrc(video) ?? ''
+    const fallback = videoFallbackSrc(video)
+    const src = useFallback && fallback ? fallback : primary
     const poster = video.thumbnail ?? undefined
 
     /*
@@ -274,13 +294,18 @@ function LightboxVideo({ video, testId }: { video: PostVideo; testId?: string })
      * `HTMLVideoElement` — there is no way to ask it without one. Done here rather than in an
      * effect so the answer is known on the first paint that has an element, which is what keeps the
      * unplayable notice from flashing in after the controls.
+     *
+     * Measured against `primary`, never `src`: once the fallback is in play `src` is an mp4, and
+     * re-measuring it would answer "playable" and say nothing about why we switched.
      */
     const measure = useCallback(
         (element: HTMLVideoElement | null) => {
-            if (!element || !src) return
-            setUnplayable(isHlsSource(src) && !hlsSupported(element))
+            if (!element || !primary) return
+            const needsEngine = isHlsSource(primary) && !hlsSupported(element)
+            setUseFallback(needsEngine && Boolean(fallback))
+            setUnplayable(needsEngine && !fallback)
         },
-        [src],
+        [primary, fallback],
     )
 
     if (unplayable) {

@@ -6,7 +6,7 @@ import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import { useCallback, useRef, useState } from 'react'
 import type { PostImage } from '../api/types'
-import { detectAspectRatio, gallerySlideRatio } from '../lib/post-media'
+import { detectAspectRatio, gallerySlideRatio, POST_COLUMN_SIZES } from '../lib/post-media'
 
 /**
  * A post's images — one image sized by its own ratio, several as a horizontal row.
@@ -99,7 +99,7 @@ export function PostImageGallery({
                     src={src}
                     alt={t('post_image_alt')}
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    sizes={POST_COLUMN_SIZES}
                     className="object-cover"
                 />
             </Frame>

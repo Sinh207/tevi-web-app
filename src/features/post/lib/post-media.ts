@@ -38,6 +38,51 @@ export function videoAspectRatio(video: PostVideo): number | null {
 }
 
 /**
+ * The video's **primary** source, or `null` when the payload carries none.
+ *
+ * ## `hls` first, and that number is the two native clients', not a guess
+ *
+ * iOS resolves the same field through one computed property —
+ * `VideoPlayback.url { hls.isEmpty ? mp4 : hls }` (`Modules/Post/Model/Post.swift`) — and Android
+ * writes `playback?.hls ?: playback?.url` at seven call sites. Both prefer the manifest, because a
+ * transcoded post exposes **only** the manifest: `url` is frequently absent, which legacy's
+ * `useEditPost` notes in as many words. Preferring the mp4 would mean falling back to the manifest
+ * on nearly every real post anyway, while diverging from the clients for the few that have both.
+ *
+ * ## `dash` is modelled and deliberately never chosen
+ *
+ * It is in the payload and in Android's `PostPlaybackModel`, and **nothing on Android reads it**.
+ * Only legacy web does, desktop-only, behind video.js. No browser plays DASH unaided, so selecting
+ * it here could only ever produce the unplayable notice — it stays in the type as a record of the
+ * wire, not as a source.
+ *
+ * The browser half of this — what to do when the primary is a manifest this browser cannot play —
+ * is `videoFallbackSrc` below.
+ */
+export function videoSrc(video: PostVideo | null | undefined): string | null {
+    if (!video) return null
+    return video.playback.hls ?? video.playback.url ?? null
+}
+
+/**
+ * The progressive mp4 to fall back to, or `null`.
+ *
+ * ## This is iOS's `backupAsset`, decided earlier
+ *
+ * `PostVideoView` is handed the manifest as its asset and the mp4 as `backupAsset`, and swaps to it
+ * from a `AVPlayerItem.status == .failed` observer (`playBackupAssetIfNeeded`) — guarded on
+ * `asset.url.isHLS`, so the swap only ever replaces a manifest. The web can answer the same
+ * question **without waiting for a failure**: `canPlayType` says up front whether this browser has
+ * HLS, so the lightbox picks the mp4 before the first frame rather than after a visible stall.
+ *
+ * Same fallback, one event earlier. Where neither is playable the reader is told, which is the case
+ * iOS does not have because AVPlayer always has HLS.
+ */
+export function videoFallbackSrc(video: PostVideo | null | undefined): string | null {
+    return video?.playback.url ?? null
+}
+
+/**
  * What kind of media a post leads with.
  *
  * Video wins over images when a post somehow has both, because a post carries at most one video and
@@ -46,7 +91,7 @@ export function videoAspectRatio(video: PostVideo): number | null {
 export type PostMediaKind = 'none' | 'image' | 'video'
 
 export function postMediaKind(post: Pick<Post, 'images' | 'video'>): PostMediaKind {
-    if (post.video?.playback) return 'video'
+    if (videoSrc(post.video)) return 'video'
     if (post.images && post.images.length > 0) return 'image'
     return 'none'
 }
@@ -185,3 +230,19 @@ export const GALLERY_HEIGHT = { mobile: 260, desktop: 310 } as const
 export function gallerySlideRatio(image: PostImage): number {
     return imageAspectRatio(image) ?? 1
 }
+
+/**
+ * The `sizes` every image that fills the post column declares.
+ *
+ * ## The default that ships with a `fill` image describes a grid this app does not have
+ *
+ * `(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw` is the create-next-app shape — three
+ * columns on a desktop, two on a tablet. A post card is **one** column capped at 612px (which is
+ * also `--breakpoint-sm`, and what `(rail)/layout.tsx` pins the end rail against), so on a 900px
+ * viewport the default claims 450px for a box that is really 612px wide. The browser then picks a
+ * candidate for the smaller number, and on a 2× screen the cover lands visibly soft.
+ *
+ * It is a sharpness bug rather than a bandwidth one — the default under-declares here, it does not
+ * over-declare — which is why it survives a glance at the network panel.
+ */
+export const POST_COLUMN_SIZES = '(max-width: 612px) 100vw, 612px'

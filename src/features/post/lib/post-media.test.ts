@@ -10,6 +10,8 @@ import {
     lockedSummary,
     postMediaKind,
     videoAspectRatio,
+    videoFallbackSrc,
+    videoSrc,
 } from './post-media'
 
 function image(overrides: Record<string, unknown>): PostImage {
@@ -214,5 +216,102 @@ describe('gallerySlideRatio', () => {
     it('is the image ratio, or square when unknown', () => {
         expect(gallerySlideRatio(image({ w: 1600, h: 900 }))).toBeCloseTo(16 / 9)
         expect(gallerySlideRatio(image({}))).toBe(1)
+    })
+})
+
+describe('videoSrc', () => {
+    /**
+     * The regression this exists for. `playback` is an **object** on the wire; parsed as a string
+     * it became `null`, and every video post in the home feed rendered as a card with no media and
+     * no error. Taken from a real `followed-channels/threads/` page.
+     */
+    it('reads the transcoded feed shape', () => {
+        const post = normalizePost({
+            id: 'p1',
+            video: {
+                id: '379380f0-e56a-4cec-8323-51fcec8efa11',
+                duration_seconds: 6,
+                width: 720,
+                height: 1280,
+                playback: { hls: 'https://feed-stg.tevicdn.com/videos/26/07/30/T/stream.m3u8' },
+                thumbnail: 'https://tevi-cdn.tevi.dev/Post/VideoThumbnails/thumb.jpeg',
+                is_ready: true,
+            },
+        })
+
+        expect(videoSrc(post?.video)).toBe(
+            'https://feed-stg.tevicdn.com/videos/26/07/30/T/stream.m3u8',
+        )
+        // The consequence, which is the half that was actually visible: the card decides whether to
+        // draw a media block from this.
+        expect(postMediaKind({ images: null, video: post?.video ?? null })).toBe('video')
+    })
+
+    /**
+     * The precedence the two native clients use: iOS's `VideoPlayback.url` computed property and
+     * Android's `playback?.hls ?: playback?.url`. Pinned because "prefer the mp4, it needs no media
+     * engine" is the plausible-sounding inversion, and it silently disagrees with both shipped apps
+     * on every post that carries both.
+     */
+    it('prefers the manifest, as iOS and Android do', () => {
+        const post = normalizePost({
+            id: 'p2',
+            video: {
+                playback: {
+                    dash: 'https://x/v.mpd',
+                    hls: 'https://x/v.m3u8',
+                    url: 'https://x/v.mp4',
+                },
+            },
+        })
+
+        expect(videoSrc(post?.video)).toBe('https://x/v.m3u8')
+        expect(videoFallbackSrc(post?.video)).toBe('https://x/v.mp4')
+    })
+
+    it('takes the mp4 when there is no manifest', () => {
+        const post = normalizePost({ id: 'p3', video: { playback: { url: 'https://x/v.mp4' } } })
+
+        expect(videoSrc(post?.video)).toBe('https://x/v.mp4')
+    })
+
+    /**
+     * `dash` is on the wire and in Android's model, and **nothing on Android reads it**. No browser
+     * plays it unaided either, so selecting it could only produce the unplayable notice.
+     */
+    it('never selects dash, even when it is the only member', () => {
+        const post = normalizePost({ id: 'p4', video: { playback: { dash: 'https://x/v.mpd' } } })
+
+        expect(videoSrc(post?.video)).toBe(null)
+        expect(videoFallbackSrc(post?.video)).toBe(null)
+    })
+
+    it('still accepts a bare string, which a local preview produces before transcoding', () => {
+        const post = normalizePost({ id: 'p5', video: { playback: 'https://x/preview.mp4' } })
+
+        expect(videoSrc(post?.video)).toBe('https://x/preview.mp4')
+    })
+
+    /**
+     * A video object carrying no playable member must read as **no video**, not as one that fails
+     * to play: `playback` is now an object and therefore always truthy, so every call site has to
+     * go through here rather than testing the field.
+     */
+    it('is null for a video with nothing playable on it, and for no video at all', () => {
+        const empty = normalizePost({ id: 'p6', video: { id: 'v', playback: {} } })
+
+        expect(videoSrc(empty?.video)).toBe(null)
+        expect(postMediaKind({ images: null, video: empty?.video ?? null })).toBe('none')
+        expect(videoSrc(null)).toBe(null)
+        expect(videoSrc(undefined)).toBe(null)
+    })
+
+    it('survives a playback field that is not an object at all', () => {
+        const post = normalizePost({ id: 'p7', video: { playback: 42 } })
+
+        // A row is never dropped for this — `normalizePosts`' rule, and one bad video must not cost
+        // the reader the post's text.
+        expect(post).not.toBeNull()
+        expect(videoSrc(post?.video)).toBe(null)
     })
 })
