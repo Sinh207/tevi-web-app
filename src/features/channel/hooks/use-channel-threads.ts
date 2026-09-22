@@ -1,10 +1,10 @@
 'use client'
 
 import { useAuth } from '@features/auth'
+import type { Post } from '@features/post'
 import { nextPageParam, type PageCursor } from '@shared/lib/api/page-cursor'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { channelApi, channelKeys, type ThreadKind } from '../api/channel-api'
-import type { ChannelThread } from '../api/types'
 
 /**
  * A channel's posts or media, paginated over the `next` cursor.
@@ -52,7 +52,7 @@ export function useChannelThreads({
      * Flattened here rather than at the call site, so the list component never sees the page
      * structure and cannot accidentally render `pages[0]` only.
      */
-    const threads: ChannelThread[] = query.data?.pages.flatMap(page => page.results) ?? []
+    const threads: Post[] = query.data?.pages.flatMap(page => page.results) ?? []
 
     return {
         threads,

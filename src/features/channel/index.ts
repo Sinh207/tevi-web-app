@@ -27,11 +27,15 @@
  * symbols that are deliberately private, `channelApi` among them, which the note at the foot of this
  * file argues against in writing. That is paying with the boundary to buy a directory.
  *
- * **`features/post` is the opposite case and is already committed to** — see `ChannelThread` in
- * `api/types.ts` and `channel-thread-placeholder.tsx`. A post is its own entity, four surfaces will
- * render one (channel, home, search, notifications), and the dependency runs *channel → post*, not
- * the other way. Modelling it here would make home and search reach through this feature to draw a
- * post card.
+ * **`features/post` was the opposite case and has landed.** A post is its own entity, four surfaces
+ * will render one (channel, home, search, notifications), and the dependency runs *channel → post*,
+ * not the other way — modelling it here would make home and search reach through this feature to
+ * draw a post card. The `ChannelThread` stub and its placeholder card are gone; `getThreads` parses
+ * its rows with `normalizePosts` and `ChannelThreadList` renders `PostCard`.
+ *
+ * The prediction in the paragraph above came true as well: **`features/home`** is the second surface
+ * that needed this cluster. What it took was two symbols (`useFollowedLives`, `FollowingLiveRow`),
+ * not the nine-symbol widening this note argues against — see their export below.
  *
  * **When to revisit this one:** the day a second surface needs the follow list — a home feed filtered
  * to followed spaces is the likely one. The seam then is the whole cluster (following +
@@ -49,7 +53,6 @@ export type {
     ChannelPrivacy,
     ChannelSocialLink,
     ChannelStats,
-    ChannelThread,
     FollowedChannel,
     FollowedLive,
     FollowedOrdering,
@@ -172,6 +175,18 @@ export { useChannelStats } from './hooks/use-channel-stats'
  * *list* to count it — see the hook for why the badge has its own key and its own `enabled` gate.
  */
 export { useFollowRequestsCount } from './hooks/use-follow-requests-count'
+/*
+ * The home page's Lives tab is the second consumer of this pair, and it is the case the barrel note
+ * above anticipates — "the day a second surface needs the follow list". What moved is **two
+ * symbols**, not the nine-symbol widening that note argues against: the rows are `FollowedLive`,
+ * this feature already fetches and renders them, and home re-implementing either half would be a
+ * second copy of `followed-channels/lives/` and of a live card with its own access rules
+ * (`liveAccess`) that changed once already and had to change in one place.
+ *
+ * `channelApi` itself stays private, which is the line that matters.
+ */
+export type { UseFollowedLivesResult } from './hooks/use-followed-lives'
+export { useFollowedLives } from './hooks/use-followed-lives'
 export { AUTO_FOLLOW_SECONDS } from './lib/auto-follow'
 export type { ChannelOwnership, ChannelVisibility } from './lib/channel-flags'
 export {

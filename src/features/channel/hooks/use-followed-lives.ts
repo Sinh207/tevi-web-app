@@ -45,13 +45,37 @@ export interface UseFollowedLivesResult {
     collapse: () => void
 }
 
-export function useFollowedLives(): UseFollowedLivesResult {
+export function useFollowedLives({
+    limit,
+    collapsible = true,
+}: {
+    /** How many to ask for. Defaults to `/following`'s ten — see `getFollowedLives`. */
+    limit?: number
+    /**
+     * Whether the list starts cut to five with a *Show more*.
+     *
+     * `/following` wants that: the strip sits above the list the screen is actually about, so it
+     * has to yield space to it. The **home page's Lives tab** does not — there the list *is* the
+     * screen, and collapsing it would hide rows behind a control for no reason. Legacy has two
+     * separate implementations for that one difference.
+     *
+     * With it off, `visible` is everything and `canExpand` / `canCollapse` are permanently false,
+     * so a caller that ignores them draws the right thing.
+     */
+    collapsible?: boolean
+} = {}): UseFollowedLivesResult {
     const { activeId, isAuthenticated } = useAuth()
     const [expanded, setExpanded] = useState(false)
 
     const query = useQuery({
-        queryKey: channelKeys.followedLives(activeId),
-        queryFn: ({ signal }) => channelApi.getFollowedLives({ accountId: activeId, signal }),
+        /*
+         * `limit` is part of the key. Two surfaces asking for ten and fifty are two different
+         * answers, and sharing a key would serve whichever landed first to both — `/following`
+         * would get fifty rows to slice to five, or home's tab would silently cap at ten.
+         */
+        queryKey: [...channelKeys.followedLives(activeId), limit ?? null],
+        queryFn: ({ signal }) =>
+            channelApi.getFollowedLives({ limit, accountId: activeId, signal }),
         enabled: isAuthenticated,
     })
 
@@ -61,13 +85,15 @@ export function useFollowedLives(): UseFollowedLivesResult {
     const expand = useCallback(() => setExpanded(true), [])
     const collapse = useCallback(() => setExpanded(false), [])
 
+    const showsAll = !collapsible || expanded
+
     return {
-        visible: expanded ? lives : lives.slice(0, FOLLOWED_LIVES_COLLAPSED),
+        visible: showsAll ? lives : lives.slice(0, FOLLOWED_LIVES_COLLAPSED),
         total: lives.length,
         isLoading: query.isLoading,
         isError: query.isError,
-        canExpand: hasMore && !expanded,
-        canCollapse: hasMore && expanded,
+        canExpand: collapsible && hasMore && !expanded,
+        canCollapse: collapsible && hasMore && expanded,
         expand,
         collapse,
     }

@@ -1,3 +1,4 @@
+import { normalizePosts } from '@features/post'
 import { env } from '@shared/config/env'
 import { ApiError } from '@shared/lib/api/errors'
 import { ANON_SCOPE, CACHE_TTL, invalidateETagCache } from '@shared/lib/api/interceptors/etag'
@@ -17,7 +18,6 @@ import {
 import {
     type Channel,
     type ChannelPrivacy,
-    type ChannelThread,
     type FollowedLive,
     type FollowedOrdering,
     normalizeBlockedAccounts,
@@ -257,7 +257,7 @@ export const channelApi = {
      * `limit` alongside an already-complete cursor query, which duplicates whatever the cursor
      * carried; here it is one or the other.
      */
-    getThreads({
+    async getThreads({
         slug,
         isOwner,
         kind,
@@ -275,10 +275,29 @@ export const channelApi = {
         const path = isOwner ? 'v3/channel/my-channel/threads/' : channelPath(slug, 'threads/')
         // Array-valued params repeat their key rather than being bracketed — `apiClient` sets
         // that for every model (`paramsSerializer`), which is what makes a `PageCursor` survive.
-        return api.get<Paginated<ChannelThread>>(path, cursor ?? FIRST_PAGE[kind], {
+        const body = await api.get<Partial<Paginated<unknown>>>(path, cursor ?? FIRST_PAGE[kind], {
             signal,
             ...(accountId ? { accountId } : {}),
         })
+        /*
+         * Rows are parsed by **`features/post`**, which now owns the post DTO.
+         *
+         * This used to answer a three-field `ChannelThread` stub and a placeholder card, with
+         * `channel-thread-placeholder.tsx` saying in writing that it would be deleted rather than
+         * refactored the day the real feature landed. That day is this one.
+         *
+         * `channel → post` is the sanctioned direction (`index.ts` argues it at length), and the
+         * import does not close a cycle: `features/post` reaches back only for
+         * `@features/channel/routes`, which is a leaf with no imports of its own.
+         *
+         * A row that will not parse is **dropped**, the page is not — `normalizePosts`' rule.
+         */
+        return {
+            results: normalizePosts(body?.results),
+            count: body?.count ?? 0,
+            next: body?.next ?? null,
+            previous: body?.previous ?? null,
+        }
     },
 
     /**
@@ -426,15 +445,29 @@ export const channelApi = {
      * on error rather than telling a reader that nobody they follow is live when it does not know.
      */
     async getFollowedLives({
+        limit = FOLLOWED_LIVES_LIMIT,
         accountId,
         signal,
     }: {
+        /**
+         * How many to ask for. Defaults to `/following`'s ten.
+         *
+         * A parameter rather than a constant because the **home page's Lives tab** is a different
+         * surface with a different question: `/following` shows a strip above a list and ten is
+         * generous for it, while home's tab *is* the list and legacy asks for fifty
+         * (`useTabLives.PAGE_SIZE`). One number could not serve both, and the alternative — a second
+         * model method — would duplicate the path and the parser to vary one query parameter.
+         *
+         * Still no cursor either way: the endpoint returns no `next`, so whatever `limit` asks for is
+         * the whole answer.
+         */
+        limit?: number
         accountId?: string | null
         signal?: AbortSignal
     } = {}): Promise<FollowedLive[]> {
         const body = await api.get<Partial<Paginated<unknown>>>(
             'v3/channel/followed-channels/lives/',
-            { limit: FOLLOWED_LIVES_LIMIT },
+            { limit },
             { signal, ...(accountId ? { accountId } : {}) },
         )
         return normalizeFollowedLives(body?.results)

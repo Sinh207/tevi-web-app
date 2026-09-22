@@ -1,15 +1,18 @@
 'use client'
 
+import { type Post, PostCard } from '@features/post'
+import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
+import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Skeleton } from '@shared/ui/skeleton'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ThreadKind } from '../api/channel-api'
 import { useChannelThreads } from '../hooks/use-channel-threads'
 import { ChannelEmptyState } from './channel-empty-state'
 import { ChannelError } from './channel-error'
-import { ChannelMediaPlaceholder, ChannelThreadPlaceholder } from './channel-thread-placeholder'
+import { ChannelMediaTile } from './channel-media-tile'
 
 /**
  * A channel's posts or media as an infinite list — the four states, and the sentinel.
@@ -48,6 +51,17 @@ export function ChannelThreadList({
         hasNextPage,
         isFetchingNextPage,
     } = useChannelThreads({ slug, kind, isOwner })
+
+    /*
+     * One share sheet for the whole list, holding whichever post raised it — the same arrangement
+     * the home feed uses, and for the same reason: `ShareDialog` mounts a channel list, a link mint
+     * and a QR canvas, so one per card would mount twenty to show at most one.
+     */
+    const [sharing, setSharing] = useState<Post | null>(null)
+
+    /* A post's id is the row's identity here, where home's is a whole group's. */
+    const keys = useMemo(() => threads.map(thread => thread.id), [threads])
+    const { observe, heightFor } = useRenderWindow(keys)
 
     const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({
         enabled: hasNextPage && !isFetchingNextPage,
@@ -105,11 +119,38 @@ export function ChannelThreadList({
                 // Three across and gap-1, matching legacy's grid. 21 per page is seven full rows.
                 <div className="grid grid-cols-3 gap-1">
                     {threads.map(thread => (
-                        <ChannelMediaPlaceholder key={thread.id} />
+                        <ChannelMediaTile key={thread.id} post={thread} />
                     ))}
                 </div>
             ) : (
-                threads.map(thread => <ChannelThreadPlaceholder key={thread.id} thread={thread} />)
+                /*
+                 * Windowed, for the reason `useRenderWindow` states: a space with a long history
+                 * is the same unbounded list home is, and a `PostCard` is the same expensive row.
+                 * The **media** grid above is not windowed — a tile is one `next/image` in a fixed
+                 * cell, so the DOM it accumulates is a fraction of a card's and the grid's own
+                 * three-column layout is what a stood-down cell would have to reproduce.
+                 */
+                threads.map(thread => {
+                    const height = heightFor(thread.id)
+                    return (
+                        <div
+                            key={thread.id}
+                            ref={observe}
+                            {...windowKeyProps(thread.id)}
+                            className="min-w-0"
+                            style={height === null ? undefined : { height }}
+                        >
+                            {height === null ? (
+                                <PostCard
+                                    post={thread}
+                                    onShare={() => setSharing(thread)}
+                                    onChanged={() => refetch()}
+                                    testId="channel-thread"
+                                />
+                            ) : null}
+                        </div>
+                    )
+                })
             )}
 
             {/* Zero-height, so it never adds space to a list that has stopped growing. */}
@@ -117,6 +158,19 @@ export function ChannelThreadList({
 
             {isFetchingNextPage && (
                 <ThreadListSkeleton kind={kind} rows={kind === 'media' ? 3 : 1} />
+            )}
+
+            {sharing && (
+                <ShareDialog
+                    open
+                    onOpenChange={open => {
+                        if (!open) setSharing(null)
+                    }}
+                    url={sharing.shareable_url ?? ''}
+                    title={sharing.text}
+                    image={sharing.cover_image?.uri ?? sharing.images?.[0]?.uri ?? null}
+                    context={postShareContext(sharing, 'space')}
+                />
             )}
         </div>
     )

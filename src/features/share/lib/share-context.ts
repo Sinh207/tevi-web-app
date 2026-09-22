@@ -59,3 +59,36 @@ export function spaceShareContext(
         sourceScreen,
     }
 }
+
+/**
+ * A post as a share context — legacy's `buildPostShareContext`.
+ *
+ * ## Structural, not `Post`
+ *
+ * It takes `{ id, channel: { slug } }` rather than importing `features/post`'s type, exactly as
+ * `spaceShareContext` takes a shape rather than `Channel`. Two reasons, and the second is the one
+ * that matters: this feature is below both of those in the dependency order, and a share sheet that
+ * needed the whole post DTO to mint a link would be claiming a dependency it does not have — the
+ * only fields a share *has* are the two below.
+ *
+ * ## `creatorId` is the **handle**
+ *
+ * Not the channel's id and not the account's. The field is attribution, the wire wants the handle,
+ * and it is optional — a post whose channel did not parse still gets a link, it just carries no
+ * creator. `spaceShareContext` carries the same note.
+ *
+ * `null` when the post has no id, which routes the sheet to the plain `v1/shorten/` path rather
+ * than a `422`. Legacy passes `content_id: undefined` and finds that out from the server.
+ */
+export function postShareContext(
+    post: { id?: string | number | null; channel?: { slug?: string | null } | null },
+    sourceScreen = 'post',
+): ShareContext | null {
+    if (post.id === null || post.id === undefined || post.id === '') return null
+    return {
+        contentType: 'post',
+        contentId: String(post.id),
+        creatorId: post.channel?.slug ?? null,
+        sourceScreen,
+    }
+}

@@ -309,13 +309,15 @@ export function normalizeChannelActivity(body: unknown): ChannelActivity[] {
     )
 }
 
-export const channelThreadSchema = z.looseObject({
-    id,
-    code: nullableText,
-    created_at: nullableTimestamp,
-})
-
-export type ChannelThread = z.infer<typeof channelThreadSchema>
+/*
+ * `channelThreadSchema` / `ChannelThread` lived here — a three-field stub standing in for the post
+ * DTO until `features/post` existed. It does now, so `getThreads` parses its rows with
+ * `normalizePosts` and this schema is **deleted rather than refactored**, which is what
+ * `channel-thread-placeholder.tsx` said would happen.
+ *
+ * The stub is not kept as an alias: a second name for `Post` is a second thing to look up, and the
+ * whole point of the original note was that modelling a post here would guarantee it drifted.
+ */
 
 /**
  * A person as `my-channel/`'s **list** endpoints return them — the blocked list and the

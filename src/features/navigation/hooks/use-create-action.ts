@@ -28,8 +28,8 @@ export interface CreateOption {
  *
  * - **Create a post** is something the web can do: legacy has a full composer (`PostForm`, ~8.7k
  *   LOC) and posting has never been app-only. It is simply **not ported yet** — `features/post`
- *   does not exist; `channel-thread-placeholder.tsx` stands in for the post card "until
- *   `features/post` lands". So the row carries no `onSelect` and every surface renders it
+ *   now exists and renders posts on the space page and the home feed, but nothing **writes** one:
+ *   the composer is the missing half. So the row carries no `onSelect` and every surface renders it
  *   `disabled` behind a "Coming soon" badge (`CreateOptionRow`), which is this repo's own rule for
  *   a row whose destination is not built (`shared/components/action-rows.tsx`: a button that
  *   navigates to a 404 is worse than one that is visibly not ready, and a silently inert one is

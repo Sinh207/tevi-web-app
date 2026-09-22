@@ -56,4 +56,9 @@
  */
 
 export { ShareDialog } from './components/share-dialog'
-export { type ShareContentType, type ShareContext, spaceShareContext } from './lib/share-context'
+export {
+    postShareContext,
+    type ShareContentType,
+    type ShareContext,
+    spaceShareContext,
+} from './lib/share-context'

@@ -52,7 +52,29 @@ import type { Post } from '../api/types'
  * next time its list refetches. Legacy solves the same problem with nine event-emitter messages,
  * which `CLAUDE.md` is explicit this app does not add in anticipation.
  */
-export function usePostActions(post: Post, { onChanged }: { onChanged?: () => void } = {}) {
+export function usePostActions(
+    post: Post,
+    {
+        onChanged,
+        onAuthorBlocked,
+    }: {
+        onChanged?: () => void
+        /**
+         * The author was blocked, and the caller is told **which** space it was.
+         *
+         * Separate from `onChanged` because the two mean different things to a list: `onChanged` is
+         * "re-ask the server", while this is "these rows must leave the screen now". A feed cannot
+         * satisfy the second with an invalidation — that refetches from page one, losing the
+         * reader's scroll, and until the backend's own filter catches up it can return the very
+         * posts the reader just asked not to see.
+         *
+         * Firing `onChanged` alone and letting the caller guess from it would be worse: it fires for
+         * a pin and a delete too, so a list acting on it would hide a space because somebody pinned
+         * something.
+         */
+        onAuthorBlocked?: (channelId: string) => void
+    } = {},
+) {
     const { activeId } = useAuth()
     const { t } = useTranslation()
     const queryClient = useQueryClient()
@@ -126,6 +148,8 @@ export function usePostActions(post: Post, { onChanged }: { onChanged?: () => vo
             toast.success(
                 t('post_block_success', { name: post.channel?.name ?? post.channel?.slug ?? '' }),
             )
+            const channelId = post.channel?.id
+            if (channelId) onAuthorBlocked?.(channelId)
             /*
              * Blocking changes what the *whole feed* may show, not one card, so it invalidates
              * everything this feature caches and hands the list owner its own signal. There is no
