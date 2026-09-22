@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-811 ids across 28 surfaces.
+812 ids across 28 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -181,7 +181,7 @@ Also present on every route it is mounted under — `src/features/navigation/com
 
 ## `channel` — Channel / space, following, profile settings
 
-Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/membership/[[...tier]]`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
+Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/membership/[[...tier]]`, `/[slug]/post/[code]`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
 
 | testid | companions | source |
 |---|---|---|
@@ -236,19 +236,19 @@ Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug
 | `channel-follow-requests-loading` | — | `src/features/channel/components/follow-requests-skeleton.tsx:32` |
 | `channel-follow-requests-retry` | — | `src/features/channel/components/follow-requests-view.tsx:182` |
 | `channel-follow-requests-sign-in` | — | `src/features/channel/components/follow-requests-view.tsx:162` |
-| `channel-following-filter` | — | `src/features/channel/components/following-view.tsx:419` |
-| `channel-following-find-people` | — | `src/features/channel/components/following-view.tsx:300` |
+| `channel-following-filter` | — | `src/features/channel/components/following-view.tsx:426` |
+| `channel-following-find-people` | — | `src/features/channel/components/following-view.tsx:307` |
 | `channel-following-live` | — | `src/features/channel/components/following-view.tsx:208` |
 | `channel-following-live-link` | — | `src/features/channel/components/following-live-row.tsx:371` |
 | `channel-following-live-restricted` | — | `src/features/channel/components/following-live-row.tsx:381` |
-| `channel-following-lives-toggle` | — | `src/features/channel/components/following-view.tsx:225` |
+| `channel-following-lives-toggle` | — | `src/features/channel/components/following-view.tsx:232` |
 | `channel-following-loading` | — | `src/features/channel/components/following-skeleton.tsx:36` |
 | `channel-following-menu-item` | `data-row-key` | `src/features/channel/components/following-row-menu.tsx:135` |
-| `channel-following-retry` | — | `src/features/channel/components/following-view.tsx:274` |
-| `channel-following-row` | — | `src/features/channel/components/following-view.tsx:352` |
+| `channel-following-retry` | — | `src/features/channel/components/following-view.tsx:281` |
+| `channel-following-row` | — | `src/features/channel/components/following-view.tsx:359` |
 | `channel-following-row-link` | `data-channel-slug` | `src/features/channel/components/following-channel-row.tsx:294` |
-| `channel-following-sign-in` | — | `src/features/channel/components/following-view.tsx:254` |
-| `channel-following-sort` | — | `src/features/channel/components/following-view.tsx:444` |
+| `channel-following-sign-in` | — | `src/features/channel/components/following-view.tsx:261` |
+| `channel-following-sort` | — | `src/features/channel/components/following-view.tsx:451` |
 | `channel-header-loading` | — | `src/features/channel/components/channel-header-skeleton.tsx:26` |
 | `channel-invitation-accept` | — | `src/features/channel/components/mcn-invitation-view.tsx:616` |
 | `channel-invitation-error` | — | `src/features/channel/components/mcn-invitation-view.tsx:96` |
@@ -348,6 +348,7 @@ Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug
 | `channel-suspended-guidelines` | — | `src/features/channel/components/channel-state-screens.tsx:117` |
 | `channel-tabs` | — | `src/features/channel/components/channel-tabs.tsx:86` |
 | `channel-tabs-loading` | — | `src/features/channel/components/channel-tabs-skeleton.tsx:35` |
+| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:148` |
 | `channel-top-bar-loading` | — | `src/features/channel/components/channel-top-bar-skeleton.tsx:43` |
 | `channel-unblock` | — | `src/features/channel/components/blocked-account-row.tsx:205` |
 | `channel-verified-badge` | — | `src/features/channel/components/channel-identity.tsx:94` |
@@ -626,7 +627,7 @@ Routes: `/my-wallet`, `/my-wallet/payout-method`, `/my-wallet/payout-request`, `
 
 ## `navigation` — Shell — rail, top bar, tab bar, account drawer, end rail
 
-Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
+Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/post/[code]`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
 
 Also present on every route it is mounted under — `src/app/(web)/(main)/layout.tsx`.
 
@@ -884,7 +885,7 @@ Routes: `/my-wallet/payout-method`, `/my-wallet/payout-request`, `/my-wallet/pay
 
 ## `post` — Post card
 
-_Not attributed._
+Routes: `/[slug]/post/[code]`
 
 _No ids yet._
 
@@ -1037,11 +1038,15 @@ name; you need it to know the element exists.
 |---|---|---|
 | `PasswordField` | `src/features/auth/components/auth-fields.tsx` | `-caps` `-reveal` |
 | `OtpInput` | `src/features/auth/components/otp-input.tsx` | `-digit` |
+| `HomeEmptyState` | `src/features/home/components/home-empty-state.tsx` | `-retry` `-title` `-trigger` |
+| `HomeLiveFeed` | `src/features/home/components/home-live-feed.tsx` | `-row` |
+| `HomePostFeed` | `src/features/home/components/home-post-feed.tsx` | `-item` |
 | `TotalBalanceCard` | `src/features/my-wallet/components/total-balance-card.tsx` | `-count` |
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
 | `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
+| `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-retry` `-row` `-title` |
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
 | `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` |
 | `PostLockPanel` | `src/features/post/components/post-lock-panel.tsx` | `-label` `-title` |

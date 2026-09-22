@@ -38,6 +38,15 @@ export {
 } from './api/types'
 export type { PostMiniAppApp } from './components/post-attachments'
 export { PostCard } from './components/post-card'
+/**
+ * The post-detail **screen**, and nothing under it.
+ *
+ * The route composes this with a back bar and hands it the server-fetched body; the replies hook,
+ * the detail hook and the reply row stay internal. Same rule the auth barrel states for its
+ * settings screens: a consumer holding the pieces could assemble a version that skips the gates
+ * the card applies, and the gates are the whole reason the card is reused here.
+ */
+export { PostDetailView } from './components/post-detail-view'
 export type { PostActions } from './hooks/use-post-actions'
 export { usePostActions } from './hooks/use-post-actions'
 export { usePostBookmark } from './hooks/use-post-bookmark'
@@ -76,3 +85,20 @@ export {
     postMediaKind,
     videoAspectRatio,
 } from './lib/post-media'
+/**
+ * What a crawler and a link-preview scraper are told about a post.
+ *
+ * Pure, so it sits on the main barrel rather than on `./server.ts` — only the *fetch* is
+ * server-only. `features/channel` splits the same way.
+ */
+export {
+    buildPostDescription,
+    buildPostHeadline,
+    buildPostTitle,
+    isCanonicalPath,
+    mayRenderForCrawler,
+    type PostFetchStatus,
+    postCanonicalPath,
+    postSnippet,
+    resolvePostFetchStatus,
+} from './lib/post-seo'
