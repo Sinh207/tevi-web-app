@@ -6,7 +6,7 @@
         "icons": "node scripts/generate-icon-names.mjs && node scripts/build-icon-sprite.mjs",
         "brand": "node scripts/generate-brand-assets.mjs",
         "fonts": "node scripts/build-fonts.mjs",
-        "dev": "node scripts/build-icon-sprite.mjs && node scripts/dev-cache.mjs --preflight && next dev --port 5001",
+        "dev": "node scripts/build-icon-sprite.mjs && node scripts/dev-cache.mjs --preflight && next dev --port 3000",
         "build": "node scripts/build-icon-sprite.mjs && next build --webpack",
         "start": "next start",
         "lint": "biome check",

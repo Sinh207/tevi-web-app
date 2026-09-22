@@ -44,7 +44,7 @@ behavior/parity questions. Per-feature open items live in `docs/` — see the ma
 ## Commands
 
 ```bash
-pnpm dev                              # builds the icon sprite, then dev server (Turbopack) on :5001
+pnpm dev                              # builds the icon sprite, then dev server (Turbopack) on :3000
 pnpm build                            # production build — pinned to webpack (`next build --webpack`)
 pnpm typecheck                        # tsc --noEmit
 pnpm cache                            # measure .next build caches; says what is safe to prune

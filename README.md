@@ -20,7 +20,7 @@ lockfile is pnpm's).
 ```bash
 pnpm install
 cp .env.local.example .env.local   # then fill in the values
-pnpm dev                           # http://localhost:5001
+pnpm dev                           # http://localhost:3000
 ```
 
 `.env.local` is validated by zod at startup (`src/shared/config/env.ts`), so a missing or malformed
