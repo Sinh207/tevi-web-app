@@ -13,7 +13,8 @@ import { useState } from 'react'
 import type { Post } from '../api/types'
 import { usePostBookmark } from '../hooks/use-post-bookmark'
 import { usePostReaction } from '../hooks/use-post-reaction'
-import { canReply, postActionVisibility, replyCost } from '../lib/post-access'
+import { postActionVisibility, replyCost } from '../lib/post-access'
+import { mayReply, replyAudience, replyAudienceNotice } from '../lib/who-can-reply'
 import { BookmarkIcon, StarCostGlyph } from './legacy-icons'
 
 /**
@@ -97,19 +98,32 @@ export function PostActions({
     const shows = postActionVisibility(post, { quoteEnabled })
 
     /**
-     * What pressing *Comment* does, in the three cases it has.
+     * What pressing *Comment* does, in the four cases it has.
      *
      * The order is the interesting part. **Affordability is checked before the route in**: a reader
      * who is allowed to reply but cannot pay for it is offered Star, while a reader who is not
      * allowed to reply at all is offered the membership — and the second must not be shown to the
      * first, because buying a membership would not fix a shortfall.
      *
+     * ⚠ **A reader who cannot reply is only offered the paywall when there *is* one.** This used to
+     * hand every such press to `onUnlockReplies`, which is `usePostUnlock().press` — and that flow
+     * answers `postIntent`, which is `'none'` for a **followers-only** post. So on the audience
+     * legacy makes most common, the button was live, focusable, and did nothing at all. Now only
+     * the `'unlock'` audience takes that route; the rest navigate to the post, where the *Who can
+     * reply?* panel names the rule (`lib/who-can-reply.ts`).
+     *
      * A cost of `null` means free, and `requireStars(0, …)` is not used there: it would still wrap
      * the press in a sign-in gate, and **reading** the replies under a post is not something a guest
      * has to sign in for. Legacy gates the comment *box*, never the navigation.
      */
-    const commentPress = !canReply(post)
-        ? onUnlockReplies
+    // `mayReply`, so a reader who already follows a followers-only space is not sent to a paywall
+    // or bounced to the detail page — see its note in `lib/who-can-reply.ts`.
+    const barred = !mayReply(post)
+    const audienceAction = replyAudienceNotice(replyAudience(post))?.action ?? 'none'
+    const commentPress = barred
+        ? audienceAction === 'unlock'
+            ? onUnlockReplies
+            : onComment
         : cost !== null && onComment
           ? requireStars(cost, onComment)
           : onComment
@@ -323,14 +337,16 @@ function ReactButton({
 }
 
 /**
- * Legacy's own artwork, committed rather than fetched — `public/` is where an animation this app
+ * Legacy's own artwork, committed rather than fetched — **exported** because the reply row draws the
+ * same star, and a second constant pointing at the same file is how two surfaces end up animating to
+ * different frames. `public/` is where an animation this app
  * ships lives (`docs/STATIC_ASSETS.md`), and `LottieAnimation` loads it by URL so the 117 KB is
  * cached as a file instead of inlined into a JS chunk.
  */
-const REACTION_ART = '/lotties/icon-star-reactions.json'
+export const REACTION_ART = '/lotties/icon-star-reactions.json'
 
 /** The artwork's last frame — its `op`, and legacy's own `goToAndStop(60)`. */
-const REACTED_FRAME = 60
+export const REACTED_FRAME = 60
 
 /**
  * The bookmark control.
@@ -381,7 +397,7 @@ function BookmarkButton({ post, testId }: { post: Post; testId?: string }) {
  *
  * `ps-1` is the gap between glyph and figure, logical so it flips under RTL.
  */
-const COUNT_CLASS =
+export const COUNT_CLASS =
     'type-dense-emphasis min-w-[2ch] ps-1 text-start tabular-nums text-(--text-body)'
 
 /**
@@ -404,7 +420,7 @@ const COUNT_CLASS =
  * `type-micro-overline` is the DS's only 10px step, which is legacy's size; its weight is medium
  * against legacy's 600, and that is the DS's ramp rather than something to override by hand.
  */
-function StarCostChip({ cost, on }: { cost: number; on: 'react' | 'action' }) {
+export function StarCostChip({ cost, on }: { cost: number; on: 'react' | 'action' }) {
     return (
         <span
             aria-hidden="true"

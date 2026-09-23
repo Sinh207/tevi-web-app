@@ -52,6 +52,14 @@ export type PostIntent = 'none' | 'purchase' | 'become-a-member' | 'choose'
  */
 const PAID_USERS = 'paid_users'
 
+/*
+ * ⚠ This is **not** the only reader of `reply_allowed_user`, and it is not the complete list of its
+ * values. `lib/who-can-reply.ts` carries all six and the sentence each one puts on screen; this file
+ * names the one value that has a *paywall* behind it, because that is the only one this function's
+ * four-way branch can answer. A restriction with no paywall — followers, verified spaces, mentioned
+ * spaces — is `'none'` here and is explained there.
+ */
+
 export function postIntent(post: Post): PostIntent {
     if (isLocked(post)) {
         const gate = postGate(post)

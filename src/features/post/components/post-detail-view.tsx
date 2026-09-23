@@ -13,6 +13,8 @@ import type { Post } from '../api/types'
 import { usePostDetail } from '../hooks/use-post-detail'
 import { usePostReplies } from '../hooks/use-post-replies'
 import { PostCard } from './post-card'
+import { ReplyComposer } from './reply-composer'
+import { ReplyRow } from './reply-row'
 
 /**
  * `/@{slug}/post/{code}` — one post and its replies.
@@ -27,30 +29,46 @@ import { PostCard } from './post-card'
  * guard, the menu and the four gates identical between a feed row and the page it opens. Legacy
  * has two implementations and its detail view is where the unlock flow drifted.
  *
- * ## Replies are `PostCard` too, and ⚠ that is a **placeholder shape**
+ * ## Replies are `ReplyRow`, and they used to be `PostCard` — which was wrong, not merely dense
  *
- * A reply carries the same DTO as a post (`postApi.getReplies` says so, and `normalizePosts`
- * parses both), so every gate the card applies is correct for a reply. What is *not* established
- * is the geometry: the Figma file draws a reply row that is denser than a post card — no cover
- * media block, a smaller avatar — and those comps were not consulted here. This renders a correct,
- * fully-gated reply at the wrong density, which is the honest placeholder; a second card invented
- * from scratch would be the wrong one *and* a second place for the gates to drift.
+ * The belief was that a reply carries a post's DTO. It does not: `api/reply-types.ts` has the
+ * measured payload and the table of differences, the headline being that a reply's author is
+ * `owner_channel` and a card reads `channel`, so **every reply rendered with no author**. Its
+ * reaction button pointed at a post endpoint with a reply's id, and its menu offered a *Block* row
+ * that had nothing to block. `ReplyRow` draws the fields that exist and calls the endpoints that
+ * serve them.
  *
- * ## No composer
+ * ## The composer sits **between** the post and its replies
  *
- * Writing a reply is deliberately not in this screen yet. It is its own feature — a paid
- * interaction with a Star cost, a `useRequireStars` gate, an optimistic row and an upload path —
- * and bolting a text box onto this page would be the shallow half of it.
+ * Legacy pins it to the bottom of the viewport. Here it is in the flow, directly under the post it
+ * replies to and above the list it adds to, which is where the reader is already looking after
+ * pressing *Comment* — and a fixed bar would have to negotiate with the mobile tab bar, the
+ * keyboard's own inset and the mini-app player for the same strip of screen.
+ *
+ * It draws nothing when the reader may not reply (`canReply`), so a post with replies closed is a
+ * post and its list, with no dead box between them.
+ *
+ * ## `isPremiumReader` comes from the route, and has to
+ *
+ * Premium readers are exempt from paid interaction, and that fact lives in `features/channel`
+ * (`useMyChannel().isPremium`) — which imports this feature, so neither this screen nor the card
+ * below it may read it. The feed and the space page fill the prop themselves; here the filling is
+ * done by `app/…/post/[code]/post-detail-screen.tsx`, a client boundary that exists for this one
+ * boolean. Left unpassed it defaults to `false`, which quotes a Premium reader a price they do not
+ * owe — so a new caller of this screen has to supply it.
  */
 export function PostDetailView({
     identifier,
     serverPost,
+    isPremiumReader = false,
     testId = 'post-detail',
 }: {
     /** The id or code from the URL — either addresses the same post. */
     identifier: string
     /** The anonymous body fetched during the render; see `usePostDetail` for why it is not cached. */
     serverPost: Post | null
+    /** Premium readers are exempt from paid interaction. See the note above — nothing passes it yet. */
+    isPremiumReader?: boolean
     testId?: string
 }) {
     const { t } = useTranslation()
@@ -109,6 +127,7 @@ export function PostDetailView({
             <div className="bg-(--background-surface)">
                 <PostCard
                     post={post}
+                    isPremiumReader={isPremiumReader}
                     disableDetail
                     onShare={() => setSharing(post)}
                     onChanged={() => refetch()}
@@ -116,9 +135,31 @@ export function PostDetailView({
                 />
             </div>
 
+            <ReplyComposer
+                post={post}
+                isPremiumReader={isPremiumReader}
+                /*
+                 * Both, and neither is redundant: the list gains a row and the post's `reply_count`
+                 * — drawn by the card above — goes up. The hook has already invalidated this
+                 * feature's keys; these are the two queries whose *rendered* copies must not be
+                 * left waiting for a stale time to expire.
+                 */
+                onReplied={() => {
+                    void refetch()
+                    void replies.refetch()
+                }}
+                testId={subTestId(testId, 'panel')}
+            />
+
             <RepliesSection
                 replies={replies}
-                onShare={setSharing}
+                /*
+                 * The **post's** tally, not the list's: the replies envelope carries no `count` at
+                 * all (`usePostReplies` says what that used to print). It can lag the list by a
+                 * moment after a write; a figure occasionally one behind beats one always zero.
+                 */
+                count={post.reply_count}
+                isPremiumReader={isPremiumReader}
                 observe={observe}
                 heightFor={heightFor}
                 sentinelRef={sentinelRef}
@@ -143,14 +184,17 @@ export function PostDetailView({
 
 function RepliesSection({
     replies,
-    onShare,
+    count,
+    isPremiumReader,
     observe,
     heightFor,
     sentinelRef,
     testId,
 }: {
     replies: ReturnType<typeof usePostReplies>
-    onShare: (post: Post) => void
+    /** The parent post's `reply_count` — see the call site for why it is not the list's length. */
+    count: number
+    isPremiumReader: boolean
     observe: ReturnType<typeof useRenderWindow>['observe']
     heightFor: ReturnType<typeof useRenderWindow>['heightFor']
     sentinelRef: ReturnType<typeof useInView<HTMLDivElement>>[0]
@@ -167,8 +211,8 @@ function RepliesSection({
                 data-testid={subTestId(testId, 'title')}
                 className="type-title-t3-semibold px-3 pt-4 pb-2 text-(--text-title) md:px-6"
             >
-                {/* The server's count, not `replies.length` — `usePostReplies` says why. */}
-                {t('post_detail_replies', { count: replies.count })}
+                {/* The post's own tally — the replies envelope carries none. */}
+                {t('post_detail_replies', { count })}
             </h2>
 
             {replies.isLoading ? (
@@ -207,9 +251,9 @@ function RepliesSection({
                                 style={height === null ? undefined : { height }}
                             >
                                 {height === null ? (
-                                    <PostCard
-                                        post={reply}
-                                        onShare={() => onShare(reply)}
+                                    <ReplyRow
+                                        reply={reply}
+                                        isPremiumReader={isPremiumReader}
                                         onChanged={() => replies.refetch()}
                                         testId={subTestId(testId, 'row')}
                                     />

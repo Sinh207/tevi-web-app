@@ -5213,7 +5213,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:148"
+            "source": "src/features/channel/components/channel-thread-list.tsx:157"
         },
         "channel-top-bar-loading": {
             "scope": "channel",
@@ -12272,6 +12272,7 @@
                 "group",
                 "item",
                 "message",
+                "panel",
                 "retry",
                 "row",
                 "title"
@@ -12366,6 +12367,49 @@
                 "next",
                 "option",
                 "title"
+            ]
+        },
+        "src/features/post/components/reply-audience-notice.tsx": {
+            "accepts": [
+                "ReplyAudienceNotice"
+            ],
+            "parts": [
+                "description",
+                "panel",
+                "title",
+                "trigger"
+            ]
+        },
+        "src/features/post/components/reply-composer.tsx": {
+            "accepts": [
+                "ReplyComposer"
+            ],
+            "parts": [
+                "error",
+                "field",
+                "input",
+                "item",
+                "list",
+                "remove",
+                "submit",
+                "trigger"
+            ]
+        },
+        "src/features/post/components/reply-row.tsx": {
+            "accepts": [
+                "ReplyRow"
+            ],
+            "parts": [
+                "description",
+                "header",
+                "label-data",
+                "message",
+                "overlay",
+                "panel",
+                "remove",
+                "reveal",
+                "slide",
+                "trigger"
             ]
         },
         "src/features/search/components/creator-picker-view.tsx": {

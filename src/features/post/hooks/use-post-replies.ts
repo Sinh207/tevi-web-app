@@ -15,12 +15,19 @@ import { postApi, postKeys } from '../api/post-api'
  * viewer-relative in the same nine fields the parent is. A key shared across accounts would show
  * one reader another's unlock state on a paid reply.
  *
- * ## `count` comes from the server and is **not** `rows.length`
+ * ## ⚠ There is no `count`, and this hook used to invent one
  *
- * The parent's `reply_count` and this list's `count` can disagree for a moment — the parent is a
- * cached body and this is a fresh page — and the number beside the heading should be the one that
- * came with the rows it labels. Rows already loaded is a third number again and is never what a
- * reader means by "42 replies".
+ * The envelope is `{ next, previous, results }` — cursor pagination, measured against the real
+ * service. This hook read `count ?? 0` off it and handed the heading a **zero on every post that
+ * had replies**, which nothing caught because zero is also the honest answer for a post with none.
+ * The number beside the heading is the parent post's own `reply_count` now, which the screen
+ * already holds.
+ *
+ * ## The rows are `Reply`, not `Post`
+ *
+ * They were parsed as posts, and `api/reply-types.ts` carries the measured table of how far apart
+ * the two payloads are — the short version being that a reply's author is `owner_channel`, so every
+ * row rendered with no author at all.
  */
 export function usePostReplies(postId: string | null) {
     const { activeId } = useAuth()
@@ -47,8 +54,6 @@ export function usePostReplies(postId: string | null) {
 
     return {
         replies,
-        /** The server's own total, from the most recent page — see the note above. */
-        count: query.data?.pages[query.data.pages.length - 1]?.count ?? 0,
         isLoading: query.isLoading,
         isError: query.isError,
         refetch: query.refetch,

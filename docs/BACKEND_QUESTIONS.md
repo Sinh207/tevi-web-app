@@ -3140,6 +3140,114 @@ Encoded in: `features/post/api/post-report-api.ts`.
 
 ---
 
+## B109 — **replies**: mostly **answered by a live payload**, and five questions left · **one of which had the reply list printing "0 replies" on every post**
+
+`core/v1/posts/{id}/replies/` and `core/v1/posts/replies/{id}/…`. The web client now reads, writes,
+reacts to and deletes replies from the post-detail page. Like **B104**, most of this one is already
+settled — not by a schema but by **reading a real response** off `wapi.tevi.dev` (a signed GET, one
+post with five replies and one nested thread). Those are recorded here as findings; the questions
+follow.
+
+### Answered by the payload, and acted on
+
+**A reply is not a post, and this client believed it was.** The two DTOs share ten fields and then
+diverge: a reply's author is **`owner_channel`** (plus `owner`, the *user*), the space it sits in is
+**`post_channel`**, and it carries **`post_id`** / **`parent_id`**, **`from_post_owner`** and
+**`from_subscriber`**. It has **no** `channel`, `is_owner`, `shareable_url`, `product_id`,
+`required_packages`, `viewer`, `need_unlock_package`, `detected_nsfw`, `marked_nsfw`,
+`reply_allowed`, `can_reply`, `playback`, `cover_image` or `quoted_post`. Parsed as posts — which is
+what the detail page did — every row rendered with **no author, no avatar and no name**, plus a
+share button, a bookmark button and a *Block* row that could never work. The measured shape is
+`features/post/api/reply-types.ts`.
+
+**The replies envelope carries no `count`.** It is `{ next, previous, results }` — cursor
+pagination. The client read `count ?? 0` and printed **"0 replies"** over every populated list; the
+heading now uses the parent post's own `reply_count`.
+
+**Reacting to a reply is a different endpoint.** `v1/posts/replies/{id}/reaction/` and
+`…/reaction-delete/`, not the post pair — a reply's id sent to `v1/posts/{id}/reaction/` is a 404,
+which is what the reply rows were doing.
+
+**A reply is priced by `post_channel`, not by its author's space.** Both carry
+`paid_interaction_enabled` / `paid_interaction_cost`, and they are different channels whenever the
+reply is not by the post's owner. Crediting the wrong one pays whoever wrote the comment.
+
+**`lang` comes back on every row**, echoing what the write sent.
+
+**`reply_allowed_user` is always present, and there is no "everyone".** 20 consecutive posts carried
+it — 18 `FOLLOWERS`, 2 `PAID_USERS` — and the iOS enum has the same six cases with no open value,
+defaulting an unparseable one to `.followers`. So followers-only is the product's default, not an
+opt-in restriction. `reply_allowed_link` is a real boolean on the wire (`true` on every row), which
+settles the field this client had typed as text.
+
+### Still open
+
+`POST core/v1/posts/{id}/replies/`. Three parts of the body are still transcribed from legacy rather
+than known.
+
+- **`lang`.** Legacy hard-codes **`'en'`** on every comment, from all nine of its locales, and this
+  client does the same. What does the field do — is it the language of the text (in which case
+  legacy has been mislabelling every non-English reply ever written, and the client should send the
+  reader's locale), or something else entirely? If it is the former, what is the accepted set — BCP
+  47 tags (`zh-TW`), or the eight-ish codes the UI switcher uses? Sending the wrong one is a 400 on
+  every reply from a non-English reader, which is why nothing has been changed on a guess.
+- **`html_text`.** Legacy shortens every URL in the text and splices `<a>` tags back in, sending
+  `html_text` **instead of** `text`. This client sends plain `text` only: it never renders
+  `html_text` (creator-authored markup, no sanitiser — `post-card.tsx` states the refusal), so a
+  reply sent that way is one it cannot display. Is `html_text` required for anything server-side —
+  link previews, moderation, the mobile apps' rendering — or is `text` alone a complete reply?
+- **The image ceiling.** Ten, taken from legacy's own error string (`'Maximum 10 images allowed per
+  comment'`) rather than from any documented limit. The client refuses an eleventh before it
+  uploads. What does the endpoint actually enforce, and does it enforce a **size** or a count?
+
+Four smaller ones while the endpoints are open:
+
+- **What does `DELETE v1/posts/replies/{id}/` leave behind?** A post's delete keeps the row and
+  flips `deleted`, and a reply carries the same flag — but this was not measured. The client
+  invalidates and re-reads rather than splicing the row out, which is correct either way;
+  `ReplyRow` draws a tombstone if one comes back.
+- **Does `can_reply` move as soon as the reader qualifies?** The iOS client evidently does not think
+  so: its `isGrantedReplyPermission` computes the two satisfiable audiences from **client** state
+  (`channel.isFollowed`, `isSubscribed`) and consults `can_reply` only for the four that cannot be
+  satisfied. The web client now matches it on the **followers** half — `channel.is_followed` is on
+  the post payload, so a reader who has just followed gets the box rather than a panel telling them
+  to follow — and stays on `can_reply` for the **members** half, because `my-subscriptions/` lives in
+  `features/membership` and the dependency runs membership → channel → post, so reading it from the
+  post feature would close a barrel cycle. iOS fires a second request
+  (`fetchMySubscriptions(channelId:)`) for exactly that value. Two things would let both clients stop
+  second-guessing: say whether `can_reply` is immediate, and if it is not, whether the post payload
+  could carry the members half the way it already carries `is_followed`.
+- **Is `reply_allowed_user` closed at six values?** The client now reads all six of legacy's
+  (`FOLLOWERS`, `PAID_USERS`, `FOLLOWINGS`, `VERIFIED_SPACES`, `MENTIONED_SPACES`, `NONE`) and puts a
+  sentence on screen for each. A seventh would fall through to "no restriction named", so the reader
+  is told nothing rather than something invented — but they are also not told the truth. Is the set
+  fixed, and is there a `code` or an id to switch on rather than these strings?
+- **What does `can_reply: false` with no `reply_allowed_user` mean?** It is reachable — a block, a
+  rate limit, something else — and the client deliberately draws no panel for it, since an empty one
+  says less than none. If there is a reason worth showing, what carries it?
+- **Who may delete a reply?** The client offers it to the reply's author **and** to the owner of
+  the post, both derived from ids since the payload states neither. Legacy renders the row for the
+  same two. Does the endpoint enforce that, or something wider?
+- The reply's images are uploaded through `v3/upload/generate-gcs-upload-url/` with a
+  **client-chosen key**, not through legacy's `v1/posts/image/upload-url/` (which names the object
+  itself). That is **B104**'s question, and the answer decides this too.
+- `reply_allowed_link` is read as a **boolean**. Legacy writes it as `reply_allowed_link || false`,
+  so that is the assumption; the client treats an **absent** field as "links allowed" rather than
+  refusing, since refusing wrongly stops every reply on every post. Is it a boolean, and is it
+  always present on the post payload?
+
+Not a question, but the thing this unblocks: **reporting a reply**
+(`v1/report/report/reply/contents/` + `v1/report/report/replies/{id}/`) is the one control the reply
+row deliberately does not draw yet — the reason-collecting dialog is built around the *post* pair,
+and the row it replaced was submitting a reply's id to the post endpoint.
+
+Encoded in: `features/post/api/reply-types.ts`, `features/post/api/post-api.ts` (`createReply`,
+`getReplies`, `getChildReplies`, the three reply writes), `features/post/lib/reply-access.ts`,
+`features/post/lib/reply-draft.ts`, `features/post/hooks/use-create-reply.ts`,
+`features/post/hooks/use-reply-reaction.ts`.
+
+---
+
 ## Closed
 
 Answered and acted on. Kept as one line so the `Bnn` references in the code still resolve; the

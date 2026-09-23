@@ -1,5 +1,7 @@
+import { normalizeReply, type Reply } from './api/reply-types'
 import { normalizePost, type Post } from './api/types'
 
+export type { Reply } from './api/reply-types'
 export type { Post } from './api/types'
 
 /**
@@ -36,6 +38,9 @@ export { PostImageGallery } from './components/post-image-gallery'
 export { PostLockPanel } from './components/post-lock-panel'
 export { PostMediaLightbox } from './components/post-media-lightbox'
 export { PostNsfwGuard } from './components/post-nsfw-guard'
+export { ReplyAudienceNotice } from './components/reply-audience-notice'
+export { ReplyComposer } from './components/reply-composer'
+export { ReplyRow } from './components/reply-row'
 export { postIntent } from './lib/post-intent'
 export { postHref } from './lib/post-link'
 
@@ -332,6 +337,154 @@ export const POST_PAID_REPLIES = makePostFixture({
     reply_allowed_user: 'PAID_USERS',
     reaction_count: 54,
     reply_count: 9,
+})
+
+/**
+ * Members-only replies on a post that is **also** behind its paywall.
+ *
+ * The pair with `POST_PAID_REPLIES`, which is readable. That one is the *Become a member* label and
+ * this one is *Unlock post to reply* — iOS splits them on `need_unlock_package`, and legacy web
+ * says "unlock" for both, which offers to sell somebody a post they already have.
+ *
+ * Every field of the lock is needed for `isLocked` to answer `true`: a `product_id` or a
+ * `required_packages` row makes it gated, and `viewer` plus `need_unlock_package` is what says
+ * **this reader** is outside. The first version of this fixture carried only the reply audience and
+ * so was not locked at all — it rendered the same label as its pair, which is how the harness
+ * caught it.
+ */
+export const POST_PAID_REPLIES_LOCKED = makePostFixture({
+    id: 'paid-replies-locked',
+    text: 'Locked, and only members may reply — so the offer is to unlock it.',
+    reply_allowed: true,
+    can_reply: false,
+    reply_allowed_user: 'PAID_USERS',
+    product_id: 'prod-1',
+    price: 20,
+    viewer: 'STARGAZERS',
+    need_unlock_package: true,
+    reply_count: 3,
+})
+
+/**
+ * The reader's **own** restricted post — no panel at all.
+ *
+ * `can_reply` is false for the author too once they close replies, so without the owner guard every
+ * creator is lectured about a rule they set themselves.
+ */
+export const POST_REPLIES_OWN_CLOSED = makePostFixture({
+    id: 'replies-own-closed',
+    text: 'My own post with replies closed. No Who-can-reply panel should appear under this one.',
+    is_owner: true,
+    reply_allowed: false,
+    can_reply: false,
+    reply_allowed_user: 'NONE',
+})
+
+/**
+ * Followers-only, and the reader **already follows** — so the box appears, not the panel.
+ *
+ * `can_reply` is still `false` here on purpose: that is the stale body a reader is holding in the
+ * seconds after following, and the case iOS settles from `channel.isFollowed` rather than waiting
+ * for a refetch. Without the followers branch in `mayReply` this fixture shows a follower a panel
+ * telling them to follow.
+ */
+export const POST_REPLIES_FOLLOWED = makePostFixture({
+    id: 'replies-followed',
+    text: 'You already follow this space, so the composer should appear even though can_reply is still false.',
+    reply_allowed: true,
+    can_reply: false,
+    reply_allowed_user: 'FOLLOWERS',
+    channel: { ...POST_FIXTURE_CHANNEL, is_followed: true },
+})
+
+/**
+ * The four *Who can reply?* audiences this client had never read.
+ *
+ * `POST_PAID_REPLIES` above is the fifth (`PAID_USERS`), and the only one the app already handled.
+ * Each of these needs a creator to have set it and a reader who is not in the allowed group, which
+ * is two accounts and a setting away from anything a developer can reach.
+ */
+export const POST_REPLIES_FOLLOWERS = makePostFixture({
+    id: 'replies-followers',
+    text: 'Only followers may reply — the audience legacy makes most common, and the one whose Comment button did nothing.',
+    reply_allowed: true,
+    can_reply: false,
+    reply_allowed_user: 'FOLLOWERS',
+    reply_count: 4,
+})
+
+export const POST_REPLIES_FOLLOWINGS = makePostFixture({
+    id: 'replies-followings',
+    text: 'Only spaces the creator follows may reply. A statement of fact — there is no control that fixes it.',
+    reply_allowed: true,
+    can_reply: false,
+    reply_allowed_user: 'FOLLOWINGS',
+})
+
+export const POST_REPLIES_VERIFIED = makePostFixture({
+    id: 'replies-verified',
+    text: 'Only verified spaces may reply.',
+    reply_allowed: true,
+    can_reply: false,
+    reply_allowed_user: 'VERIFIED_SPACES',
+})
+
+export const POST_REPLIES_MENTIONED = makePostFixture({
+    id: 'replies-mentioned',
+    text: 'Only spaces mentioned in this post may reply.',
+    reply_allowed: true,
+    can_reply: false,
+    reply_allowed_user: 'MENTIONED_SPACES',
+})
+
+/**
+ * `NONE` **and** `reply_allowed: false` — legacy sets both, and either alone means replies are off.
+ */
+export const POST_REPLIES_NONE = makePostFixture({
+    id: 'replies-none',
+    text: 'Replies are turned off for this post.',
+    reply_allowed: false,
+    can_reply: false,
+    reply_allowed_user: 'NONE',
+})
+
+/**
+ * Barred, with **no reason named** — the backend says `can_reply: false` and nothing else.
+ *
+ * The panel must stay away: an empty one says less than none. The case is easy to miss because it
+ * looks identical to an ordinary post until you try to reply.
+ */
+export const POST_REPLIES_UNEXPLAINED = makePostFixture({
+    id: 'replies-unexplained',
+    text: 'The backend refuses replies and does not say why. No panel should appear under this one.',
+    reply_allowed: true,
+    can_reply: false,
+})
+
+/**
+ * Links are **off** in this post's replies — the composer's one inline refusal.
+ *
+ * `reply_allowed_link` is the creator's switch, and the only way to see the message it produces is
+ * to type a URL into a post that has it off. No developer's own post has it off by default.
+ */
+export const POST_REPLY_NO_LINKS = makePostFixture({
+    id: 'reply-no-links',
+    text: 'Replies to this post may not contain links. Try typing one below.',
+    reply_allowed_link: false,
+    reply_count: 6,
+})
+
+/**
+ * Links **on**, stated rather than left absent.
+ *
+ * The pair matters: absence is read as *allowed*, so a fixture that simply omits the field would
+ * look identical to this one while testing a different branch.
+ */
+export const POST_REPLY_LINKS_OK = makePostFixture({
+    id: 'reply-links-ok',
+    text: 'Replies here may contain links.',
+    reply_allowed_link: true,
+    reply_count: 2,
 })
 
 /**
@@ -681,3 +834,148 @@ export const POST_PAID_INTERACTION_ONE = makePostFixture({
     channel: { ...POST_FIXTURE_CHANNEL, paid_interaction_enabled: true, paid_interaction_cost: 1 },
     reaction_count: 6,
 })
+
+/**
+ * Replies, and every one of them is a state a developer cannot reach from their own account.
+ *
+ * Built through `normalizeReply` from the **measured** payload (`api/reply-types.ts`), so a fixture
+ * cannot claim a field the wire does not send — which is the exact mistake the reply list shipped
+ * with, and the reason the harness has these at all.
+ *
+ * The ids are the real thing's: `owner` (the user) is what decides ownership, and `post_channel`
+ * carries both `owner_id` and the interaction price. Reading the harness, the numbers to know are
+ * **`3544332405`** (the author, and the post's owner) and **`999`** (a stranger).
+ */
+const REPLY_AUTHOR = {
+    id: 'ch-author',
+    slug: 'alice',
+    name: 'Alice Nguyen',
+    images: { thumb: null, uri: null, avatar_video: null },
+    verified_tick_badge: null,
+    is_premium: false,
+}
+
+const REPLY_POST_CHANNEL = {
+    id: 'ch-post',
+    slug: 'alice',
+    name: 'Alice Nguyen',
+    owner_id: 3544332405,
+    paid_interaction_enabled: false,
+    paid_interaction_cost: null,
+}
+
+function makeReplyFixture(overrides: Record<string, unknown>): Reply {
+    const parsed = normalizeReply({
+        id: '1',
+        post_id: 'post-1',
+        parent_id: null,
+        created_at: 1760000000000,
+        owner: { id: '999', display_name: 'Stranger' },
+        owner_channel: REPLY_AUTHOR,
+        post_channel: REPLY_POST_CHANNEL,
+        ...overrides,
+    })
+    if (!parsed) throw new Error('dev reply fixture did not parse')
+    return parsed
+}
+
+/** The ordinary row: words, a time, a star nobody has pressed. */
+export const REPLY_TEXT = makeReplyFixture({
+    id: 'reply-text',
+    text: 'This is exactly what I needed today. Thanks for writing it up.',
+    reaction_count: 12,
+})
+
+/** Long enough to wrap several times — the case the indent under the name has to survive. */
+export const REPLY_LONG = makeReplyFixture({
+    id: 'reply-long',
+    text: Array.from(
+        { length: 4 },
+        () => 'A reply can be as long as anybody wants it to be, and nothing clamps it.',
+    ).join(' '),
+    reaction_count: 3,
+})
+
+/**
+ * The author pays for the space — legacy's `BadgeMember`, and the one mark a reply has that a post
+ * card does not.
+ */
+export const REPLY_MEMBER = makeReplyFixture({
+    id: 'reply-member',
+    text: 'Member of this space, and the badge says so.',
+    from_subscriber: true,
+    reaction_count: 7,
+})
+
+/** Already reacted to, so the star opens on its end frame rather than animating into it. */
+export const REPLY_REACTED = makeReplyFixture({
+    id: 'reply-reacted',
+    text: 'You have already starred this one.',
+    user_reaction: { type: 'LIKE' },
+    reaction_count: 41,
+})
+
+/** Answers hang off it. The figure is drawn; opening the thread is the next cut. */
+export const REPLY_WITH_CHILDREN = makeReplyFixture({
+    id: 'reply-children',
+    text: 'This one started a thread.',
+    reply_count: 6,
+    reaction_count: 2,
+})
+
+/** Pictures with no words — a reply the old post-card row refused to treat as a reply at all. */
+export const REPLY_IMAGES = makeReplyFixture({
+    id: 'reply-images',
+    text: null,
+    /*
+     * Committed art, not a placeholder service. A remote URL here would be an unoptimisable host
+     * (`next.config.ts`'s `remotePatterns` lists the ones Tevi owns) and a remote image inside
+     * `src/`, which `pnpm art:audit` exists to keep out. `w`/`h` are the pair a reply really sends.
+     */
+    images: [
+        { uri: '/illustrations/monetization/donation.webp', w: 1600, h: 900 },
+        { uri: '/illustrations/monetization/membership-overview.webp', w: 1600, h: 900 },
+    ],
+})
+
+/**
+ * `html_text` with no `text` — legacy writes one for any reply containing a link.
+ *
+ * This client renders no markup (`post-card.tsx` states the refusal), so the row has to say the
+ * words are not showable rather than draw an empty bubble. Unreachable without a legacy-authored
+ * reply, which is why it is a fixture.
+ */
+export const REPLY_HTML_ONLY = makeReplyFixture({
+    id: 'reply-html',
+    text: null,
+    html_text: '<p>See <a href="https://example.invalid">this</a>.</p>',
+})
+
+/** The reader's own, so the menu offers *Delete*. `owner.id` is what decides it. */
+export const REPLY_OWN = makeReplyFixture({
+    id: 'reply-own',
+    text: 'My own reply — the kebab has a Delete row.',
+    owner: { id: '3544332405', display_name: 'Me' },
+})
+
+/** A charging space: reacting costs 5 Star, so the star wears a price chip. */
+export const REPLY_PAID = makeReplyFixture({
+    id: 'reply-paid',
+    text: 'Reacting to this costs Star, because the space charges for interaction.',
+    post_channel: {
+        ...REPLY_POST_CHANNEL,
+        owner_id: '111',
+        paid_interaction_enabled: true,
+        paid_interaction_cost: 5,
+    },
+})
+
+/** Deleted — the tombstone, visible for the moment between a delete and a refetch. */
+export const REPLY_DELETED = makeReplyFixture({
+    id: 'reply-deleted',
+    text: 'gone',
+    deleted: true,
+})
+
+/** Nothing at all: no words, no pictures, no markup. The payload allows it; the row has to cope. */
+export const REPLY_EMPTY = makeReplyFixture({ id: 'reply-empty', text: null })

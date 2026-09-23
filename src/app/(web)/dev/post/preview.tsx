@@ -1,6 +1,6 @@
 'use client'
 
-import type { Post } from '@features/post/dev'
+import type { Post, Reply } from '@features/post/dev'
 import {
     makePostFixture,
     POST_AFFILIATE,
@@ -40,14 +40,38 @@ import {
     POST_PAID_INTERACTION,
     POST_PAID_INTERACTION_ONE,
     POST_PAID_REPLIES,
+    POST_PAID_REPLIES_LOCKED,
     POST_PURCHASED,
     POST_REPLIES_CLOSED,
+    POST_REPLIES_FOLLOWED,
+    POST_REPLIES_FOLLOWERS,
+    POST_REPLIES_FOLLOWINGS,
+    POST_REPLIES_MENTIONED,
+    POST_REPLIES_NONE,
+    POST_REPLIES_OWN_CLOSED,
+    POST_REPLIES_UNEXPLAINED,
+    POST_REPLIES_VERIFIED,
+    POST_REPLY_LINKS_OK,
+    POST_REPLY_NO_LINKS,
     POST_TEXT,
     POST_THUMB_ONLY_IMAGE,
     POST_VIDEO,
     POST_VIDEO_AND_IMAGES,
     POST_VIDEO_BARE,
     PostCard,
+    REPLY_DELETED,
+    REPLY_EMPTY,
+    REPLY_HTML_ONLY,
+    REPLY_IMAGES,
+    REPLY_LONG,
+    REPLY_MEMBER,
+    REPLY_OWN,
+    REPLY_PAID,
+    REPLY_REACTED,
+    REPLY_TEXT,
+    REPLY_WITH_CHILDREN,
+    ReplyComposer,
+    ReplyRow,
 } from '@features/post/dev'
 
 /**
@@ -469,9 +493,216 @@ const GROUPS: Group[] = [
     },
 ]
 
+/**
+ * The reply box, in the four states the post decides.
+ *
+ * Every one of them is somebody else's setting: a channel that charges, a post whose creator banned
+ * links, a post with replies closed. A developer's own post is none of those, which is the same
+ * reason the card needs a harness.
+ *
+ * What is **not** reachable here is the sign-in gate — the harness runs inside the session stack, so
+ * a signed-in developer never sees it. Press *Reply* while signed out to reach it.
+ */
+const COMPOSER_CASES: { title: string; note: string; post: Post }[] = [
+    {
+        title: 'Free',
+        note: 'The ordinary case. Button says Reply and carries no price.',
+        post: POST_REPLY_LINKS_OK,
+    },
+    {
+        title: 'Priced',
+        note: 'The channel charges 5 Star to interact, so the price is on the button — and the charge runs before the write.',
+        post: POST_PAID_INTERACTION,
+    },
+    {
+        title: 'Links banned',
+        note: 'reply_allowed_link is false. Type a URL: the button disables and the reason appears under the box.',
+        post: POST_REPLY_NO_LINKS,
+    },
+    {
+        title: 'Followers only',
+        note: 'Barred, and the panel takes the box’s place. The link goes to the space, where the real Follow control is.',
+        post: POST_REPLIES_FOLLOWERS,
+    },
+    {
+        title: 'Followers only, already following',
+        note: 'can_reply is still false — the stale body just after a follow. The box should appear, not the panel.',
+        post: POST_REPLIES_FOLLOWED,
+    },
+    {
+        title: 'Members only, post still locked',
+        note: 'Offers to unlock — iOS’s label for a post the reader cannot read yet.',
+        post: POST_PAID_REPLIES_LOCKED,
+    },
+    {
+        title: 'Members only, post readable',
+        note: 'Offers membership instead — the second label legacy web does not have. Saying "unlock" here would sell a post they already own.',
+        post: POST_PAID_REPLIES,
+    },
+    {
+        title: 'Creator’s followings',
+        note: 'A statement of fact: no control, because nothing the reader presses would fix it.',
+        post: POST_REPLIES_FOLLOWINGS,
+    },
+    {
+        title: 'Verified spaces only',
+        note: 'Same shape, different sentence.',
+        post: POST_REPLIES_VERIFIED,
+    },
+    {
+        title: 'Mentioned spaces only',
+        note: 'Same shape, different sentence.',
+        post: POST_REPLIES_MENTIONED,
+    },
+    {
+        title: 'Replies off',
+        note: 'NONE and reply_allowed: false together, as legacy writes them.',
+        post: POST_REPLIES_NONE,
+    },
+    {
+        title: 'Own post, replies closed',
+        note: 'The author set the rule, so no panel. Nothing should appear below.',
+        post: POST_REPLIES_OWN_CLOSED,
+    },
+    {
+        title: 'Barred, no reason given',
+        note: 'can_reply is false with no audience named. Nothing should appear below — an empty panel says less than none.',
+        post: POST_REPLIES_UNEXPLAINED,
+    },
+    {
+        title: 'Replies closed (switch only)',
+        note: 'reply_allowed false with no audience field — still reads as “replies are off”.',
+        post: POST_REPLIES_CLOSED,
+    },
+]
+
+/**
+ * The reply row, in the states the payload decides.
+ *
+ * *Delete* shows only on `REPLY_OWN`, and only when the signed-in account's id is `3544332405` —
+ * the fixture's `owner.id`. On any other account that row is correctly absent, which is the thing
+ * to check rather than a bug to report.
+ */
+const REPLY_CASES: { title: string; note: string; reply: Reply }[] = [
+    { title: 'Text', note: 'The ordinary row.', reply: REPLY_TEXT },
+    {
+        title: 'Long text',
+        note: 'Wraps several times. The indent under the name has to survive it, and is dropped below sm.',
+        reply: REPLY_LONG,
+    },
+    {
+        title: 'Member',
+        note: 'from_subscriber — the author pays for this space. The one mark a reply has that a post card does not.',
+        reply: REPLY_MEMBER,
+    },
+    {
+        title: 'Already reacted',
+        note: 'Opens on the star’s end frame rather than animating into it.',
+        reply: REPLY_REACTED,
+    },
+    {
+        title: 'Has answers',
+        note: 'reply_count is its own child replies. The figure is drawn; opening the thread is the next cut.',
+        reply: REPLY_WITH_CHILDREN,
+    },
+    {
+        title: 'Images only',
+        note: 'No words. A reply the old post-card row would not treat as a reply at all.',
+        reply: REPLY_IMAGES,
+    },
+    {
+        title: 'html_text only',
+        note: 'Legacy writes one for any reply with a link. No markup is rendered, so the row says so.',
+        reply: REPLY_HTML_ONLY,
+    },
+    {
+        title: 'Own reply',
+        note: 'owner.id is the reader’s, so the kebab carries Delete. Absent unless you are signed in as 3544332405.',
+        reply: REPLY_OWN,
+    },
+    {
+        title: 'Paid interaction',
+        note: 'The space charges 5 Star to react, so the star wears a price chip and the charge runs first.',
+        reply: REPLY_PAID,
+    },
+    {
+        title: 'Deleted',
+        note: 'The tombstone — visible for the moment between a delete and a refetch.',
+        reply: REPLY_DELETED,
+    },
+    {
+        title: 'Empty',
+        note: 'No words, no pictures, no markup. The payload allows it.',
+        reply: REPLY_EMPTY,
+    },
+]
+
 export function PostPreview() {
     return (
         <div className="flex flex-col gap-12">
+            <section className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1 border-(--border-subtle) border-b pb-2">
+                    <h2 className="type-title-t2-semibold text-(--text-title)">Reply row</h2>
+                    <p className="type-dense-default text-(--text-subtitle)">
+                        Built from the measured reply payload, which is not a post’s. Pressing the
+                        star hits the real endpoint — these fixtures have no server-side reply, so
+                        it will fail and roll back.
+                    </p>
+                </div>
+
+                <div className="flex max-w-[612px] flex-col gap-px">
+                    {REPLY_CASES.map(item => (
+                        <div key={item.title} className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-0.5">
+                                <h3 className="type-title-t3-semibold text-(--text-title)">
+                                    {item.title}
+                                </h3>
+                                <p className="type-caption-meta text-(--text-placeholder)">
+                                    {item.note}
+                                </p>
+                            </div>
+                            <div className="bg-(--background-surface)">
+                                <ReplyRow
+                                    reply={item.reply}
+                                    testId={`post-detail-${item.reply.id}-row`}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1 border-(--border-subtle) border-b pb-2">
+                    <h2 className="type-title-t2-semibold text-(--text-title)">Reply composer</h2>
+                    <p className="type-dense-default text-(--text-subtitle)">
+                        The box under a post on its own page, and the <em>Who can reply?</em> panel
+                        that takes its place when the reader is barred. Attaching a picture and
+                        pressing Reply both hit the real endpoints — these fixtures have no
+                        server-side post, so a send will fail.
+                    </p>
+                </div>
+
+                {COMPOSER_CASES.map(item => (
+                    <div key={item.title} className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-0.5">
+                            <h3 className="type-title-t3-semibold text-(--text-title)">
+                                {item.title}
+                            </h3>
+                            <p className="type-caption-meta text-(--text-placeholder)">
+                                {item.note}
+                            </p>
+                        </div>
+                        <div className="max-w-[612px]">
+                            <ReplyComposer
+                                post={item.post}
+                                testId={`post-detail-${item.post.id}-panel`}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </section>
+
             <section className="flex flex-col gap-2">
                 <div className="flex flex-col gap-0.5">
                     <h2 className="type-title-t2-semibold text-(--text-title)">

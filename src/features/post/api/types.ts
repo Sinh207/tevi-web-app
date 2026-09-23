@@ -256,7 +256,25 @@ const postCoreShape = {
     reply_allowed: boolish,
     can_reply: boolish,
     reply_allowed_user: nullableText,
-    reply_allowed_link: nullableText,
+    /**
+     * The creator's "links are allowed in replies" switch — a **boolean**, and `null` when the
+     * payload does not carry it.
+     *
+     * It was `nullableText` here, which is wrong in a way nothing would have surfaced: legacy reads
+     * `postInfo?.reply_allowed_link` as a boolean (`postForm/provider` writes it as
+     * `reply_allowed_link || false`), and a boolean run through `nullableText` lands as `null` —
+     * which the composer would then have had to read as "not allowed" and silently refuse every
+     * reply on every post.
+     *
+     * Absence is kept distinguishable from `false` rather than defaulted, because the two mean
+     * different things to the box: `false` is a creator's refusal to display, `null` is a field
+     * this client did not receive. `allowsReplyLinks` decides what to do with the second, and
+     * decides it **once**.
+     */
+    reply_allowed_link: z
+        .unknown()
+        .transform(value => (typeof value === 'boolean' ? value : null))
+        .catch(null),
 
     // ── Presentation ──
     pinned: boolish,

@@ -2,7 +2,8 @@ import { env } from '@shared/config/env'
 import { ApiError } from '@shared/lib/api/errors'
 import { createApiModel } from '@shared/lib/api/model'
 import type { PageCursor } from '@shared/lib/api/page-cursor'
-import { normalizePost, normalizePosts, type Post } from './types'
+import { normalizeReplies, normalizeReply, type Reply } from './reply-types'
+import { normalizePost, type Post } from './types'
 
 /**
  * A post as a thing in its own right — `core/v1/posts/**`.
@@ -13,11 +14,13 @@ import { normalizePost, normalizePosts, type Post } from './types'
  * menu offers — pin, reply-allowed, delete, and the two Star charges (unlocking a gated post, and
  * paying to interact on a channel that charges).
  *
+ * Everything the **post-detail screen** adds on top: the reply list, and posting one.
+ *
  * Legacy's `PostModel` declares 32 methods across five groups. The ones still absent belong to
- * surfaces that do not exist yet and would be guesses here: **comments** (7 methods — a reply list,
- * its form and its own reactions), **collections** (13 — a screen nobody has ported), the
- * bookmark **list** and `deleteAllBookmark` (a screen, not a card), and `updatePost`, which is the
- * composer's. Each lands with the surface that offers it, the way `report-api.ts` split out of
+ * surfaces that do not exist yet and would be guesses here: the rest of **comments** (a reply's own
+ * reactions, its deletion, and the nested `child-replies/` thread — the reply row draws none of
+ * those yet), **collections** (13 — a screen nobody has ported), the bookmark **list** and
+ * `deleteAllBookmark` (a screen, not a card), and `updatePost`, which is the post composer's. Each lands with the surface that offers it, the way `report-api.ts` split out of
  * `channel-api.ts`. `post-report-api.ts` beside this file is that split happening again.
  *
  * ## Every write pins the account, and none of them is retried
@@ -64,6 +67,16 @@ const VERSION = 'v1'
 const postPath = (postId: string, suffix = '') =>
     `${VERSION}/posts/${encodeURIComponent(postId)}/${suffix}`
 
+/**
+ * A **reply** is addressed under `posts/replies/`, never under `posts/{id}/`.
+ *
+ * Its own namespace, and the one thing that makes the reply endpoints impossible to confuse with
+ * the post ones by accident — which they were, until the detail page's replies were drawn as post
+ * cards and their reaction button pointed at `posts/{replyId}/reaction/`.
+ */
+const replyPath = (replyId: string, suffix = '') =>
+    `${VERSION}/posts/replies/${encodeURIComponent(replyId)}/${suffix}`
+
 const POST_SCOPE = ['post'] as const
 
 /**
@@ -83,6 +96,9 @@ export const postKeys = {
     /** Every page of replies under one post. */
     replies: (postId: string, accountId: string | null) =>
         [...POST_SCOPE, 'replies', postId, accountId ?? 'anon'] as const,
+    /** Every page of child replies under one reply — a different endpoint, so a different key. */
+    childReplies: (replyId: string, accountId: string | null) =>
+        [...POST_SCOPE, 'child-replies', replyId, accountId ?? 'anon'] as const,
 }
 
 /**
@@ -336,13 +352,77 @@ export const postApi = {
     },
 
     /**
+     * Post a reply under a post.
+     *
+     * ## The body is three fields, and two of them are conditional
+     *
+     * `{ lang, text?, images? }` — legacy's `handleProcessCommentData` verbatim, minus the half this
+     * client cannot honour. Legacy also sends **`html_text`**: it runs the typed text through
+     * `linkifyjs`, shortens every URL it finds through the link service, and splices `<a>` tags back
+     * in. That is deliberately not ported, and not merely to save a request:
+     *
+     * - **`PostCard` never renders `html_text`** (creator-authored markup, no sanitiser in this
+     *   repo — the card's own note states the refusal). A reply sent as `html_text` with no `text`
+     *   beside it is therefore a reply *this client cannot display*, which is a worse outcome than
+     *   an unlinked URL.
+     * - Splicing markup built from user input is the injection surface the card exists to avoid.
+     *   Making links live is a parser over `text`, when someone builds it.
+     *
+     * So the words go out as `text`, exactly as typed. Nothing is lost that this app can show.
+     *
+     * ## `lang` is `'en'` and that is a transcription, not a decision
+     *
+     * Legacy hard-codes it on every comment, from all nine of its locales. Sending the reader's UI
+     * locale instead would be a guess about a field whose accepted values nothing documents, and the
+     * failure mode is a `400` on every reply from a Vietnamese reader. **B109** asks what it is for.
+     *
+     * ## Not retried, and the reason is the charge beside it
+     *
+     * `createApiModel` posts without `{ retry: true }`, which is right here twice over: a replayed
+     * reply is a duplicate row the reader did not write, and on a channel that charges, the Star has
+     * already left the account before this call is made.
+     *
+     * Answers with the **created reply**, in the reply shape (`api/reply-types.ts`) rather than the
+     * post one, so the caller can put the row on screen without waiting for a refetch. A body that
+     * will not parse degrades to `null`; the reply still landed, and the list refetch recovers it.
+     */
+    async createReply(
+        { postId, text, images }: { postId: string; text: string | null; images: ReplyImage[] },
+        accountId?: string | null,
+    ): Promise<Reply | null> {
+        const body: {
+            lang: string
+            text?: string
+            images?: ReplyImage[]
+        } = { lang: REPLY_LANG }
+        if (text) body.text = text
+        if (images.length > 0) body.images = images
+
+        return normalizeReply(
+            await api.post<unknown>(
+                postPath(postId, 'replies/'),
+                body,
+                accountId ? { accountId } : undefined,
+            ),
+        )
+    },
+
+    /**
      * One page of replies under a post.
      *
      * Cursor-paginated like the channel's own thread list, and the cursor is a **full URL the client
      * must not fetch** — `shared/lib/api/page-cursor.ts` explains why (an internal hostname, and the
-     * credential rules in `origins.ts`). The rows are posts: a reply carries the same DTO, which is
-     * why `normalizePosts` parses both and why the comment row and the post card can share their
-     * gates.
+     * credential rules in `origins.ts`).
+     *
+     * ⚠ **The rows are replies, not posts, and the envelope carries no `count`.** Both were wrong
+     * here and both were silent: `normalizePosts` parsed every row into a post-shaped object whose
+     * author field (`channel`) does not exist on a reply, and `body.count ?? 0` printed
+     * *"0 replies"* over a list that had some. The real envelope is `{ next, previous, results }` —
+     * cursor pagination has no total. `api/reply-types.ts` carries the measured shape.
+     *
+     * The heading's number is the **parent post's** `reply_count` instead, which is a field that
+     * exists. It can lag this list by a moment; a figure that is occasionally one behind beats one
+     * that is always zero.
      */
     async getReplies({
         postId,
@@ -355,16 +435,78 @@ export const postApi = {
         accountId?: string | null
         signal?: AbortSignal
     }) {
-        const body = await api.get<{ results?: unknown; count?: number; next?: string | null }>(
+        const body = await api.get<{ results?: unknown; next?: string | null }>(
             postPath(postId, 'replies/'),
             cursor ?? { limit: REPLIES_PAGE_SIZE },
             { signal, ...(accountId ? { accountId } : {}) },
         )
-        return {
-            results: normalizePosts(body?.results),
-            count: body?.count ?? 0,
-            next: body?.next ?? null,
-        }
+        return { results: normalizeReplies(body?.results), next: body?.next ?? null }
+    },
+
+    /**
+     * One page of **child** replies — the answers to a reply.
+     *
+     * A different path entirely (`v1/posts/replies/{id}/child-replies/`, not
+     * `v1/posts/{id}/replies/`), the same row shape, and every row carries `parent_id` pointing back
+     * at the reply asked about. Legacy expands these inline under each comment.
+     */
+    async getChildReplies({
+        replyId,
+        cursor,
+        accountId,
+        signal,
+    }: {
+        replyId: string
+        cursor?: PageCursor | null
+        accountId?: string | null
+        signal?: AbortSignal
+    }) {
+        const body = await api.get<{ results?: unknown; next?: string | null }>(
+            replyPath(replyId, 'child-replies/'),
+            cursor ?? { limit: REPLIES_PAGE_SIZE },
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        return { results: normalizeReplies(body?.results), next: body?.next ?? null }
+    },
+
+    /**
+     * React to a reply, and take it back — **not** the post endpoints.
+     *
+     * `v1/posts/replies/{id}/reaction/` and `…/reaction-delete/`. A reply's id is not a post's id,
+     * so sending one to `v1/posts/{id}/reaction/` is a 404 — which is exactly what the detail page
+     * did while it drew replies as post cards. The asymmetry is the post pair's: the add posts a
+     * `type`, the remove takes none.
+     */
+    reactToReply(replyId: string, accountId?: string | null) {
+        return api.post<unknown>(
+            replyPath(replyId, 'reaction/'),
+            { type: 'LIKE' },
+            accountId ? { accountId } : undefined,
+        )
+    },
+
+    unreactFromReply(replyId: string, accountId?: string | null) {
+        return api.del<unknown>(
+            replyPath(replyId, 'reaction-delete/'),
+            undefined,
+            accountId ? { accountId } : undefined,
+        )
+    },
+
+    /**
+     * Delete a reply — the author's own, or the post owner's moderation.
+     *
+     * `DELETE v1/posts/replies/{id}/`. Unlike `deletePost`, whose row survives as a tombstone, what
+     * a deleted reply does is **unmeasured** — the payload has a `deleted` flag, so the row may well
+     * come back flagged rather than disappear. The caller therefore refetches rather than removing
+     * the row itself, which is right either way. **B109**.
+     */
+    deleteReply(replyId: string, accountId?: string | null) {
+        return api.del<unknown>(
+            replyPath(replyId),
+            undefined,
+            accountId ? { accountId } : undefined,
+        )
     },
 }
 
@@ -374,6 +516,22 @@ export const postApi = {
  * child-reply list the backend expands inline. Twenty of those is a visibly slower first paint.
  */
 export const REPLIES_PAGE_SIZE = 10
+
+/**
+ * One uploaded image, in the shape `createReply` sends it.
+ *
+ * `w`/`h` are the natural pixel dimensions, measured in the browser before the upload — legacy
+ * sends the same pair, and they are what lets a reply's gallery reserve its box before the bytes
+ * arrive. `postImageSchema` reads both this spelling and `width`/`height` coming back.
+ */
+export interface ReplyImage {
+    uri: string
+    w: number | null
+    h: number | null
+}
+
+/** See `createReply` — legacy's hard-coded value, carried rather than guessed at. **B109**. */
+const REPLY_LANG = 'en'
 
 /**
  * Did the write land?

@@ -5,13 +5,13 @@ import {
     buildPostTitle,
     isCanonicalPath,
     mayRenderForCrawler,
-    PostDetailView,
     postCanonicalPath,
 } from '@features/post'
 import { getPostForRequest } from '@features/post/server'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 import { permanentRedirect } from 'next/navigation'
+import { PostDetailScreen } from './post-detail-screen'
 
 /**
  * `/@{slug}/post/{code}` — one post and its replies.
@@ -169,7 +169,8 @@ export default async function PostDetailPage({ params }: PageProps) {
     return (
         <main className="mx-auto flex w-full max-w-[612px] flex-1 flex-col">
             <PageBackBar title={t('post_detail_title')} />
-            <PostDetailView identifier={code} serverPost={serverPost} />
+            {/* A client boundary, and only because a hook has to be read. See the file. */}
+            <PostDetailScreen identifier={code} serverPost={serverPost} />
         </main>
     )
 }
