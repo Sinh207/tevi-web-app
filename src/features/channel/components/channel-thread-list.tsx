@@ -10,6 +10,7 @@ import { Skeleton } from '@shared/ui/skeleton'
 import { useEffect, useMemo, useState } from 'react'
 import type { ThreadKind } from '../api/channel-api'
 import { useChannelThreads } from '../hooks/use-channel-threads'
+import { useMyChannel } from '../providers/my-channel-provider'
 import { ChannelEmptyState } from './channel-empty-state'
 import { ChannelError } from './channel-error'
 import { ChannelMediaTile } from './channel-media-tile'
@@ -51,6 +52,13 @@ export function ChannelThreadList({
         hasNextPage,
         isFetchingNextPage,
     } = useChannelThreads({ slug, kind, isOwner })
+
+    /**
+     * Premium readers pay nothing to react or reply, and the flag is the **reader's**, not the
+     * post's — so it is read here and handed down rather than derived inside `features/post`, which
+     * may not import this feature. `replyCost` carries the rule.
+     */
+    const { isPremium } = useMyChannel()
 
     /*
      * One share sheet for the whole list, holding whichever post raised it — the same arrangement
@@ -143,6 +151,7 @@ export function ChannelThreadList({
                             {height === null ? (
                                 <PostCard
                                     post={thread}
+                                    isPremiumReader={isPremium}
                                     onShare={() => setSharing(thread)}
                                     onChanged={() => refetch()}
                                     testId="channel-thread"

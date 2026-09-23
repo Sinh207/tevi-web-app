@@ -1,5 +1,6 @@
 'use client'
 
+import { useMyChannel } from '@features/channel'
 import { type Post, PostCard } from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
@@ -56,6 +57,13 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
         isFetchingNextPage,
         needsMore,
     } = useHomeFeed()
+
+    /**
+     * Premium readers pay nothing to react or reply, and the flag is the **reader's**, not the
+     * post's — so it is read here and handed down rather than derived inside `features/post`, which
+     * may not import this feature. `replyCost` carries the rule.
+     */
+    const { isPremium } = useMyChannel()
 
     /**
      * The share sheet is **one dialog for the whole feed**, holding whichever post raised it.
@@ -126,6 +134,7 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
                                   <PostCard
                                       key={post.id}
                                       post={post}
+                                      isPremiumReader={isPremium}
                                       /*
                                        * Only the **last drawn card of a collapsed group** offers
                                        * See more. On a collapsed group that is the only card; the
