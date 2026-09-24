@@ -236,14 +236,14 @@ describe('buildPostBody — where legacy web and iOS disagree', () => {
         ).toBe(false)
     })
 
-    it('always states the paid-interaction setting, enabled or not', () => {
-        expect(buildPostBody(draft({ text: 'x' }), UPLOADED).paid_interaction).toEqual({
-            is_enabled: false,
-            star_cost: 0,
-        })
-        expect(
-            buildPostBody(draft({ text: 'x', paidInteractionCost: 5 }), UPLOADED).paid_interaction,
-        ).toEqual({ is_enabled: true, star_cost: 5 })
+    /**
+     * `paid_interaction` is **not sent**, and that is a correction rather than an omission. Legacy
+     * still assembles it, but its own post-settings dialog replaced the switch with a notice saying
+     * the setting moved to Studio — so the field it sends carries a dead state over the
+     * channel-wide value. iOS reaches the same place by commenting the line out.
+     */
+    it('never sends paid_interaction', () => {
+        expect('paid_interaction' in buildPostBody(draft({ text: 'x' }), UPLOADED)).toBe(false)
     })
 
     it('omits pinned and quoted_post rather than nulling them', () => {

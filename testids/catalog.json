@@ -12299,12 +12299,16 @@
             ],
             "parts": [
                 "affix",
+                "group",
                 "header",
                 "label-data",
+                "list",
                 "panel",
                 "prefix",
+                "row",
                 "submit",
-                "suffix"
+                "suffix",
+                "trigger"
             ]
         },
         "src/features/post/components/post-detail-view.tsx": {
@@ -12400,21 +12404,19 @@
         },
         "src/features/post/components/post-settings-panel.tsx": {
             "accepts": [
-                "PostSettingsPanel"
+                "PostAudienceScreen",
+                "PostReplyAudienceScreen",
+                "PostSettingsScreen",
+                "PostCollectionScreen"
             ],
             "parts": [
                 "affix",
-                "confirm",
                 "field",
-                "group",
                 "input",
                 "item",
-                "list",
+                "message",
                 "option",
-                "panel",
-                "reveal",
-                "row",
-                "suffix"
+                "reveal"
             ]
         },
         "src/features/post/components/post-unlock-dialogs.tsx": {

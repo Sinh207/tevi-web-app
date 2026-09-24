@@ -14,7 +14,7 @@
  * | `video` | `{ id, thumbnail: <upload URL> }` | `{ id }` | **`{ id }`** |
  * | `lang` | `'en'`, hard-coded | the reader's own 2-letter code | **the reader's** |
  * | empty paid tier | sends `viewer: 'stargazers'` regardless | falls back to `everyone` | **falls back** |
- * | `paid_interaction` | sent | commented out | **sent** |
+ * | `paid_interaction` | assembled, but its switch is **gone from the UI** | commented out | **not sent** |
  * | `hidden_links` | absent | sent | **absent** |
  *
  * The three that matter most:
@@ -99,9 +99,6 @@ export interface PostDraft {
     replyAllowedUser: string
     /** Links permitted in replies. */
     replyAllowedLink: boolean
-    /** Charge readers to react and comment on this post. `null` when the creator has it off. */
-    paidInteractionCost: number | null
-
     pinned: boolean
     markedNsfw: boolean
     /** The post this one quotes, by id. */
@@ -133,7 +130,6 @@ export function emptyPostDraft(): PostDraft {
          */
         replyAllowedUser: 'FOLLOWERS',
         replyAllowedLink: true,
-        paidInteractionCost: null,
         pinned: false,
         markedNsfw: false,
         quotedPostId: null,
@@ -309,7 +305,6 @@ export interface PostBody {
     price_currency?: 'TVS'
     reply_allowed_user?: string
     reply_allowed_link?: boolean
-    paid_interaction?: { is_enabled: boolean; star_cost: number }
     pinned?: boolean
     marked_nsfw: boolean
     quoted_post?: string
@@ -385,15 +380,21 @@ export function buildPostBody(
     body.reply_allowed_link = draft.replyAllowedLink
 
     /*
-     * Sent on every create, with `is_enabled` carrying the answer — legacy's shape. iOS has the
-     * line **commented out**, so its posts inherit whatever the channel's default is. Following
-     * legacy here because this is the client being ported and the field is per-post on the wire;
-     * **B110** asks which of the two the backend actually honours.
+     * ⚠ **`paid_interaction` is deliberately not sent**, and that is a correction rather than an
+     * omission.
+     *
+     * Legacy's `useCreatePost` still assembles it, which is why it was ported — but legacy's own
+     * *post settings* dialog no longer offers the switch. Where it used to be there is now a
+     * notice: "Looking for 'Allow paid interactions'? This setting has been moved… set it once for
+     * all your content in Studio → Interaction". So the field it sends carries whatever its dead
+     * state happens to hold, on every post, over the channel-wide setting the creator configured.
+     *
+     * iOS reaches the same conclusion the blunt way: the line is **commented out** in
+     * `PostLocal.swift`.
+     *
+     * Two clients agreeing by different routes is as close to an answer as this gets, and sending
+     * a per-post override nobody can see is the one outcome worth avoiding. **B110**.
      */
-    body.paid_interaction = {
-        is_enabled: draft.paidInteractionCost !== null && draft.paidInteractionCost > 0,
-        star_cost: draft.paidInteractionCost ?? 0,
-    }
 
     if (draft.pinned) body.pinned = true
     if (draft.quotedPostId) body.quoted_post = draft.quotedPostId

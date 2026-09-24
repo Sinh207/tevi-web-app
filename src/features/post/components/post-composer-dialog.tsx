@@ -28,7 +28,12 @@ import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { isAttachableImage } from '../lib/reply-draft'
 import { captureVideoPoster, probeVideo, readVideoCodec } from '../lib/video-file'
 import { PostComposerBody } from './post-composer-body'
-import { PostSettingsPanel } from './post-settings-panel'
+import {
+    PostAudienceScreen,
+    PostCollectionScreen,
+    PostReplyAudienceScreen,
+    PostSettingsScreen,
+} from './post-settings-panel'
 
 /**
  * **New post** — legacy's `PostForm`, as far as words and pictures go.
@@ -55,7 +60,7 @@ import { PostSettingsPanel } from './post-settings-panel'
  * hands the five fields down.
  */
 /** The composer's own screens — see the note at `screen`. */
-type ComposerScreen = 'compose' | 'settings'
+type ComposerScreen = 'compose' | 'audience' | 'reply' | 'settings' | 'collections'
 
 export function PostComposerDialog({
     open,
@@ -275,6 +280,9 @@ export function PostComposerDialog({
         })
     }
 
+    /** One writer for every settings screen — they all patch the same draft. */
+    const patch = (next: Partial<PostDraft>) => setDraft(current => ({ ...current, ...next }))
+
     const remaining = limit - draft.text.length
     const message =
         videoError ??
@@ -319,9 +327,7 @@ export function PostComposerDialog({
             >
                 <div className="relative">
                     <DialogScreenHeader
-                        title={
-                            screen === 'compose' ? t('post_create_title') : t('post_settings_title')
-                        }
+                        title={t(SCREEN_TITLES[screen])}
                         /*
                          * Present only on a sub-screen, which turns the control into a back arrow —
                          * `DialogScreenHeader` makes that switch itself rather than taking a
@@ -340,22 +346,56 @@ export function PostComposerDialog({
                      */}
                     {screen === 'compose' ? (
                         <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
-                            <button
-                                type="button"
-                                data-testid={subTestId(testId, 'affix')}
-                                aria-label={t('post_settings_title')}
+                            <HeaderAction
+                                icon="folder"
+                                label={t('post_collection_title')}
                                 disabled={create.isPending}
-                                onClick={() => setScreen('settings')}
-                                className="flex size-9 items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
-                            >
-                                <Icon name="gear" size={20} />
-                            </button>
+                                onPress={() => setScreen('collections')}
+                                testId={subTestId(testId, 'affix')}
+                            />
+                            <HeaderAction
+                                icon="gear"
+                                label={t('post_settings_title')}
+                                disabled={create.isPending}
+                                onPress={() => setScreen('settings')}
+                                testId={subTestId(testId, 'prefix')}
+                            />
                         </div>
                     ) : null}
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3">
-                    {screen === 'compose' ? (
+                    {screen === 'audience' ? (
+                        <PostAudienceScreen
+                            draft={draft}
+                            onChange={patch}
+                            minPrice={minPrice}
+                            tiers={tiers}
+                            disabled={create.isPending}
+                            testId={subTestId(testId, 'group')}
+                        />
+                    ) : screen === 'reply' ? (
+                        <PostReplyAudienceScreen
+                            draft={draft}
+                            onChange={patch}
+                            disabled={create.isPending}
+                            testId={subTestId(testId, 'list')}
+                        />
+                    ) : screen === 'settings' ? (
+                        <PostSettingsScreen
+                            draft={draft}
+                            onChange={patch}
+                            disabled={create.isPending}
+                            testId={subTestId(testId, 'panel')}
+                        />
+                    ) : screen === 'collections' ? (
+                        <PostCollectionScreen
+                            draft={draft}
+                            onChange={patch}
+                            disabled={create.isPending}
+                            testId={subTestId(testId, 'row')}
+                        />
+                    ) : (
                         <PostComposerBody
                             draft={draft}
                             author={author}
@@ -372,15 +412,6 @@ export function PostComposerDialog({
                             message={message}
                             testId={testId}
                         />
-                    ) : (
-                        <PostSettingsPanel
-                            draft={draft}
-                            onChange={next => setDraft(current => ({ ...current, ...next }))}
-                            minPrice={minPrice}
-                            tiers={tiers}
-                            disabled={create.isPending}
-                            testId={subTestId(testId, 'panel')}
-                        />
                     )}
                 </div>
 
@@ -396,18 +427,18 @@ export function PostComposerDialog({
                                 icon={draft.audience === 'STARGAZERS' ? 'lock-simple' : 'globe'}
                                 label={
                                     draft.audience === 'STARGAZERS'
-                                        ? t('post_settings_members')
-                                        : t('post_audience_everyone')
+                                        ? t('post_audience_exclusive')
+                                        : t('post_audience_free')
                                 }
                                 disabled={create.isPending}
-                                onPress={() => setScreen('settings')}
-                                testId={subTestId(testId, 'prefix')}
+                                onPress={() => setScreen('audience')}
+                                testId={subTestId(testId, 'trigger')}
                             />
                             <SettingChip
                                 icon="comment"
                                 label={t(replyAudienceLabelKey(draft.replyAllowedUser))}
                                 disabled={create.isPending}
-                                onPress={() => setScreen('settings')}
+                                onPress={() => setScreen('reply')}
                                 testId={subTestId(testId, 'suffix')}
                             />
                         </div>
@@ -484,21 +515,58 @@ function SettingChip({
     )
 }
 
+/** Each screen's own title, so the header says where the reader is. Legacy titles its three the same. */
+const SCREEN_TITLES: Record<ComposerScreen, string> = {
+    compose: 'post_create_title',
+    audience: 'post_audience_title',
+    reply: 'who_can_reply_title',
+    settings: 'post_settings_title',
+    collections: 'post_collection_title',
+}
+
+/** One of the header's two trailing controls — legacy's `BtnCollection` and `BtnPostSetting`. */
+function HeaderAction({
+    icon,
+    label,
+    disabled,
+    onPress,
+    testId,
+}: {
+    icon: TeviIconName
+    label: string
+    disabled?: boolean
+    onPress: () => void
+    testId?: string
+}) {
+    return (
+        <button
+            type="button"
+            data-testid={testId}
+            aria-label={label}
+            disabled={disabled}
+            onClick={onPress}
+            className="flex size-9 items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+        >
+            <Icon name={icon} size={20} />
+        </button>
+    )
+}
+
 /** The reply rule's own label, from the same six values the settings screen offers. */
 function replyAudienceLabelKey(value: string): string {
     switch (value) {
         case 'PAID_USERS':
-            return 'post_settings_reply_paid'
+            return 'post_reply_option_paid'
         case 'FOLLOWINGS':
-            return 'post_settings_reply_followings'
+            return 'post_reply_option_followings'
         case 'VERIFIED_SPACES':
-            return 'post_settings_reply_verified'
+            return 'post_reply_option_verified'
         case 'MENTIONED_SPACES':
-            return 'post_settings_reply_mentioned'
+            return 'post_reply_option_mentioned'
         case 'NONE':
-            return 'post_settings_reply_none'
+            return 'post_reply_option_none'
         default:
-            return 'post_settings_reply_followers'
+            return 'post_reply_option_followers'
     }
 }
 

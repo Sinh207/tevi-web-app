@@ -8,42 +8,28 @@ import { Toggle } from '@shared/ui/toggle'
 import { useId } from 'react'
 import type { PostDraft } from '../lib/post-draft'
 import { STAR_PRICE_MAX } from '../lib/post-draft'
-import type { ReplyAudience } from '../lib/who-can-reply'
 import { PostCollectionPicker } from './post-collection-picker'
 
 /**
- * Everything about a post that is not its words — audience, paywall, who may reply, and the three
- * switches.
+ * The composer's settings screens — **three of them**, because legacy has three dialogs.
  *
- * ## One panel where legacy has three dialogs
+ * ## Why three and not one
  *
- * Legacy opens *Select your audience*, *Reply settings* and *Post settings* as separate modals from
- * three buttons on the composer's action bar. They are collapsed here because they are all the same
- * kind of question — "who is this for and what may they do with it" — and because three modals over
- * a modal is a stack this app's dialog primitive does not draw. What is kept from legacy is the
- * **grouping**, in the same order, so a creator who knows the app finds the same switch in the same
- * neighbourhood.
+ * They were collapsed into a single panel at first, on the grounds that they answer the same kind of
+ * question. They do not: *Select your audience* decides whether the post is sold, *Who can reply?*
+ * is a six-way choice with an explanation each, and *Post settings* is three switches and a notice.
+ * Legacy titles them separately, and a creator who knows the app looks for a switch under the
+ * heading it lives under.
  *
- * ## The paywall's two routes are independent, and both write the same field
- *
- * A post can be unlocked by **buying it** (a Star price) or by **being a member** (a tier), and a
- * creator may offer either, both, or neither. Legacy models this as two booleans that each flip the
- * audience to `STARGAZERS` and back, which is why its `handlePaidChange` and `handleMemberChange`
- * each check the *other* before reverting. Here the audience is **derived** instead: it is
- * `STARGAZERS` exactly when at least one route is set, which `buildPostBody` re-derives on the way
- * out — so the two cannot drift.
- *
- * ## Why the reply audience is six radio rows and not a select
- *
- * The six values are `lib/who-can-reply.ts`'s, the same list the reader meets on the other side as
- * a sentence. Radios rather than a `<select>` because each one needs its own explanation — *Only
- * spaces you follow* is not self-evident — and the DS ships no select with a second line.
+ * Each is a screen inside the composer's own dialog rather than a modal over it — this app's dialog
+ * draws one layer, and `DialogScreenHeader`'s back arrow is the navigation.
  */
-export function PostSettingsPanel({
+
+/** *Select your audience* — legacy's first dialog. */
+export function PostAudienceScreen({
     draft,
     onChange,
     minPrice,
-    /** The creator's membership tiers. Empty means the members route cannot be offered. */
     tiers,
     disabled = false,
     testId,
@@ -51,6 +37,7 @@ export function PostSettingsPanel({
     draft: PostDraft
     onChange: (next: Partial<PostDraft>) => void
     minPrice: number
+    /** The creator's membership tiers. Empty means the members route cannot be offered. */
     tiers: { id: string; name: string }[]
     disabled?: boolean
     testId?: string
@@ -59,14 +46,15 @@ export function PostSettingsPanel({
 
     const paidRoute = draft.price !== null
     const memberRoute = draft.requiredPackages.length > 0
+    const free = !paidRoute && !memberRoute
 
     /**
      * Turning a route on or off, and keeping `audience` in step.
      *
-     * The audience is never set directly by a control — it is whatever the two routes imply. That is
-     * the one rule this panel exists to hold: legacy has two handlers that each have to remember to
-     * consult the other, and a post whose audience says `STARGAZERS` with neither route set is one
-     * only its author can read (`buildPostBody` rewrites that shape, and this stops it arising).
+     * The audience is never set by a control directly — it is whatever the two routes imply. Legacy
+     * has two handlers that each have to remember to consult the other; here the shape that needs
+     * remembering (`STARGAZERS` with neither route set, a post only its author can read) cannot
+     * arise.
      */
     function setRoutes(next: { price?: number | null; packages?: string[] }) {
         const price = next.price === undefined ? draft.price : next.price
@@ -79,193 +67,279 @@ export function PostSettingsPanel({
     }
 
     return (
-        <div
-            data-testid={testId}
-            className="flex flex-col gap-4 border-(--separator-default) border-t pt-4"
-        >
-            <Section title={t('post_settings_audience')} testId={subTestId(testId, 'group')}>
-                <SwitchRow
-                    label={t('post_settings_paid')}
-                    hint={t('post_settings_paid_hint')}
-                    checked={paidRoute}
-                    disabled={disabled}
-                    onChange={on => setRoutes({ price: on ? minPrice : null })}
-                    testId={subTestId(testId, 'option')}
-                />
+        <div data-testid={testId} className="flex flex-col">
+            {/*
+             * **Free is its own switch**, not the absence of the other two — legacy draws it that
+             * way, and it is the difference between "this post is free" as a statement and as a
+             * leftover. Turning it on clears both routes; turning it off does nothing, because
+             * "not free" is not an instruction until one of the routes below is chosen.
+             */}
+            <SwitchRow
+                label={t('post_audience_free')}
+                checked={free}
+                disabled={disabled}
+                onChange={on => {
+                    if (on) setRoutes({ price: null, packages: [] })
+                }}
+                testId={subTestId(testId, 'option')}
+            />
 
-                {paidRoute ? (
-                    <label className="flex items-center gap-2 ps-1">
-                        <span className="type-dense-default text-(--text-subtitle)">
-                            {t('post_settings_price')}
-                        </span>
-                        <input
-                            type="number"
-                            inputMode="numeric"
-                            min={minPrice}
-                            max={STAR_PRICE_MAX}
-                            value={draft.price ?? minPrice}
-                            disabled={disabled}
-                            data-testid={subTestId(testId, 'input')}
-                            onChange={event => {
-                                /*
-                                 * An empty field is not a price of zero. Clearing it while typing
-                                 * is ordinary, so it falls back to the floor rather than to a value
-                                 * `postDraftProblem` would then refuse — the author is mid-edit,
-                                 * not wrong.
-                                 */
-                                const parsed = Number(event.target.value)
-                                setRoutes({
-                                    price:
-                                        Number.isFinite(parsed) && parsed > 0 ? parsed : minPrice,
-                                })
-                            }}
-                            className="type-body-default w-28 rounded-(--radius-sm) border border-(--input-border) bg-transparent px-2 py-1 text-(--text-title)"
-                        />
-                        <Icon name="star" size={16} className="text-(--icon-secondary)" />
-                    </label>
-                ) : null}
+            <Rule />
 
-                {/*
-                 * The members route is offered only when there is a tier to require. A creator with
-                 * no membership set up would otherwise switch it on and produce a post gated behind
-                 * a tier list that is empty — which reaches nobody, and which `buildPostBody` would
-                 * then quietly republish as public.
-                 */}
-                {tiers.length > 0 ? (
-                    <SwitchRow
-                        label={t('post_settings_members')}
-                        hint={t('post_settings_members_hint')}
-                        checked={memberRoute}
+            <h3 className="type-dense-emphasis pt-3 pb-1 text-(--text-title)">
+                {t('post_audience_exclusive')}
+            </h3>
+
+            <SwitchRow
+                label={t('post_audience_pay_per_post')}
+                hint={t('post_audience_pay_per_post_hint')}
+                checked={paidRoute}
+                disabled={disabled}
+                onChange={on => setRoutes({ price: on ? minPrice : null })}
+                testId={subTestId(testId, 'item')}
+            />
+
+            {paidRoute ? (
+                <label className="flex items-center gap-2 pb-3">
+                    <span className="type-dense-default text-(--text-subtitle)">
+                        {t('post_settings_price')}
+                    </span>
+                    <input
+                        type="number"
+                        inputMode="numeric"
+                        min={minPrice}
+                        max={STAR_PRICE_MAX}
+                        value={draft.price ?? minPrice}
                         disabled={disabled}
-                        onChange={on =>
-                            setRoutes({ packages: on && tiers[0] ? [tiers[0].id] : [] })
-                        }
-                        testId={subTestId(testId, 'item')}
+                        data-testid={subTestId(testId, 'input')}
+                        onChange={event => {
+                            /*
+                             * An empty field is not a price of zero. Clearing it while typing is
+                             * ordinary, so it falls back to the floor rather than to a value
+                             * `postDraftProblem` would then refuse — the author is mid-edit.
+                             */
+                            const parsed = Number(event.target.value)
+                            setRoutes({
+                                price: Number.isFinite(parsed) && parsed > 0 ? parsed : minPrice,
+                            })
+                        }}
+                        className="type-body-default w-28 rounded-(--radius-sm) border border-(--input-border) bg-transparent px-2 py-1 text-(--text-title)"
                     />
-                ) : null}
-            </Section>
+                    <Icon name="star" size={16} className="text-(--icon-secondary)" />
+                </label>
+            ) : null}
 
-            <Section title={t('post_collection_section')} testId={subTestId(testId, 'row')}>
-                <PostCollectionPicker
-                    selected={draft.collectionIds}
-                    onChange={ids => onChange({ collectionIds: ids })}
-                    disabled={disabled}
-                    testId={subTestId(testId, 'suffix')}
-                />
-            </Section>
-
-            <Section title={t('who_can_reply_title')} testId={subTestId(testId, 'list')}>
-                {REPLY_AUDIENCES.map(audience => (
-                    // biome-ignore lint/a11y/noLabelWithoutControl: `Radio` renders the `<input type="radio">` this label wraps; the rule cannot see through a component.
-                    <label
-                        key={audience.value}
-                        className="flex cursor-pointer items-center gap-2"
-                        data-option-value={audience.value}
-                    >
-                        {/*
-                         * `as="span"`, because `Radio` defaults to rendering a `<label>` around its
-                         * own input — and a label inside a label gives the words to the outer one
-                         * and the control to the inner, so pressing the text toggles nothing. The
-                         * DS geometry is untouched; only the element it renders as changes, which
-                         * is what the prop is for.
-                         */}
-                        <Radio
-                            as="span"
-                            name="post-reply-audience"
-                            checked={draft.replyAllowedUser === audience.value}
-                            disabled={disabled}
-                            onChange={() => onChange({ replyAllowedUser: audience.value })}
-                            data-testid={subTestId(testId, 'option')}
-                        />
-                        <span className="type-dense-default text-(--text-title)">
-                            {t(audience.labelKey)}
-                        </span>
-                    </label>
-                ))}
-            </Section>
-
-            <Section title={t('post_settings_title')} testId={subTestId(testId, 'panel')}>
+            {/*
+             * The members route is offered only when there is a tier to require. A creator with no
+             * membership would otherwise switch it on and produce a post gated behind an empty tier
+             * list — which reaches nobody, and which `buildPostBody` then republishes as public.
+             */}
+            {tiers.length > 0 ? (
                 <SwitchRow
-                    label={t('post_settings_reply_links')}
-                    checked={draft.replyAllowedLink}
+                    label={t('post_audience_members')}
+                    hint={t('post_audience_members_hint')}
+                    checked={memberRoute}
                     disabled={disabled}
-                    onChange={on => onChange({ replyAllowedLink: on })}
-                    testId={subTestId(testId, 'field')}
-                />
-                <SwitchRow
-                    label={t('post_settings_pin')}
-                    checked={draft.pinned}
-                    disabled={disabled}
-                    onChange={on => onChange({ pinned: on })}
+                    onChange={on => setRoutes({ packages: on && tiers[0] ? [tiers[0].id] : [] })}
                     testId={subTestId(testId, 'affix')}
                 />
-                <SwitchRow
-                    label={t('post_settings_nsfw')}
-                    hint={t('post_settings_nsfw_hint')}
-                    checked={draft.markedNsfw}
-                    disabled={disabled}
-                    onChange={on => onChange({ markedNsfw: on })}
-                    testId={subTestId(testId, 'reveal')}
-                />
-                <SwitchRow
-                    label={t('post_settings_paid_interaction')}
-                    hint={t('post_settings_paid_interaction_hint')}
-                    checked={draft.paidInteractionCost !== null}
-                    disabled={disabled}
-                    /*
-                     * A cost of `1` when switched on, which is the smallest charge that means
-                     * anything — `PostActions` prints a price chip only above 1, so anything less
-                     * would be a charge the reader is never shown.
-                     */
-                    onChange={on => onChange({ paidInteractionCost: on ? 1 : null })}
-                    testId={subTestId(testId, 'confirm')}
-                />
-            </Section>
+            ) : null}
         </div>
     )
 }
 
-/**
- * The six reply audiences, in legacy's own order.
- *
- * Values are the wire's (`lib/who-can-reply.ts` reads the same six coming back), so the composer and
- * the reader's panel cannot disagree about what a post says.
- */
-const REPLY_AUDIENCES: { value: string; labelKey: string; audience: ReplyAudience }[] = [
-    { value: 'FOLLOWERS', labelKey: 'post_settings_reply_followers', audience: 'followers' },
-    { value: 'PAID_USERS', labelKey: 'post_settings_reply_paid', audience: 'paid-users' },
-    { value: 'FOLLOWINGS', labelKey: 'post_settings_reply_followings', audience: 'followings' },
-    {
-        value: 'VERIFIED_SPACES',
-        labelKey: 'post_settings_reply_verified',
-        audience: 'verified-spaces',
-    },
-    {
-        value: 'MENTIONED_SPACES',
-        labelKey: 'post_settings_reply_mentioned',
-        audience: 'mentioned-spaces',
-    },
-    { value: 'NONE', labelKey: 'post_settings_reply_none', audience: 'none' },
-]
-
-function Section({
-    title,
-    children,
+/** *Who can reply?* — legacy's second dialog: a subtitle and six explained choices. */
+export function PostReplyAudienceScreen({
+    draft,
+    onChange,
+    disabled = false,
     testId,
 }: {
-    title: string
-    children: React.ReactNode
+    draft: PostDraft
+    onChange: (next: Partial<PostDraft>) => void
+    disabled?: boolean
     testId?: string
 }) {
+    const { t } = useTranslation()
+
     return (
-        <section data-testid={testId} className="flex flex-col gap-2">
-            <h3 className="type-dense-emphasis text-(--text-title)">{title}</h3>
-            {children}
-        </section>
+        <div data-testid={testId} className="flex flex-col gap-3">
+            <p className="type-dense-default text-(--text-subtitle)">
+                {t('post_reply_setting_subtitle')}
+            </p>
+
+            {REPLY_AUDIENCES.map(audience => (
+                // biome-ignore lint/a11y/noLabelWithoutControl: `Radio` renders the `<input type="radio">` this label wraps; the rule cannot see through a component.
+                <label
+                    key={audience.value}
+                    className="flex cursor-pointer items-start gap-2"
+                    data-option-value={audience.value}
+                >
+                    {/*
+                     * `as="span"`, because `Radio` defaults to rendering a `<label>` around its own
+                     * input — and a label inside a label gives the words to the outer one and the
+                     * control to the inner, so pressing the text toggles nothing.
+                     */}
+                    <Radio
+                        as="span"
+                        name="post-reply-audience"
+                        checked={draft.replyAllowedUser === audience.value}
+                        disabled={disabled}
+                        onChange={() => onChange({ replyAllowedUser: audience.value })}
+                        data-testid={subTestId(testId, 'option')}
+                        className="mt-0.5 flex-none"
+                    />
+                    <span className="flex min-w-0 flex-col">
+                        <span className="type-dense-emphasis text-(--text-title)">
+                            {t(audience.labelKey)}
+                        </span>
+                        {/*
+                         * Each choice carries its own second line, as legacy's do. *Spaces you
+                         * follow* is not self-evident, and a bare list of six would leave the
+                         * creator guessing at three of them.
+                         */}
+                        <span className="type-caption-meta text-(--text-placeholder)">
+                            {t(audience.hintKey)}
+                        </span>
+                    </span>
+                </label>
+            ))}
+        </div>
     )
 }
 
-/** A label, an optional second line, and a switch on the trailing edge. */
+/** *Post settings* — legacy's third dialog: three switches and a notice. */
+export function PostSettingsScreen({
+    draft,
+    onChange,
+    disabled = false,
+    testId,
+}: {
+    draft: PostDraft
+    onChange: (next: Partial<PostDraft>) => void
+    disabled?: boolean
+    testId?: string
+}) {
+    const { t } = useTranslation()
+
+    return (
+        <div data-testid={testId} className="flex flex-col">
+            <SwitchRow
+                label={t('post_settings_reply_links')}
+                checked={draft.replyAllowedLink}
+                disabled={disabled}
+                onChange={on => onChange({ replyAllowedLink: on })}
+                testId={subTestId(testId, 'field')}
+            />
+            <Rule />
+            <SwitchRow
+                label={t('post_settings_pin')}
+                checked={draft.pinned}
+                disabled={disabled}
+                onChange={on => onChange({ pinned: on })}
+                testId={subTestId(testId, 'affix')}
+            />
+            <Rule />
+            <SwitchRow
+                label={t('post_settings_nsfw')}
+                hint={t('post_settings_nsfw_hint')}
+                checked={draft.markedNsfw}
+                disabled={disabled}
+                onChange={on => onChange({ markedNsfw: on })}
+                testId={subTestId(testId, 'reveal')}
+            />
+            <Rule />
+
+            {/*
+             * Not a switch — a **notice**, which is what legacy put here when the setting moved out
+             * of the composer. Porting the control instead would offer a per-post override of
+             * something the creator now configures once for their whole space, and `buildPostBody`
+             * no longer sends the field at all (it says why).
+             */}
+            <div data-testid={subTestId(testId, 'message')} className="flex flex-col gap-1 py-3">
+                <p className="type-dense-emphasis text-(--text-title)">
+                    {t('post_settings_paid_interaction_moved')}
+                </p>
+                <p className="type-caption-meta text-(--text-placeholder)">
+                    {t('post_settings_paid_interaction_moved_hint')}
+                </p>
+            </div>
+        </div>
+    )
+}
+
+/** *Add to a collection* — legacy's `BtnCollection`, opened from the composer's header. */
+export function PostCollectionScreen({
+    draft,
+    onChange,
+    disabled = false,
+    testId,
+}: {
+    draft: PostDraft
+    onChange: (next: Partial<PostDraft>) => void
+    disabled?: boolean
+    testId?: string
+}) {
+    return (
+        <PostCollectionPicker
+            selected={draft.collectionIds}
+            onChange={ids => onChange({ collectionIds: ids })}
+            disabled={disabled}
+            alwaysOpen
+            testId={testId}
+        />
+    )
+}
+
+/**
+ * The six reply audiences, in legacy's order, with legacy's own labels.
+ *
+ * The wording is `useReplySetting`'s — *Paid viewers*, *Mentioned only* — rather than a paraphrase.
+ * A creator picking a rule here and a reader meeting it on the post are looking at two sentences
+ * about one setting, and the pair only reads as one product if both come from the same source. The
+ * values are the wire's, which `lib/who-can-reply.ts` reads back.
+ */
+const REPLY_AUDIENCES: { value: string; labelKey: string; hintKey: string }[] = [
+    {
+        value: 'FOLLOWERS',
+        labelKey: 'post_reply_option_followers',
+        hintKey: 'post_reply_option_followers_hint',
+    },
+    {
+        value: 'PAID_USERS',
+        labelKey: 'post_reply_option_paid',
+        hintKey: 'post_reply_option_paid_hint',
+    },
+    {
+        value: 'FOLLOWINGS',
+        labelKey: 'post_reply_option_followings',
+        hintKey: 'post_reply_option_followings_hint',
+    },
+    {
+        value: 'VERIFIED_SPACES',
+        labelKey: 'post_reply_option_verified',
+        hintKey: 'post_reply_option_verified_hint',
+    },
+    {
+        value: 'MENTIONED_SPACES',
+        labelKey: 'post_reply_option_mentioned',
+        hintKey: 'post_reply_option_mentioned_hint',
+    },
+    { value: 'NONE', labelKey: 'post_reply_option_none', hintKey: 'post_reply_option_none_hint' },
+]
+
+/** The hairline legacy puts between setting rows (`<Divider/>`). */
+function Rule() {
+    return <span aria-hidden="true" className="h-px w-full bg-(--separator-default)" />
+}
+
+/**
+ * A label, an optional second line, and a switch on the trailing edge.
+ *
+ * A `<div>`, not a `<label>`: `Toggle` is a `role="switch"` **button**, and a label wrapping one
+ * labels nothing — the browser only associates a label with a form control. `aria-labelledby` is
+ * what names the switch, and the hint is joined to it so a screen reader hears the qualification.
+ */
 function SwitchRow({
     label,
     hint,
@@ -281,19 +355,13 @@ function SwitchRow({
     onChange: (checked: boolean) => void
     testId?: string
 }) {
-    /*
-     * A `<div>`, not a `<label>`. `Toggle` is a `role="switch"` **button**, and a label wrapping one
-     * labels nothing — the browser only associates a label with a form control. `aria-labelledby`
-     * is what gives the switch its name, and the hint is joined to it so a screen reader hears the
-     * qualification rather than just the noun.
-     */
     const labelId = useId()
     const hintId = `${labelId}-hint`
 
     return (
-        <div className="flex items-start justify-between gap-3">
-            <span className="flex min-w-0 flex-col">
-                <span id={labelId} className="type-dense-default text-(--text-title)">
+        <div className="flex items-start justify-between gap-3 py-3">
+            <span className="flex min-w-0 flex-col gap-1">
+                <span id={labelId} className="type-body-strong text-(--text-title)">
                     {label}
                 </span>
                 {hint ? (
@@ -308,7 +376,7 @@ function SwitchRow({
                 onCheckedChange={onChange}
                 aria-labelledby={hint ? `${labelId} ${hintId}` : labelId}
                 data-testid={testId}
-                className="flex-none"
+                className="mt-0.5 flex-none"
             />
         </div>
     )

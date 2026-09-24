@@ -30,15 +30,25 @@ export function PostCollectionPicker({
     selected,
     onChange,
     disabled = false,
+    alwaysOpen = false,
     testId,
 }: {
     selected: string[]
     onChange: (ids: string[]) => void
     disabled?: boolean
+    /**
+     * Drawn expanded, with no disclosure control of its own.
+     *
+     * For the composer's **collection screen**, which is already a screen about collections — a
+     * button there saying *Add to a collection* would be asking twice. The disclosure shape stays
+     * for anywhere this is one row among others.
+     */
+    alwaysOpen?: boolean
     testId?: string
 }) {
     const { t } = useTranslation()
-    const [open, setOpen] = useState(false)
+    const [expanded, setExpanded] = useState(false)
+    const open = alwaysOpen || expanded
     const [name, setName] = useState('')
 
     const collections = useCollections({ enabled: open })
@@ -62,21 +72,23 @@ export function PostCollectionPicker({
 
     return (
         <div data-testid={testId} className="flex flex-col gap-2">
-            <button
-                type="button"
-                data-testid={subTestId(testId, 'trigger')}
-                aria-expanded={open}
-                disabled={disabled}
-                onClick={() => setOpen(current => !current)}
-                className="type-dense-emphasis flex items-center justify-between text-(--text-title)"
-            >
-                <span>{t('post_collection_title')}</span>
-                <span className="type-caption-meta text-(--text-placeholder)">
-                    {selected.length > 0
-                        ? t('post_collection_selected', { count: selected.length })
-                        : t('post_collection_none')}
-                </span>
-            </button>
+            {alwaysOpen ? null : (
+                <button
+                    type="button"
+                    data-testid={subTestId(testId, 'trigger')}
+                    aria-expanded={open}
+                    disabled={disabled}
+                    onClick={() => setExpanded(current => !current)}
+                    className="type-dense-emphasis flex items-center justify-between text-(--text-title)"
+                >
+                    <span>{t('post_collection_title')}</span>
+                    <span className="type-caption-meta text-(--text-placeholder)">
+                        {selected.length > 0
+                            ? t('post_collection_selected', { count: selected.length })
+                            : t('post_collection_none')}
+                    </span>
+                </button>
+            )}
 
             {open ? (
                 <div className="flex flex-col gap-2">
