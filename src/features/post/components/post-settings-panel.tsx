@@ -8,7 +8,6 @@ import { Toggle } from '@shared/ui/toggle'
 import { useId } from 'react'
 import type { PostDraft } from '../lib/post-draft'
 import { STAR_PRICE_MAX } from '../lib/post-draft'
-import { PostCollectionPicker } from './post-collection-picker'
 
 /**
  * The composer's settings screens — **three of them**, because legacy has three dialogs.
@@ -265,28 +264,6 @@ export function PostSettingsScreen({
                 </p>
             </div>
         </div>
-    )
-}
-
-/** *Add to a collection* — legacy's `BtnCollection`, opened from the composer's header. */
-export function PostCollectionScreen({
-    draft,
-    onChange,
-    disabled = false,
-    testId,
-}: {
-    draft: PostDraft
-    onChange: (next: Partial<PostDraft>) => void
-    disabled?: boolean
-    testId?: string
-}) {
-    return (
-        <PostCollectionPicker
-            selected={draft.collectionIds}
-            onChange={ids => onChange({ collectionIds: ids })}
-            disabled={disabled}
-            testId={testId}
-        />
     )
 }
 

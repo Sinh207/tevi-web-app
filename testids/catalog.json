@@ -12301,16 +12301,24 @@
             ],
             "parts": [
                 "affix",
-                "group",
                 "header",
                 "label-data",
-                "list",
-                "panel",
                 "prefix",
-                "row",
                 "submit",
                 "suffix",
                 "trigger"
+            ]
+        },
+        "src/features/post/components/post-composer-dialogs.tsx": {
+            "accepts": [
+                "PostComposerDialogs"
+            ],
+            "parts": [
+                "group",
+                "header",
+                "list",
+                "panel",
+                "row"
             ]
         },
         "src/features/post/components/post-detail-view.tsx": {
@@ -12408,8 +12416,7 @@
             "accepts": [
                 "PostAudienceScreen",
                 "PostReplyAudienceScreen",
-                "PostSettingsScreen",
-                "PostCollectionScreen"
+                "PostSettingsScreen"
             ],
             "parts": [
                 "affix",

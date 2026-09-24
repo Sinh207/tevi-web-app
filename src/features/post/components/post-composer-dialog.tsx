@@ -28,12 +28,7 @@ import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { isAttachableImage } from '../lib/reply-draft'
 import { captureVideoPoster, probeVideo, readVideoCodec } from '../lib/video-file'
 import { PostComposerBody } from './post-composer-body'
-import {
-    PostAudienceScreen,
-    PostCollectionScreen,
-    PostReplyAudienceScreen,
-    PostSettingsScreen,
-} from './post-settings-panel'
+import { type ComposerDialog, PostComposerDialogs } from './post-composer-dialogs'
 
 /**
  * **New post** — legacy's `PostForm`, as far as words and pictures go.
@@ -59,9 +54,6 @@ import {
  * `features/channel`, which imports this feature. Whoever mounts the dialog reads the provider and
  * hands the five fields down.
  */
-/** The composer's own screens — see the note at `screen`. */
-type ComposerScreen = 'compose' | 'audience' | 'reply' | 'settings' | 'collections'
-
 export function PostComposerDialog({
     open,
     onOpenChange,
@@ -101,18 +93,14 @@ export function PostComposerDialog({
     const _videoRef = useRef<HTMLInputElement>(null)
 
     /**
-     * Which screen the dialog is showing.
+     * Which settings dialog is open over the composer, if any.
      *
-     * Legacy opens *Select your audience*, *Reply settings*, *Post settings* and the collection
-     * picker as **separate modals over the composer**, which is itself a modal. This app's dialog
-     * draws one layer, so they are screens inside the same frame instead — the header's control
-     * turns into a back arrow, which is exactly what `DialogScreenHeader`'s `onBack` is for and
-     * what `TwoStepVerificationDialog` already does with its five steps.
-     *
-     * The grouping and the order are legacy's, so a creator finds the same switch in the same
-     * place; only the layer it sits on differs.
+     * They are **separate popups**, as legacy has them — `post-composer-dialogs.tsx` carries the
+     * reasoning, including why the first pass folding them into this frame was wrong. The composer
+     * itself never changes shape: its header keeps its close button and the draft stays on screen
+     * behind whichever one is open.
      */
-    const [screen, setScreen] = useState<ComposerScreen>('compose')
+    const [settingsDialog, setSettingsDialog] = useState<ComposerDialog>(null)
 
     const [draft, setDraft] = useState<PostDraft>(emptyPostDraft)
     /** A file the browser would not decode. Not a draft problem — the clip never got in. */
@@ -316,7 +304,8 @@ export function PostComposerDialog({
                 if (create.isPending) return
                 if (!next) {
                     reset()
-                    setScreen('compose')
+                    // Any settings popup goes with it — reopening should not land on one.
+                    setSettingsDialog(null)
                 }
                 onOpenChange(next)
             }}
@@ -326,14 +315,14 @@ export function PostComposerDialog({
                 data-testid={testId}
             >
                 <div className="relative">
+                    {/*
+                     * The composer's own header never changes: a close button and one title. The
+                     * settings are separate dialogs over it, so there is no second state for this
+                     * control to be in — an earlier pass turned it into a back arrow, which takes
+                     * the way out away and asks the reader to notice that a button changed meaning.
+                     */}
                     <DialogScreenHeader
-                        title={t(SCREEN_TITLES[screen])}
-                        /*
-                         * Present only on a sub-screen, which turns the control into a back arrow —
-                         * `DialogScreenHeader` makes that switch itself rather than taking a
-                         * `canGoBack` boolean, so the two cannot disagree.
-                         */
-                        onBack={screen === 'compose' ? undefined : () => setScreen('compose')}
+                        title={t('post_create_title')}
                         disabled={create.isPending}
                         testId={subTestId(testId, 'header')}
                     />
@@ -344,143 +333,121 @@ export function PostComposerDialog({
                      * bar because that is where legacy puts them, and because the bar below is
                      * already carrying the two settings that describe *who the post is for*.
                      */}
-                    {screen === 'compose' ? (
-                        <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
-                            <HeaderAction
-                                /*
-                                 * Legacy's own glyph: a stacked rectangle with a play triangle —
-                                 * a *collection*, not a folder. `folder` was the first guess and
-                                 * says something else about what the button opens.
-                                 */
-                                icon="history-rectangle-play"
-                                label={t('post_collection_title')}
-                                disabled={create.isPending}
-                                onPress={() => setScreen('collections')}
-                                testId={subTestId(testId, 'affix')}
-                            />
-                            <HeaderAction
-                                icon="gear"
-                                label={t('post_settings_title')}
-                                disabled={create.isPending}
-                                onPress={() => setScreen('settings')}
-                                testId={subTestId(testId, 'prefix')}
-                            />
-                        </div>
-                    ) : null}
+                    <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+                        <HeaderAction
+                            /*
+                             * Legacy's own glyph: a stacked rectangle with a play triangle — a
+                             * *collection*, not a folder. `folder` was the first guess and says
+                             * something else about what the button opens.
+                             */
+                            icon="history-rectangle-play"
+                            label={t('post_collection_title')}
+                            disabled={create.isPending}
+                            onPress={() => setSettingsDialog('collections')}
+                            testId={subTestId(testId, 'affix')}
+                        />
+                        <HeaderAction
+                            icon="gear"
+                            label={t('post_settings_title')}
+                            disabled={create.isPending}
+                            onPress={() => setSettingsDialog('settings')}
+                            testId={subTestId(testId, 'prefix')}
+                        />
+                    </div>
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3">
-                    {screen === 'audience' ? (
-                        <PostAudienceScreen
-                            draft={draft}
-                            onChange={patch}
-                            minPrice={minPrice}
-                            tiers={tiers}
-                            disabled={create.isPending}
-                            testId={subTestId(testId, 'group')}
-                        />
-                    ) : screen === 'reply' ? (
-                        <PostReplyAudienceScreen
-                            draft={draft}
-                            onChange={patch}
-                            disabled={create.isPending}
-                            testId={subTestId(testId, 'list')}
-                        />
-                    ) : screen === 'settings' ? (
-                        <PostSettingsScreen
-                            draft={draft}
-                            onChange={patch}
-                            disabled={create.isPending}
-                            testId={subTestId(testId, 'panel')}
-                        />
-                    ) : screen === 'collections' ? (
-                        <PostCollectionScreen
-                            draft={draft}
-                            onChange={patch}
-                            disabled={create.isPending}
-                            testId={subTestId(testId, 'row')}
-                        />
-                    ) : (
-                        <PostComposerBody
-                            draft={draft}
-                            author={author}
-                            characterLimit={limit}
-                            limitReached={draft.images.length >= POST_IMAGE_MAX}
-                            disabled={create.isPending}
-                            readingVideo={readingVideo}
-                            onText={text =>
-                                setDraft(current => ({ ...current, text: text.slice(0, limit) }))
-                            }
-                            onPickFiles={files => void pickFiles(files)}
-                            onRemoveImage={removeImage}
-                            onRemoveVideo={removeVideo}
-                            message={message}
-                            testId={testId}
-                        />
-                    )}
+                    <PostComposerBody
+                        draft={draft}
+                        author={author}
+                        characterLimit={limit}
+                        limitReached={draft.images.length >= POST_IMAGE_MAX}
+                        disabled={create.isPending}
+                        readingVideo={readingVideo}
+                        onText={text =>
+                            setDraft(current => ({ ...current, text: text.slice(0, limit) }))
+                        }
+                        onPickFiles={files => void pickFiles(files)}
+                        onRemoveImage={removeImage}
+                        onRemoveVideo={removeVideo}
+                        message={message}
+                        testId={testId}
+                    />
                 </div>
 
                 {/*
                  * Legacy's action bar: the two settings that say **who the post is for** on the
-                 * leading side, and what happens to it on the trailing one. Drawn on the composing
-                 * screen only — on a settings screen the back arrow is the whole of the navigation.
+                 * leading side, and what happens to it on the trailing one. Always drawn — the
+                 * settings open over this dialog rather than replacing it.
                  */}
-                {screen === 'compose' ? (
-                    <div className="flex items-center justify-between gap-2 border-(--separator-default) border-t px-4 py-3">
-                        <div className="flex min-w-0 items-center gap-2">
-                            <SettingChip
-                                icon={draft.audience === 'STARGAZERS' ? 'lock-simple' : 'globe'}
-                                label={
-                                    draft.audience === 'STARGAZERS'
-                                        ? t('post_audience_exclusive')
-                                        : t('post_audience_free')
-                                }
-                                disabled={create.isPending}
-                                onPress={() => setScreen('audience')}
-                                testId={subTestId(testId, 'trigger')}
-                            />
-                            <SettingChip
-                                icon="comment"
-                                label={t(replyAudienceLabelKey(draft.replyAllowedUser))}
-                                disabled={create.isPending}
-                                onPress={() => setScreen('reply')}
-                                testId={subTestId(testId, 'suffix')}
-                            />
-                        </div>
-
-                        <div className="flex flex-none items-center gap-2">
-                            {/*
-                             * The remaining count appears only as it runs out — legacy prints it
-                             * from the first keystroke, beside an empty box. 50 is far enough out
-                             * to be a warning and near enough not to be furniture.
-                             */}
-                            {remaining <= 50 ? (
-                                <span
-                                    data-testid={subTestId(testId, 'label-data')}
-                                    className={
-                                        remaining < 0
-                                            ? 'type-caption-meta text-(--text-error)'
-                                            : 'type-caption-meta text-(--text-placeholder)'
-                                    }
-                                >
-                                    {remaining}
-                                </span>
-                            ) : null}
-                            <Button
-                                variant="primary"
-                                size="medium"
-                                disabled={Boolean(problem) || create.isPending}
-                                onClick={() => create.publish(draft)}
-                                data-testid={subTestId(testId, 'submit')}
-                            >
-                                {create.isPending
-                                    ? t('post_create_posting')
-                                    : t('post_create_submit')}
-                            </Button>
-                        </div>
+                <div className="flex items-center justify-between gap-2 border-(--separator-default) border-t px-4 py-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                        <SettingChip
+                            icon={draft.audience === 'STARGAZERS' ? 'lock-simple' : 'globe'}
+                            label={
+                                draft.audience === 'STARGAZERS'
+                                    ? t('post_audience_exclusive')
+                                    : t('post_audience_free')
+                            }
+                            disabled={create.isPending}
+                            onPress={() => setSettingsDialog('audience')}
+                            testId={subTestId(testId, 'trigger')}
+                        />
+                        <SettingChip
+                            icon="comment"
+                            label={t(replyAudienceLabelKey(draft.replyAllowedUser))}
+                            disabled={create.isPending}
+                            onPress={() => setSettingsDialog('reply')}
+                            testId={subTestId(testId, 'suffix')}
+                        />
                     </div>
-                ) : null}
+
+                    <div className="flex flex-none items-center gap-2">
+                        {/*
+                         * The remaining count appears only as it runs out — legacy prints it
+                         * from the first keystroke, beside an empty box. 50 is far enough out
+                         * to be a warning and near enough not to be furniture.
+                         */}
+                        {remaining <= 50 ? (
+                            <span
+                                data-testid={subTestId(testId, 'label-data')}
+                                className={
+                                    remaining < 0
+                                        ? 'type-caption-meta text-(--text-error)'
+                                        : 'type-caption-meta text-(--text-placeholder)'
+                                }
+                            >
+                                {remaining}
+                            </span>
+                        ) : null}
+                        <Button
+                            variant="primary"
+                            size="medium"
+                            disabled={Boolean(problem) || create.isPending}
+                            onClick={() => create.publish(draft)}
+                            data-testid={subTestId(testId, 'submit')}
+                        >
+                            {create.isPending ? t('post_create_posting') : t('post_create_submit')}
+                        </Button>
+                    </div>
+                </div>
             </DialogContent>
+
+            {/*
+             * The four settings popups, mounted beside the composer's content so they stack over
+             * it rather than replacing it — `post-composer-dialogs.tsx` says why that is the
+             * right shape and what the earlier arrangement got wrong.
+             */}
+            <PostComposerDialogs
+                open={settingsDialog}
+                onClose={() => setSettingsDialog(null)}
+                draft={draft}
+                onChange={patch}
+                minPrice={minPrice}
+                tiers={tiers}
+                disabled={create.isPending}
+                testId={testId}
+            />
         </Dialog>
     )
 }
@@ -518,15 +485,6 @@ function SettingChip({
             <span className="truncate">{label}</span>
         </button>
     )
-}
-
-/** Each screen's own title, so the header says where the reader is. Legacy titles its three the same. */
-const SCREEN_TITLES: Record<ComposerScreen, string> = {
-    compose: 'post_create_title',
-    audience: 'post_audience_title',
-    reply: 'who_can_reply_title',
-    settings: 'post_settings_title',
-    collections: 'post_collection_title',
 }
 
 /** One of the header's two trailing controls — legacy's `BtnCollection` and `BtnPostSetting`. */
