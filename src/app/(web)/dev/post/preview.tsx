@@ -1,7 +1,7 @@
 'use client'
 
-import type { Post, Reply } from '@features/post/dev'
 import {
+    emptyPostDraft,
     makePostFixture,
     POST_AFFILIATE,
     POST_DECORATED,
@@ -58,8 +58,11 @@ import {
     POST_VIDEO,
     POST_VIDEO_AND_IMAGES,
     POST_VIDEO_BARE,
+    type Post,
     PostCard,
+    PostComposerBody,
     PostComposerDialog,
+    type PostDraft,
     REPLY_DELETED,
     REPLY_EMPTY,
     REPLY_HTML_ONLY,
@@ -71,6 +74,7 @@ import {
     REPLY_REACTED,
     REPLY_TEXT,
     REPLY_WITH_CHILDREN,
+    type Reply,
     ReplyComposer,
     ReplyRow,
 } from '@features/post/dev'
@@ -652,6 +656,7 @@ const HARNESS_AUTHOR = {
 
 export function PostPreview() {
     const [composerOpen, setComposerOpen] = useState(false)
+    const [harnessDraft, setHarnessDraft] = useState<PostDraft>(emptyPostDraft)
 
     return (
         <div className="flex flex-col gap-12">
@@ -674,6 +679,28 @@ export function PostPreview() {
                     onOpenChange={setComposerOpen}
                     author={HARNESS_AUTHOR}
                 />
+
+                {/*
+                 * The composing screen on its own, outside the dialog — the only way to review the
+                 * geometry without a portal in the way. The dialog above is the real thing; this is
+                 * the same component it renders.
+                 */}
+                <div className="max-w-[612px] rounded-xl bg-(--background-surface) p-4">
+                    <PostComposerBody
+                        draft={harnessDraft}
+                        author={HARNESS_AUTHOR}
+                        characterLimit={500}
+                        limitReached={false}
+                        disabled={false}
+                        readingVideo={false}
+                        onText={text => setHarnessDraft(current => ({ ...current, text }))}
+                        onPickFiles={() => {}}
+                        onRemoveImage={() => {}}
+                        onRemoveVideo={() => {}}
+                        message={null}
+                        testId="post-composer"
+                    />
+                </div>
             </section>
 
             <section className="flex flex-col gap-6">

@@ -12277,26 +12277,34 @@
                 "trigger"
             ]
         },
+        "src/features/post/components/post-composer-body.tsx": {
+            "accepts": [
+                "PostComposerBody"
+            ],
+            "parts": [
+                "clear",
+                "error",
+                "field",
+                "input",
+                "item",
+                "list",
+                "remove",
+                "slide",
+                "trigger"
+            ]
+        },
         "src/features/post/components/post-composer-dialog.tsx": {
             "accepts": [
                 "PostComposerDialog"
             ],
             "parts": [
                 "affix",
-                "clear",
-                "error",
-                "field",
                 "header",
-                "input",
-                "item",
                 "label-data",
-                "list",
                 "panel",
                 "prefix",
-                "remove",
-                "slide",
                 "submit",
-                "trigger"
+                "suffix"
             ]
         },
         "src/features/post/components/post-detail-view.tsx": {

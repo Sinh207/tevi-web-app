@@ -2108,5 +2108,7 @@
     "post_collection_more": "Đang hiển thị những bộ sưu tập đầu tiên.",
     "post_collection_new_placeholder": "Tên bộ sưu tập mới",
     "post_collection_create": "Tạo",
-    "post_collection_create_failed": "Không thể tạo bộ sưu tập đó"
+    "post_collection_create_failed": "Không thể tạo bộ sưu tập đó",
+    "post_create_add_media": "Thêm ảnh hoặc video",
+    "post_create_reading_video": "Đang đọc video…"
 }

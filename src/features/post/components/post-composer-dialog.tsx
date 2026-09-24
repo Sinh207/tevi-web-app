@@ -1,7 +1,6 @@
 'use client'
 
 import { rawGrantNumber, usePermission } from '@features/permission'
-import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { DialogScreenHeader } from '@shared/components/dialog-screen-header'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { useWebConfig } from '@shared/lib/remote-config'
@@ -9,6 +8,7 @@ import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
 import { Dialog, DialogContent } from '@shared/ui/dialog'
 import { Icon } from '@shared/ui/icon'
+import type { TeviIconName } from '@shared/ui/icon-names'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useCreatePost } from '../hooks/use-create-post'
 import {
@@ -23,10 +23,11 @@ import {
     postDraftProblem,
     STAR_PRICE_MAX,
     STAR_PRICE_MIN_DEFAULT,
-    VIDEO_TYPES,
 } from '../lib/post-draft'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
+import { isAttachableImage } from '../lib/reply-draft'
 import { captureVideoPoster, probeVideo, readVideoCodec } from '../lib/video-file'
+import { PostComposerBody } from './post-composer-body'
 import { PostSettingsPanel } from './post-settings-panel'
 
 /**
@@ -53,6 +54,9 @@ import { PostSettingsPanel } from './post-settings-panel'
  * `features/channel`, which imports this feature. Whoever mounts the dialog reads the provider and
  * hands the five fields down.
  */
+/** The composer's own screens — see the note at `screen`. */
+type ComposerScreen = 'compose' | 'settings'
+
 export function PostComposerDialog({
     open,
     onOpenChange,
@@ -87,9 +91,23 @@ export function PostComposerDialog({
     testId?: string
 }) {
     const { t } = useTranslation()
-    const inputId = useId()
-    const fileRef = useRef<HTMLInputElement>(null)
-    const videoRef = useRef<HTMLInputElement>(null)
+    const _inputId = useId()
+    const _fileRef = useRef<HTMLInputElement>(null)
+    const _videoRef = useRef<HTMLInputElement>(null)
+
+    /**
+     * Which screen the dialog is showing.
+     *
+     * Legacy opens *Select your audience*, *Reply settings*, *Post settings* and the collection
+     * picker as **separate modals over the composer**, which is itself a modal. This app's dialog
+     * draws one layer, so they are screens inside the same frame instead — the header's control
+     * turns into a back arrow, which is exactly what `DialogScreenHeader`'s `onBack` is for and
+     * what `TwoStepVerificationDialog` already does with its five steps.
+     *
+     * The grouping and the order are legacy's, so a creator finds the same switch in the same
+     * place; only the layer it sits on differs.
+     */
+    const [screen, setScreen] = useState<ComposerScreen>('compose')
 
     const [draft, setDraft] = useState<PostDraft>(emptyPostDraft)
     /** A file the browser would not decode. Not a draft problem — the clip never got in. */
@@ -165,10 +183,7 @@ export function PostComposerDialog({
     /** Reading a clip takes two decodes and a byte scan, so the picker reports while it works. */
     const [readingVideo, setReadingVideo] = useState(false)
 
-    async function attachVideo(files: FileList | null) {
-        const file = files?.[0]
-        if (!file || !isAttachableVideo(file)) return
-
+    async function attachVideo(file: File) {
         setReadingVideo(true)
         try {
             const probe = await probeVideo(file)
@@ -222,15 +237,34 @@ export function PostComposerDialog({
         })
     }
 
-    async function attach(files: FileList | null) {
+    /**
+     * One picker, both kinds — legacy's `BtnUpload` accepts images and video together and sorts by
+     * the file's own type. A **video wins** when the selection carries both: a post takes one clip
+     * or several pictures and never a mix, so something has to be dropped, and the clip is the
+     * deliberate choice (nobody picks a video by accident).
+     */
+    async function pickFiles(files: FileList | null) {
         if (!files || files.length === 0) return
+        const picked = Array.from(files)
+
+        const video = picked.find(isAttachableVideo)
+        if (video) {
+            await attachVideo(video)
+            return
+        }
+
         const room = POST_IMAGE_MAX - draft.images.length
         if (room <= 0) return
-        const accepted = Array.from(files)
-            .filter(file => file.type.startsWith('image/'))
-            .slice(0, room)
+        const accepted = picked.filter(file => isAttachableImage(file)).slice(0, room)
+        if (accepted.length === 0) return
+
         const measured = await Promise.all(accepted.map(measureImage))
-        setDraft(current => ({ ...current, images: [...current.images, ...measured] }))
+        setDraft(current => {
+            // Pictures and a clip cannot share a post, so attaching one drops the other.
+            if (current.video) URL.revokeObjectURL(current.video.previewUrl)
+            return { ...current, video: null, images: [...current.images, ...measured] }
+        })
+        setVideoError(null)
     }
 
     function removeImage(id: string) {
@@ -272,7 +306,10 @@ export function PostComposerDialog({
                  * the dialog refuses — the same reason `DialogScreenHeader` takes `disabled`.
                  */
                 if (create.isPending) return
-                if (!next) reset()
+                if (!next) {
+                    reset()
+                    setScreen('compose')
+                }
                 onOpenChange(next)
             }}
         >
@@ -280,250 +317,189 @@ export function PostComposerDialog({
                 className="flex max-h-[90dvh] w-full max-w-[612px] flex-col gap-0 p-0"
                 data-testid={testId}
             >
-                <DialogScreenHeader
-                    title={t('post_create_title')}
-                    disabled={create.isPending}
-                    testId={subTestId(testId, 'header')}
-                />
-
-                <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3">
-                    <div className="flex min-w-0 items-start gap-2">
-                        {author ? (
-                            <AnimatedAvatar
-                                size="medium"
-                                thumb={author.thumb}
-                                avatarVideo={author.avatarVideo}
-                                isPremium={author.isPremium}
-                                alt=""
-                                initials={
-                                    author.name?.trim()
-                                        ? author.name.trim().slice(0, 2).toUpperCase()
-                                        : undefined
-                                }
-                                className="flex-none"
-                            />
-                        ) : null}
-
-                        <div className="flex min-w-0 flex-1 flex-col">
-                            <label className="sr-only" htmlFor={inputId}>
-                                {t('post_create_placeholder')}
-                            </label>
-                            <textarea
-                                id={inputId}
-                                data-testid={subTestId(testId, 'input')}
-                                value={draft.text}
-                                maxLength={limit}
-                                rows={3}
-                                placeholder={t('post_create_placeholder')}
-                                aria-invalid={message ? true : undefined}
-                                disabled={create.isPending}
-                                onChange={event =>
-                                    setDraft(current => ({
-                                        ...current,
-                                        text: event.target.value.slice(0, limit),
-                                    }))
-                                }
-                                className="type-body-default max-h-64 min-h-24 w-full resize-none bg-transparent py-1 text-(--text-title) outline-none placeholder:text-(--text-placeholder) disabled:opacity-60"
-                            />
-                        </div>
-                    </div>
-
-                    {draft.video ? (
-                        <div
-                            data-testid={subTestId(testId, 'slide')}
-                            className="relative overflow-hidden rounded-[8px] bg-(--background-segment)"
-                        >
-                            {/*
-                             * `controls`, and no autoplay. The author is checking they attached the
-                             * right clip, which is a thing they scrub; a card in a feed is a
-                             * different question and `PostCard` answers it its own way.
-                             */}
-                            {/* biome-ignore lint/a11y/useMediaCaption: a clip the author is about to publish has no track to caption it with. */}
-                            <video
-                                src={draft.video.previewUrl}
-                                controls
-                                playsInline
-                                preload="metadata"
-                                className="max-h-64 w-full"
-                            />
-                            <button
-                                type="button"
-                                data-testid={subTestId(testId, 'clear')}
-                                aria-label={t('post_create_remove_video')}
-                                disabled={create.isPending}
-                                onClick={removeVideo}
-                                className="absolute end-1 top-1 flex size-8 items-center justify-center rounded-full bg-(--background-overlay) text-(--text-on)"
-                            >
-                                <Icon name="xmark" size={16} />
-                            </button>
-                            <span className="absolute bottom-1 end-1 rounded-full bg-(--background-overlay) px-2 py-0.5 type-micro-overline text-(--text-on)">
-                                {formatClipLength(draft.video.durationSeconds)}
-                            </span>
-                        </div>
-                    ) : null}
-
-                    {draft.images.length > 0 ? (
-                        <ul
-                            data-testid={subTestId(testId, 'list')}
-                            className="flex snap-x gap-2 overflow-x-auto"
-                        >
-                            {draft.images.map(image => (
-                                <li
-                                    key={image.id}
-                                    data-testid={subTestId(testId, 'item')}
-                                    className="relative size-24 flex-none snap-start overflow-hidden rounded-[8px] bg-(--background-segment)"
-                                >
-                                    {/* biome-ignore lint/performance/noImgElement: a blob: URL has nothing for next/image to optimise and no loader that accepts it. */}
-                                    <img
-                                        src={image.previewUrl}
-                                        alt=""
-                                        className="size-full object-cover"
-                                    />
-                                    <button
-                                        type="button"
-                                        data-testid={subTestId(testId, 'remove')}
-                                        aria-label={t('post_create_remove_image')}
-                                        disabled={create.isPending}
-                                        onClick={() => removeImage(image.id)}
-                                        className="absolute end-1 top-1 flex size-6 items-center justify-center rounded-full bg-(--background-overlay) text-(--text-on)"
-                                    >
-                                        <Icon name="xmark" size={16} />
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : null}
-
-                    <PostSettingsPanel
-                        draft={draft}
-                        onChange={next => setDraft(current => ({ ...current, ...next }))}
-                        minPrice={minPrice}
-                        tiers={tiers}
+                <div className="relative">
+                    <DialogScreenHeader
+                        title={
+                            screen === 'compose' ? t('post_create_title') : t('post_settings_title')
+                        }
+                        /*
+                         * Present only on a sub-screen, which turns the control into a back arrow —
+                         * `DialogScreenHeader` makes that switch itself rather than taking a
+                         * `canGoBack` boolean, so the two cannot disagree.
+                         */
+                        onBack={screen === 'compose' ? undefined : () => setScreen('compose')}
                         disabled={create.isPending}
-                        testId={subTestId(testId, 'panel')}
+                        testId={subTestId(testId, 'header')}
                     />
 
-                    {message ? (
-                        <p
-                            data-testid={subTestId(testId, 'error')}
-                            className="type-dense-default text-(--text-error)"
-                        >
-                            {message}
-                        </p>
+                    {/*
+                     * Legacy's two header actions, on the trailing edge: the collection picker and
+                     * the post settings. They are drawn beside the title rather than in the action
+                     * bar because that is where legacy puts them, and because the bar below is
+                     * already carrying the two settings that describe *who the post is for*.
+                     */}
+                    {screen === 'compose' ? (
+                        <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+                            <button
+                                type="button"
+                                data-testid={subTestId(testId, 'affix')}
+                                aria-label={t('post_settings_title')}
+                                disabled={create.isPending}
+                                onClick={() => setScreen('settings')}
+                                className="flex size-9 items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+                            >
+                                <Icon name="gear" size={20} />
+                            </button>
+                        </div>
                     ) : null}
+                </div>
+
+                <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3">
+                    {screen === 'compose' ? (
+                        <PostComposerBody
+                            draft={draft}
+                            author={author}
+                            characterLimit={limit}
+                            limitReached={draft.images.length >= POST_IMAGE_MAX}
+                            disabled={create.isPending}
+                            readingVideo={readingVideo}
+                            onText={text =>
+                                setDraft(current => ({ ...current, text: text.slice(0, limit) }))
+                            }
+                            onPickFiles={files => void pickFiles(files)}
+                            onRemoveImage={removeImage}
+                            onRemoveVideo={removeVideo}
+                            message={message}
+                            testId={testId}
+                        />
+                    ) : (
+                        <PostSettingsPanel
+                            draft={draft}
+                            onChange={next => setDraft(current => ({ ...current, ...next }))}
+                            minPrice={minPrice}
+                            tiers={tiers}
+                            disabled={create.isPending}
+                            testId={subTestId(testId, 'panel')}
+                        />
+                    )}
                 </div>
 
                 {/*
-                 * Legacy's action bar: two sides, the leading one for the settings that decide who
-                 * the post is **for** and the trailing one for what happens to it. Only the picture
-                 * button and *Post* exist so far; the audience, reply-setting and preview controls
-                 * land beside them without the bar changing shape.
+                 * Legacy's action bar: the two settings that say **who the post is for** on the
+                 * leading side, and what happens to it on the trailing one. Drawn on the composing
+                 * screen only — on a settings screen the back arrow is the whole of the navigation.
                  */}
-                <div className="flex items-center justify-between gap-2 border-(--separator-default) border-t px-4 py-3">
-                    <div className="flex items-center gap-1">
-                        <input
-                            ref={fileRef}
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            hidden
-                            data-testid={subTestId(testId, 'field')}
-                            onChange={event => {
-                                void attach(event.target.files)
-                                // Cleared, so picking the same file twice still fires `change`.
-                                event.target.value = ''
-                            }}
-                        />
-                        <button
-                            type="button"
-                            data-testid={subTestId(testId, 'trigger')}
-                            aria-label={t('post_create_add_image')}
-                            disabled={
-                                draft.images.length >= POST_IMAGE_MAX ||
-                                create.isPending ||
-                                draft.video !== null
-                            }
-                            onClick={() => fileRef.current?.click()}
-                            className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
-                        >
-                            <Icon name="image" size={20} />
-                        </button>
-
-                        <input
-                            ref={videoRef}
-                            type="file"
-                            accept={VIDEO_TYPES.join(',')}
-                            hidden
-                            data-testid={subTestId(testId, 'affix')}
-                            onChange={event => {
-                                void attachVideo(event.target.files)
-                                event.target.value = ''
-                            }}
-                        />
-                        {/*
-                         * One clip per post, and never beside pictures — legacy's own rule
-                         * (`TOO_MANY_VIDEOS`, and a media picker that clears the other kind).
-                         * Attaching a clip drops the pictures rather than refusing, because that is
-                         * the action the reader just asked for; the button is what says no.
-                         */}
-                        <button
-                            type="button"
-                            data-testid={subTestId(testId, 'prefix')}
-                            aria-label={t('post_create_add_video')}
-                            aria-busy={readingVideo || undefined}
-                            disabled={
-                                draft.video !== null ||
-                                draft.images.length > 0 ||
-                                readingVideo ||
-                                create.isPending
-                            }
-                            onClick={() => videoRef.current?.click()}
-                            className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
-                        >
-                            <Icon name="video" size={20} />
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        {/*
-                         * The remaining count appears only as it runs out — legacy prints it from
-                         * the start, which puts a number beside an empty box. 50 is far enough out
-                         * to be a warning and near enough not to be furniture.
-                         */}
-                        {remaining <= 50 ? (
-                            <span
-                                data-testid={subTestId(testId, 'label-data')}
-                                className={
-                                    remaining < 0
-                                        ? 'type-caption-meta text-(--text-error)'
-                                        : 'type-caption-meta text-(--text-placeholder)'
+                {screen === 'compose' ? (
+                    <div className="flex items-center justify-between gap-2 border-(--separator-default) border-t px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                            <SettingChip
+                                icon={draft.audience === 'STARGAZERS' ? 'lock-simple' : 'globe'}
+                                label={
+                                    draft.audience === 'STARGAZERS'
+                                        ? t('post_settings_members')
+                                        : t('post_audience_everyone')
                                 }
+                                disabled={create.isPending}
+                                onPress={() => setScreen('settings')}
+                                testId={subTestId(testId, 'prefix')}
+                            />
+                            <SettingChip
+                                icon="comment"
+                                label={t(replyAudienceLabelKey(draft.replyAllowedUser))}
+                                disabled={create.isPending}
+                                onPress={() => setScreen('settings')}
+                                testId={subTestId(testId, 'suffix')}
+                            />
+                        </div>
+
+                        <div className="flex flex-none items-center gap-2">
+                            {/*
+                             * The remaining count appears only as it runs out — legacy prints it
+                             * from the first keystroke, beside an empty box. 50 is far enough out
+                             * to be a warning and near enough not to be furniture.
+                             */}
+                            {remaining <= 50 ? (
+                                <span
+                                    data-testid={subTestId(testId, 'label-data')}
+                                    className={
+                                        remaining < 0
+                                            ? 'type-caption-meta text-(--text-error)'
+                                            : 'type-caption-meta text-(--text-placeholder)'
+                                    }
+                                >
+                                    {remaining}
+                                </span>
+                            ) : null}
+                            <Button
+                                variant="primary"
+                                size="medium"
+                                disabled={Boolean(problem) || create.isPending}
+                                onClick={() => create.publish(draft)}
+                                data-testid={subTestId(testId, 'submit')}
                             >
-                                {remaining}
-                            </span>
-                        ) : null}
-                        <Button
-                            variant="primary"
-                            size="medium"
-                            disabled={Boolean(problem) || create.isPending}
-                            onClick={() => create.publish(draft)}
-                            data-testid={subTestId(testId, 'submit')}
-                        >
-                            {create.isPending ? t('post_create_posting') : t('post_create_submit')}
-                        </Button>
+                                {create.isPending
+                                    ? t('post_create_posting')
+                                    : t('post_create_submit')}
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                ) : null}
             </DialogContent>
         </Dialog>
     )
 }
 
-/** `m:ss`, the badge legacy draws on a clip. Not `formatDuration` — that is `lib/post-media.ts`'s
- *  and takes a post's video, which a local file is not yet. */
-function formatClipLength(seconds: number): string {
-    const whole = Math.max(0, Math.round(seconds))
-    const minutes = Math.floor(whole / 60)
-    return `${minutes}:${String(whole % 60).padStart(2, '0')}`
+/**
+ * One of the action bar's two settings — a glyph, a word, and a press that opens the screen it
+ * belongs to.
+ *
+ * Legacy draws these as buttons carrying the **current value** (`BtnAudience` shows the audience,
+ * `BtnReplySetting` the reply rule), which is what makes the bar a summary rather than a menu: the
+ * author can see what the post is set to without opening anything.
+ */
+function SettingChip({
+    icon,
+    label,
+    disabled,
+    onPress,
+    testId,
+}: {
+    icon: TeviIconName
+    label: string
+    disabled?: boolean
+    onPress: () => void
+    testId?: string
+}) {
+    return (
+        <button
+            type="button"
+            data-testid={testId}
+            disabled={disabled}
+            onClick={onPress}
+            className="type-caption-meta flex min-w-0 items-center gap-1 rounded-full border border-(--separator-default) px-2 py-1 text-(--text-subtitle) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+        >
+            <Icon name={icon} size={16} className="flex-none" />
+            <span className="truncate">{label}</span>
+        </button>
+    )
+}
+
+/** The reply rule's own label, from the same six values the settings screen offers. */
+function replyAudienceLabelKey(value: string): string {
+    switch (value) {
+        case 'PAID_USERS':
+            return 'post_settings_reply_paid'
+        case 'FOLLOWINGS':
+            return 'post_settings_reply_followings'
+        case 'VERIFIED_SPACES':
+            return 'post_settings_reply_verified'
+        case 'MENTIONED_SPACES':
+            return 'post_settings_reply_mentioned'
+        case 'NONE':
+            return 'post_settings_reply_none'
+        default:
+            return 'post_settings_reply_followers'
+    }
 }
 
 /**

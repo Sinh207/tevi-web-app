@@ -2108,5 +2108,7 @@
     "post_collection_more": "Showing your first collections.",
     "post_collection_new_placeholder": "New collection name",
     "post_collection_create": "Create",
-    "post_collection_create_failed": "Couldn't create that collection"
+    "post_collection_create_failed": "Couldn't create that collection",
+    "post_create_add_media": "Add photos or a video",
+    "post_create_reading_video": "Reading the video…"
 }

@@ -2168,5 +2168,7 @@
     "post_collection_more": "يتم عرض أول مجموعاتك.",
     "post_collection_new_placeholder": "اسم المجموعة الجديدة",
     "post_collection_create": "إنشاء",
-    "post_collection_create_failed": "تعذّر إنشاء تلك المجموعة"
+    "post_collection_create_failed": "تعذّر إنشاء تلك المجموعة",
+    "post_create_add_media": "إضافة صور أو فيديو",
+    "post_create_reading_video": "جارٍ قراءة الفيديو…"
 }

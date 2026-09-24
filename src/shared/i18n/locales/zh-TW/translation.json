@@ -2108,5 +2108,7 @@
     "post_collection_more": "正在顯示你最前面的合集。",
     "post_collection_new_placeholder": "新合集名稱",
     "post_collection_create": "建立",
-    "post_collection_create_failed": "無法建立該合集"
+    "post_collection_create_failed": "無法建立該合集",
+    "post_create_add_media": "新增照片或影片",
+    "post_create_reading_video": "正在讀取影片…"
 }

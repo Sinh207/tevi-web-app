@@ -1047,7 +1047,8 @@ name; you need it to know the element exists.
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
 | `PostCollectionPicker` | `src/features/post/components/post-collection-picker.tsx` | `-input` `-message` `-option` `-retry` `-submit` `-trigger` |
-| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-clear` `-error` `-field` `-header` `-input` `-item` `-label-data` `-list` `-panel` `-prefix` `-remove` `-slide` `-submit` `-trigger` |
+| `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-clear` `-error` `-field` `-input` `-item` `-list` `-remove` `-slide` `-trigger` |
+| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-header` `-label-data` `-panel` `-prefix` `-submit` `-suffix` |
 | `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
 | `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` |

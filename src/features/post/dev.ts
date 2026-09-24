@@ -34,6 +34,7 @@ export type { Post } from './api/types'
  */
 
 export { PostCard } from './components/post-card'
+export { PostComposerBody } from './components/post-composer-body'
 export { PostComposerDialog } from './components/post-composer-dialog'
 export { PostImageGallery } from './components/post-image-gallery'
 export { PostLockPanel } from './components/post-lock-panel'
@@ -43,6 +44,7 @@ export { ReplyAudienceNotice } from './components/reply-audience-notice'
 export { ReplyComposer } from './components/reply-composer'
 export { ReplyRow } from './components/reply-row'
 export { ReplyThread } from './components/reply-thread'
+export { emptyPostDraft, type PostDraft } from './lib/post-draft'
 export { postIntent } from './lib/post-intent'
 export { postHref } from './lib/post-link'
 

@@ -2108,5 +2108,7 @@
     "post_collection_more": "첫 번째 컬렉션들을 보여주고 있습니다.",
     "post_collection_new_placeholder": "새 컬렉션 이름",
     "post_collection_create": "만들기",
-    "post_collection_create_failed": "컬렉션을 만들지 못했습니다"
+    "post_collection_create_failed": "컬렉션을 만들지 못했습니다",
+    "post_create_add_media": "사진 또는 동영상 추가",
+    "post_create_reading_video": "동영상을 읽는 중…"
 }

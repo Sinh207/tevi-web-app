@@ -2108,5 +2108,7 @@
     "post_collection_more": "Menampilkan koleksi pertama kamu.",
     "post_collection_new_placeholder": "Nama koleksi baru",
     "post_collection_create": "Buat",
-    "post_collection_create_failed": "Koleksi itu gagal dibuat"
+    "post_collection_create_failed": "Koleksi itu gagal dibuat",
+    "post_create_add_media": "Tambahkan foto atau video",
+    "post_create_reading_video": "Membaca video…"
 }
