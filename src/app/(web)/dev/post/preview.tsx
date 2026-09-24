@@ -637,11 +637,21 @@ const REPLY_CASES: { title: string; note: string; reply: Reply }[] = [
     },
 ]
 
+/** The reader, as the route would supply them. */
+const HARNESS_AUTHOR = {
+    name: 'Alice Nguyen',
+    slug: 'alice',
+    thumb: null,
+    avatarVideo: null,
+    isPremium: false,
+    verifiedBadge: null,
+}
+
 export function PostPreview() {
     return (
         <div className="flex flex-col gap-12">
             <section className="flex flex-col gap-6">
-                <div className="flex flex-col gap-1 border-(--border-subtle) border-b pb-2">
+                <div className="flex flex-col gap-1 border-(--separator-default) border-b pb-2">
                     <h2 className="type-title-t2-semibold text-(--text-title)">Reply row</h2>
                     <p className="type-dense-default text-(--text-subtitle)">
                         Built from the measured reply payload, which is not a post’s. Pressing the
@@ -673,7 +683,7 @@ export function PostPreview() {
             </section>
 
             <section className="flex flex-col gap-6">
-                <div className="flex flex-col gap-1 border-(--border-subtle) border-b pb-2">
+                <div className="flex flex-col gap-1 border-(--separator-default) border-b pb-2">
                     <h2 className="type-title-t2-semibold text-(--text-title)">Reply composer</h2>
                     <p className="type-dense-default text-(--text-subtitle)">
                         The box under a post on its own page, and the <em>Who can reply?</em> panel
@@ -696,6 +706,11 @@ export function PostPreview() {
                         <div className="max-w-[612px]">
                             <ReplyComposer
                                 post={item.post}
+                                /*
+                                 * The real one comes from `useMyChannel` via the route; the harness
+                                 * stands in for that caller, the way it does for `onOpenMiniApp`.
+                                 */
+                                author={HARNESS_AUTHOR}
                                 testId={`post-detail-${item.post.id}-panel`}
                             />
                         </div>
@@ -722,7 +737,7 @@ export function PostPreview() {
 
             {GROUPS.map(group => (
                 <section key={group.heading} className="flex flex-col gap-6">
-                    <div className="flex flex-col gap-1 border-(--border-subtle) border-b pb-2">
+                    <div className="flex flex-col gap-1 border-(--separator-default) border-b pb-2">
                         <h2 className="type-title-t2-semibold text-(--text-title)">
                             {group.heading}
                         </h2>

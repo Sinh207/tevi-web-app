@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Post } from '../api/types'
 import { usePostDetail } from '../hooks/use-post-detail'
 import { usePostReplies } from '../hooks/use-post-replies'
+import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { PostCard } from './post-card'
 import { ReplyComposer } from './reply-composer'
 import { ReplyRow } from './reply-row'
@@ -45,21 +46,24 @@ import { ReplyRow } from './reply-row'
  * pressing *Comment* — and a fixed bar would have to negotiate with the mobile tab bar, the
  * keyboard's own inset and the mini-app player for the same strip of screen.
  *
- * It draws nothing when the reader may not reply (`canReply`), so a post with replies closed is a
- * post and its list, with no dead box between them.
+ * When the reader may not reply it draws the *Who can reply?* panel in the box's place — legacy's
+ * own substitution — and nothing at all when the payload names no reason for the refusal.
  *
- * ## `isPremiumReader` comes from the route, and has to
+ * ## The reader comes from the route, and has to
  *
  * Premium readers are exempt from paid interaction, and that fact lives in `features/channel`
  * (`useMyChannel().isPremium`) — which imports this feature, so neither this screen nor the card
- * below it may read it. The feed and the space page fill the prop themselves; here the filling is
- * done by `app/…/post/[code]/post-detail-screen.tsx`, a client boundary that exists for this one
- * boolean. Left unpassed it defaults to `false`, which quotes a Premium reader a price they do not
- * owe — so a new caller of this screen has to supply it.
+ * below it may read it. The same goes for `author`, the reader's own space, which the composer
+ * draws as an avatar and an identity line. The feed and the space page fill the Premium prop
+ * themselves; here both are filled by `app/…/post/[code]/post-detail-screen.tsx`, a client boundary
+ * that exists for exactly these two facts. Left unpassed, `isPremiumReader` defaults to `false` and
+ * quotes a Premium reader a price they do not owe — so a new caller of this screen has to supply
+ * it.
  */
 export function PostDetailView({
     identifier,
     serverPost,
+    author = null,
     isPremiumReader = false,
     testId = 'post-detail',
 }: {
@@ -67,7 +71,9 @@ export function PostDetailView({
     identifier: string
     /** The anonymous body fetched during the render; see `usePostDetail` for why it is not cached. */
     serverPost: Post | null
-    /** Premium readers are exempt from paid interaction. See the note above — nothing passes it yet. */
+    /** The reader's own space, for the composer's avatar and identity line. From the route too. */
+    author?: ReplyComposerAuthor | null
+    /** Premium readers are exempt from paid interaction. The route supplies it — see the note above. */
     isPremiumReader?: boolean
     testId?: string
 }) {
@@ -123,7 +129,27 @@ export function PostDetailView({
     }
 
     return (
-        <div data-testid={testId} className="flex min-w-0 flex-col">
+        /*
+         * One rounded shell around the post, the composer and the replies — legacy's own geometry
+         * (`borderRadius: { xs: '0 0 16px 16px', md: '16px' }`, `overflow: hidden`). The corners are
+         * on the **stack**, not on each block, which is what makes the hairline gaps between them
+         * read as one card rather than three: `overflow-hidden` is what clips the first and last
+         * block's own square corners to the shell's.
+         *
+         * Below `md` only the bottom corners are rounded, because the stack runs to both edges of
+         * the screen there — rounding the top would leave two notches under a sticky bar that is
+         * flush with them.
+         */
+        <div
+            data-testid={testId}
+            /*
+             * `flex-1`, so the stack takes the height the route's `<main>` has left it and the
+             * replies block can fill it. The chain it completes starts at `(main)/layout.tsx`'s
+             * `min-h-[var(--window-height)]`, runs through `TabBarShell` and `<main flex-1>`, and
+             * ends here — a break anywhere in it and the block below collapses to its content.
+             */
+            className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-b-2xl md:rounded-2xl"
+        >
             <div className="bg-(--background-surface)">
                 <PostCard
                     post={post}
@@ -137,6 +163,7 @@ export function PostDetailView({
 
             <ReplyComposer
                 post={post}
+                author={author}
                 isPremiumReader={isPremiumReader}
                 /*
                  * Both, and neither is redundant: the list gains a row and the post's `reply_count`
@@ -153,12 +180,6 @@ export function PostDetailView({
 
             <RepliesSection
                 replies={replies}
-                /*
-                 * The **post's** tally, not the list's: the replies envelope carries no `count` at
-                 * all (`usePostReplies` says what that used to print). It can lag the list by a
-                 * moment after a write; a figure occasionally one behind beats one always zero.
-                 */
-                count={post.reply_count}
                 isPremiumReader={isPremiumReader}
                 observe={observe}
                 heightFor={heightFor}
@@ -184,7 +205,6 @@ export function PostDetailView({
 
 function RepliesSection({
     replies,
-    count,
     isPremiumReader,
     observe,
     heightFor,
@@ -192,8 +212,6 @@ function RepliesSection({
     testId,
 }: {
     replies: ReturnType<typeof usePostReplies>
-    /** The parent post's `reply_count` — see the call site for why it is not the list's length. */
-    count: number
     isPremiumReader: boolean
     observe: ReturnType<typeof useRenderWindow>['observe']
     heightFor: ReturnType<typeof useRenderWindow>['heightFor']
@@ -205,20 +223,31 @@ function RepliesSection({
     return (
         <section
             data-testid={subTestId(testId, 'group')}
-            className="mt-px flex min-w-0 flex-col bg-(--background-surface)"
+            /*
+             * `grow`, so a post with few replies — or none — still paints its surface to the bottom
+             * of the window instead of stopping under the last row and letting the page colour
+             * show through. It is the **replies** block that grows rather than the post above it:
+             * the post is a fixed piece of content, and stretching it would put its actions
+             * somewhere different on every post.
+             *
+             * `grow` and not a `min-height`: the height wanted is "whatever is left", which only
+             * the flex chain knows — `DESIGN_SYSTEM.md` §6 states the rule, and a `min-h-screen`
+             * here would be too tall by exactly the height of the bar and the post.
+             *
+             * ⚠ This is **not** legacy's geometry. It puts `minHeight: 100vh` on the page container
+             * and `marginBottom: 150px` under the stack, so its card stops at its content and the
+             * page is tall underneath it. Growing the block is the deliberate change: below `md`
+             * the surface is full-bleed, so legacy's arrangement reads as the card being cut off
+             * mid-screen.
+             */
+            className="mt-px flex min-w-0 grow flex-col bg-(--background-surface)"
         >
-            <h2
-                data-testid={subTestId(testId, 'title')}
-                className="type-title-t3-semibold px-3 pt-4 pb-2 text-(--text-title) md:px-6"
-            >
-                {/* The post's own tally — the replies envelope carries none. */}
-                {t('post_detail_replies', { count })}
-            </h2>
-
             {replies.isLoading ? (
                 <ReplySkeleton />
             ) : replies.isError ? (
-                <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+                // `grow` + centred: the block is now as tall as the window has room for, and a
+                // notice pinned to its top edge reads as a row rather than as the state of a list.
+                <div className="flex grow flex-col items-center justify-center gap-3 px-4 py-10 text-center">
                     <p className="type-dense-default text-(--text-subtitle)">
                         {t('post_detail_replies_error')}
                     </p>
@@ -234,12 +263,25 @@ function RepliesSection({
             ) : replies.isEmpty ? (
                 <p
                     data-testid={subTestId(testId, 'message')}
-                    className="type-dense-default px-3 py-10 text-center text-(--text-placeholder) md:px-6"
+                    className="type-dense-default flex grow items-center justify-center px-3 py-10 text-center text-(--text-placeholder) md:px-6"
                 >
                     {t('post_detail_replies_empty')}
                 </p>
             ) : (
-                <div className="flex min-w-0 flex-col gap-px">
+                /*
+                 * `divide-y`, not `gap-px`.
+                 *
+                 * The feed separates its cards with a 1px gap and lets the **page colour** show
+                 * through, which works there because nothing is painted behind them. Here the block
+                 * itself is painted — it has to be, or a short list leaves the bottom of the window
+                 * the wrong colour — so a gap over that surface is a hairline of surface on
+                 * surface: invisible. Every row ran into the next one, which is what this looked
+                 * like before the block started filling its space.
+                 *
+                 * A real border draws regardless of what is behind it, and `divide-y` puts it
+                 * between rows only, so the last row still meets the empty space below it cleanly.
+                 */
+                <div className="flex min-w-0 flex-col divide-y divide-(--separator-default)">
                     {replies.replies.map(reply => {
                         const height = heightFor(reply.id)
                         return (
@@ -247,7 +289,7 @@ function RepliesSection({
                                 key={reply.id}
                                 ref={observe}
                                 {...windowKeyProps(reply.id)}
-                                className="min-w-0 bg-(--background-surface)"
+                                className="min-w-0"
                                 style={height === null ? undefined : { height }}
                             >
                                 {height === null ? (
@@ -273,10 +315,15 @@ function RepliesSection({
     )
 }
 
-/** Matches the card's own shape, so nothing jumps at the moment the post lands. */
+/**
+ * Matches the card's own shape, so nothing jumps at the moment the post lands.
+ *
+ * `flex-1` for the same reason the replies block has it: a loading state that is only as tall as
+ * its own placeholder makes the page grow under the reader the instant the post arrives.
+ */
 function DetailSkeleton() {
     return (
-        <div className="flex flex-col gap-3 bg-(--background-surface) px-3 py-3 md:px-6 md:py-5">
+        <div className="flex flex-1 flex-col gap-3 bg-(--background-surface) px-3 py-3 md:px-6 md:py-5">
             <div className="flex items-center gap-2">
                 <Skeleton className="size-10 rounded-full" />
                 <div className="flex flex-col gap-1">
@@ -330,7 +377,7 @@ function DetailNotice({
     return (
         <div
             data-testid={subTestId(testId, 'message')}
-            className="flex flex-col items-center justify-center gap-3 bg-(--background-surface) px-4 py-16 text-center"
+            className="flex flex-1 flex-col items-center justify-center gap-3 bg-(--background-surface) px-4 py-16 text-center"
         >
             <span className="flex size-12 items-center justify-center rounded-full bg-(--background-segment) text-(--icon-secondary)">
                 <Icon name={icon} size={24} />

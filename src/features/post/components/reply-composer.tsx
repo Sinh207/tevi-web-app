@@ -1,5 +1,8 @@
 'use client'
 
+import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { PremiumBadge } from '@shared/components/premium-badge'
+import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatStarAmount } from '@shared/lib/money'
 import { useWebConfig } from '@shared/lib/remote-config'
@@ -10,6 +13,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import type { Post } from '../api/types'
 import { useCreateReply } from '../hooks/use-create-reply'
 import { replyCost } from '../lib/post-access'
+import type { ReplyComposerAuthor } from '../lib/reply-author'
 import {
     allowsReplyLinks,
     isAttachableImage,
@@ -43,12 +47,20 @@ import { ReplyAudienceNotice } from './reply-audience-notice'
  * A post whose restriction has no sentence — `'everyone'`, or an audience this build has not been
  * taught — still draws nothing at all, which is right: an empty panel says less than no panel.
  *
- * ## No avatar beside it, and that is a boundary rather than an omission
+ * ## The box grows, and that is legacy's layout rather than a flourish
  *
- * Legacy draws the reader's own avatar on the left. It comes from `useMyChannel`, which lives in
- * `features/channel` — and that feature imports this one, so reading it here would close a barrel
- * cycle. The row is laid out so the slot can be filled by a prop the day something above this
- * component can supply one; nothing else changes.
+ * Idle it is one row — avatar, a one-line input, and *Reply* on the trailing edge. As soon as the
+ * reader focuses it or puts anything in it, the identity line and the picture button appear and
+ * *Reply* moves **down** to sit beside the picture button. Legacy renders `BtnReply` from two
+ * places for exactly this (`comment-post-detail-reply-btn-inline` when there is content,
+ * `…-standalone` when there is not), and the reason is the resting state: a composer nobody has
+ * touched should be one line, not a form.
+ *
+ * ## The reader's own avatar arrives as a prop
+ *
+ * It comes from `useMyChannel`, which lives in `features/channel` — and that feature imports this
+ * one, so reading it here would close a barrel cycle. `PostDetailScreen` (in `app/`) reads it and
+ * hands it down, the same route `isPremiumReader` takes. Absent, the slot is simply not drawn.
  *
  * ## The three refusals a draft can carry, and only two of them are printed
  *
@@ -58,11 +70,14 @@ import { ReplyAudienceNotice } from './reply-audience-notice'
  */
 export function ReplyComposer({
     post,
+    author = null,
     isPremiumReader = false,
     onReplied,
     testId,
 }: {
     post: Post
+    /** The reader's own space, for the avatar and the identity line. `null` draws neither. */
+    author?: ReplyComposerAuthor | null
     /** Premium readers are exempt from paid interaction — `features/premium`'s fact, not the post's. */
     isPremiumReader?: boolean
     /** The reply landed; the screen refetches the list and the count. */
@@ -75,6 +90,16 @@ export function ReplyComposer({
     const textRef = useRef<HTMLTextAreaElement>(null)
 
     const [draft, setDraft] = useState<ReplyDraft>({ text: '', images: [] })
+    /**
+     * Has the reader engaged with the box?
+     *
+     * Legacy's `showBtnUploadMedia` is `isInputFocused || text || images.length || isHover`. The
+     * hover term is dropped: it exists to reveal the picture button to a mouse before the box is
+     * focused, which no touch device can use, and the button is one tab away either way. Everything
+     * else is kept, including that the identity line and the picture button appear together —
+     * legacy gates both on the same flag.
+     */
+    const [focused, setFocused] = useState(false)
 
     /**
      * The reply's character ceiling.
@@ -173,6 +198,30 @@ export function ReplyComposer({
               ? t('post_reply_image_limit', { count: REPLY_IMAGE_MAX })
               : null
 
+    const expanded = focused || draft.text.trim().length > 0 || draft.images.length > 0
+
+    const submitButton = (
+        <Button
+            variant="primary"
+            size="small"
+            className="flex-none"
+            disabled={Boolean(problem) || reply.isPending}
+            onClick={send}
+            data-testid={subTestId(testId, 'submit')}
+        >
+            {/*
+             * The price rides on the button, which is where the action row puts it too: the moment a
+             * reader needs to know a reply costs Star is the moment they are about to spend it.
+             * `> 1` is legacy's own threshold — a 1-Star charge is not worth a number.
+             */}
+            {reply.cost === null || reply.cost <= 1
+                ? t('post_reply_submit')
+                : t('post_reply_submit_priced', {
+                      amount: formatStarAmount(reply.cost, currentLanguage),
+                  })}
+        </Button>
+    )
+
     return (
         <section
             data-testid={testId}
@@ -182,128 +231,184 @@ export function ReplyComposer({
              * cannot add it from outside — this component renders nothing when replies are closed,
              * and a wrapper would leave a 1px strip behind.
              */
-            className="mt-px flex min-w-0 flex-col gap-2 bg-(--background-surface) px-3 py-3 md:px-6 md:py-4"
+            className="mt-px flex min-w-0 flex-col bg-(--background-surface) px-3 py-3 md:px-6"
         >
-            <div className="flex min-w-0 items-end gap-2">
-                <label className="sr-only" htmlFor={inputId}>
-                    {t('post_reply_placeholder')}
-                </label>
-                <textarea
-                    ref={textRef}
-                    id={inputId}
-                    data-testid={subTestId(testId, 'input')}
-                    value={draft.text}
-                    maxLength={limit}
-                    rows={1}
-                    placeholder={t('post_reply_placeholder')}
-                    aria-invalid={message ? true : undefined}
-                    aria-describedby={message ? `${inputId}-message` : undefined}
-                    disabled={reply.isPending}
-                    onChange={event => {
-                        setText(event.target.value)
-                        grow(event.currentTarget)
-                    }}
-                    onKeyDown={event => {
-                        /*
-                         * Enter sends, Shift+Enter breaks the line — legacy's binding, and the one
-                         * every chat box in the product uses. `isComposing` is the half legacy
-                         * misses: an IME candidate list is confirmed with Enter, so without it a
-                         * Japanese or Vietnamese reader sends their reply mid-word.
-                         */
-                        if (
-                            event.key !== 'Enter' ||
-                            event.shiftKey ||
-                            event.nativeEvent.isComposing
-                        )
-                            return
-                        event.preventDefault()
-                        send()
-                    }}
-                    className="type-body-default max-h-40 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-(--text-title) outline-none placeholder:text-(--text-placeholder) disabled:opacity-60"
-                />
+            {/* `items-start`, so the avatar stays level with the first line as the box grows. */}
+            <div className="flex min-w-0 items-start gap-2">
+                {author ? (
+                    <AnimatedAvatar
+                        size="medium"
+                        thumb={author.thumb}
+                        avatarVideo={author.avatarVideo}
+                        isPremium={author.isPremium}
+                        alt=""
+                        initials={
+                            author.name?.trim()
+                                ? author.name.trim().slice(0, 2).toUpperCase()
+                                : undefined
+                        }
+                        className="flex-none"
+                    />
+                ) : null}
 
-                <input
-                    ref={fileRef}
-                    type="file"
-                    accept={REPLY_IMAGE_TYPES.join(',')}
-                    multiple
-                    hidden
-                    data-testid={subTestId(testId, 'field')}
-                    onChange={event => {
-                        void attach(event.target.files)
-                        // Cleared so picking the same file twice in a row still fires `change`.
-                        event.target.value = ''
-                    }}
-                />
-                <button
-                    type="button"
-                    data-testid={subTestId(testId, 'trigger')}
-                    aria-label={t('post_reply_add_image')}
-                    disabled={full || reply.isPending}
-                    onClick={() => fileRef.current?.click()}
-                    className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
-                >
-                    <Icon name="image" size={20} />
-                </button>
-
-                <Button
-                    variant="primary"
-                    size="small"
-                    className="flex-none"
-                    disabled={Boolean(problem) || reply.isPending}
-                    onClick={send}
-                    data-testid={subTestId(testId, 'submit')}
-                >
+                <div className="flex min-w-0 flex-1 flex-col">
                     {/*
-                     * The price is on the button rather than beside the box, which is where the
-                     * action row puts it too: the one moment a reader needs to know a reply costs
-                     * Star is the moment they are about to spend it.
+                     * The identity line, and it appears only once the box is in use — legacy gates
+                     * it on the same flag as the picture button. At rest it would be the reader's
+                     * own name printed above an empty field, which tells them nothing they do not
+                     * know.
                      */}
-                    {reply.cost === null
-                        ? t('post_reply_submit')
-                        : t('post_reply_submit_priced', {
-                              amount: formatStarAmount(reply.cost, currentLanguage),
-                          })}
-                </Button>
-            </div>
+                    {expanded && author ? (
+                        <span className="flex min-w-0 items-center gap-0.5">
+                            <span className="type-dense-emphasis max-w-[200px] truncate text-(--text-title)">
+                                {author.name}
+                            </span>
+                            <VerifiedBadge image={author.verifiedBadge} size={16} />
+                            {author.isPremium ? (
+                                <PremiumBadge size={16} className="flex-none" />
+                            ) : null}
+                            {author.slug ? (
+                                <span className="type-caption-meta max-w-[140px] truncate text-(--text-placeholder)">
+                                    {`@${author.slug}`}
+                                </span>
+                            ) : null}
+                        </span>
+                    ) : null}
 
-            {draft.images.length > 0 ? (
-                <ul
-                    data-testid={subTestId(testId, 'list')}
-                    /*
-                     * A scrolling row, not a carousel: these are thumbnails the reader scrubs
-                     * sideways, with no slide semantics at all (`DESIGN_SYSTEM.md` §10).
-                     */
-                    className="-mx-3 flex snap-x gap-2 overflow-x-auto px-3 md:-mx-6 md:px-6"
-                >
-                    {draft.images.map(image => (
-                        <li
-                            key={image.id}
-                            data-testid={subTestId(testId, 'item')}
-                            className="relative size-16 flex-none snap-start overflow-hidden rounded-[8px] bg-(--background-segment)"
+                    <div className="flex min-w-0 items-center gap-2">
+                        <label className="sr-only" htmlFor={inputId}>
+                            {t('post_reply_placeholder')}
+                        </label>
+                        <textarea
+                            ref={textRef}
+                            id={inputId}
+                            data-testid={subTestId(testId, 'input')}
+                            value={draft.text}
+                            maxLength={limit}
+                            rows={1}
+                            placeholder={t('post_reply_placeholder')}
+                            aria-invalid={message ? true : undefined}
+                            aria-describedby={message ? `${inputId}-message` : undefined}
+                            disabled={reply.isPending}
+                            onFocus={() => setFocused(true)}
+                            onBlur={() => setFocused(false)}
+                            onChange={event => {
+                                setText(event.target.value)
+                                grow(event.currentTarget)
+                            }}
+                            onKeyDown={event => {
+                                /*
+                                 * Enter sends, Shift+Enter breaks the line — legacy's binding, and
+                                 * the one every chat box in the product uses. `isComposing` is the
+                                 * half legacy misses: an IME candidate list is confirmed with
+                                 * Enter, so without it a Japanese or Vietnamese reader sends their
+                                 * reply mid-word.
+                                 */
+                                if (
+                                    event.key !== 'Enter' ||
+                                    event.shiftKey ||
+                                    event.nativeEvent.isComposing
+                                )
+                                    return
+                                event.preventDefault()
+                                send()
+                            }}
+                            className="type-body-default max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-(--text-title) outline-none placeholder:text-(--text-placeholder) disabled:opacity-60"
+                        />
+                        {/* At rest the button sits **here**, on the input's own line. */}
+                        {expanded ? null : submitButton}
+                    </div>
+
+                    {draft.images.length > 0 ? (
+                        <ul
+                            data-testid={subTestId(testId, 'list')}
+                            /*
+                             * A scrolling row, not a carousel: these are thumbnails the reader
+                             * scrubs sideways, with no slide semantics at all
+                             * (`DESIGN_SYSTEM.md` §10).
+                             */
+                            className="mt-1 flex snap-x gap-2 overflow-x-auto"
                         >
-                            {/*
-                             * A local `blob:` URL that exists for as long as this draft does, so
-                             * `next/image` has nothing to optimise and no loader that would accept
-                             * it. The plain tag is correct here rather than a concession.
-                             */}
-                            {/* biome-ignore lint/performance/noImgElement: a blob: URL has nothing for next/image to optimise and no loader that accepts it. */}
-                            <img src={image.previewUrl} alt="" className="size-full object-cover" />
+                            {draft.images.map(image => (
+                                <li
+                                    key={image.id}
+                                    data-testid={subTestId(testId, 'item')}
+                                    className="relative size-16 flex-none snap-start overflow-hidden rounded-[8px] bg-(--background-segment)"
+                                >
+                                    {/*
+                                     * A local `blob:` URL that exists for as long as this draft
+                                     * does, so `next/image` has nothing to optimise and no loader
+                                     * that would accept it. The plain tag is correct here rather
+                                     * than a concession.
+                                     */}
+                                    {/* biome-ignore lint/performance/noImgElement: a blob: URL has nothing for next/image to optimise and no loader that accepts it. */}
+                                    <img
+                                        src={image.previewUrl}
+                                        alt=""
+                                        className="size-full object-cover"
+                                    />
+                                    <button
+                                        type="button"
+                                        data-testid={subTestId(testId, 'remove')}
+                                        aria-label={t('post_reply_remove_image')}
+                                        onClick={() => remove(image.id)}
+                                        className="absolute end-1 top-1 flex size-6 items-center justify-center rounded-full bg-(--background-overlay) text-(--text-on)"
+                                    >
+                                        {/* 16 is the smallest the sprite ships — `IconSize` is a
+                                            union, so a hand-picked 12 is a type error rather than a
+                                            blurry glyph. */}
+                                        <Icon name="xmark" size={16} />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : null}
+
+                    {/*
+                     * The action row, drawn only once the box is in use. It carries the picture
+                     * button and — from here on — *Reply*, which is where legacy moves it the
+                     * moment there is anything to send.
+                     */}
+                    {expanded ? (
+                        <div className="mt-1 flex items-center justify-between gap-2">
                             <button
                                 type="button"
-                                data-testid={subTestId(testId, 'remove')}
-                                aria-label={t('post_reply_remove_image')}
-                                onClick={() => remove(image.id)}
-                                className="absolute end-1 top-1 flex size-6 items-center justify-center rounded-full bg-(--background-overlay) text-(--text-on)"
+                                data-testid={subTestId(testId, 'trigger')}
+                                aria-label={t('post_reply_add_image')}
+                                disabled={full || reply.isPending}
+                                /*
+                                 * `onMouseDown` with the default prevented, not `onClick`: the
+                                 * button is only rendered while the box is focused, and a plain
+                                 * click blurs the textarea first — which unmounts this button
+                                 * before its own handler runs, so the picker never opens.
+                                 */
+                                onMouseDown={event => {
+                                    event.preventDefault()
+                                    fileRef.current?.click()
+                                }}
+                                className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
                             >
-                                {/* 16 is the smallest the sprite ships — `IconSize` is a union, so a
-                                    hand-picked 12 is a type error rather than a blurry glyph. */}
-                                <Icon name="xmark" size={16} />
+                                <Icon name="image" size={20} />
                             </button>
-                        </li>
-                    ))}
-                </ul>
-            ) : null}
+                            {submitButton}
+                        </div>
+                    ) : null}
+
+                    <input
+                        ref={fileRef}
+                        type="file"
+                        accept={REPLY_IMAGE_TYPES.join(',')}
+                        multiple
+                        hidden
+                        data-testid={subTestId(testId, 'field')}
+                        onChange={event => {
+                            void attach(event.target.files)
+                            // Cleared so picking the same file twice in a row still fires `change`.
+                            event.target.value = ''
+                        }}
+                    />
+                </div>
+            </div>
 
             {message ? (
                 <p

@@ -102,3 +102,11 @@ export {
     postSnippet,
     resolvePostFetchStatus,
 } from './lib/post-seo'
+/**
+ * The shape the route hands down for the composer's avatar.
+ *
+ * From `lib/`, **never** re-exported through `components/reply-composer` — that file is a client
+ * component, and routing a type through it from this barrel put it in the server graph and turned
+ * the post route into a 404. `lib/reply-author.ts` carries the whole account.
+ */
+export type { ReplyComposerAuthor } from './lib/reply-author'

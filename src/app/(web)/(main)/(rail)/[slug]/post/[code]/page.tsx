@@ -166,9 +166,24 @@ export default async function PostDetailPage({ params }: PageProps) {
     const serverPost =
         result.status === 'ok' && mayRenderForCrawler(result.post) ? result.post : null
 
+    /*
+     * The bar carries the **space's name**, not the word "Post" — legacy's `PostDetailHeader` reads
+     * `postInfo.channel.name` and centres it, and the reason is worth keeping: this page is almost
+     * always arrived at from a shared link, where the one thing a reader needs before the post loads
+     * is whose space they have landed in. "Post" tells them what they can already see.
+     *
+     * It comes from the **server** body, so it is in the first paint rather than after a hydration.
+     * When that body is missing — a post that is gone, or an upstream failure — the generic title
+     * stands in, which is the same fallback `generateMetadata` uses a few lines up.
+     */
+    const heading =
+        (result.status === 'ok' && mayRenderForCrawler(result.post)
+            ? result.post.channel?.name
+            : null) ?? t('post_detail_title')
+
     return (
         <main className="mx-auto flex w-full max-w-[612px] flex-1 flex-col">
-            <PageBackBar title={t('post_detail_title')} />
+            <PageBackBar title={heading} />
             {/* A client boundary, and only because a hook has to be read. See the file. */}
             <PostDetailScreen identifier={code} serverPost={serverPost} />
         </main>

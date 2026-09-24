@@ -1,10 +1,14 @@
 'use client'
 
 import { useMyChannel } from '@features/channel'
-import { type Post, PostDetailView } from '@features/post'
+import { type Post, PostDetailView, type ReplyComposerAuthor } from '@features/post'
+import { useMemo } from 'react'
 
 /**
- * The client boundary that tells the post screen whether the reader is Premium.
+ * The client boundary that tells the post screen who the reader is.
+ *
+ * Two facts, both from `useMyChannel`: whether they are **Premium** (paid interaction exempts them)
+ * and their **own space** (the composer draws their avatar and name, as legacy's does).
  *
  * ## Why this file exists rather than a prop on the page
  *
@@ -36,11 +40,36 @@ export function PostDetailScreen({
     identifier: string
     serverPost: Post | null
 }) {
-    const { isPremium } = useMyChannel()
+    const { myChannel, isPremium, verifiedTickBadge } = useMyChannel()
+
+    /**
+     * The reader, flattened to the five fields the composer draws.
+     *
+     * Flattened here rather than passed as a `Channel`, because `features/post` cannot name that
+     * type — the same boundary this file exists for. `null` while the account has no space, which
+     * is a real state (a reader who has never created one): the composer then draws no avatar and
+     * no identity line, and everything else about it still works.
+     */
+    const author = useMemo<ReplyComposerAuthor | null>(
+        () =>
+            myChannel
+                ? {
+                      name: myChannel.name ?? null,
+                      slug: myChannel.slug ?? null,
+                      thumb: myChannel.images?.thumb ?? null,
+                      avatarVideo: myChannel.images?.avatar_video ?? null,
+                      isPremium,
+                      verifiedBadge: verifiedTickBadge,
+                  }
+                : null,
+        [myChannel, isPremium, verifiedTickBadge],
+    )
+
     return (
         <PostDetailView
             identifier={identifier}
             serverPost={serverPost}
+            author={author}
             isPremiumReader={isPremium}
         />
     )

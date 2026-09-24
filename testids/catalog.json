@@ -12274,8 +12274,7 @@
                 "message",
                 "panel",
                 "retry",
-                "row",
-                "title"
+                "row"
             ]
         },
         "src/features/post/components/post-header.tsx": {
