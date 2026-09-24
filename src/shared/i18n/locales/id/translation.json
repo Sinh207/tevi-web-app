@@ -2061,5 +2061,15 @@
     "reply_action_reply": "Balas",
     "reply_hide_answers": "Sembunyikan tanggapan",
     "reply_answers_error": "Tanggapan gagal dimuat.",
-    "reply_answers_more": "Tampilkan tanggapan lainnya"
+    "reply_answers_more": "Tampilkan tanggapan lainnya",
+    "post_create_title": "Postingan baru",
+    "post_create_placeholder": "Apa yang kamu pikirkan?",
+    "post_create_submit": "Posting",
+    "post_create_posting": "Memposting…",
+    "post_create_add_image": "Tambahkan gambar",
+    "post_create_remove_image": "Hapus gambar",
+    "post_create_too_long": "Postingan ini terlalu panjang.",
+    "post_create_failed": "Postingan kamu gagal diterbitkan",
+    "post_create_image_limit_one": "Kamu bisa melampirkan maksimal {{count}} gambar per postingan.",
+    "post_create_image_limit_other": "Kamu bisa melampirkan maksimal {{count}} gambar per postingan."
 }

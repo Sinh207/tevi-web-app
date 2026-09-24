@@ -39,6 +39,14 @@ export {
 export type { PostMiniAppApp } from './components/post-attachments'
 export { PostCard } from './components/post-card'
 /**
+ * The post composer, and the one boolean two shells and one renderer share.
+ *
+ * `PostComposerDialog` is exported because a **host** has to mount it — it needs `useMyChannel`,
+ * which this feature may not read — and the store because the rail and the tab bar both open it.
+ * The draft, the hook and the upload path stay internal.
+ */
+export { PostComposerDialog } from './components/post-composer-dialog'
+/**
  * The post-detail **screen**, and nothing under it.
  *
  * The route composes this with a back bar and hands it the server-fetched body; the replies hook,
@@ -110,3 +118,4 @@ export {
  * the post route into a 404. `lib/reply-author.ts` carries the whole account.
  */
 export type { ReplyComposerAuthor } from './lib/reply-author'
+export { openPostComposer, usePostComposerStore } from './store/composer-store'

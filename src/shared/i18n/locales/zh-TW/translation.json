@@ -2061,5 +2061,15 @@
     "reply_action_reply": "回覆",
     "reply_hide_answers": "隱藏回應",
     "reply_answers_error": "無法載入回應。",
-    "reply_answers_more": "顯示更多回應"
+    "reply_answers_more": "顯示更多回應",
+    "post_create_title": "新貼文",
+    "post_create_placeholder": "你在想什麼？",
+    "post_create_submit": "發布",
+    "post_create_posting": "發布中…",
+    "post_create_add_image": "新增圖片",
+    "post_create_remove_image": "移除圖片",
+    "post_create_too_long": "這則貼文太長了。",
+    "post_create_failed": "無法發布你的貼文",
+    "post_create_image_limit_one": "每則貼文最多可附加 {{count}} 張圖片。",
+    "post_create_image_limit_other": "每則貼文最多可附加 {{count}} 張圖片。"
 }

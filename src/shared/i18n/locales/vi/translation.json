@@ -2061,5 +2061,15 @@
     "reply_action_reply": "Trả lời",
     "reply_hide_answers": "Ẩn trả lời",
     "reply_answers_error": "Không tải được phần trả lời.",
-    "reply_answers_more": "Xem thêm trả lời"
+    "reply_answers_more": "Xem thêm trả lời",
+    "post_create_title": "Bài viết mới",
+    "post_create_placeholder": "Bạn đang nghĩ gì?",
+    "post_create_submit": "Đăng",
+    "post_create_posting": "Đang đăng…",
+    "post_create_add_image": "Thêm ảnh",
+    "post_create_remove_image": "Xoá ảnh",
+    "post_create_too_long": "Bài viết này quá dài.",
+    "post_create_failed": "Không thể đăng bài viết của bạn",
+    "post_create_image_limit_one": "Bạn có thể đính kèm tối đa {{count}} ảnh cho mỗi bài viết.",
+    "post_create_image_limit_other": "Bạn có thể đính kèm tối đa {{count}} ảnh cho mỗi bài viết."
 }

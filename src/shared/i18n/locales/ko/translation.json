@@ -2061,5 +2061,15 @@
     "reply_action_reply": "답글",
     "reply_hide_answers": "답글 숨기기",
     "reply_answers_error": "답글을 불러오지 못했습니다.",
-    "reply_answers_more": "답글 더 보기"
+    "reply_answers_more": "답글 더 보기",
+    "post_create_title": "새 게시물",
+    "post_create_placeholder": "무슨 생각을 하고 있나요?",
+    "post_create_submit": "게시",
+    "post_create_posting": "게시 중…",
+    "post_create_add_image": "사진 추가",
+    "post_create_remove_image": "사진 삭제",
+    "post_create_too_long": "게시물이 너무 깁니다.",
+    "post_create_failed": "게시물을 올리지 못했습니다",
+    "post_create_image_limit_one": "게시물 하나에 사진은 최대 {{count}}장까지 첨부할 수 있습니다.",
+    "post_create_image_limit_other": "게시물 하나에 사진은 최대 {{count}}장까지 첨부할 수 있습니다."
 }

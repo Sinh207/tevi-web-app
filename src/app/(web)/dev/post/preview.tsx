@@ -59,6 +59,7 @@ import {
     POST_VIDEO_AND_IMAGES,
     POST_VIDEO_BARE,
     PostCard,
+    PostComposerDialog,
     REPLY_DELETED,
     REPLY_EMPTY,
     REPLY_HTML_ONLY,
@@ -73,6 +74,8 @@ import {
     ReplyComposer,
     ReplyRow,
 } from '@features/post/dev'
+import { Button } from '@shared/ui/button'
+import { useState } from 'react'
 
 /**
  * Every card state, grouped by what it is a state *of*, each labelled with what makes it hard to
@@ -648,8 +651,31 @@ const HARNESS_AUTHOR = {
 }
 
 export function PostPreview() {
+    const [composerOpen, setComposerOpen] = useState(false)
+
     return (
         <div className="flex flex-col gap-12">
+            <section className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1 border-(--separator-default) border-b pb-2">
+                    <h2 className="type-title-t2-semibold text-(--text-title)">Post composer</h2>
+                    <p className="type-dense-default text-(--text-subtitle)">
+                        The dialog the rail’s <code>+</code> and the tab bar’s FAB both open. Words
+                        and pictures only so far — video, audience, paywall and the reply settings
+                        are later cuts. Pressing Post hits the real endpoint.
+                    </p>
+                </div>
+                <div>
+                    <Button variant="primary" size="medium" onClick={() => setComposerOpen(true)}>
+                        Open the composer
+                    </Button>
+                </div>
+                <PostComposerDialog
+                    open={composerOpen}
+                    onOpenChange={setComposerOpen}
+                    author={HARNESS_AUTHOR}
+                />
+            </section>
+
             <section className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1 border-(--separator-default) border-b pb-2">
                     <h2 className="type-title-t2-semibold text-(--text-title)">Reply row</h2>

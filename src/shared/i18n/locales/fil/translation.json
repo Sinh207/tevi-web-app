@@ -2061,5 +2061,15 @@
     "reply_action_reply": "Tumugon",
     "reply_hide_answers": "Itago ang mga sagot",
     "reply_answers_error": "Hindi ma-load ang mga sagot.",
-    "reply_answers_more": "Magpakita pa ng mga sagot"
+    "reply_answers_more": "Magpakita pa ng mga sagot",
+    "post_create_title": "Bagong post",
+    "post_create_placeholder": "Ano ang nasa isip mo?",
+    "post_create_submit": "I-post",
+    "post_create_posting": "Nagpo-post…",
+    "post_create_add_image": "Magdagdag ng larawan",
+    "post_create_remove_image": "Alisin ang larawan",
+    "post_create_too_long": "Masyadong mahaba ang post na ito.",
+    "post_create_failed": "Hindi na-publish ang iyong post",
+    "post_create_image_limit_one": "Puwede kang maglakip ng {{count}} larawan sa isang post.",
+    "post_create_image_limit_other": "Puwede kang maglakip ng hanggang {{count}} larawan sa isang post."
 }

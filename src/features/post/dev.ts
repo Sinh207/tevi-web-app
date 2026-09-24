@@ -34,6 +34,7 @@ export type { Post } from './api/types'
  */
 
 export { PostCard } from './components/post-card'
+export { PostComposerDialog } from './components/post-composer-dialog'
 export { PostImageGallery } from './components/post-image-gallery'
 export { PostLockPanel } from './components/post-lock-panel'
 export { PostMediaLightbox } from './components/post-media-lightbox'

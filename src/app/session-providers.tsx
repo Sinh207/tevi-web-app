@@ -7,6 +7,7 @@ import { MiniAppHost } from '@features/mini-app'
 import { PaymentProvider } from '@features/payment'
 import { PermissionProvider } from '@features/permission'
 import { RealtimeProvider } from '@features/realtime'
+import { PostComposerHost } from './post-composer-host'
 
 /**
  * Everything that depends on there being a session (outer → inner):
@@ -136,6 +137,11 @@ export function SessionProviders({
                                     player is `z-40` against their `z-50`, so an application is
                                     never drawn on top of the question it just asked. */}
                                 <MiniAppHost />
+                                {/* One mount for two openers — the rail's `+` and the tab bar's
+                                    FAB are both in the DOM, so the dialog cannot live beside
+                                    either. Inside `MyChannelProvider` because it draws the
+                                    author's own avatar. */}
+                                <PostComposerHost />
                             </MyChannelProvider>
                         </PaymentProvider>
                     </BalanceProvider>

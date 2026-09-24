@@ -2061,5 +2061,15 @@
     "reply_action_reply": "回复",
     "reply_hide_answers": "隐藏回应",
     "reply_answers_error": "无法加载回应。",
-    "reply_answers_more": "查看更多回应"
+    "reply_answers_more": "查看更多回应",
+    "post_create_title": "新帖子",
+    "post_create_placeholder": "你在想什么？",
+    "post_create_submit": "发布",
+    "post_create_posting": "发布中…",
+    "post_create_add_image": "添加图片",
+    "post_create_remove_image": "移除图片",
+    "post_create_too_long": "这条帖子太长了。",
+    "post_create_failed": "帖子发布失败",
+    "post_create_image_limit_one": "每条帖子最多可添加 {{count}} 张图片。",
+    "post_create_image_limit_other": "每条帖子最多可添加 {{count}} 张图片。"
 }

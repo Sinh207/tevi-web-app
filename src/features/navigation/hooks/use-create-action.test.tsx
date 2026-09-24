@@ -10,8 +10,10 @@ import { useCreateAction } from './use-create-action'
  *   row wired to the app prompt would be a *false statement* about where posting happens — and it
  *   would look completely correct on screen. That is the bug this file exists to hold shut, and it
  *   is the one this feature actually shipped in its first pass.
- * - `post` carries **no** `onSelect`, which is how every surface knows to dim it. Give it one and
- *   the row becomes a live button to nothing.
+ * - `post` opens the **composer**, and does it through the store rather than by rendering a dialog:
+ *   both navigation shells are in the DOM at once, so a dialog rendered from this hook would be two
+ *   dialogs with two drafts. It also closes the options surface first — the composer's backdrop
+ *   would otherwise land on the list it came from.
  * - The gate is on the surface, not the rows: a guest gets the login dialog and no menu. The rail's
  *   `+` is on every desktop page, so this is one of the most-pressed controls in the app.
  * - `GetAppDialog`'s `title` and `body` are **optional and fall back** to the generic "Get the Tevi
@@ -20,7 +22,10 @@ import { useCreateAction } from './use-create-action'
  */
 
 const openLoginDialog = vi.hoisted(() => vi.fn())
+const openComposer = vi.hoisted(() => vi.fn())
 const authed = vi.hoisted(() => ({ value: true }))
+
+vi.mock('@features/post', () => ({ openPostComposer: () => openComposer() }))
 
 // Mirrors the real `useRequireAuth`: run the callback for an account, raise the dialog otherwise.
 vi.mock('@features/auth', () => ({
@@ -67,12 +72,26 @@ describe('useCreateAction', () => {
         ).toEqual(['post', 'event'])
     })
 
-    it('leaves the post option without an action, which is what dims its row', () => {
-        const post = renderHook()
-            .read()
-            .options.find(o => o.key === 'post')
-        expect(post?.onSelect).toBeUndefined()
+    it('opens the composer from the post option, and never the app prompt', () => {
+        const probe = renderHook()
+        const post = probe.read().options.find(o => o.key === 'post')
         expect(post?.label).toBe('nav_create_post')
+
+        probe.run(a => a.options.find(o => o.key === 'post')?.onSelect?.())
+
+        expect(openComposer).toHaveBeenCalledTimes(1)
+        // Posting is not app-only. A prompt here would be a false statement about where it happens.
+        expect(probe.read().appPrompt.open).toBe(false)
+    })
+
+    /** Sequential, not stacked — the composer's backdrop must not land on the list behind it. */
+    it('closes the options surface as the composer opens', () => {
+        const probe = renderHook()
+        probe.run(a => a.onOpenChange(true))
+        expect(probe.read().open).toBe(true)
+
+        probe.run(a => a.options.find(o => o.key === 'post')?.onSelect?.())
+        expect(probe.read().open).toBe(false)
     })
 
     it('opens the app prompt from the event option only', () => {

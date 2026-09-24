@@ -12264,6 +12264,23 @@
                 "slide"
             ]
         },
+        "src/features/post/components/post-composer-dialog.tsx": {
+            "accepts": [
+                "PostComposerDialog"
+            ],
+            "parts": [
+                "error",
+                "field",
+                "header",
+                "input",
+                "item",
+                "label-data",
+                "list",
+                "remove",
+                "submit",
+                "trigger"
+            ]
+        },
         "src/features/post/components/post-detail-view.tsx": {
             "accepts": [
                 "PostDetailView"

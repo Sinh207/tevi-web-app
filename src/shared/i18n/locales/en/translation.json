@@ -2061,5 +2061,15 @@
     "reply_action_reply": "Reply",
     "reply_hide_answers": "Hide answers",
     "reply_answers_error": "Couldn't load answers.",
-    "reply_answers_more": "Show more answers"
+    "reply_answers_more": "Show more answers",
+    "post_create_title": "New post",
+    "post_create_placeholder": "What's on your mind?",
+    "post_create_submit": "Post",
+    "post_create_posting": "Posting…",
+    "post_create_add_image": "Add a picture",
+    "post_create_remove_image": "Remove picture",
+    "post_create_too_long": "This post is too long.",
+    "post_create_failed": "Couldn't publish your post",
+    "post_create_image_limit_one": "You can attach {{count}} picture to a post.",
+    "post_create_image_limit_other": "You can attach up to {{count}} pictures to a post."
 }
