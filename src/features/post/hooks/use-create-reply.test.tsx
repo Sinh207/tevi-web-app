@@ -19,6 +19,8 @@ type ReplyBody = {
     target: { kind: 'post'; postId: string } | { kind: 'reply'; replyId: string }
     text: string | null
     images: { uri: string }[]
+    /** The reader's own two-letter code. `en` here, since the probe mounts no i18n instance. */
+    lang: string
 }
 
 const chargeInteraction = vi.fn((_charge: unknown, _accountId: string | null) => {
@@ -140,7 +142,7 @@ describe('a free reply', () => {
         await waitFor(() => expect(created).toHaveBeenCalled())
         expect(calls).toEqual(['create'])
         expect(createReply).toHaveBeenCalledWith(
-            { target: { kind: 'post', postId: 'p1' }, text: 'hello', images: [] },
+            { target: { kind: 'post', postId: 'p1' }, text: 'hello', images: [], lang: 'en' },
             'acc-1',
         )
         expect(chargeInteraction).not.toHaveBeenCalled()
@@ -303,6 +305,7 @@ describe('answering a reply', () => {
             target: { kind: 'reply', replyId: 'r-parent' },
             text: 'answering',
             images: [],
+            lang: 'en',
         })
     })
 

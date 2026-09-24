@@ -2,6 +2,7 @@ import { env } from '@shared/config/env'
 import { ApiError } from '@shared/lib/api/errors'
 import { createApiModel } from '@shared/lib/api/model'
 import type { PageCursor } from '@shared/lib/api/page-cursor'
+import type { PostBody, UploadedImage } from '../lib/post-draft'
 import { normalizeReplies, normalizeReply, type Reply } from './reply-types'
 import { normalizePost, type Post } from './types'
 
@@ -352,6 +353,32 @@ export const postApi = {
     },
 
     /**
+     * Publish a post.
+     *
+     * ## `v3/channel/my-channel/threads/`, which is not where the rest of this file points
+     *
+     * Every other call here is `v1/posts/…`. Creating one is a **channel** operation on the same
+     * `/core` service — the endpoint is the write half of the list `channelApi.getThreads` reads,
+     * and `my-channel` is how the backend knows which space to publish to without being told. Both
+     * legacy web and iOS post to this exact path. Do not "correct" it to `v1/posts/`.
+     *
+     * The body is `lib/post-draft.ts`'s to build; this only sends it. That split is what lets the
+     * six places legacy web and iOS disagree be settled in a pure function with a test, rather than
+     * inside a request.
+     *
+     * Answers with the created post. Not retried — a replayed create is a second post.
+     */
+    async createPost(body: PostBody, accountId?: string | null): Promise<Post | null> {
+        return normalizePost(
+            await api.post<unknown>(
+                'v3/channel/my-channel/threads/',
+                body,
+                accountId ? { accountId } : undefined,
+            ),
+        )
+    },
+
+    /**
      * Post a reply — under a **post**, or under another **reply**.
      *
      * ## The body is three fields, and two of them are conditional
@@ -370,11 +397,14 @@ export const postApi = {
      *
      * So the words go out as `text`, exactly as typed. Nothing is lost that this app can show.
      *
-     * ## `lang` is `'en'` and that is a transcription, not a decision
+     * ## `lang` is the **reader's** two-letter code, not `'en'`
      *
-     * Legacy hard-codes it on every comment, from all nine of its locales. Sending the reader's UI
-     * locale instead would be a guess about a field whose accepted values nothing documents, and the
-     * failure mode is a `400` on every reply from a Vietnamese reader. **B109** asks what it is for.
+     * Legacy web hard-codes `'en'` on every comment from all nine of its locales. That was
+     * transcribed here at first, on the grounds that nothing documented the accepted values — and
+     * then iOS settled it: `PostLocal.swift` sends `LZ.getCurrentLanguage().twoCharactersCode` on
+     * every post it creates, so a two-letter code is a value the backend already receives daily
+     * from a shipped client. `postLang` narrows the locale; **B109** still asks what the field
+     * drives.
      *
      * ## Not retried, and the reason is the charge beside it
      *
@@ -391,14 +421,21 @@ export const postApi = {
             target,
             text,
             images,
-        }: { target: ReplyTarget; text: string | null; images: ReplyImage[] },
+            lang,
+        }: {
+            target: ReplyTarget
+            text: string | null
+            images: ReplyImage[]
+            /** The reader's own two-letter code — `postLang`. See the note above. */
+            lang: string
+        },
         accountId?: string | null,
     ): Promise<Reply | null> {
         const body: {
             lang: string
             text?: string
             images?: ReplyImage[]
-        } = { lang: REPLY_LANG }
+        } = { lang }
         if (text) body.text = text
         if (images.length > 0) body.images = images
 
@@ -544,18 +581,13 @@ export type ReplyTarget =
 /**
  * One uploaded image, in the shape `createReply` sends it.
  *
- * `w`/`h` are the natural pixel dimensions, measured in the browser before the upload — legacy
- * sends the same pair, and they are what lets a reply's gallery reserve its box before the bytes
- * arrive. `postImageSchema` reads both this spelling and `width`/`height` coming back.
+ * An **alias** of the post body's own `UploadedImage`, not a second declaration: legacy builds the
+ * images array identically for a post and a comment, and two identical interfaces are two places
+ * for the dimension spelling to drift. `w`/`h` are the natural pixel dimensions, measured in the
+ * browser before the upload; `postImageSchema` reads both this spelling and `width`/`height` on the
+ * way back.
  */
-export interface ReplyImage {
-    uri: string
-    w: number | null
-    h: number | null
-}
-
-/** See `createReply` — legacy's hard-coded value, carried rather than guessed at. **B109**. */
-const REPLY_LANG = 'en'
+export type ReplyImage = UploadedImage
 
 /**
  * Did the write land?

@@ -12,10 +12,15 @@ import { createApiModel } from './model'
  * |---|---|---|
  * | still image | `v3/upload/generate-gcs-upload-url/` | avatars, covers, video posters |
  * | animated avatar | `v4/animated-avatar/` | the premium looping avatar clip |
+ * | post video | `v1/posts/video/upload-url/` | a video post's clip **and** its poster |
  *
- * They answer the same `{ upload_url, serve_url }` pair and differ only in what the backend does
- * with the object afterwards — the animated one is transcoded, which is why it is not just
- * another key on the first endpoint.
+ * The first two answer the same `{ upload_url, serve_url }` pair and differ only in what the
+ * backend does with the object afterwards — the animated one is transcoded, which is why it is not
+ * just another key on the first endpoint.
+ *
+ * The **third is a different shape entirely** and is documented at `uploadPostVideo`: it names the
+ * object itself, hands back an **id** rather than a URL, and issues two upload URLs in one
+ * response.
  *
  * ## The `PUT` deliberately does **not** go through `apiClient`
  *
@@ -86,6 +91,60 @@ async function put(uploadUrl: string, file: Blob, { onProgress, signal }: Upload
     })
 }
 
+/**
+ * What `v1/posts/video/upload-url/` answers.
+ *
+ * Three fields and **no `serve_url`**: a video is transcoded, so there is nothing to serve at the
+ * moment it is uploaded. What the post body carries is the `id`, and the backend resolves the
+ * playback URLs from it once the transcode finishes — which is why a freshly created video post
+ * renders with no `playback` for a while, and why `postMediaKind` has to cope with that.
+ */
+interface SignedVideoUpload {
+    id?: unknown
+    upload_url?: unknown
+    thumbnail_upload_url?: unknown
+}
+
+export interface VideoUploadTarget {
+    id: string
+    uploadUrl: string
+    /** `null` when the backend issued none — then the poster simply is not uploaded. */
+    thumbnailUploadUrl: string | null
+}
+
+function readSignedVideoUpload(body: unknown): VideoUploadTarget | null {
+    if (!body || typeof body !== 'object') return null
+    const dto = body as SignedVideoUpload
+    const id = typeof dto.id === 'string' ? dto.id : ''
+    const uploadUrl = typeof dto.upload_url === 'string' ? dto.upload_url : ''
+    if (!id || !uploadUrl) return null
+    return {
+        id,
+        uploadUrl,
+        thumbnailUploadUrl:
+            typeof dto.thumbnail_upload_url === 'string' && dto.thumbnail_upload_url
+                ? dto.thumbnail_upload_url
+                : null,
+    }
+}
+
+/** What the caller measured about the clip. Every field is the backend's own parameter name. */
+export interface VideoUploadMeta {
+    /** `mp4`, `mov`, `webm` — the container, from the file's own type. */
+    extension: string
+    durationSeconds: number
+    width: number
+    height: number
+    /**
+     * The video codec, or `null`.
+     *
+     * Required by the endpoint and **nullable**: a browser can read a file's dimensions and
+     * duration without being able to name its codec, and legacy sends `null` in that case rather
+     * than guessing. Nothing client-side can do better without decoding the container by hand.
+     */
+    codec: string | null
+}
+
 export const uploadApi = {
     /**
      * Upload a still image and return the URL it will be served from, or `null`.
@@ -102,6 +161,67 @@ export const uploadApi = {
         if (!signed) return null
         await put(signed.uploadUrl, file, options)
         return signed.serveUrl
+    },
+
+    /**
+     * Upload a post's video, and its poster frame, and return the **id** the post body carries.
+     *
+     * ## Three requests, and the order is fixed
+     *
+     * Ask for the pair of URLs, `PUT` the clip, then `PUT` the poster. The poster is last and its
+     * failure is **not** fatal: a video post with no poster shows a black first frame, which is
+     * worse than the alternative only until the transcode produces one. Legacy aborts the whole post
+     * when the *video* fails and carries on without a thumbnail, and that is the right split.
+     *
+     * ## The post body carries `{ id }` and nothing else
+     *
+     * ⚠ Legacy web sends `video: { id, thumbnail: thumbnail_upload_url }` — the **upload** URL, a
+     * signed, expiring link to a bucket write. The iOS client sends `["id": videoId]` and nothing
+     * more, and it is the one to copy: a poster the backend already received needs no URL back, and
+     * an expiring write URL stored on a post is a field that is wrong the moment it is read.
+     * **B110**.
+     *
+     * ## `thumbnail_extension` is always `jpeg`
+     *
+     * Legacy hard-codes it and the poster is drawn from a `<canvas>`, which this client will encode
+     * as JPEG too. It is a parameter of the *request*, not of the file, so it is not the caller's.
+     */
+    async uploadPostVideo(
+        {
+            file,
+            meta,
+            poster,
+        }: {
+            file: Blob
+            meta: VideoUploadMeta
+            /** The poster frame, or `null` when the browser could not decode one. */
+            poster: Blob | null
+        },
+        options?: UploadOptions,
+    ): Promise<string | null> {
+        const target = readSignedVideoUpload(
+            await api.post<unknown>('v1/posts/video/upload-url/', {
+                video_extension: meta.extension,
+                thumbnail_extension: 'jpeg',
+                duration_seconds: meta.durationSeconds,
+                width: meta.width,
+                height: meta.height,
+                codec: meta.codec,
+            }),
+        )
+        if (!target) return null
+
+        await put(target.uploadUrl, file, options)
+
+        if (poster && target.thumbnailUploadUrl) {
+            try {
+                await put(target.thumbnailUploadUrl, poster)
+            } catch {
+                // The clip is up; a missing poster is a worse first frame, not a failed post.
+            }
+        }
+
+        return target.id
     },
 
     /**

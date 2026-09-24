@@ -17,6 +17,7 @@ import {
 } from '../api/post-api'
 import type { Reply } from '../api/reply-types'
 import type { Post } from '../api/types'
+import { postLang } from '../lib/post-draft'
 import { type ReplyDraft, replyText } from '../lib/reply-draft'
 
 /**
@@ -88,7 +89,7 @@ export function useCreateReply(
     },
 ) {
     const { activeId } = useAuth()
-    const { t } = useTranslation()
+    const { t, currentLanguage } = useTranslation()
     const requireAuth = useRequireAuth()
     const requireStars = useRequireStars()
     const queryClient = useQueryClient()
@@ -144,7 +145,15 @@ export function useCreateReply(
              */
             if (!text && images.length === 0) throw new Error('reply has no content')
 
-            return postApi.createReply({ target, text, images }, accountId)
+            /*
+             * The reader's own language, not `'en'`. iOS tags every post it creates with the two
+             * letters of the current locale, so the field takes one from a shipped client already —
+             * `postLang` narrows `zh-CN` and the rest. **B109**.
+             */
+            return postApi.createReply(
+                { target, text, images, lang: postLang(currentLanguage) },
+                accountId,
+            )
         },
         onSuccess: reply => {
             /*

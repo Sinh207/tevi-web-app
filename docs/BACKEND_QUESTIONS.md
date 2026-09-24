@@ -3248,6 +3248,53 @@ Encoded in: `features/post/api/reply-types.ts`, `features/post/api/post-api.ts` 
 
 ---
 
+## B110 — **creating a post**: the two shipped clients build the same request six ways apart · **the web client had to pick one of each**
+
+`POST core/v3/channel/my-channel/threads/`. Legacy web's `useCreatePost` and iOS's `PostLocal.swift`
+fill the same form and disagree on six fields. This client reads both and picks per field
+(`features/post/lib/post-draft.ts` carries the table); four of the six are safe either way, two are
+not. Please settle these.
+
+**1. `video`.** Legacy web sends `{ id, thumbnail: <the thumbnail **upload** URL> }` — a signed,
+expiring link to a bucket write, stored on the post. iOS sends `{ id }`. This client follows iOS: a
+poster the backend already received needs no URL handed back, and an expiring write URL is a field
+that is wrong the moment anything reads it. Is `thumbnail` used at all, and if so, what does it
+expect — a serve URL, or nothing?
+
+**2. `paid_interaction`.** Legacy web sends `{ is_enabled, star_cost }` on every create. iOS has the
+line **commented out**, so its posts presumably inherit the channel's setting. Both cannot be right:
+either the field is per-post and iOS is silently publishing with the channel default, or it is
+ignored on create and legacy web has been sending it for nothing. Which?
+
+**3. An empty paywall.** A post with `viewer: 'stargazers'`, no `required_packages` and no `price`
+reaches nobody — not the public, and no member, because it names no tier. iOS rewrites the audience
+to `everyone` before sending; legacy web sends it as-is. This client follows iOS. Does the backend
+reject that shape, or store it?
+
+**4. `hidden_links`.** iOS sends it on every create; legacy web has no such field and no UI for it.
+What is it, and does anything break by omitting it?
+
+**5. `html_text` vs `text`.** Legacy web sends **only** `html_text` for every post, converting
+newlines to `<br/>` even when there is no link. This client sends `text` — it renders no
+creator-authored markup (see B109's note on replies), and iOS's own parser falls back to `text` when
+`html_text` is absent, so plain text displays everywhere. Confirm nothing server-side (link
+previews, search indexing, moderation) depends on `html_text` being present.
+
+**6. `lang`.** Answered by iOS as far as the *shape* goes — it sends the current locale's two-letter
+code, so the field takes one from a shipped client daily. This client now does the same and B109's
+question narrows to what the field actually drives, and what happens to `zh-CN` vs `zh-TW`, which
+both narrow to `zh`.
+
+One more, from the upload side: **`v1/posts/video/upload-url/`** answers
+`{ id, upload_url, thumbnail_upload_url }` and takes `codec` as a **required, nullable** parameter.
+A browser can measure a clip's duration and dimensions without naming its codec, so this client
+sends `null` there, as legacy does. Is `null` genuinely accepted, or does it degrade the transcode?
+
+Encoded in: `features/post/lib/post-draft.ts` (`buildPostBody`, `postLang`),
+`features/post/api/post-api.ts` (`createPost`), `shared/lib/api/upload-api.ts` (`uploadPostVideo`).
+
+---
+
 ## Closed
 
 Answered and acted on. Kept as one line so the `Bnn` references in the code still resolve; the
