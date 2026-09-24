@@ -41,7 +41,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 space reserved for it all drop out when printed. Pages that people are
                 asked to keep a copy of — the policies, a receipt — depend on it, and no
                 page is worse off for it. */}
-            <div className="flex min-h-[var(--window-height)]">
+            {/* `data-app-shell` is what a full-screen surface marks `inert` while it covers
+                the site — the Live studio does (`features/event`'s `StudioPortal`). */}
+            <div data-app-shell className="flex min-h-[var(--window-height)]">
                 <AppSide />
                 <TabBarShell>{children}</TabBarShell>
             </div>

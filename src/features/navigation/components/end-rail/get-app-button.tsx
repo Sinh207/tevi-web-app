@@ -1,10 +1,10 @@
 'use client'
 
 import { GetAppDialog } from '@shared/components/get-app-dialog'
+import { PhoneMark } from '@shared/components/phone-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Button } from '@shared/ui/button'
 import { useState } from 'react'
-import { PhoneMark } from './phone-mark'
 
 /**
  * "Get App" in the end-rail pill.

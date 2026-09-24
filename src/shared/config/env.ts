@@ -40,6 +40,25 @@ const clientSchema = z.object({
     NEXT_PUBLIC_TELEGRAM_BOT_ID: z.string().optional(),
     NEXT_PUBLIC_AUTH_REDIRECT_URL: z.string().url().optional(),
 
+    /*
+     * **The live player's two vendors.** All four are optional and the studio degrades without
+     * them: `liveTransport` still says which route a room needs, and the stage falls back to the
+     * app hand-off rather than mounting a player it cannot license or authenticate.
+     *
+     * Every one of these is **inlined into the client bundle**, which is the vendors' own model
+     * rather than a choice of ours — the BytePlus licence is domain-locked (`*.tevi.dev` /
+     * `*.tevi.com`) and time-limited, and an Agora app id is public by design because the actual
+     * authorisation is the per-viewer `viewer_token` the backend mints. Same category as
+     * `NEXT_PUBLIC_SIGN_SECRET`: public by construction, and not to be described as a secret.
+     *
+     * ⚠ The licence being domain-locked is why `pnpm dev` on `localhost` may refuse to play even
+     * with all four set. The dev licence names `*.tevi.dev`, not `localhost`.
+     */
+    NEXT_PUBLIC_AGORA_APP_ID: z.string().optional(),
+    NEXT_PUBLIC_BYTEPLUS_APP_ID: z.string().optional(),
+    NEXT_PUBLIC_BYTEPLUS_LICENSE_SIGN: z.string().optional(),
+    NEXT_PUBLIC_BYTEPLUS_LICENSE_CONTENT: z.string().optional(),
+
     // Analytics (optional — gated by consent at runtime)
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
@@ -67,6 +86,10 @@ const clientValues = {
     NEXT_PUBLIC_LINE_CHANNEL_ID: process.env.NEXT_PUBLIC_LINE_CHANNEL_ID,
     NEXT_PUBLIC_TELEGRAM_BOT_ID: process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID,
     NEXT_PUBLIC_AUTH_REDIRECT_URL: process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL,
+    NEXT_PUBLIC_AGORA_APP_ID: process.env.NEXT_PUBLIC_AGORA_APP_ID,
+    NEXT_PUBLIC_BYTEPLUS_APP_ID: process.env.NEXT_PUBLIC_BYTEPLUS_APP_ID,
+    NEXT_PUBLIC_BYTEPLUS_LICENSE_SIGN: process.env.NEXT_PUBLIC_BYTEPLUS_LICENSE_SIGN,
+    NEXT_PUBLIC_BYTEPLUS_LICENSE_CONTENT: process.env.NEXT_PUBLIC_BYTEPLUS_LICENSE_CONTENT,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,

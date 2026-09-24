@@ -122,6 +122,11 @@ Test at all custom breakpoints, not just mobile/desktop:
 - [ ] Logical CSS properties only (`ps/pe`, `ms/me`, `start/end`) — never `pl/pr`, `ml/mr`,
       `left/right`. Check the component in Arabic (RTL) — mirroring should look correct.
       Run `pnpm lint:rtl` to catch the common cases automatically.
+- [ ] Every link to a **route in this app** is `next/link`, not a bare `<a href>` — an anchor is a
+      full document load, which rebuilds the providers and the whole session bootstrap to reach a
+      page the router could swap in place. It is invisible in a screenshot and in every test.
+      `pnpm lint:links` is the guard; `// internal-link-ok:` with a reason is the escape hatch for a
+      URL that genuinely leaves the app.
 - [ ] Renders correctly in both light and `.dark` — check contrast, borders, icons that assume
       a background color.
 
@@ -248,7 +253,7 @@ target pure logic, E2E covers the actual UI.
 
 - [ ] Run the dev server and manually click through: loading, error, empty, success, RTL,
       dark mode, and at least one narrow (sm) and one wide (xl) viewport.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm lint:rtl`, and `pnpm lint:testids` pass.
+- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm lint:rtl`, `pnpm lint:links`, and `pnpm lint:testids` pass.
 - [ ] Tests pass per §9 (`pnpm test`, and `pnpm test:e2e` if a Playwright spec applies).
 
 ## 13. Automation hooks (`data-testid`)

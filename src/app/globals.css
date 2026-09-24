@@ -1679,3 +1679,40 @@
         opacity: 0;
     }
 }
+
+/* ====================================================================
+ * `tevi-mic-pulse` — an open microphone on a seat tile.
+ *
+ * Legacy's `pulseMic`, ported at its own numbers (`seats/components/
+ * player`): 1.5s, `ease-out`, infinite, and **two** properties moving
+ * together — the dot grows 8% while a ring of its own colour expands
+ * 10px out of it and fades. Either half alone reads wrong: the scale on
+ * its own is a throb with no direction, and the ring on its own looks
+ * like a focus style.
+ *
+ * The 70% stop is legacy's and is what makes it a pulse rather than a
+ * sine — the growth is quick and the settle is slow, which is how a
+ * voice peak actually behaves.
+ *
+ * ⚠ The `box-shadow` is the *ring*, so the element must not clip it.
+ * The mic badge carries `overflow-hidden` to keep its glyph inside a
+ * 20px collar, so the animation goes on the badge itself rather than on
+ * anything within it.
+ *
+ * Callers pair it with `motion-reduce:animate-none`, which leaves the
+ * dot solid — the colour already says the microphone is open.
+ * ==================================================================== */
+@keyframes tevi-mic-pulse {
+    0% {
+        scale: 1;
+        box-shadow: 0 0 0 0 rgba(255, 104, 104, 0.7);
+    }
+    70% {
+        scale: 1.08;
+        box-shadow: 0 0 0 10px rgba(255, 104, 104, 0);
+    }
+    100% {
+        scale: 1;
+        box-shadow: 0 0 0 0 rgba(255, 104, 104, 0);
+    }
+}

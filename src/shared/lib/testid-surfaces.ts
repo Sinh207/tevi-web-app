@@ -59,6 +59,14 @@ export const TESTID_SURFACES: Record<string, TestIdSurface> = {
     'brand-assets': { kind: 'screen', label: 'Brand assets' },
     channel: { kind: 'screen', label: 'Channel / space, following, profile settings' },
     earnings: { kind: 'screen', label: 'Earnings report' },
+    /**
+     * One live event's page — `/@{slug}/event/{code}`.
+     *
+     * Distinct from `channel`, which owns the surfaces that *advertise* a stream (the space's Live
+     * tab, the Live-now strip, the Following row). This scope is the stream's own page: the details
+     * card, the host row, the access panel and the age gate.
+     */
+    event: { kind: 'screen', label: 'A live event — details, access and the app hand-off' },
     'gift-code': { kind: 'screen', label: 'Redeem gift code' },
     identification: { kind: 'screen', label: 'Identity verification (KYC)' },
     legal: { kind: 'screen', label: 'Legal documents' },

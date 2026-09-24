@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-811 ids across 27 surfaces.
+928 ids across 28 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -181,15 +181,15 @@ Also present on every route it is mounted under — `src/features/navigation/com
 
 ## `channel` — Channel / space, following, profile settings
 
-Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/membership/[[...tier]]`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
+Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/event/[code]/report`, `/[slug]/membership/[[...tier]]`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
 
 | testid | companions | source |
 |---|---|---|
 | `channel-activity-more` | — | `src/features/channel/components/channel-about-activity.tsx:140` |
 | `channel-add-home-screen` | — | `src/features/channel/components/add-home-screen-guide.tsx:64` |
 | `channel-add-home-screen-item` | — | `src/features/channel/components/add-home-screen-guide.tsx:206` |
-| `channel-auto-follow-now` | — | `src/features/channel/components/channel-auto-follow.tsx:141` |
-| `channel-auto-follow-skip` | — | `src/features/channel/components/channel-auto-follow.tsx:131` |
+| `channel-auto-follow-now` | — | `src/features/channel/components/channel-auto-follow.tsx:160` |
+| `channel-auto-follow-skip` | — | `src/features/channel/components/channel-auto-follow.tsx:150` |
 | `channel-back` | — | `src/features/channel/components/channel-top-bar.tsx:117` |
 | `channel-bio-link` | — | `src/features/channel/components/channel-bio.tsx:202` |
 | `channel-bio-nsfw` | — | `src/features/channel/components/channel-bio.tsx:134` |
@@ -221,11 +221,9 @@ Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug
 | `channel-error-retry` | — | `src/app/(web)/(main)/(rail)/[slug]/error.tsx:36` |
 | `channel-event-cancel` | — | `src/features/channel/components/channel-event-menu.tsx:107` |
 | `channel-event-cancel-confirm` | — | `src/features/channel/components/channel-event-menu.tsx:132` |
-| `channel-event-get-app` | — | `src/features/channel/components/channel-live-event-screen.tsx:80` |
-| `channel-event-link` | — | `src/features/channel/components/channel-event-card.tsx:108` |
+| `channel-event-link` | — | `src/features/channel/components/channel-event-card.tsx:109` |
 | `channel-event-qr` | — | `src/features/channel/components/channel-event-menu.tsx:98` |
 | `channel-event-share` | — | `src/features/channel/components/channel-event-menu.tsx:90` |
-| `channel-event-visit` | — | `src/features/channel/components/channel-live-event-screen.tsx:96` |
 | `channel-follow` | — | `src/features/channel/components/channel-viewer-actions.tsx:250` |
 | `channel-follow-request-action` | `data-row-key` | `src/features/channel/components/follow-request-row.tsx:226` |
 | `channel-follow-request-link` | `data-channel-slug` | `src/features/channel/components/follow-request-row.tsx:204` |
@@ -239,8 +237,8 @@ Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug
 | `channel-following-filter` | — | `src/features/channel/components/following-view.tsx:419` |
 | `channel-following-find-people` | — | `src/features/channel/components/following-view.tsx:300` |
 | `channel-following-live` | — | `src/features/channel/components/following-view.tsx:208` |
-| `channel-following-live-link` | — | `src/features/channel/components/following-live-row.tsx:371` |
-| `channel-following-live-restricted` | — | `src/features/channel/components/following-live-row.tsx:381` |
+| `channel-following-live-link` | — | `src/features/channel/components/following-live-row.tsx:451` |
+| `channel-following-live-restricted` | — | `src/features/channel/components/following-live-row.tsx:461` |
 | `channel-following-lives-toggle` | — | `src/features/channel/components/following-view.tsx:225` |
 | `channel-following-loading` | — | `src/features/channel/components/following-skeleton.tsx:36` |
 | `channel-following-menu-item` | `data-row-key` | `src/features/channel/components/following-row-menu.tsx:135` |
@@ -261,14 +259,14 @@ Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug
 | `channel-invitation-retry` | — | `src/features/channel/components/mcn-invitation-view.tsx:104` |
 | `channel-invitation-sign-in` | — | `src/features/channel/components/mcn-invitation-view.tsx:85` |
 | `channel-invitation-signed-out` | — | `src/features/channel/components/mcn-invitation-view.tsx:75` |
-| `channel-live-card-link` | — | `src/features/channel/components/channel-live-now.tsx:270` |
-| `channel-live-card-restricted` | — | `src/features/channel/components/channel-live-now.tsx:258` |
-| `channel-live-channel-link` | — | `src/features/channel/components/channel-live-now.tsx:117` |
+| `channel-live-card-link` | — | `src/features/channel/components/channel-live-now.tsx:275` |
+| `channel-live-card-restricted` | — | `src/features/channel/components/channel-live-now.tsx:263` |
+| `channel-live-channel-link` | — | `src/features/channel/components/channel-live-now.tsx:122` |
 | `channel-live-filter` | — | `src/features/channel/components/channel-live-filter.tsx:108` |
 | `channel-live-filter-option` | `data-option-value` | `src/features/channel/components/channel-live-filter.tsx:114` |
 | `channel-live-get-app` | — | `src/features/channel/components/channel-live-restricted-dialog.tsx:108` |
-| `channel-live-restricted` | — | `src/features/channel/components/channel-live-now.tsx:158` |
-| `channel-live-title-link` | — | `src/features/channel/components/channel-live-now.tsx:151` |
+| `channel-live-restricted` | — | `src/features/channel/components/channel-live-now.tsx:163` |
+| `channel-live-title-link` | — | `src/features/channel/components/channel-live-now.tsx:156` |
 | `channel-manager-invitation-accept` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:572` |
 | `channel-manager-invitation-error` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:119` |
 | `channel-manager-invitation-expired` | — | `src/features/channel/components/mcn-user-invitation-view.tsx:150` |
@@ -395,6 +393,132 @@ Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`
 | `earnings-loading` | — | `src/features/earnings/components/earnings-report-skeleton.tsx:38` |
 | `earnings-retry` | — | `src/features/earnings/components/earnings-report-view.tsx:183` |
 | `earnings-sign-in` | — | `src/features/earnings/components/earnings-report-view.tsx:123` |
+
+## `event` — A live event — details, access and the app hand-off
+
+Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
+
+| testid | companions | source |
+|---|---|---|
+| `event-age-confirm` | — | `src/features/event/components/event-age-gate.tsx:91` |
+| `event-age-decline` | — | `src/features/event/components/event-age-gate.tsx:100` |
+| `event-age-gate` | — | `src/features/event/components/event-age-gate.tsx:53` |
+| `event-analytics` | — | `src/features/event/components/event-analytics-cards.tsx:65` |
+| `event-back` | — | `src/features/event/components/event-top-bar.tsx:60` |
+| `event-banned` | — | `src/features/event/components/event-state-screens.tsx:186` |
+| `event-banned-discover` | — | `src/features/event/components/event-state-screens.tsx:195` |
+| `event-banned-home` | — | `src/features/event/components/event-state-screens.tsx:203` |
+| `event-banned-notice` | — | `src/features/event/components/event-state-screens.tsx:174` |
+| `event-become-member` | — | `src/features/event/components/event-unlock-actions.tsx:94` |
+| `event-card-retry` | — | `src/features/event/components/event-card-state.tsx:120` |
+| `event-copy-code` | — | `src/features/event/components/event-analytics-cards.tsx:182` |
+| `event-description-toggle` | — | `src/features/event/components/event-description-card.tsx:56` |
+| `event-ended-rail` | — | `src/features/event/components/event-ended-rail.tsx:39` |
+| `event-ended-rail-home` | — | `src/features/event/components/event-ended-rail.tsx:82` |
+| `event-ended-rail-live` | `data-channel-slug` | `src/features/event/components/event-ended-rail.tsx:113` |
+| `event-error` | — | `src/features/event/components/event-state-screens.tsx:118` |
+| `event-error-retry` | — | `src/features/event/components/event-state-screens.tsx:131` |
+| `event-gift-animation` | — | `src/features/event/components/event-gift-animation.tsx:105` |
+| `event-gift-float` | — | `src/features/event/components/event-studio-screen.tsx:521` |
+| `event-gift-float-item` | `data-card-id` | `src/features/event/components/event-gift-float.tsx:56` |
+| `event-gift-panel` | — | `src/features/event/components/event-studio-screen.tsx:614` |
+| `event-gift-tray` | — | `src/features/event/components/event-studio-screen.tsx:590` |
+| `event-host` | — | `src/features/event/components/event-host-card.tsx:52` |
+| `event-host-info` | — | `src/features/event/components/event-host-info-card.tsx:47` |
+| `event-host-live` | — | `src/features/event/components/event-host-live-screen.tsx:127` |
+| `event-host-live-app` | — | `src/features/event/components/event-host-live-screen.tsx:133` |
+| `event-interactive-revenue` | — | `src/features/event/components/event-revenue-summary.tsx:154` |
+| `event-invitation` | — | `src/features/event/components/event-invitation-dialog.tsx:42` |
+| `event-invitation-close` | — | `src/features/event/components/event-invitation-dialog.tsx:91` |
+| `event-invitation-stores` | — | `src/features/event/components/event-invitation-dialog.tsx:85` |
+| `event-kicked-out` | — | `src/features/event/components/event-watch-panel.tsx:446` |
+| `event-kicked-out-home` | — | `src/features/event/components/event-watch-panel.tsx:452` |
+| `event-live-revenue` | — | `src/features/event/components/event-revenue-summary.tsx:115` |
+| `event-locked` | — | `src/features/event/components/event-watch-panel.tsx:385` |
+| `event-locked-get-app` | — | `src/features/event/components/event-watch-panel.tsx:399` |
+| `event-maintenance-fee` | — | `src/features/event/components/event-analytics-cards.tsx:232` |
+| `event-maintenance-fee-info` | — | `src/features/event/components/event-analytics-cards.tsx:282` |
+| `event-membership-tile` | — | `src/features/event/components/event-membership-tile.tsx:67` |
+| `event-new-members` | — | `src/features/event/components/event-analytics-cards.tsx:300` |
+| `event-not-found` | — | `src/features/event/components/event-state-screens.tsx:68` |
+| `event-off-air` | — | `src/features/event/components/event-watch-panel.tsx:305` |
+| `event-order-link` | — | `src/features/event/components/event-order-row.tsx:101` |
+| `event-out-of-star` | — | `src/features/event/components/event-out-of-star-dialog.tsx:55` |
+| `event-out-of-star-get` | — | `src/features/event/components/event-out-of-star-dialog.tsx:62` |
+| `event-out-of-star-leave` | — | `src/features/event/components/event-out-of-star-dialog.tsx:81` |
+| `event-out-of-star-premium` | — | `src/features/event/components/event-out-of-star-dialog.tsx:72` |
+| `event-platform-restricted` | — | `src/features/event/components/event-watch-panel.tsx:248` |
+| `event-premium-nudge` | — | `src/features/event/components/event-premium-nudge.tsx:34` |
+| `event-premium-nudge-close` | — | `src/features/event/components/event-premium-nudge.tsx:42` |
+| `event-premium-nudge-dismiss` | — | `src/features/event/components/event-premium-nudge.tsx:72` |
+| `event-premium-nudge-subscribe` | — | `src/features/event/components/event-premium-nudge.tsx:62` |
+| `event-report-back` | — | `src/features/event/components/event-report-screen.tsx:148` |
+| `event-report-panel` | — | `src/features/event/components/event-orders-panel.tsx:69` |
+| `event-report-search` | — | `src/features/event/components/event-orders-panel.tsx:126` |
+| `event-report-tab` | `data-option-value` | `src/features/event/components/event-orders-panel.tsx:109` |
+| `event-restricted-get-app` | — | `src/features/event/components/event-watch-panel.tsx:255` |
+| `event-revenue-summary` | — | `src/features/event/components/event-revenue-summary.tsx:88` |
+| `event-share` | — | `src/features/event/components/event-actions.tsx:69` |
+| `event-share-bar` | — | `src/features/event/components/event-share-button.tsx:45` |
+| `event-sign-in` | — | `src/features/event/components/event-watch-panel.tsx:485` |
+| `event-sign-in-action` | — | `src/features/event/components/event-watch-panel.tsx:492` |
+| `event-status` | — | `src/features/event/components/event-details-card.tsx:50` |
+| `event-studio` | — | `src/features/event/components/event-studio-screen.tsx:333` |
+| `event-studio-ad` | — | `src/features/event/components/event-studio-ad.tsx:55` |
+| `event-studio-app` | — | `src/features/event/components/event-studio-chrome.tsx:281` |
+| `event-studio-app-dialog` | — | `src/features/event/components/event-studio-chrome.tsx:294` |
+| `event-studio-arrival` | — | `src/features/event/components/event-studio-chat.tsx:976` |
+| `event-studio-back` | — | `src/features/event/components/event-studio-screen.tsx:374` |
+| `event-studio-ccu` | — | `src/features/event/components/event-studio-chat.tsx:833` |
+| `event-studio-channel` | — | `src/features/event/components/event-studio-screen.tsx:390` |
+| `event-studio-channel-link` | — | `src/features/event/components/event-studio-chrome.tsx:150` |
+| `event-studio-chat` | — | `src/features/event/components/event-studio-chat.tsx:793` |
+| `event-studio-chat-collapse` | — | `src/features/event/components/event-studio-chat.tsx:846` |
+| `event-studio-chat-ended` | — | `src/features/event/components/event-studio-chat.tsx:1065` |
+| `event-studio-chat-error` | — | `src/features/event/components/event-studio-chat.tsx:1148` |
+| `event-studio-chat-expand` | — | `src/features/event/components/event-studio-chat.tsx:1201` |
+| `event-studio-chat-input` | — | `src/features/event/components/event-studio-chat.tsx:1089` |
+| `event-studio-chat-jump` | — | `src/features/event/components/event-studio-chat.tsx:1041` |
+| `event-studio-chat-list` | — | `src/features/event/components/event-studio-chat.tsx:1012` |
+| `event-studio-chat-notices` | — | `src/features/event/components/event-studio-chat.tsx:361` |
+| `event-studio-chat-send` | — | `src/features/event/components/event-studio-chat.tsx:1123` |
+| `event-studio-chat-strip` | — | `src/features/event/components/event-studio-chat.tsx:1192` |
+| `event-studio-chat-strip-ccu` | — | `src/features/event/components/event-studio-chat.tsx:1244` |
+| `event-studio-copy-link` | — | `src/features/event/components/event-studio-channel-actions.tsx:220` |
+| `event-studio-emoji` | — | `src/features/event/components/event-studio-chat.tsx:673` |
+| `event-studio-emoji-panel` | — | `src/features/event/components/event-studio-chat.tsx:649` |
+| `event-studio-fee-error` | — | `src/features/event/components/event-studio-chat.tsx:992` |
+| `event-studio-fee-notice` | — | `src/features/event/components/event-studio-chat.tsx:998` |
+| `event-studio-follow` | — | `src/features/event/components/event-studio-channel-actions.tsx:292` |
+| `event-studio-get-membership` | — | `src/features/event/components/event-studio-upsell.tsx:80` |
+| `event-studio-get-premium` | — | `src/features/event/components/event-studio-upsell.tsx:91` |
+| `event-studio-leaderboard` | — | `src/features/event/components/event-studio-chat.tsx:226` |
+| `event-studio-leaderboard-empty` | — | `src/features/event/components/event-studio-chat.tsx:207` |
+| `event-studio-leaderboard-loading` | — | `src/features/event/components/event-studio-chat.tsx:187` |
+| `event-studio-leaderboard-me` | — | `src/features/event/components/event-studio-chat.tsx:261` |
+| `event-studio-more` | — | `src/features/event/components/event-studio-channel-actions.tsx:129` |
+| `event-studio-more-panel` | — | `src/features/event/components/event-studio-channel-actions.tsx:142` |
+| `event-studio-muted` | — | `src/features/event/components/event-studio-chat.tsx:954` |
+| `event-studio-pinned` | — | `src/features/event/components/event-studio-chat.tsx:893` |
+| `event-studio-pinned-close` | — | `src/features/event/components/event-studio-chat.tsx:933` |
+| `event-studio-report` | — | `src/features/event/components/event-studio-channel-actions.tsx:243` |
+| `event-studio-seat` | `data-publisher-id` | `src/features/event/components/event-studio-seats.tsx:118` |
+| `event-studio-seats` | — | `src/features/event/components/event-studio-seats.tsx:420` |
+| `event-studio-star` | — | `src/features/event/components/event-studio-chrome.tsx:268` |
+| `event-studio-toolbar` | — | `src/features/event/components/event-studio-screen.tsx:425` |
+| `event-studio-unmute` | — | `src/features/event/components/event-studio-player.tsx:238` |
+| `event-sustained-viewers-info` | — | `src/features/event/components/event-revenue-summary.tsx:193` |
+| `event-total-revenue` | — | `src/features/event/components/event-analytics-cards.tsx:393` |
+| `event-total-revenue-retry` | — | `src/features/event/components/event-analytics-cards.tsx:448` |
+| `event-unknown` | — | `src/features/event/components/event-watch-panel.tsx:416` |
+| `event-unknown-get-app` | — | `src/features/event/components/event-watch-panel.tsx:422` |
+| `event-unlock` | — | `src/features/event/components/event-unlock-actions.tsx:122` |
+| `event-unlock-confirm` | — | `src/features/event/components/event-unlock-actions.tsx:150` |
+| `event-upcoming` | — | `src/features/event/components/event-watch-panel.tsx:265` |
+| `event-upcoming-get-app` | — | `src/features/event/components/event-watch-panel.tsx:271` |
+| `event-visit-space` | — | `src/features/event/components/event-watch-panel.tsx:319` |
+| `event-watch` | — | `src/features/event/components/event-watch-panel.tsx:219` |
+| `event-watch-get-app` | — | `src/features/event/components/event-watch-panel.tsx:226` |
 
 ## `gift-code` — Redeem gift code
 
@@ -632,9 +756,9 @@ Also present on every route it is mounted under — `src/app/(web)/(main)/layout
 
 | testid | companions | source |
 |---|---|---|
-| `navigation-breadcrumb` | — | `src/features/navigation/components/page-back-bar.tsx:189` |
-| `navigation-breadcrumb-item` | — | `src/features/navigation/components/page-back-bar.tsx:198` |
-| `navigation-breadcrumb-link` | — | `src/features/navigation/components/page-back-bar.tsx:220` |
+| `navigation-breadcrumb` | — | `src/features/navigation/components/page-back-bar.tsx:190` |
+| `navigation-breadcrumb-item` | — | `src/features/navigation/components/page-back-bar.tsx:199` |
+| `navigation-breadcrumb-link` | — | `src/features/navigation/components/page-back-bar.tsx:221` |
 | `navigation-end-rail` | — | `src/features/navigation/components/end-rail/app-end-rail.tsx:70` |
 | `navigation-end-rail-get-app` | — | `src/features/navigation/components/end-rail/get-app-button.tsx:48` |
 | `navigation-end-rail-get-star` | — | `src/features/navigation/components/end-rail/end-rail-pill.tsx:86` |
@@ -676,7 +800,7 @@ Also present on every route it is mounted under — `src/app/(web)/(main)/layout
 | `navigation-navbar-notifications` | — | `src/features/navigation/components/app-navbar.tsx:196` |
 | `navigation-navbar-profile` | — | `src/features/navigation/components/app-navbar.tsx:231` |
 | `navigation-navbar-search` | — | `src/features/navigation/components/app-navbar.tsx:180` |
-| `navigation-page-back` | — | `src/features/navigation/components/page-back-bar.tsx:130` |
+| `navigation-page-back` | — | `src/features/navigation/components/page-back-bar.tsx:131` |
 | `navigation-tab-bar` | — | `src/features/navigation/components/app-tab-bar.tsx:38` |
 | `navigation-tab-bar-create` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:51` |
 | `navigation-tab-bar-create-dialog` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:58` |
@@ -1031,6 +1155,9 @@ name; you need it to know the element exists.
 |---|---|---|
 | `PasswordField` | `src/features/auth/components/auth-fields.tsx` | `-caps` `-reveal` |
 | `OtpInput` | `src/features/auth/components/otp-input.tsx` | `-digit` |
+| `EventGiftPanel` | `src/features/event/components/event-gift-panel.tsx` | `-close` `-empty` `-item` `-list` `-option` `-tab` `-trigger` |
+| `EventGiftTray` | `src/features/event/components/event-gift-tray.tsx` | `-item` `-trigger` |
+| `EventReportCard` | `src/features/event/components/event-report-card.tsx` | `-hint` `-trigger` |
 | `TotalBalanceCard` | `src/features/my-wallet/components/total-balance-card.tsx` | `-count` |
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
 | `CreatorPickerView` | `src/features/search/components/creator-picker-view.tsx` | `-field` `-item` `-retry` |

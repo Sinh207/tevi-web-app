@@ -12,9 +12,9 @@ Auth is Bearer-JWT via the Authorization header; tokens live in localStorage und
 migration upgrades legacy keys, e.g. `user_logged_list` / `user_id`, on first load).
 
 **Where the port stands:** the foundation is done and business features are landing on top of it —
-28 feature modules today (payment/Stripe, premium, membership, donation, payout, gift-code,
-star-transfer, affiliate, analytics, monetization, notification, search, channel, identification,
-mini-app…). What is *not* built yet is read out of the legacy app, which lives at `../tevi-web-app` and stays the reference for
+29 feature modules today (payment/Stripe, premium, membership, donation, payout, gift-code,
+star-transfer, affiliate, analytics, monetization, notification, search, channel, event,
+identification, mini-app…). What is *not* built yet is read out of the legacy app, which lives at `../tevi-web-app` and stays the reference for
 behavior/parity questions. Per-feature open items live in `docs/` — see the map below.
 
 ## Stack
@@ -52,6 +52,7 @@ pnpm cache:clean                      # prune them — never a store a live dev 
 NEXT_DEV_DISK_CACHE=0 pnpm dev        # no turbopack disk store at all (slower cold start)
 pnpm lint                             # biome check          (lint:fix = --write)
 pnpm lint:rtl                         # scripts/check-rtl-classes.sh — fails on pl/pr/ml/mr, left-/right-
+pnpm lint:links                       # scripts/check-internal-links.mjs — bare <a> on an internal route
 pnpm lint:testids                     # data-testid grammar + catalog drift (scripts/check-testids.mjs)
 pnpm testids                          # regenerate the committed testids/ catalog for QC
 pnpm test                             # vitest run (src/**/*.{test,spec}.{ts,tsx})
@@ -68,10 +69,10 @@ pnpm fonts                            # Chella → WOFF2            (after Brand
 pnpm format                           # biome format --write
 ```
 
-`pnpm typecheck && pnpm lint && pnpm lint:rtl && pnpm lint:testids` is the pre-PR gate (see
-`.github/pull_request_template.md`).
+`pnpm typecheck && pnpm lint && pnpm lint:rtl && pnpm lint:links && pnpm lint:testids` is the
+pre-PR gate (see `.github/pull_request_template.md`).
 
-## `docs/` — the ten long-form documents
+## `docs/` — the eleven long-form documents
 
 Each one holds the reasoning a code comment has no room for. Read the relevant one **before**
 changing the area it covers; several exist because a "simplification" was tried and reverted.
@@ -86,6 +87,7 @@ changing the area it covers; several exist because a "simplification" was tried 
 | [`MINI_APP.md`](docs/MINI_APP.md) | the third-party `postMessage` player and its security posture |
 | [`PAYMENT.md`](docs/PAYMENT.md) | Stripe, checkout, saved cards — the four `action` branches, and what is still unbuilt (§8) |
 | [`END_RAIL_OPEN_ITEMS.md`](docs/END_RAIL_OPEN_ITEMS.md) | the desktop end rail / campaign — what is deliberately unfinished (R1–R9) |
+| [`EVENT.md`](docs/EVENT.md) | the event area — its **three** screens (My event · Live details · Live studio, legacy's own vocabulary), the divergences, and what the player brings |
 | [`API_ERRORS.md`](docs/API_ERRORS.md) | wording any failed write — the API's own message wins, ours is the fallback |
 | [`BACKEND_QUESTIONS.md`](docs/BACKEND_QUESTIONS.md) | before "fixing" a payload that looks odd — several look odd on purpose |
 
@@ -146,10 +148,12 @@ mounted per top-level route: sibling layouts unmount on a client-side navigation
 
 **Boundary rules (enforce):**
 - A feature must NOT import another feature's internals — only via a barrel. `index.ts` is the
-  main one; **four narrower barrels at the feature root are sanctioned**, each so a cheap consumer
+  main one; **five narrower barrels at the feature root are sanctioned**, each so a cheap consumer
   does not pay for the whole feature:
-  - `routes.ts` — the feature's paths and nothing else, **with no imports of its own** (13 features,
-    62 cross-feature imports). `features/navigation/lib/menu-rows.ts` is a data module with no JSX
+  - `routes.ts` — the feature's paths and nothing else, **with no imports of its own** (14 features
+    today; the count of *call sites* was written down here as 62 and measures 34, so it is gone —
+    a number in prose rots, and `grep "@features/.*/routes"` is the answer that cannot).
+    `features/navigation/lib/menu-rows.ts` is a data module with no JSX
     or hooks; routed through `index.ts` its link would close a cycle between two barrels, which ESM
     resolves by handing one side a half-initialised module — not a build error, an `undefined is not
     a function` at render time. So: `@features/payment/routes`, never `@features/payment`. A
@@ -158,12 +162,26 @@ mounted per top-level route: sibling layouts unmount on a client-side navigation
     **deep-link vocabulary** (`direct_donation`, `become_a_member`, `custom_profile`) and the parser
     that reads it off a URL. `features/donation` and `features/membership` both need it, and the
     main barrel would close a cycle through `channel-viewer-actions.tsx`.
-  - `skeleton.ts` — the container/shell constants a route's `loading.tsx` needs (6 features), so a
+  - `skeleton.ts` — the container/shell constants a route's `loading.tsx` needs (9 features), so a
     skeleton does not drag the feature's component tree into the loading chunk.
-  - `dev.ts` — fixtures and pieces for the `/dev/*` harnesses (7 features), kept out of `index.ts`
+  - `dev.ts` — fixtures and pieces for the `/dev/*` harnesses (11 features), kept out of `index.ts`
     so production never imports them.
-  - `server.ts` — the RSC-only barrel (`features/channel`), carrying `server-only`.
-  An import that skips `index.ts` for one of those four is **correct — do not "fix" it**. Reaching
+  - `server.ts` — the RSC-only barrel (`features/channel`, `features/event`), carrying
+    `server-only`. `features/event`'s also carries the pure SEO builders, whose only consumer is
+    that route's `generateMetadata` — a metadata function reaching through the main barrel would
+    pull the feature's whole `'use client'` tree, plus `@features/membership` and `@features/share`
+    behind it, into a function that returns a `<head>`.
+  - **`access.ts`** — `features/event`'s, and the fifth kind: **a product rule two features share.**
+    Is a live stream gated, how does it say so, and may the website play it. `features/event`
+    renders the stream's page; `features/channel` renders the three surfaces that *advertise* one
+    (the Live tab card, the Live-now strip, the Following row) and draws the same badge. Two copies
+    of a predicate that decides whether somebody is asked for money diverge silently, and the
+    visible half is a price tag printed over a free stream — the bug its own doc records. It takes
+    **structural parameters rather than a DTO**, which is what lets one rule serve two services'
+    schemas and makes a renamed field a type error at each call site. Import-free for the same
+    reason `routes.ts` is: `features/channel` must be able to read it without pulling a barrel that
+    reaches back.
+  An import that skips `index.ts` for one of those five is **correct — do not "fix" it**. Reaching
   into `components/`, `hooks/`, `lib/` or `api/` is the violation.
 - `shared/` must NOT import from `features/`. `app/` composes, holds no business logic.
 - Aliases: `@/*`, `@app/*`, `@features/*`, `@shared/*`.
@@ -185,9 +203,10 @@ mounted per top-level route: sibling layouts unmount on a client-side navigation
    `/app/*` screen, nothing is). NEVER to sync server data. **Every declared event must have an
    emitter** — add one when the thing that fires it exists, not in anticipation. Each event's own
    reason is written at its declaration; read that before adding a ninth.
-3. **Socket** (socket.io) — two rooms, and they are opposites. Transport for both is
-   `shared/lib/socket/` (injected `io`, so it is testable without a browser) behind a dynamic
-   import, because a guest must never download 40KB to be told nothing.
+3. **Socket** (socket.io) — three rooms, scoped to an **account**, a **device** and a
+   **broadcast**. Transport for all three is `shared/lib/socket/` (injected `io`, so it is testable
+   without a browser) behind a dynamic import, because a guest must never download 40KB to be told
+   nothing.
    - The **user room** (`shared/lib/socket/user-room.ts`, connected by `@features/realtime`),
      `${DOORMAN}/user` at path `/doorman/`: this account's balance, Premium state and
      `inbox_change`. Open **only for a real account** — every visitor carries
@@ -204,7 +223,17 @@ mounted per top-level route: sibling layouts unmount on a client-side navigation
      payload *is* a session the client has no other way to obtain — see `device-room.ts`. It is
      deliberately not in `features/realtime`: that feature's whole job is "who has an account", and
      this room exists for people who do not.
-   Neither room is exported. A second caller of `connect` is a second lifecycle, and they will
+   - The **live room** (`shared/lib/socket/live-room.ts`, connected by `features/event`'s
+     `use-live-room.ts`), `${DOORMAN}/event`: chat, gifts, CCU, the seat layout, and the two
+     refusals nothing else can raise — **kickout** and **ban**, which `lib/watch-state.ts` records
+     as unknowable precisely because this room had not been ported. Scoped to one broadcast, open
+     only while the studio is on screen, real accounts only. It is the one room with **commands**
+     (`request(command, payload)` → a promise that rejects on a non-zero `err_code`), and the one
+     place where a frame *is* the source: `get_message_history` is a socket command, so the chat
+     transcript has no HTTP copy. `join_event` fires on **every** connect, not once — socket.io
+     reconnects transparently and the server's room membership does not survive it, which is the
+     bug legacy has.
+   No room is exported. A second caller of `connect` is a second lifecycle, and they will
    disagree.
 
 **Two further channels exist, and neither is a primitive you choose.** Both are contracts this app
@@ -534,7 +563,8 @@ defaulting to on would prompt every account that has never set one, with nothing
 
 **`forgetAccount` is the one place an account's traces are erased** — its bearer, its ETag scope,
 its cached `/me`, and every piece of per-account state this device holds: sensitive-content consent
-(`shared/lib/nsfw-consent.ts`), search history (`shared/lib/search-recents.ts`), and whatever comes
+(`shared/lib/nsfw-consent.ts`), the 18+ confirmations an account gave for individual live events
+(`shared/lib/age-consent.ts`), search history (`shared/lib/search-recents.ts`), and whatever comes
 next — and it **revokes server-side first** (`authApi.logout(id)` while the refresh token still
 exists to renew with), then removes locally. That is *why* those stores live in `shared/lib/` and
 not in the feature that reads them: `features/auth` may not import another feature, so anything
@@ -722,7 +752,10 @@ Full pipeline + runbook: [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md).
   floating in its column (`/my-wallet`, `/my-star`): there the gaps between cards *are* the
   separation, so painting the screen dissolves them, and only the bottom-most block takes `fullBleed`.
   Blocks that are tinted, outlined, or full-bleed to the bottom carry their own edges, so a screen
-  made only of those is painted whatever its block count (`/monetization/membership`). Empty states
+  made only of those is painted whatever its block count (`/monetization/membership`). **A form is
+  never the page-colour case** — a screen that is only fields is always painted and full width below
+  `md`, with every block full-bleed, `gap-0` + `border-b` in place of the gaps, and the submit as a
+  `sticky bottom-0` bar; the double inset it removes is 32 of 390px. Empty states
   follow the panel, with a 16/600 title and a `max-w-[400px]` body.
   The decision table, the reference pairs and the traps — a skeleton block that goes *invisible* on
   the surface rather than merely mismatched, and `overflow-clip` vs `overflow-hidden` under a sticky
@@ -834,6 +867,17 @@ real HTTP status or a browser.
 ## Conventions
 
 - Files: kebab-case (`auth-provider.tsx`, `use-mobile.ts`). Components PascalCase, hooks `useX`.
+- **Internal navigation is `next/link`, never a bare `<a href>`.** An anchor to a route in this app
+  is a full document load: the root layout, the providers and `SessionProviders`' whole bootstrap —
+  device fingerprint, `/me`, permissions, balance, my-channel — are rebuilt to reach a page the
+  router could have swapped in place. `next/link` renders the same `<a>`, so middle-click, new tab,
+  the status bar and being announced as a link all survive; there is **no trade-off**, which is why
+  it is easy to get wrong. The decision that gets debated is "anchor or `<button
+  onClick={router.push}>`" — anchor wins it, and the second question, `<a>` or `<Link>`, never gets
+  asked. It shipped twice (`features/channel`'s Live surfaces, then `features/event` copying them)
+  and nothing catches it: the markup, the destination and the pixels are identical, and only a
+  network panel shows the reload. `pnpm lint:links` is the guard; the escape hatch for a link that
+  genuinely leaves the app is `// internal-link-ok:` with the reason.
 - **A prop set to `undefined` does not cross the server→client boundary** — the flight payload is
   JSON and JSON drops undefined-valued keys — so it cannot be used to *unset* something a client
   component would otherwise default. Override with a real value. It passes in jsdom and fails in

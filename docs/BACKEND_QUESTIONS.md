@@ -2,7 +2,7 @@
 
 Contract questions the web client is currently guessing at, in priority order —
 **B11–B28 channel**, **B29–B33 earnings**, **B34–B39 wallet**, **B40–B42 permission**,
-**B57–B60 dashboard analytics** (see the headings below). **Auth is fully answered** and
+**B57–B60 dashboard analytics**, **B105–B109 the event page, the live room and paid chat** (see the headings below). **Auth is fully answered** and
 lives in [Closed](#closed) — apart from **B92** (passcode management), **B94** (acquisition /
 affiliate attribution) and **B95** (TikTok PKCE); **B88** closed with the auth contract, which
 showed the sign-in half was never a question. What auth has instead of open
@@ -3014,6 +3014,145 @@ Encoded in `features/monetization/api/donation-types.ts`, `api/donation-api.ts`,
 
 ---
 
+## B105 — `v4/public/events/{code}/`: is it really public, what does a **refusal** look like, and is `product_id` always there? · **the event page is built on three assumptions**
+
+`/@{slug}/event/{code}` is now a real page (`features/event`), and it reads exactly one endpoint:
+`GET core/v4/public/events/{code}/`. Legacy calls the same one from its event container. Three
+things about it are load-bearing here and none is in a schema this client has seen.
+
+**1. Is `public/` a promise, or just a path segment?** This client sends the bearer when it has one
+and no bearer at all during the server render, and it assumes both are answered — that is what makes
+the page reachable by a visitor, by a link-preview scraper, and by `generateMetadata`. If the
+endpoint in fact requires a session, the whole server render is dead weight: shared links unfurl as
+the site's default card and the first paint becomes a skeleton. **If it is public, please also
+confirm which fields are omitted without a bearer.** The client assumes `purchased` and
+`need_unlock_package` are, and treats the anonymous body as a display-only seed for that reason
+(`use-event.ts` dates it to the epoch so the reader's own copy always replaces it). If either field
+comes back *true* for an anonymous caller, the seed is worse than nothing.
+
+**2. What does a geo refusal look like?** Legacy has a whole `GeoRestricted` screen and raises it
+from code **`E003`** on a *different* endpoint — `live/v1/streaming-events/{code}/preview/`, the
+preview stream. This client calls no streaming endpoint (there is no web player yet), so **it cannot
+detect a geo restriction at all** and deliberately ships no such screen — a wall nothing can raise is
+worse than a missing one. If `public/events/{code}/` answers a distinguishable status or code for a
+region-blocked reader, the screen is a small addition and `lib/watch-state.ts` is where the branch
+goes. Same question for the two other states legacy renders and this client cannot see: **kicked
+out** and **banned from the channel**, both of which arrive as socket frames inside a live session
+there.
+
+**3. Is `product_id` guaranteed on a paid event?** It is what `POST billy/v1/ecom/purchase/` takes,
+and this client **refuses to draw the unlock button without one** (`canUnlockWithStars`) — so a paid
+stream whose payload omits it is advertised with a price and no way to pay it. Legacy is the opposite
+and worse: it renders the button and posts `{ product_id: undefined }`. If the field can legitimately
+be absent while the event is still purchasable, we need the other identifier; if it cannot, the guard
+is belt-and-braces and stays.
+
+Two smaller ones, both currently guessed:
+
+- **`price_currency`** is assumed to be `TVS` when absent. It is published in the `Event` JSON-LD as
+  `priceCurrency`, which schema.org expects to be ISO 4217 — `TVS` is not, and inventing `USD` would
+  misstate the price by whatever today's rate is. Is there a fiat equivalent the page should publish
+  instead, or should `offers` be dropped for Star-priced streams?
+- **`id` vs `code`** — see B106 below.
+
+Encoded in `features/event/api/types.ts`, `api/event-api.ts`, `api/event-server-api.ts`,
+`lib/watch-state.ts`, `lib/event-seo.ts`.
+
+---
+
+### ⚠ Measured since: an unknown code answers **500**, not 404
+
+`GET v4/public/events/definitely-not-real/` returns **500** three times out of three against the dev
+gateway. That is not a theoretical preference for 404 — it decides which screen a reader gets:
+
+- `getEventForRequest` treats **only** a 404 as `gone`, because a 5xx must never deindex a live
+  stream. So a dead link never reaches the event's own *404 – Live Not Found* wall; it renders
+  *"We couldn't load this live — something went wrong on our side"*, with a retry that will fail
+  forever.
+- That is the **honest** reading of a 500 and the client is not going to guess otherwise. A wrong
+  guess in the other direction is worse: treating 5xx as "gone" would tell every reader a stream had
+  been deleted the next time the service wobbles.
+
+So: please answer 404 for an unknown or deleted code. Until then every broken event link in the wild
+reads as an outage. Encoded in `api/event-server-api.ts` (`isGone`) and `hooks/use-event.ts`.
+
+## B106 — the link service's `content_id` for a **live**: the event's `id`, or its `code`? · **`live` has been in the enum since TEV-1511 and nothing has ever sent it**
+
+`POST v1/links` takes `content_type` from a three-value enum — `post | live | space` — and legacy
+builds a context for two of them. There is no `buildLiveShareContext` anywhere in it: its event page
+shares by copying `shareable_url` to the clipboard, so **every live ever shared from the website has
+been attributed as a bare `v1/shorten/` link.** The event page's share sheet is the first caller, and
+it has to pick an identifier.
+
+A space sends its `id` and a post sends its `id`. An event has two candidates and they are not
+interchangeable: the opaque `id`, and the `code` that every URL, deep link, QR code and API path is
+built from. `liveShareContext` sends `id` when the payload carries one and falls back to `code`, on
+the grounds that consistency with the other two content types is the better guess and that an
+imperfectly-named context still attributes the share — where `null` sends it down the unattributed
+path, and the event page is one of the two surfaces where a share is most likely to be somebody's
+**first** contact with the creator.
+
+If the service expects `code`, the fallback is currently the *correct* branch and the primary one is
+silently mis-attributing. Please confirm which, and whether an unrecognised `content_id` is a `422`
+or a silent no-op — the second is the one this client cannot detect.
+
+Encoded in `features/share/lib/share-context.ts` (`liveShareContext`), `features/event/api/types.ts`
+(the `id` field's note).
+
+---
+
+## B107 — the **host's event report**: three endpoints on three services, none of them described · **`/@{slug}/event/{code}` prints a creator's revenue from guessed shapes**
+
+The event page's host branch is legacy's creator dashboard, ported. It reads three endpoints and
+none of them is in a schema this client has seen:
+
+| | endpoint | service |
+|---|---|---|
+| the bill | `GET billy/v5/billing/event-bill/{code}/` | billing |
+| the analytics | `GET report/v1/event/{code}/summary/` | report |
+| the orders | `GET billy/v1/ecom/event-orders/{code}/?kind=…` | billing (ecom) |
+
+**1. The bill's `category` and `type` vocabularies.** The bill is an **array** and this client finds
+its two halves by `category` — `LIVE` and `ACTION` — rather than by index, because a payload that
+listed `ACTION` first would otherwise file sustained-viewer earnings under *Live revenue*. Inside
+each half, `bill_detail.revenue[].type` is a **second** vocabulary and the two halves do not share
+it: `ticket` / `gift` / `consumables` on the live side, `live_chat` / `view_cost` on the interactive
+side. Are both closed sets? The live half is written out in a fixed order (legacy does the same) and
+the interactive half is *mapped over the payload* with a fallback that un-snake-cases an unknown
+`type` — so a new live-side line would be **silently dropped** while a new interactive one appears
+with a machine-ish label. If either can grow, we would rather map both.
+
+**2. `subtotal` versus `amount` on a line.** Legacy reads `subtotal` alone on its ticket and
+interactive-games rows, and falls back to `amount` on its gift row and on every interactive row — so
+one payload prints `$0` for tickets and the real figure for gifts, from the same shape, on the same
+card. There is no reading of that under which it is deliberate, so this client applies the fallback
+uniformly. Please confirm which field is authoritative, and whether both are always sent.
+
+**3. The orders have no id.** `event-orders/` sends `user` / `product`, `net_amount` and
+`created_at`, and nothing that identifies the **order**. React needs a key, so this client composes
+one from those fields plus the row's position (`KeyedOrder`) — which is correct for a list that is
+replaced wholesale and holds no per-row state, and would stop being correct the day the list
+paginates. An `id` would remove the guess.
+
+Two smaller ones:
+
+- **Is `page_size: 50` the whole list?** Legacy requests one page of fifty and offers no *load more*,
+  and this client reproduces that rather than inventing pagination on a money screen with no design
+  behind it. If a broadcast can plausibly have more than fifty ticket buyers, the endpoint's `count`
+  becomes meaningful and the dialog needs a design.
+- **`go_live_total_display`** is read as "how many maintenance-fee periods were charged". That is
+  legacy's usage and the field name says something slightly different; please confirm.
+
+⚠ And one **display** decision that depends on an answer already open: every figure here is printed
+as USD with the symbol pinned in front, because legacy does and the payload's `currency` is unread.
+That is **B29** asked from a second screen — when it is answered, this and `features/earnings` both
+stop being pinned.
+
+Encoded in `features/event/api/report-types.ts`, `api/event-report-api.ts`, `lib/event-revenue.ts`,
+`hooks/use-event-orders.ts`.
+
+---
+
 ## Auth surface not ported
 
 Not questions — the contract answers all of these — but endpoints the auth service publishes and
@@ -3035,6 +3174,199 @@ misses them.
 | `GET v1/jwks/` · `GET /auth/ping/` | Infrastructure. `jwks/` publishes only the *active* key, so it cannot verify every token in circulation — not a client concern either way. |
 | `POST v1/turnstile/` | Explicit token verification. This client sends `X-Turnstile-*` headers on the four endpoints that read them (B2) and never calls this. |
 | `POST v1/zendesk/token-request/` · `POST v1/zendesk-token/` | Zendesk SSO, two steps. |
+
+---
+
+## B108 — the **live room**: three endpoints on two services, no schema, and a field name that looks like a typo · **the studio's player is being built against a payload derived by grep**
+
+`live/` is in no swagger, so `features/event/api/live-types.ts` was written by collecting every
+property legacy dereferences across its ~12,500-line `liveView` tree. That is enough to build
+against and not enough to be sure of. Five questions, in the order they bite.
+
+**1. Is `spotlight_uid` or `spotlightUid` the wire spelling?** Legacy reads `layout?.spotlightUid`
+— camelCase, in an API where every other field on every other service is snake_case. If the wire
+really sends `spotlight_uid`, that read has been `undefined` since it was written: the spotlight
+branch never resolves the person it names and silently falls back to `publishers[0]`. The failure
+is invisible whenever the host *is* the spotlight, which is most of the time. This client accepts
+both spellings, snake first.
+
+**2. What does `preview/` answer on a refusal, and does a refused call still spend one of the three
+previews?** Legacy's switch reads six codes — `C001` exclusive, `E003` geo-restricted, `E004`/`E010`
+members-only, `E005` unpublished, `E012` sign-in-required — and acts on exactly one of them
+(`E003`), letting the rest fall through an empty `default:`. **`E003` is the only way this client
+can ever learn a stream is geo-restricted** (`lib/watch-state.ts` records it as unknowable for
+exactly that reason), so the shape of that response matters more than the others. And the quota
+question is the sharp one: this client marks a look spent on a **2xx** only, on the grounds that a
+refusal is not a preview anybody watched — if the service counts refusals too, the two counters
+drift and a reader silently gets fewer than three.
+
+**3. Is the preview limit three, per device, per event — and is the server the one enforcing it?**
+Legacy's `PREVIEW_LIMIT = 3` is a client constant against `localStorage`, which a reader can clear.
+`shared/lib/preview-quota.ts` reproduces it and is explicit that it is a guard against *spending* a
+look, not a gate. Please confirm the server's own rule, what it answers when the limit is reached,
+and whether the window is per event or per event **per day**.
+
+**4. Can `layout.layout` be a value outside `P1`–`P9` / `L1`–`L9`?** The renderer falls back to `P1`
+for anything unrecognised rather than failing, so a new code degrades to a single tile instead of a
+blank room — but if new arrangements are planned, the fallback is a silently wrong layout rather
+than an error.
+
+**5. Does `alternative_playlist` always carry an `flv` entry?** The client prefers FLV and falls
+back to HLS, because HTTP-FLV is seconds of latency against HLS's tens and a live chat answering a
+thirty-second-old frame is a different product. If FLV is being retired, that preference becomes a
+wasted first attempt on every stream.
+
+⚠ Two things this client has already decided and will not change without an answer: none of these
+three responses is ever written to the **disk** ETag tier (`viewer_token` is a credential and the
+playlist URLs are signed and expire — the **B72** failure with a credential in it), and the preview
+call is never retried, because the backend counts the call rather than the view.
+
+Encoded in `features/event/api/live-types.ts`, `features/event/api/live-api.ts`
+(`PREVIEW_REFUSAL`), `features/event/hooks/use-live-preview.ts`, `shared/lib/preview-quota.ts`.
+
+---
+
+### The chat frame carries less than the design draws
+
+Three things in the comps' `Right menu` have no field behind them in any frame this client has
+seen, so all three are **not drawn** rather than invented:
+
+**A. The pinned message names a mentioned user and a role.** `Chat/Pinned Message` shows
+`theirishshane2914 ✓ @Ashley [👑 Host]` above the text. `pinned_message` and
+`get_pinned_message` both answer `{ message, user_name }` and nothing else — no slug, no verified
+flag, no mention, no role. Is the pin meant to carry the poster's full user object, and is
+`@Ashley` the *host being addressed* or the person who wrote it?
+
+**B. `Badge/Lvl Badge` and `Badge/User Badge` need a level.** Two gradient chips — a gift level
+and a user level — sit beside a name in the comps, and `Chat/Unlock level` ("Send a Gift to
+activate your gifted level & reward") is a whole float about them. No `msg` frame carries a level
+of any kind. Which field, and on the frame or on `user`?
+
+**C. `channel_subscription_duration` — please confirm it is a frame field.** Legacy reads
+`data.channel_subscription_duration` in all four places and never `data.user.…`; this client had
+it on the user object and therefore never once drew the `MEM` badge. Both spellings are accepted
+now, but only one of them should exist.
+
+## B109 — **live interactions are billed by the client**: paid chat, and the sustained fee · **two silent failures and a field name that looks like a typo**
+
+In a broadcast with `paid_chat`, each message costs the reader 1 Star. The sequence legacy
+implements, and this port has copied because there is no other contract to copy:
+
+```
+emit post_message  → err_code 0, the message is in front of the room
+POST billy/v1/ecom/purchase/  { product_id, price_id, consumption_data, metadata }
+```
+
+Three things about that are worth an answer.
+
+**1. Does the server charge, or does it only take the client's word?** The ordering says the
+latter: `post_message` succeeds on its own merits, and the purchase is a separate call afterwards.
+If that is right, **a client that simply never makes the second call posts for free**, forever, and
+nothing detects it. If the server *does* charge on `post_message`, then this client is billing
+twice and the second call should be deleted.
+
+**2. Where do the product ids come from?** `71cc131b-…` and `304320ca-…` are literals in legacy's
+`constants/productType.js`, and `ACTION_FEE = 1` is a literal in the component. There is a
+`permission/v3/remote-config/ACTION_FEE/` endpoint that looks like it should answer the fee, and
+legacy never reads it — `CLAUDE.md` records it as dead code. Are the ids stable, per-environment,
+or something that should be configuration?
+
+**3. What is supposed to happen when the charge fails?** Legacy fires the purchase without
+awaiting it and discards the result, so a declined charge leaves the message posted, the reader
+believing they paid, and the creator believing they were paid. This port **awaits** it and tells
+the reader their Star did not move (`event_studio_chat_charge_failed`) — which is the honest
+answer available to a client, and not a fix: the message is already public. Should the message be
+retracted, should the post be gated on the charge, or is a stranded free message acceptable?
+
+⚠ The one part this client can get right on its own is already done: the balance is checked
+**before** posting, so a reader who cannot pay is refused rather than posting and failing to bill.
+
+### The sustained fee — the same pattern, on a timer
+
+Every `charge_duration` minutes the client posts the same `ecom/purchase/` with the `CHARGE_STAR`
+product. Three more questions:
+
+**4. `quality`, or `quantity`?** Legacy sends `quality: fee`. If the service reads `quantity`,
+then every sustained-fee charge ever made has billed the default rather than the configured
+amount, and a console set to 2 Star has been taking 1. Sent as legacy spells it, because
+"correcting" it against a service that really does read `quality` would start billing double.
+
+**5. Is Premium meant to be exempt?** Legacy charges everybody and only suppresses the *notice*
+when `myChannel.is_premium`, so a Premium subscriber pays the sustained fee silently while
+everybody else is told about it. That reads like an exemption somebody started and did not
+finish. Ported as written — inventing an exemption would stop money reaching streamers — but it
+wants an answer.
+
+**6. Does the server expect a charge per interval at all, or does it meter viewing itself?** The
+same question as 1, and with the same consequence: a client that does not post is watching free.
+
+⚠ One thing that was **not** ported, because it is a defect rather than a contract: legacy's
+charge interval lists `isOutOfStar` among its effect dependencies, so crossing the fee threshold
+rebuilds the `setInterval` — and a new interval restarts its countdown. A viewer whose balance
+moves past the fee, which is any viewer who sends a gift or gets charged, has their clock reset
+and is **never billed again**. If your figures for sustained-fee revenue look lower than the
+configuration implies, that is a plausible reason.
+
+Encoded in `features/event/api/unlock-api.ts` (`purchaseChatMessage`, `purchaseSustainedFee`,
+`LIVE_CHAT_PRODUCT`, `LIVE_SUSTAINED_FEE_PRODUCT`), `features/event/hooks/use-live-chat.ts`,
+`features/event/hooks/use-sustained-fee.ts`, `features/event/lib/sustained-fee.ts`.
+
+---
+
+## B110 — **gifts in a live room**: the client announces its own charge, and three fields the schema and legacy disagree about · **the gift vertical is built on billy's OpenAPI plus one grep**
+
+Unlike the rest of the live room, gifting **has a published schema**
+(`billy/docs/schema/v1/?format=json` — `product-packages/`, `send/`), and reading it before porting
+settled more than it raised. What is left is five questions, and the first is the one that matters.
+
+**1. Should the *server* emit the gift frame?** Today the client does. `POST v1/gifting/send/`
+charges, and then the **sender's browser** emits `post_message { type: 'cmd', msg: '/give_gift', … }`
+into the live room — which is how every other screen in the broadcast (the chat sentence, the float
+banner, the leaderboard) learns that anything happened. Two consequences follow directly:
+
+- a client that charges and then fails to emit has moved the reader's Star, paid the creator, and
+  shown the room nothing. Legacy fires the emit without awaiting it, so neither side finds out; this
+  port awaits it and tells the sender (`event_gift_announce_failed`);
+- **a client can announce a gift it never paid for.** The frame carries `gift_data.price` and
+  `gift_amount`, both chosen by the sender. Nothing downstream may be treated as a record — and
+  `top_stars`, which *is* the server's, is the only trustworthy figure in the room.
+
+If the room already emits its own frame on a successful `send/`, this client is announcing twice and
+the emit should go.
+
+**2. `product-packages/` takes two params the schema does not document.** Its OpenAPI declares only
+`page` and `page_size`; legacy sends `channel_id` and `include_exclusive` as well, and a per-space
+catalogue evidently needs the first. Both are sent as legacy spells them — an ignored param costs
+nothing, while dropping one the service reads would quietly serve every space the same gifts. *Are
+they real, and is `include_exclusive=true` what makes the Exclusive tab possible?*
+
+**3. `LegacyProduct.exclusive` is typed `string`.** Legacy reads it as a bare truthiness test, which
+says **yes** to `"false"` and to `"0"`. If the serializer ever renders a Python `False` as `"False"`,
+legacy moves the entire catalogue into the *Exclusive* tab and empties the ordinary one, with nothing
+failing. This port names the false-ish spellings (`gift-types.ts`, `stringishFlag`). *What is the
+closed set of values — and would a boolean be possible?*
+
+**4. `PublicEventSerializerV4` carries `allowed_donation` and `gift_effect`, and legacy reads
+neither.** Both are booleans on the event payload; grep finds no reference to either anywhere in
+`../tevi-web-app`. This port honours them — `allowed_donation` hides the tray, `gift_effect` is
+parsed for the animation that does not exist yet — with `boolishDefaultTrue`, so an older payload
+that omits them behaves exactly as legacy does. *Do they mean what their names say?* If
+`allowed_donation` is about the **space's** direct-donation offer rather than the broadcast's gifts,
+this gate is on the wrong flag and the tray should stop reading it.
+
+**5. `send/` takes a `quantity` (`minimum: 1, default: 1`) and legacy never sends one.** The `x10` a
+room sees comes from the **package's** own `quantity`, not from a multiplier — so one press is one
+package. *Is `quantity` a real multiplier a client could offer ("send ×10"), and does the price
+multiply with it?* Nothing is built on it either way; the field is simply not sent.
+
+One thing the schema settled outright and is worth writing down: **`send/` answers the sender's
+balances** (`ResponseUserBalanceResponseList`). This client discards them and invalidates
+`balanceKeys` instead — `features/balance` owns that figure, and writing a figure from a write's
+response is the same mistake as trusting a socket frame for one.
+
+Encoded in `features/event/api/gift-api.ts`, `features/event/api/gift-types.ts`,
+`features/event/hooks/use-send-gift.ts`, and `allowed_donation` / `gift_effect` / `host` in
+`features/event/api/types.ts`.
 
 ---
 

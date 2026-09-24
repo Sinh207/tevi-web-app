@@ -213,6 +213,16 @@ export const TESTID_COMPANIONS = [
      * it is full of `-` and could never go in the id itself.
      */
     'data-post-id',
+    /**
+     * Who is in a Live studio seat — the publisher's id, which is also Agora's `uid` and the
+     * suffix of the mount node the video is painted into (`player-{id}`).
+     *
+     * Not `data-account-id`: that one is a *reader's* account on this device, and a co-host on
+     * camera is somebody else entirely. Every seat in the grid is `event-studio-seat`, so this is
+     * the only thing that tells two of them apart — and the id cannot go in the testid itself
+     * because it is backend-issued and may contain `-`.
+     */
+    'data-publisher-id',
     'data-program-id',
     'data-provider-key',
     'data-row-key',

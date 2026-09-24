@@ -5,6 +5,7 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
 import { Icon } from '@shared/ui/icon'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
 
@@ -216,14 +217,14 @@ export function PageBreadcrumb({
                                     {item.label}
                                 </span>
                             ) : (
-                                <a
+                                <Link
                                     data-testid="navigation-breadcrumb-link"
                                     data-index={index}
                                     href={item.href}
                                     className="truncate rounded-(--radius-sm) text-(--text-body) no-underline transition-colors hover:text-(--text-title) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
                                 >
                                     {item.label}
-                                </a>
+                                </Link>
                             )}
                         </li>
                     )

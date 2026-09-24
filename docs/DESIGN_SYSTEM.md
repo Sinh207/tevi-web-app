@@ -430,6 +430,46 @@ deleted): the card animated to full-bleed as it reached the sticky chrome. `web-
 (`tabCurrency/transactionHistory/index.js`), with no scroll listener anywhere — so a rAF-per-scroll
 hook was paying for a behaviour legacy does not have. Do not reintroduce it.
 
+### A form is always painted, and always full width
+
+The two questions under *…unless none of its blocks is a plain surface card* are for screens that
+**display**. A screen that is nothing but fields — a
+settings or setup form — never takes the page-colour branch, whatever its block count and whatever
+its blocks are filled with. Below `md` it is painted and it runs edge to edge.
+
+**Why:** the column's `px-4` plus each card's own `p-4` insets the content **twice** — 326px of usable
+width on a 390px screen. On a screen whose entire content is fields, those 32px are the thing the
+reader came for. `/monetization/donation` was first built as cards on page colour, which is correct by
+question 2 and wrong by this one.
+
+Four parts, and the third is the one that is easy to miss:
+
+- **Paint the plane** below `md` — `X_SCREEN` on the sticky bar *and* the column.
+- **Every block full-bleed**: `-mx-4 rounded-none md:mx-0 md:rounded-xl`, so its own `p-4` becomes the
+  only gutter.
+- **Separation moves from the gap to a hairline.** The form drops to `gap-0` with a `border-b` per
+  block (`md:gap-3 md:border-b-0`). On a painted plane a surface-coloured block is not *mismatched*,
+  it is **invisible** — so a block that stops relying on the gap has to be given something else.
+- **The submit is a bar pinned to the bottom of the viewport, at every width** — `sticky bottom-0`,
+  full-bleed below `md`, with the **button inside keeping the column's inset** (a button meeting both
+  bezels is a bar, not a button; the *bar* is the thing that runs edge to edge). An in-flow Save left
+  the primary action two screens below the last field on a phone. Four things it needs: `sticky` and
+  never `fixed` (sticky keeps its space in flow, so nothing above is covered and no compensating
+  padding can drift out of sync); an **opaque ground** matching `X_SCREEN`, because content scrolls
+  under it; a **`border-t`**, the only thing separating it from that content while stuck — so the last
+  block gives its own `border-b` up (`last-of-type:border-b-0`) or you get a 2px line; and the
+  **column must drop its `pb-*`** for that view, or at the end of the scroll the bar un-sticks and
+  hops up off the bottom edge. Keep `mt-auto md:mt-0` beside it: sticky does nothing when the content
+  already fits, and `mt-auto` is what puts the bar at the foot in that case.
+
+There is no separate rule below `sm` (612) — 16px is the DS's minimum gutter, and anything narrower
+puts text on the bezel.
+
+Reference: `DONATION_FORM_SECTION` + `DONATION_FORM_FOOTER` in
+`features/monetization/lib/container.ts`, pinned by `e2e/monetization-donation.spec.ts` ("Save stays
+pinned to the bottom") — because `sticky` dies **silently** the moment an ancestor gains
+`overflow: hidden`. See §9.
+
 ### A brand-tinted ground needs its own ink token
 
 `--background-brand` / **`--text-on-brand`** are a pair, and the pair exists because of a measured

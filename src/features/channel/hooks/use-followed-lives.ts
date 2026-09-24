@@ -45,14 +45,26 @@ export interface UseFollowedLivesResult {
     collapse: () => void
 }
 
-export function useFollowedLives(): UseFollowedLivesResult {
+export function useFollowedLives({
+    expanded: startExpanded = false,
+    enabled = true,
+}: {
+    /** Off until the caller has somewhere to show them — the studio asks only once it has ended. */
+    enabled?: boolean
+    /**
+     * Start with every live rather than the collapsed few. The Live studio's *ended* screen wants
+     * the whole list in a scrolling row — legacy's rail there has no collapse control at all —
+     * while `/following` keeps its show-more.
+     */
+    expanded?: boolean
+} = {}): UseFollowedLivesResult {
     const { activeId, isAuthenticated } = useAuth()
-    const [expanded, setExpanded] = useState(false)
+    const [expanded, setExpanded] = useState(startExpanded)
 
     const query = useQuery({
         queryKey: channelKeys.followedLives(activeId),
         queryFn: ({ signal }) => channelApi.getFollowedLives({ accountId: activeId, signal }),
-        enabled: isAuthenticated,
+        enabled: enabled && isAuthenticated,
     })
 
     const lives = query.data ?? []

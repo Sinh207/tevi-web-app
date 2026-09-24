@@ -1,16 +1,17 @@
 'use client'
 
+import { appLink, isPlatformRestricted, liveAccess } from '@features/event/access'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { StarMark } from '@shared/components/star-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState } from 'react'
 import type { ChannelEvent } from '../api/events-api'
 import type { Channel } from '../api/types'
 import { formatActivityDateTime } from '../lib/channel-format'
 import { liveEvents } from '../lib/channel-live'
-import { appLink, isPlatformRestricted, liveAccess } from '../lib/live-access'
 import { ChannelEventMenu } from './channel-event-menu'
 import { ChannelLiveBadge } from './channel-live-badge'
 import { ChannelLiveRestrictedDialog } from './channel-live-restricted-dialog'
@@ -89,9 +90,13 @@ function ChannelLiveItem({ event, channel }: { event: ChannelEvent; channel: Cha
                  * Hidden from assistive tech **on purpose**: the name beside it is the same link, and
                  * two anchors to one place are announced twice. `tabIndex={-1}` keeps it out of the
                  * tab order for the same reason, so what is left is a mouse target on the picture.
+                 *
+                 * ⚠ This carried a `biome-ignore lint/a11y/useAnchorContent` while it was a bare
+                 * `<a>`. The rule does not see a `<Link>`, so the suppression became dead — and
+                 * biome reports an unused one, which is how it was caught. The *reason* it existed
+                 * still holds and is the paragraph above; only the rule stopped firing.
                  */}
-                {/* biome-ignore lint/a11y/useAnchorContent: the name beside it is the accessible link */}
-                <a href={channelHref} className="flex-none" tabIndex={-1} aria-hidden="true">
+                <Link href={channelHref} className="flex-none" tabIndex={-1} aria-hidden="true">
                     {/* 40, legacy's size — `medium` is the DS step that is exactly that. */}
                     <AnimatedAvatar
                         size="medium"
@@ -101,7 +106,7 @@ function ChannelLiveItem({ event, channel }: { event: ChannelEvent; channel: Cha
                         alt=""
                         initials={name.slice(0, 2).toUpperCase()}
                     />
-                </a>
+                </Link>
 
                 <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex min-w-0 items-center gap-1">
@@ -113,13 +118,13 @@ function ChannelLiveItem({ event, channel }: { event: ChannelEvent; channel: Cha
                          * Both text runs truncate rather than taking legacy's fixed 35% caps: with
                          * a cap, a short name still surrenders two thirds of the row to nothing.
                          */}
-                        <a
+                        <Link
                             data-testid="channel-live-channel-link"
                             href={channelHref}
                             className="type-dense-strong min-w-0 truncate text-(--text-title)"
                         >
                             {name}
-                        </a>
+                        </Link>
                         <ChannelVerifiedMark channel={channel} size={16} />
                         <span className="type-caption-meta min-w-0 truncate text-(--text-body)">
                             @{slug}
@@ -148,9 +153,9 @@ function ChannelLiveItem({ event, channel }: { event: ChannelEvent; channel: Cha
 
             {event.title &&
                 (href ? (
-                    <a data-testid="channel-live-title-link" href={href} className="min-w-0">
+                    <Link data-testid="channel-live-title-link" href={href} className="min-w-0">
                         <LiveTitle title={event.title} />
-                    </a>
+                    </Link>
                 ) : restrictedTo ? (
                     // A button, not a link: it opens a dialog and navigates nowhere, so announcing
                     // it as a link would promise a destination it does not have.
@@ -266,7 +271,7 @@ function LiveMedia({
     }
 
     return (
-        <a
+        <Link
             data-testid="channel-live-card-link"
             href={href}
             className="min-w-0 transition-opacity hover:opacity-90"
@@ -278,6 +283,6 @@ function LiveMedia({
              * same fix, as `ChannelEventCard`'s overlay link.
              */}
             <span className="sr-only">{event.title}</span>
-        </a>
+        </Link>
     )
 }

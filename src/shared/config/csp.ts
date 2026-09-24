@@ -184,6 +184,50 @@ const MINIAPP_FRAME_SOURCES = (() => {
     return entries.length > 0 ? entries : ['https:']
 })()
 
+/**
+ * **Where the live player may pull a stream from**, for `connect-src` and `media-src`.
+ *
+ * HTTP-FLV and HLS are both fetched with XHR/`fetch` before anything reaches a `<video>`, so a
+ * live CDN needs `connect-src` and not only `media-src`. The origin is **not knowable at build
+ * time**: `alternative_playlist` URLs come out of the API payload, and legacy — which ships no CSP
+ * at all — never had to name them.
+ *
+ * So this follows `MINIAPP_FRAME_SOURCES` exactly: a space- or comma-separated list of CSP source
+ * expressions in `NEXT_PUBLIC_LIVE_CDN_ORIGINS`, read through `process.env` directly because the
+ * policy is built in `proxy.ts` on the edge runtime, before the app's env module exists.
+ *
+ * ⚠ **Unset in production, it contributes nothing and live playback is blocked.** That is the
+ * deliberate direction: the alternative is a blanket `https:` on `connect-src`, which is the one
+ * directive that decides where an injected script may send what it has read. A blank video with a
+ * CSP violation in the console is a visible, diagnosable failure; a widened `connect-src` is
+ * neither.
+ *
+ * ⚠ **In development it falls back to `https:`, and that is not laziness.** The origin is only
+ * in the API payload, so finding it requires watching a live stream — which the closed policy
+ * prevents. That is a loop with no way in, and it is how "why can't I watch the live?" ends up
+ * with three answers instead of one. Dev opens the door, the developer reads the origin off the
+ * network panel, and production stays shut until somebody sets it.
+ *
+ * `isDev` already gates `ws:` on the same directive two entries down, so this is the file's own
+ * existing idiom rather than a new exception.
+ *
+ * To fill it: read one real `preview/` or `playback/` payload, take the origin off the playlist
+ * URLs, and set them here. **B108** asks the backend to name them so this can stop being a
+ * per-environment discovery.
+ */
+function liveCdnSources(isDev: boolean): string[] {
+    const configured = process.env.NEXT_PUBLIC_LIVE_CDN_ORIGINS
+    if (!configured) return isDev ? ['https:'] : []
+    return [
+        ...new Set(
+            configured
+                .split(/[\s,]+/)
+                .map(entry => entry.trim())
+                .filter(Boolean),
+        ),
+    ]
+}
+
 /** `https://wapi.tevi.dev` → `wss://wapi.tevi.dev`, for the socket adapter in a later phase. */
 function toWebSocketOrigin(origin?: string): string | undefined {
     if (!origin) return undefined
@@ -278,6 +322,23 @@ export function buildCsp({ nonce, isDev = false }: { nonce: string; isDev?: bool
                 GOOGLE_ACCOUNTS_ORIGIN,
                 STRIPE_API_ORIGIN,
                 ...FIREBASE_ORIGINS,
+                // The live CDN. Configured origins, or `https:` in dev only — see
+                // `liveCdnSources` for why production fails closed and dev cannot.
+                ...liveCdnSources(isDev),
+                /*
+                 * ⚠ **`data:` is for the live player's WASM decoder, and it is not a hole.**
+                 *
+                 * VePlayer inlines its soft-decode module as a `data:application/wasm;base64,…`
+                 * URL and fetches it with `WebAssembly.instantiateStreaming`. Without this the
+                 * fetch is refused, the SDK catches it and falls back to `ArrayBuffer`
+                 * instantiation — so playback still works, slower, behind a console full of CSP
+                 * violations that hide real ones. Measured on a live broadcast.
+                 *
+                 * `connect-src data:` is the one source expression that cannot exfiltrate: a
+                 * `data:` URL is self-contained, there is no peer to send anything to. It widens
+                 * what a script may *read into itself*, not where it may talk.
+                 */
+                'data:',
                 isDev ? 'ws:' : undefined,
             ),
         ],

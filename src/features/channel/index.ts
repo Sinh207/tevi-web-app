@@ -79,14 +79,55 @@ export { AddHomeScreenGuide } from './components/add-home-screen-guide'
 export { BlockedAccountRow } from './components/blocked-account-row'
 export { BlockedAccountsSkeleton } from './components/blocked-accounts-skeleton'
 export { BlockedAccountsView } from './components/blocked-accounts-view'
+/**
+ * The follow prompt that acts after a dwell — exported for the Live studio and Live details, which
+ * legacy mounts the same component into (`placement="stage"` for the studio's overlay).
+ */
+export { ChannelAutoFollow } from './components/channel-auto-follow'
 export { ChannelEmptyState } from './components/channel-empty-state'
-export { ChannelLiveEventScreen } from './components/channel-live-event-screen'
+/** The LIVE flag, for a card outside this feature that shows a stream — the ended screen's rail. */
+export { ChannelLiveBadge } from './components/channel-live-badge'
 /**
  * The space's manifest link, which has to be put in `<head>` by hand — Next streams metadata into
  * the body and Chromium only reads a manifest that is a child of the head. The component's
  * docblock carries the measurement.
  */
 export { ChannelManifestLink } from './components/channel-manifest-link'
+/**
+ * The follower / member / post counts and the owner's `income_usd`, for a slug.
+ *
+ * Exported for **`features/monetization`**, whose hub is legacy's `useChannelStats(myChannel.slug)`
+ * verbatim — the headline figure on `/monetization` is this endpoint's `income_usd` and nothing else.
+ *
+ * It sits above the "deliberately not exported" list below rather than in it, and the distinction is
+ * the one that list is really about: what is withheld is `channelStatsApi`, so nobody calls axios
+ * from a component. A sibling feature reaching for the **hook** gets the query key too, which is the
+ * whole point — `/monetization` and a creator's own space then share one cache entry instead of
+ * asking the same microservice twice under two keys, which is the disagreement the socket note in
+ * `CLAUDE.md` warns about in the other direction.
+ *
+ * `app/` still may not use it: a page mounts a feature's view, and every view that needs these
+ * numbers is inside one.
+ */
+/**
+ * The space itself, its two viewer-relative mutations, and the report form — for
+ * **`features/event`'s Live studio**, whose channel plate carries Follow and the ⋯ menu
+ * (`event-studio-channel-actions.tsx`).
+ *
+ * Exported as hooks rather than as a ready-made bar because the studio composes them into a plate
+ * this feature does not draw and should not know the geometry of: a 40px capsule floating on a
+ * video, beside a balance and a back disc. What the rule at the foot of this file forbids is
+ * exporting `channelApi` — a component reaching for the model — and these are the query and the
+ * mutations that exist so it does not have to.
+ *
+ * `ChannelReportDialog` goes with them for the reason `CLAUDE.md` gives for the two-step
+ * verification dialog: a report is nine reasons, a description and a *Report and Block* path, and a
+ * consumer given only the endpoint would assemble a shabbier one.
+ *
+ * ⚠ `useChannel` is a **second request** on the studio, and that is the price of the event payload
+ * not carrying `is_followed`. If it ever does, this export loses its only consumer.
+ */
+export { ChannelReportDialog } from './components/channel-report-dialog'
 /**
  * Exported for the account drawer's profile card, which writes the signed-in account's own
  * name and has to put the same mark after it as the channel header does. The rule it encodes
@@ -144,22 +185,8 @@ export { MySpaceRedirect } from './components/my-space-redirect'
  */
 export { SpaceVisibilityOption } from './components/space-visibility-option'
 export { SpaceVisibilityView } from './components/space-visibility-view'
-/**
- * The follower / member / post counts and the owner's `income_usd`, for a slug.
- *
- * Exported for **`features/monetization`**, whose hub is legacy's `useChannelStats(myChannel.slug)`
- * verbatim — the headline figure on `/monetization` is this endpoint's `income_usd` and nothing else.
- *
- * It sits above the "deliberately not exported" list below rather than in it, and the distinction is
- * the one that list is really about: what is withheld is `channelStatsApi`, so nobody calls axios
- * from a component. A sibling feature reaching for the **hook** gets the query key too, which is the
- * whole point — `/monetization` and a creator's own space then share one cache entry instead of
- * asking the same microservice twice under two keys, which is the disagreement the socket note in
- * `CLAUDE.md` warns about in the other direction.
- *
- * `app/` still may not use it: a page mounts a feature's view, and every view that needs these
- * numbers is inside one.
- */
+export { useChannel } from './hooks/use-channel'
+export { useChannelActions } from './hooks/use-channel-actions'
 export { useChannelStats } from './hooks/use-channel-stats'
 /**
  * Shared with `features/navigation`, whose Privacy & security screen prints the number in a
@@ -172,6 +199,8 @@ export { useChannelStats } from './hooks/use-channel-stats'
  * *list* to count it — see the hook for why the badge has its own key and its own `enabled` gate.
  */
 export { useFollowRequestsCount } from './hooks/use-follow-requests-count'
+/** The reader's followed channels that are live now — `/following` and the studio's ended rail. */
+export { useFollowedLives } from './hooks/use-followed-lives'
 export { AUTO_FOLLOW_SECONDS } from './lib/auto-follow'
 export type { ChannelOwnership, ChannelVisibility } from './lib/channel-flags'
 export {
@@ -222,7 +251,7 @@ export { MyChannelProvider, useMyChannel } from './providers/my-channel-provider
 
 /**
  * Deliberately **not** exported, so `app/` cannot reach past the feature's own composition:
- * `channelApi`, `channelStatsApi`, `useChannel`, `useChannelOwnership`,
+ * `channelApi`, `channelStatsApi`, `useChannelOwnership`,
  * `channelVisibility`, `paramsFromNextUrl`, and every formatting helper. A component calling
  * `channelApi` directly is exactly what CLAUDE.md's "never call axios from components" forbids,
  * and exporting it is the invitation.

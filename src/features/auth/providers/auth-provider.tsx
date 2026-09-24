@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslation } from '@shared/i18n/use-translation'
+import { clearAgeConsent } from '@shared/lib/age-consent'
 import { ApiError } from '@shared/lib/api/errors'
 import { clearETagScope } from '@shared/lib/api/interceptors/etag'
 import { clearTurnstileTokens, setTurnstileTokens } from '@shared/lib/api/request-context'
@@ -469,6 +470,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // content is one of them, and it is the one that reads as somebody else's answer if it
             // survives: the next person to use the browser would not be asked.
             clearNsfwConsent(id)
+            // The narrower one beside it: which 18+ live events this account said it was old
+            // enough for. Same argument, one step sharper — an age confirmation that survives
+            // the account reads as the *next* person having answered a question about their age.
+            clearAgeConsent(id)
             // The other one: the terms this account typed into `/search`. Same argument as
             // consent above — a search history left on a shared device reads as the next
             // person's, and it is legible at a glance.

@@ -1,4 +1,62 @@
-import type { ChannelEvent } from '../api/events-api'
+/**
+ * **Is a live stream gated, and how does it say so** — the whole rule, in one import-free module.
+ *
+ * ## Why it is at the feature root and imports nothing
+ *
+ * The four sanctioned narrow barrels in `CLAUDE.md` exist so a cheap consumer does not pay for a
+ * whole feature, and this is the same shape as `routes.ts`: **two features need this rule and
+ * neither may reach into the other's internals.**
+ *
+ * - `features/event` renders the stream's own page, and the paywall is most of what that page has to say.
+ * - `features/channel` renders every surface that *advertises* a stream — the space's Live tab card,
+ *   the Live-now strip, the Following row — and each of those draws the same badge.
+ *
+ * It lived in `features/channel/lib/live-access.ts` until the event page became real, which was
+ * correct only for as long as the channel was the sole reader. Two copies of a rule that decides
+ * whether somebody is asked for money is the failure this move prevents: they diverge silently, and
+ * the visible half is a price tag on a free stream (see the bug documented on `liveAccess` below,
+ * which is exactly that class of mistake made once already, upstream).
+ *
+ * So: `@features/event/access`, never `@features/event`. The main barrel pulls in the screen, the
+ * dialogs, `@features/membership` and `@features/balance`; a card that wants three predicates must
+ * not pay for any of it — and, more sharply, `features/channel` importing the main barrel would
+ * close a cycle the day the event page needs anything of the channel's.
+ *
+ * ## Structural parameters, not a DTO
+ *
+ * Every function takes the **fields it reads** rather than an event type, which is what lets one
+ * rule serve two schemas: `features/channel`'s `channelEventSchema` (the `v4/events/` list row) and
+ * this feature's `eventDetailSchema` (the `v4/public/events/{code}/` payload) are two services'
+ * wire formats and neither is evidence for the other's. Both satisfy these shapes, and `tsc` is
+ * what checks that at each call site — so a field renamed in either schema is a type error here
+ * rather than a predicate quietly reading `undefined`.
+ */
+
+/** The four fields that decide whether a reader is invited to unlock. */
+export interface GateFields {
+    /** A decimal string (`"3.00"`) in `price_currency`. `null` means *unpriced*, not free. */
+    price: string | null
+    /** Memberships that unlock this stream. Only the **length** is read. */
+    required_packages: string[]
+    /** The backend's own verdict on whether *this reader* is locked out. */
+    need_unlock_package: boolean
+    /** This reader has already paid for it outright. */
+    purchased: boolean
+}
+
+/** The one field that decides whether **the website** may play a stream at all. */
+export interface PlatformFields {
+    /** Platform names this stream may **not** be watched on — `["Website"]` on a real payload. */
+    restricted_platforms: string[]
+}
+
+/** The two app-associated URLs, in the order they are preferred. */
+export interface AppLinkFields {
+    /** The short form — `https://tevi.com/e/{code}/`. */
+    public_url: string | null
+    /** The canonical share URL — `https://tevi.com/@{slug}/event/{code}/`. */
+    shareable_url: string | null
+}
 
 /** What the badge over a stream's banner says, or `null` when the stream is simply open. */
 export interface LiveAccess {
@@ -40,7 +98,7 @@ export interface LiveAccess {
  * it says the reader is **not** locked out — but only to drop the *invitation* down to a statement,
  * never to erase the badge. See the branch itself.
  */
-export function liveAccess(event: ChannelEvent): LiveAccess | null {
+export function liveAccess(event: GateFields): LiveAccess | null {
     const requiresMembership = event.required_packages.length > 0
     // `Number`, not `parseInt`: "3.50" must not become 3. `null` stays null — unpriced is a state.
     const raw = event.price === null ? null : Number(event.price)
@@ -90,7 +148,7 @@ export function liveAccess(event: ChannelEvent): LiveAccess | null {
  * different lie — but answers the tap with the same message legacy's page shows, before navigating
  * somewhere that cannot play it. Whether it should be advertised at all is B74.
  */
-export function isPlatformRestricted(event: ChannelEvent): boolean {
+export function isPlatformRestricted(event: PlatformFields): boolean {
     return event.restricted_platforms.some(platform => platform.toLowerCase() === 'website')
 }
 
@@ -106,7 +164,7 @@ export function isPlatformRestricted(event: ChannelEvent): boolean {
  * where the note explains why: the link is populated by a tracking-gated effect, so an early press
  * silently does nothing.
  */
-export function appLink(event: ChannelEvent): string | null {
+export function appLink(event: AppLinkFields): string | null {
     return event.public_url ?? event.shareable_url
 }
 
@@ -135,7 +193,7 @@ export function appLink(event: ChannelEvent): string | null {
  * `Number`, not `parseInt`, for the reason `liveAccess` gives: `"3.50"` must not become 3. A price
  * of `"0"` is not a gate.
  */
-export function isExclusiveLive(event: ChannelEvent): boolean {
+export function isExclusiveLive(event: Pick<GateFields, 'price' | 'required_packages'>): boolean {
     if (event.required_packages.length > 0) return true
     const raw = event.price === null ? null : Number(event.price)
     return raw !== null && Number.isFinite(raw) && raw > 0

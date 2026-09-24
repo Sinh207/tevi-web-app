@@ -77,6 +77,40 @@ export const STORAGE_KEYS = {
      * its URL forever. `features/mini-app/lib/app-version.ts` owns the shape, the TTL and the cap.
      */
     miniAppVersions: `${NS}.miniapp.versions`,
+    /**
+     * Which age-restricted live events an account has confirmed it is over 18 for — a JSON map of
+     * `accountId -> { eventCode: confirmedAtMs }`. Written by `shared/lib/age-consent.ts`.
+     *
+     * Per **event**, not per space, and that is the difference from `nsfwConfirmed` above:
+     * `age_restriction` is a flag the creator sets on one broadcast, so agreeing to one 18+ stream
+     * is not agreeing to the next. One registered key for everybody, for the same three reasons
+     * `nsfwConfirmed` gives — legacy writes `` `${currentUser?.id}_age_restricted_confirmed_list` ``,
+     * which is unregistered, unmigratable, and literally `undefined_…` for a guest, i.e. a bucket
+     * every visitor on the device inherits.
+     *
+     * `AuthProvider.forgetAccount` drops an account's answers with the rest of its traces, which is
+     * the whole reason this lives in `shared/` rather than in `features/event`.
+     */
+    ageConfirmed: `${NS}.event.age_confirmed`,
+    /**
+     * How many free Live previews this **device** has spent on each event — a JSON map of
+     * `eventCode -> { spent, at }`. Written by `shared/lib/preview-quota.ts`.
+     *
+     * ⚠ **Not keyed by account, and deliberately absent from `forgetAccount`.** Every other
+     * per-person record in this registry is dropped when an account is removed; this one must
+     * survive, because the thing it limits is a *device's* access to free content. Scoping it to
+     * an account — or clearing it on sign-out — makes the quota a formality: sign out, get three
+     * more, repeat. Legacy reaches the same shape from the other direction, keying its counter on
+     * `AuthModel.deviceInfo.device_id` rather than on the user.
+     *
+     * That device-id layer is not reproduced. `localStorage` **is** the device, so the extra key
+     * buys nothing and costs a reset vector: a rotated fingerprint would hand the browser a fresh
+     * set of previews.
+     *
+     * The backend counts too, so this is a guard against *spending* previews, not the enforcement
+     * — see `liveApi.getPreview`, where a refetch or a strict-mode double-mount each cost one.
+     */
+    previewQuota: `${NS}.event.preview_quota`,
 } as const
 
 export const storage = {

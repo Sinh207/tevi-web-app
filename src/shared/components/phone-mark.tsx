@@ -3,7 +3,8 @@
  *
  * ## Why this exists at all
  *
- * Legacy draws a phone here (`trending/navBar/getApp`). All 554 base glyphs in the DS sprite were
+ * Legacy draws a phone on both controls that offer the app — the rail's (`trending/navBar/getApp`)
+ * and the Live studio's (`liveView/common/getStarAndApp/getApp`). All 554 base glyphs in the DS sprite were
  * read: there is no phone, mobile, handset or smartphone. The house rule is that a missing glyph is
  * reported rather than approximated, and it was — `qr-code` shipped for a while in its place. This
  * mark is here because that call was overridden deliberately: parity with legacy's control won over
@@ -25,7 +26,15 @@
  * ## Provenance
  *
  * The path is copied **verbatim** from legacy's inline SVG — same 24 viewBox, same coordinates — so
- * this is the shape already in production rather than a redraw of it. Two changes:
+ * this is the shape already in production rather than a redraw of it. It is also the shape the
+ * **comps** draw: `[Tevi Web App] 3. Live` → `Left menu` → `Get App` instantiates a component named
+ * `mobile` whose path is byte-identical to this one, so the design file carries the same foreign
+ * drawing rather than a library glyph. That is the whole reason the sprite is not the way in — an
+ * upstream Zappicon `mobile` exists and is a *different* silhouette (a taller 0.933 / 22.067 body
+ * against this 2.25 / 21.75 one), so importing it would have put a second, disagreeing phone in an
+ * app that already ships this one. Tried, reverted.
+ *
+ * Two changes from legacy:
  *
  * - `fill="currentColor"` in place of legacy's baked `#141414`. Legacy is light-mode only; a
  *   near-black glyph on this app's dark surface would be invisible.

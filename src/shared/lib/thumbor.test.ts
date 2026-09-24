@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { thumborSquareUrl } from './thumbor'
+import { thumborBlurUrl, thumborSquareUrl } from './thumbor'
 
 /**
  * The base is read through `serverEnv()`, which parses **once per process** and caches — so these
@@ -57,5 +57,25 @@ describe('thumborSquareUrl', () => {
      */
     it('keeps a signed source URL intact', () => {
         expect(thumborSquareUrl(`${AVATAR}?v=2`, 192)).toBe(`${BASE}/192x192/${AVATAR}?v=2`)
+    })
+})
+
+describe('thumborBlurUrl', () => {
+    it('asks the proxy for a blurred copy, source appended as-is', () => {
+        expect(thumborBlurUrl('https://static.tevicdn.com/a/b.png?v=1', 40)).toBe(
+            'https://imge.cdn.flowstreamx.com/unsafe/filters:blur(40)/https://static.tevicdn.com/a/b.png?v=1',
+        )
+    })
+
+    it.each([null, undefined, '', 'not a url', 'javascript:alert(1)', 'data:image/png;base64,AA'])(
+        'returns null for %s',
+        source => {
+            expect(thumborBlurUrl(source as string | null | undefined, 40)).toBeNull()
+        },
+    )
+
+    it('refuses a radius that is not a positive integer', () => {
+        expect(thumborBlurUrl('https://x.dev/a.png', 0)).toBeNull()
+        expect(thumborBlurUrl('https://x.dev/a.png', 2.5)).toBeNull()
     })
 })

@@ -6,6 +6,7 @@ import { cn } from '@shared/lib/utils'
 import { Badge, type BadgeStatus } from '@shared/ui/badge'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { ChannelEvent } from '../api/events-api'
 import { formatActivityDateTime } from '../lib/channel-format'
 import { ChannelEventMenu } from './channel-event-menu'
@@ -104,7 +105,7 @@ export function ChannelEventCard({ event, slug }: { event: ChannelEvent; slug: s
             )}
         >
             {href && (
-                <a
+                <Link
                     data-testid="channel-event-link"
                     href={href}
                     // `inset-0` under everything, so the row reads as one target to a pointer while
@@ -120,7 +121,7 @@ export function ChannelEventCard({ event, slug }: { event: ChannelEvent; slug: s
                      * is the same row.
                      */}
                     <span className="sr-only">{title}</span>
-                </a>
+                </Link>
             )}
             {/*
              * `basis-1/3` is legacy's `size={4}` of twelve. The 1px hairline is legacy's too, and it

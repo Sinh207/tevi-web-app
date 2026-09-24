@@ -87,3 +87,37 @@ export function thumborSquareUrl(source: string | null | undefined, size: number
     const base = (serverEnv().THUMBOR_IMAGE_BASE ?? FALLBACK_BASE).replace(/\/+$/, '')
     return `${base}/${size}x${size}/${parsed.href}`
 }
+
+/**
+ * `https://…/unsafe/filters:blur(<radius>)/<source>` — the image, **blurred by the proxy**.
+ *
+ * For a backdrop that is going to be unrecognisable anyway: the Live studio's ground is the
+ * creator's banner blurred past recognition under a 60% scrim, and legacy asks the proxy for it
+ * pre-blurred (`viewer/index.js`, `filters::blur(40)`) before its own CSS `blur(20px)` on top.
+ * Both halves are kept. The server pass is what makes the pair *that* soft — a CSS blur alone at
+ * 20px still shows shapes — and it is also the cheaper file: measured on the live proxy, a blurred
+ * response is a smooth gradient the encoder compresses well, where the sharp banner is detail the
+ * browser downloads only to destroy.
+ *
+ * `filters:` with **one** colon. Legacy writes `filters::blur(40)`, and the proxy tolerates it —
+ * measured: both spellings return byte-identical bodies — but one colon is the documented syntax
+ * and the one another proxy would also accept.
+ *
+ * Same input rules as `thumborSquareUrl`: absolute `http(s)` only, `null` for anything else, and
+ * the source appended as-is.
+ */
+export function thumborBlurUrl(source: string | null | undefined, radius: number): string | null {
+    if (!source) return null
+    if (!Number.isInteger(radius) || radius <= 0) return null
+
+    let parsed: URL
+    try {
+        parsed = new URL(source)
+    } catch {
+        return null
+    }
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null
+
+    const base = (serverEnv().THUMBOR_IMAGE_BASE ?? FALLBACK_BASE).replace(/\/+$/, '')
+    return `${base}/filters:blur(${radius})/${parsed.href}`
+}

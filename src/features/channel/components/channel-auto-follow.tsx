@@ -84,7 +84,22 @@ import { CHANNEL_CONTAINER } from '../lib/container'
  * `/`, `/my-space` and *your own* channel — never on somebody else's. The safe-area inset is still
  * honoured, because a phone's home indicator does not care whose page it is.
  */
-export function ChannelAutoFollow({ channel }: { channel: Channel }) {
+export function ChannelAutoFollow({
+    channel,
+    placement = 'page',
+}: {
+    channel: Channel
+    /**
+     * Where the bar is pinned.
+     *
+     * `page` — the viewport's foot, the space page's own arrangement. `stage` — the Live studio,
+     * which legacy mounts the same component into with `sx={{ bottom: '100px', left: '0' }}`: a
+     * 600px bar at the stage's leading edge, **100px up**, so it clears the 95px gift tray. It is
+     * positioned by its caller there (the studio is a `fixed` overlay at `z-40`, and this bar's
+     * page placement is `z-30` — it would sit underneath it and never be seen).
+     */
+    placement?: 'page' | 'stage'
+}) {
     const { t } = useTranslation()
     const { remaining, isCountingDown, skipped, isPending, skip, followNow } =
         useAutoFollow(channel)
@@ -95,8 +110,12 @@ export function ChannelAutoFollow({ channel }: { channel: Channel }) {
     return (
         <div
             className={cn(
-                CHANNEL_CONTAINER,
-                'fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(12px,env(safe-area-inset-bottom))]',
+                placement === 'page'
+                    ? cn(
+                          CHANNEL_CONTAINER,
+                          'fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(12px,env(safe-area-inset-bottom))]',
+                      )
+                    : 'absolute start-0 bottom-[100px] z-20 w-full max-w-[600px] px-3',
             )}
         >
             {/*

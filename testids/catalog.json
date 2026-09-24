@@ -2,8 +2,8 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 811,
-        "surfaces": 27
+        "ids": 928,
+        "surfaces": 28
     },
     "surfaces": {
         "affiliate": {
@@ -73,6 +73,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -99,6 +100,14 @@
             "routes": [
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]"
+            ]
+        },
+        "event": {
+            "kind": "screen",
+            "label": "A live event — details, access and the app hand-off",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
             ]
         },
         "gift-code": {
@@ -1582,6 +1591,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1603,6 +1613,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1624,6 +1635,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1645,6 +1657,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1656,7 +1669,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-auto-follow.tsx:141"
+            "source": "src/features/channel/components/channel-auto-follow.tsx:160"
         },
         "channel-auto-follow-skip": {
             "scope": "channel",
@@ -1666,6 +1679,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1677,7 +1691,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-auto-follow.tsx:131"
+            "source": "src/features/channel/components/channel-auto-follow.tsx:150"
         },
         "channel-back": {
             "scope": "channel",
@@ -1687,6 +1701,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1708,6 +1723,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1729,6 +1745,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1750,6 +1767,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1771,6 +1789,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1792,6 +1811,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1813,6 +1833,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1834,6 +1855,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1855,6 +1877,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1879,6 +1902,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1900,6 +1924,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1921,6 +1946,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1942,6 +1968,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1963,6 +1990,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -1984,6 +2012,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2005,6 +2034,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2026,6 +2056,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2047,6 +2078,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2068,6 +2100,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2089,6 +2122,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2110,6 +2144,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2131,6 +2166,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2152,6 +2188,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2173,6 +2210,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2194,6 +2232,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2215,6 +2254,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2236,6 +2276,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2257,6 +2298,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2278,6 +2320,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2299,6 +2342,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2320,6 +2364,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2333,27 +2378,6 @@
             ],
             "source": "src/features/channel/components/channel-event-menu.tsx:132"
         },
-        "channel-event-get-app": {
-            "scope": "channel",
-            "routes": [
-                "/[slug]",
-                "/[slug]/direct-donation",
-                "/[slug]/earnings-report",
-                "/[slug]/earnings-report/[dateTs]",
-                "/[slug]/event/[code]",
-                "/[slug]/membership/[[...tier]]",
-                "/follow-requests",
-                "/following",
-                "/invitation/verify",
-                "/mcn-partnership",
-                "/mcn-user-invitation/verify",
-                "/my-space",
-                "/settings/blocked-accounts",
-                "/settings/custom-profile",
-                "/settings/space-visibility"
-            ],
-            "source": "src/features/channel/components/channel-live-event-screen.tsx:80"
-        },
         "channel-event-link": {
             "scope": "channel",
             "routes": [
@@ -2362,6 +2386,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2373,7 +2398,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-event-card.tsx:108"
+            "source": "src/features/channel/components/channel-event-card.tsx:109"
         },
         "channel-event-qr": {
             "scope": "channel",
@@ -2383,6 +2408,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2404,6 +2430,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2417,27 +2444,6 @@
             ],
             "source": "src/features/channel/components/channel-event-menu.tsx:90"
         },
-        "channel-event-visit": {
-            "scope": "channel",
-            "routes": [
-                "/[slug]",
-                "/[slug]/direct-donation",
-                "/[slug]/earnings-report",
-                "/[slug]/earnings-report/[dateTs]",
-                "/[slug]/event/[code]",
-                "/[slug]/membership/[[...tier]]",
-                "/follow-requests",
-                "/following",
-                "/invitation/verify",
-                "/mcn-partnership",
-                "/mcn-user-invitation/verify",
-                "/my-space",
-                "/settings/blocked-accounts",
-                "/settings/custom-profile",
-                "/settings/space-visibility"
-            ],
-            "source": "src/features/channel/components/channel-live-event-screen.tsx:96"
-        },
         "channel-follow": {
             "scope": "channel",
             "routes": [
@@ -2446,6 +2452,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2467,6 +2474,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2491,6 +2499,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2515,6 +2524,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2536,6 +2546,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2557,6 +2568,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2578,6 +2590,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2599,6 +2612,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2620,6 +2634,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2641,6 +2656,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2662,6 +2678,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2683,6 +2700,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2704,6 +2722,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2725,6 +2744,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2736,7 +2756,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-live-row.tsx:371"
+            "source": "src/features/channel/components/following-live-row.tsx:451"
         },
         "channel-following-live-restricted": {
             "scope": "channel",
@@ -2746,6 +2766,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2757,7 +2778,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-live-row.tsx:381"
+            "source": "src/features/channel/components/following-live-row.tsx:461"
         },
         "channel-following-lives-toggle": {
             "scope": "channel",
@@ -2767,6 +2788,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2788,6 +2810,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2809,6 +2832,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2833,6 +2857,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2854,6 +2879,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2875,6 +2901,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2899,6 +2926,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2920,6 +2948,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2941,6 +2970,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2962,6 +2992,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -2983,6 +3014,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3004,6 +3036,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3025,6 +3058,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3046,6 +3080,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3067,6 +3102,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3088,6 +3124,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3109,6 +3146,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3130,6 +3168,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3151,6 +3190,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3172,6 +3212,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3193,6 +3234,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3204,7 +3246,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-live-now.tsx:270"
+            "source": "src/features/channel/components/channel-live-now.tsx:275"
         },
         "channel-live-card-restricted": {
             "scope": "channel",
@@ -3214,6 +3256,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3225,7 +3268,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-live-now.tsx:258"
+            "source": "src/features/channel/components/channel-live-now.tsx:263"
         },
         "channel-live-channel-link": {
             "scope": "channel",
@@ -3235,6 +3278,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3246,7 +3290,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-live-now.tsx:117"
+            "source": "src/features/channel/components/channel-live-now.tsx:122"
         },
         "channel-live-filter": {
             "scope": "channel",
@@ -3256,6 +3300,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3277,6 +3322,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3301,6 +3347,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3322,6 +3369,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3333,7 +3381,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-live-now.tsx:158"
+            "source": "src/features/channel/components/channel-live-now.tsx:163"
         },
         "channel-live-title-link": {
             "scope": "channel",
@@ -3343,6 +3391,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3354,7 +3403,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-live-now.tsx:151"
+            "source": "src/features/channel/components/channel-live-now.tsx:156"
         },
         "channel-manager-invitation-accept": {
             "scope": "channel",
@@ -3364,6 +3413,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3385,6 +3435,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3406,6 +3457,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3427,6 +3479,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3448,6 +3501,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3469,6 +3523,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3490,6 +3545,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3511,6 +3567,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3532,6 +3589,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3553,6 +3611,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3574,6 +3633,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3595,6 +3655,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3616,6 +3677,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3637,6 +3699,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3658,6 +3721,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3679,6 +3743,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3700,6 +3765,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3721,6 +3787,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3742,6 +3809,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3763,6 +3831,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3784,6 +3853,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3805,6 +3875,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3826,6 +3897,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3847,6 +3919,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3868,6 +3941,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3889,6 +3963,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3910,6 +3985,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3931,6 +4007,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3952,6 +4029,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3973,6 +4051,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -3994,6 +4073,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4015,6 +4095,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4036,6 +4117,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4057,6 +4139,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4078,6 +4161,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4099,6 +4183,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4120,6 +4205,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4141,6 +4227,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4162,6 +4249,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4183,6 +4271,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4204,6 +4293,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4225,6 +4315,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4246,6 +4337,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4267,6 +4359,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4291,6 +4384,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4312,6 +4406,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4333,6 +4428,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4354,6 +4450,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4375,6 +4472,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4396,6 +4494,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4417,6 +4516,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4438,6 +4538,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4459,6 +4560,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4480,6 +4582,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4501,6 +4604,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4522,6 +4626,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4543,6 +4648,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4564,6 +4670,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4585,6 +4692,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4606,6 +4714,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4627,6 +4736,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4648,6 +4758,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4669,6 +4780,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4690,6 +4802,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4711,6 +4824,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4732,6 +4846,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4753,6 +4868,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4774,6 +4890,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4795,6 +4912,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4816,6 +4934,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4837,6 +4956,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4858,6 +4978,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4879,6 +5000,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4900,6 +5022,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4921,6 +5044,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4942,6 +5066,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4966,6 +5091,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -4987,6 +5113,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5008,6 +5135,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5029,6 +5157,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5050,6 +5179,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5071,6 +5201,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5092,6 +5223,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5113,6 +5245,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5134,6 +5267,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5155,6 +5289,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5176,6 +5311,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5197,6 +5333,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5218,6 +5355,7 @@
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
                 "/[slug]/membership/[[...tier]]",
                 "/follow-requests",
                 "/following",
@@ -5391,6 +5529,970 @@
                 "/[slug]/earnings-report/[dateTs]"
             ],
             "source": "src/features/earnings/components/earnings-report-view.tsx:123"
+        },
+        "event-age-confirm": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-age-gate.tsx:91"
+        },
+        "event-age-decline": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-age-gate.tsx:100"
+        },
+        "event-age-gate": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-age-gate.tsx:53"
+        },
+        "event-analytics": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-analytics-cards.tsx:65"
+        },
+        "event-back": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-top-bar.tsx:60"
+        },
+        "event-banned": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-state-screens.tsx:186"
+        },
+        "event-banned-discover": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-state-screens.tsx:195"
+        },
+        "event-banned-home": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-state-screens.tsx:203"
+        },
+        "event-banned-notice": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-state-screens.tsx:174"
+        },
+        "event-become-member": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-unlock-actions.tsx:94"
+        },
+        "event-card-retry": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-card-state.tsx:120"
+        },
+        "event-copy-code": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-analytics-cards.tsx:182"
+        },
+        "event-description-toggle": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-description-card.tsx:56"
+        },
+        "event-ended-rail": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-ended-rail.tsx:39"
+        },
+        "event-ended-rail-home": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-ended-rail.tsx:82"
+        },
+        "event-ended-rail-live": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "companions": [
+                "data-channel-slug"
+            ],
+            "source": "src/features/event/components/event-ended-rail.tsx:113"
+        },
+        "event-error": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-state-screens.tsx:118"
+        },
+        "event-error-retry": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-state-screens.tsx:131"
+        },
+        "event-gift-animation": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-gift-animation.tsx:105"
+        },
+        "event-gift-float": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-screen.tsx:521"
+        },
+        "event-gift-float-item": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "companions": [
+                "data-card-id"
+            ],
+            "source": "src/features/event/components/event-gift-float.tsx:56"
+        },
+        "event-gift-panel": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-screen.tsx:614"
+        },
+        "event-gift-tray": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-screen.tsx:590"
+        },
+        "event-host": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-host-card.tsx:52"
+        },
+        "event-host-info": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-host-info-card.tsx:47"
+        },
+        "event-host-live": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-host-live-screen.tsx:127"
+        },
+        "event-host-live-app": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-host-live-screen.tsx:133"
+        },
+        "event-interactive-revenue": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-revenue-summary.tsx:154"
+        },
+        "event-invitation": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-invitation-dialog.tsx:42"
+        },
+        "event-invitation-close": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-invitation-dialog.tsx:91"
+        },
+        "event-invitation-stores": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-invitation-dialog.tsx:85"
+        },
+        "event-kicked-out": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:446"
+        },
+        "event-kicked-out-home": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:452"
+        },
+        "event-live-revenue": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-revenue-summary.tsx:115"
+        },
+        "event-locked": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:385"
+        },
+        "event-locked-get-app": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:399"
+        },
+        "event-maintenance-fee": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-analytics-cards.tsx:232"
+        },
+        "event-maintenance-fee-info": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-analytics-cards.tsx:282"
+        },
+        "event-membership-tile": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-membership-tile.tsx:67"
+        },
+        "event-new-members": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-analytics-cards.tsx:300"
+        },
+        "event-not-found": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-state-screens.tsx:68"
+        },
+        "event-off-air": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:305"
+        },
+        "event-order-link": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-order-row.tsx:101"
+        },
+        "event-out-of-star": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-out-of-star-dialog.tsx:55"
+        },
+        "event-out-of-star-get": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-out-of-star-dialog.tsx:62"
+        },
+        "event-out-of-star-leave": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-out-of-star-dialog.tsx:81"
+        },
+        "event-out-of-star-premium": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-out-of-star-dialog.tsx:72"
+        },
+        "event-platform-restricted": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:248"
+        },
+        "event-premium-nudge": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-premium-nudge.tsx:34"
+        },
+        "event-premium-nudge-close": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-premium-nudge.tsx:42"
+        },
+        "event-premium-nudge-dismiss": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-premium-nudge.tsx:72"
+        },
+        "event-premium-nudge-subscribe": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-premium-nudge.tsx:62"
+        },
+        "event-report-back": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-report-screen.tsx:148"
+        },
+        "event-report-panel": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-orders-panel.tsx:69"
+        },
+        "event-report-search": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-orders-panel.tsx:126"
+        },
+        "event-report-tab": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "companions": [
+                "data-option-value"
+            ],
+            "source": "src/features/event/components/event-orders-panel.tsx:109"
+        },
+        "event-restricted-get-app": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:255"
+        },
+        "event-revenue-summary": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-revenue-summary.tsx:88"
+        },
+        "event-share": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-actions.tsx:69"
+        },
+        "event-share-bar": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-share-button.tsx:45"
+        },
+        "event-sign-in": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:485"
+        },
+        "event-sign-in-action": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:492"
+        },
+        "event-status": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-details-card.tsx:50"
+        },
+        "event-studio": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-screen.tsx:333"
+        },
+        "event-studio-ad": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-ad.tsx:55"
+        },
+        "event-studio-app": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chrome.tsx:281"
+        },
+        "event-studio-app-dialog": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chrome.tsx:294"
+        },
+        "event-studio-arrival": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:976"
+        },
+        "event-studio-back": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-screen.tsx:374"
+        },
+        "event-studio-ccu": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:833"
+        },
+        "event-studio-channel": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-screen.tsx:390"
+        },
+        "event-studio-channel-link": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chrome.tsx:150"
+        },
+        "event-studio-chat": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:793"
+        },
+        "event-studio-chat-collapse": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:846"
+        },
+        "event-studio-chat-ended": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1065"
+        },
+        "event-studio-chat-error": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1148"
+        },
+        "event-studio-chat-expand": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1201"
+        },
+        "event-studio-chat-input": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1089"
+        },
+        "event-studio-chat-jump": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1041"
+        },
+        "event-studio-chat-list": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1012"
+        },
+        "event-studio-chat-notices": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:361"
+        },
+        "event-studio-chat-send": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1123"
+        },
+        "event-studio-chat-strip": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1192"
+        },
+        "event-studio-chat-strip-ccu": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1244"
+        },
+        "event-studio-copy-link": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:220"
+        },
+        "event-studio-emoji": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:673"
+        },
+        "event-studio-emoji-panel": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:649"
+        },
+        "event-studio-fee-error": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:992"
+        },
+        "event-studio-fee-notice": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:998"
+        },
+        "event-studio-follow": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:292"
+        },
+        "event-studio-get-membership": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-upsell.tsx:80"
+        },
+        "event-studio-get-premium": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-upsell.tsx:91"
+        },
+        "event-studio-leaderboard": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:226"
+        },
+        "event-studio-leaderboard-empty": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:207"
+        },
+        "event-studio-leaderboard-loading": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:187"
+        },
+        "event-studio-leaderboard-me": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:261"
+        },
+        "event-studio-more": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:129"
+        },
+        "event-studio-more-panel": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:142"
+        },
+        "event-studio-muted": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:954"
+        },
+        "event-studio-pinned": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:893"
+        },
+        "event-studio-pinned-close": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:933"
+        },
+        "event-studio-report": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:243"
+        },
+        "event-studio-seat": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "companions": [
+                "data-publisher-id"
+            ],
+            "source": "src/features/event/components/event-studio-seats.tsx:118"
+        },
+        "event-studio-seats": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-seats.tsx:420"
+        },
+        "event-studio-star": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chrome.tsx:268"
+        },
+        "event-studio-toolbar": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-screen.tsx:425"
+        },
+        "event-studio-unmute": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-player.tsx:238"
+        },
+        "event-sustained-viewers-info": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-revenue-summary.tsx:193"
+        },
+        "event-total-revenue": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-analytics-cards.tsx:393"
+        },
+        "event-total-revenue-retry": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-analytics-cards.tsx:448"
+        },
+        "event-unknown": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:416"
+        },
+        "event-unknown-get-app": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:422"
+        },
+        "event-unlock": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-unlock-actions.tsx:122"
+        },
+        "event-unlock-confirm": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-unlock-actions.tsx:150"
+        },
+        "event-upcoming": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:265"
+        },
+        "event-upcoming-get-app": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:271"
+        },
+        "event-visit-space": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:319"
+        },
+        "event-watch": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:219"
+        },
+        "event-watch-get-app": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:226"
         },
         "gift-code-clear": {
             "scope": "gift-code",
@@ -7200,7 +8302,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:189"
+            "source": "src/features/navigation/components/page-back-bar.tsx:190"
         },
         "navigation-breadcrumb-item": {
             "scope": "navigation",
@@ -7237,7 +8339,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:198"
+            "source": "src/features/navigation/components/page-back-bar.tsx:199"
         },
         "navigation-breadcrumb-link": {
             "scope": "navigation",
@@ -7274,7 +8376,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:220"
+            "source": "src/features/navigation/components/page-back-bar.tsx:221"
         },
         "navigation-end-rail": {
             "scope": "navigation",
@@ -8846,7 +9948,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:130"
+            "source": "src/features/navigation/components/page-back-bar.tsx:131"
         },
         "navigation-tab-bar": {
             "scope": "navigation",
@@ -11908,6 +13010,38 @@
             ],
             "parts": [
                 "digit"
+            ]
+        },
+        "src/features/event/components/event-gift-panel.tsx": {
+            "accepts": [
+                "EventGiftPanel"
+            ],
+            "parts": [
+                "close",
+                "empty",
+                "item",
+                "list",
+                "option",
+                "tab",
+                "trigger"
+            ]
+        },
+        "src/features/event/components/event-gift-tray.tsx": {
+            "accepts": [
+                "EventGiftTray"
+            ],
+            "parts": [
+                "item",
+                "trigger"
+            ]
+        },
+        "src/features/event/components/event-report-card.tsx": {
+            "accepts": [
+                "EventReportCard"
+            ],
+            "parts": [
+                "hint",
+                "trigger"
             ]
         },
         "src/features/my-wallet/components/total-balance-card.tsx": {

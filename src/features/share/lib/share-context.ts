@@ -59,3 +59,43 @@ export function spaceShareContext(
         sourceScreen,
     }
 }
+
+/**
+ * A **live event** as a share context.
+ *
+ * ## No legacy twin, and that is the interesting part
+ *
+ * `live` has been in the `content_type` enum since the contract landed (TEV-1511) and legacy has
+ * never built a context for it: its event page shares by copying `shareable_url` to the clipboard,
+ * so every live shared from the website has been attributed as a bare `v1/shorten/` link. This is
+ * the first caller, which means there is no shipped behaviour to copy and one open question.
+ *
+ * ## `content_id` — **B106**
+ *
+ * A space sends its `id`, a post sends its `id`, and an event has two candidate identities: the
+ * opaque `id` and the `code` that every URL, deep link and API path is built from. `id` is sent when
+ * the payload carries one, on the grounds that the other two content types send an id and
+ * consistency is the better guess; `code` is the fallback, because a context that names the content
+ * imperfectly still attributes the share, while `null` sends it down the unattributed path — and the
+ * event page is one of the two surfaces where a share is most likely to be the *first* time anybody
+ * hears about the creator.
+ *
+ * `null` only when the event has neither, which `normalizeEvent` already refuses to produce.
+ */
+export function liveShareContext(
+    event: { id?: string | number | null; code?: string | null },
+    creatorSlug?: string | null,
+    sourceScreen = 'live',
+): ShareContext | null {
+    const contentId =
+        event.id === null || event.id === undefined || event.id === ''
+            ? (event.code ?? null)
+            : String(event.id)
+    if (!contentId) return null
+    return {
+        contentType: 'live',
+        contentId,
+        creatorId: creatorSlug ?? null,
+        sourceScreen,
+    }
+}

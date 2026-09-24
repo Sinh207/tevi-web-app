@@ -71,6 +71,56 @@ const CDN = 'https://static.tevi.dev'
  */
 const SOURCES = [
     {
+        name: 'leaderboard-empty',
+        out: 'event/leaderboard-empty.webp',
+        url: `${CDN}/web/web-app/live/futuristic-leaderboard-star.png`,
+        /**
+         * The Live studio's gift leaderboard before anybody has given anything.
+         *
+         * 134×74 is the box legacy draws it at (`NoData`), and the only one — the chat column is
+         * a fixed 390, so there is no responsive case to size for.
+         */
+        box: { width: 134, height: 74 },
+        scale: 2,
+    },
+    {
+        name: 'live-get-membership',
+        out: 'event/get-membership.webp',
+        url: `${CDN}/web/web-app/live/icon-diamond.svg`,
+        /**
+         * The diamond on the studio's *Get Membership* button, in the channel plate
+         * (`channelTopBar/btnPremiumOrMembership`, drawn 16×16).
+         *
+         * **2.1 MB** of base64 PNG for a 16px mark — the same Figma image-layer export as
+         * `live-membership` below. `scale: 3`: a small square icon on a DPR-3 phone.
+         */
+        box: { width: 16, height: 16 },
+        scale: 3,
+    },
+    {
+        name: 'live-get-premium',
+        out: 'event/get-premium.webp',
+        url: `${CDN}/web/web-app/live/icon-premium.svg`,
+        /** The Premium mark on the same button's other half. **2.5 MB** upstream, drawn 16×16. */
+        box: { width: 16, height: 16 },
+        scale: 3,
+    },
+    {
+        name: 'live-membership',
+        out: 'event/membership-king.webp',
+        url: `${CDN}/web/web-app/live/icon-king.svg`,
+        /**
+         * The crown on the Live studio's **Membership** tile, beside the gift tray
+         * (`liveSession/.../bottomPanel/membership`, drawn 40×40).
+         *
+         * **1.6 MB** — a Figma image layer exported as SVG, one base64 PNG inside a 40px `<rect>` —
+         * so the same trade as `grow-your-fans`: `next/image` would pass it through untouched. A
+         * small square icon, so `scale: 3` for a DPR-3 phone, which is still a few KB.
+         */
+        box: { width: 40, height: 40 },
+        scale: 3,
+    },
+    {
         name: 'grow-your-fans',
         out: 'campaign/grow-your-fans.webp',
         url: `${CDN}/web/web-app/campaign/growth-your-fanbae/logo-gyf.svg`,
@@ -259,6 +309,43 @@ const SOURCES = [
          * `scale: 2` lands exactly on the source's 380×432 with no clamping.
          */
         box: { width: 190, height: 216 },
+        scale: 2,
+    },
+    /*
+     * The **No data** panel on a creator's event report — the three cards (revenue summary,
+     * maintenance fee, live analytics) and the per-order lists all fall back to it.
+     *
+     * Legacy draws this file at `width={120} height={30}` with `style={{ width: 120, height: auto }}`
+     * — so the declared height is meaningless (the source is 228×241, nothing like 8:1) and `auto` is
+     * what actually governs. The box below is legacy's real drawn size: 120 wide, and 127 tall, which
+     * is 120 at the source's own 0.946 ratio. Declaring the nonsense 30 would reserve a box the image
+     * overflows on every load.
+     *
+     * `scale: 2` is what the 228-wide source can just about serve for a 120 box (1.9×); the clamp
+     * does the deciding rather than a number pretending otherwise.
+     */
+    /*
+     * **404 – Live Not Found**, the wall behind a dead event link. Legacy's `images/not-found.svg`,
+     * drawn at 153×200 (`containers/event/components/noData`).
+     *
+     * Another Figma image-layer-as-SVG — **190 KB of base64 PNG** to fill a 153px slot — so the same
+     * trade as `channel-not-found` above: `next/image` passes a remote SVG through untouched, and
+     * this one is a fifth of a megabyte to say a link is broken.
+     *
+     * The box is legacy's own draw; the source is 154×200, so `scale: 2` clamps to it.
+     */
+    {
+        name: 'event-not-found',
+        out: 'event/not-found.webp',
+        url: `${CDN}/web/web-app/images/not-found.svg`,
+        box: { width: 153, height: 200 },
+        scale: 2,
+    },
+    {
+        name: 'event-no-data',
+        out: 'event/no-data.webp',
+        url: `${CDN}/web/web-app/images/no-data.png`,
+        box: { width: 120, height: 127 },
         scale: 2,
     },
     /*
