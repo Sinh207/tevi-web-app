@@ -347,7 +347,12 @@ export function PostComposerDialog({
                     {screen === 'compose' ? (
                         <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
                             <HeaderAction
-                                icon="folder"
+                                /*
+                                 * Legacy's own glyph: a stacked rectangle with a play triangle —
+                                 * a *collection*, not a folder. `folder` was the first guess and
+                                 * says something else about what the button opens.
+                                 */
+                                icon="history-rectangle-play"
                                 label={t('post_collection_title')}
                                 disabled={create.isPending}
                                 onPress={() => setScreen('collections')}

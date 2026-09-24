@@ -285,7 +285,6 @@ export function PostCollectionScreen({
             selected={draft.collectionIds}
             onChange={ids => onChange({ collectionIds: ids })}
             disabled={disabled}
-            alwaysOpen
             testId={testId}
         />
     )

@@ -12269,9 +12269,11 @@
                 "PostCollectionPicker"
             ],
             "parts": [
+                "cancel",
                 "input",
                 "message",
                 "option",
+                "panel",
                 "retry",
                 "submit",
                 "trigger"

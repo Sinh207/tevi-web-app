@@ -1,199 +1,229 @@
 'use client'
 
 import { useTranslation } from '@shared/i18n/use-translation'
+import { formatCompactCount } from '@shared/lib/format-count'
 import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
-import { Checkbox } from '@shared/ui/checkbox'
+import { Icon } from '@shared/ui/icon'
 import { Skeleton } from '@shared/ui/skeleton'
 import { useState } from 'react'
 import { useCollections } from '../hooks/use-collections'
 
 /**
- * Which of the creator's collections a new post is filed into.
+ * *Select collection* — which of the creator's collections a new post is filed into.
  *
- * ## It is a disclosure, not a dialog
+ * ## A button per row, not a checkbox
  *
- * Legacy opens this as a modal over the composer, which is a modal. This app's dialog primitive
- * draws one layer, and stacking two puts the second one's backdrop over the form the author is
- * mid-way through — so the picker expands in place, the same call `PostSettingsPanel` makes about
- * legacy's other three modals.
+ * Legacy draws each row as **name over post count**, with an outlined pill on the trailing edge
+ * that reads *Add* or *Remove*. That was built here as a checkbox list first, which is a different
+ * statement: a checkbox says "tick the ones you want and confirm", a button says "this one is in,
+ * press to take it out". Legacy's is the one that matches what actually happens — the selection is
+ * applied on publish, row by row, with no confirm step of its own.
  *
- * Collapsed by default and the query is disabled until it opens, so a composer nobody files from
- * costs no request.
+ * ## Creating one is its own screen
  *
- * ## Creating one is inline, because the alternative is a third layer
- *
- * Legacy's *Add collection* is its own modal on top of the picker modal. Here a name field appears
- * under the list; it is the same two controls without the stack.
+ * Legacy opens *Create new collection* as a second dialog with a label, a placeholder and a save
+ * button. Here it is a screen inside the same frame (this app's dialog draws one layer), but it is
+ * still a **screen** rather than the inline field this had at first: naming a collection is a step,
+ * and a field wedged under a list reads as an afterthought.
  */
 export function PostCollectionPicker({
     selected,
     onChange,
     disabled = false,
-    alwaysOpen = false,
     testId,
 }: {
     selected: string[]
     onChange: (ids: string[]) => void
     disabled?: boolean
-    /**
-     * Drawn expanded, with no disclosure control of its own.
-     *
-     * For the composer's **collection screen**, which is already a screen about collections — a
-     * button there saying *Add to a collection* would be asking twice. The disclosure shape stays
-     * for anywhere this is one row among others.
-     */
-    alwaysOpen?: boolean
     testId?: string
 }) {
-    const { t } = useTranslation()
-    const [expanded, setExpanded] = useState(false)
-    const open = alwaysOpen || expanded
+    const { t, currentLanguage } = useTranslation()
+    const [creating, setCreating] = useState(false)
     const [name, setName] = useState('')
 
-    const collections = useCollections({ enabled: open })
+    const collections = useCollections({ enabled: true })
 
     function toggle(id: string) {
         onChange(selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id])
     }
 
-    async function createAndSelect() {
+    async function create() {
         const trimmed = name.trim()
         if (!trimmed || collections.isCreating) return
         const created = await collections.create(trimmed)
         setName('')
+        setCreating(false)
         /*
          * Selected on creation. A creator who has just named a collection from inside a composer
-         * means this post to go in it — making them tick it afterwards is a step with no decision
-         * in it. A create that answers no body simply leaves nothing to tick.
+         * means this post to go in it; making them press *Add* afterwards is a step with no
+         * decision in it. A create that answers no body leaves nothing to select.
          */
         if (created?.id) onChange([...selected, created.id])
     }
 
+    if (creating) {
+        return (
+            <div data-testid={subTestId(testId, 'panel')} className="flex flex-col gap-2">
+                <label htmlFor={`${testId}-name`} className="type-body-strong text-(--text-title)">
+                    {t('post_collection_name_label')}
+                </label>
+                <input
+                    id={`${testId}-name`}
+                    value={name}
+                    // biome-ignore lint/a11y/noAutofocus: the screen is opened by pressing "Create new collection", so the field is the reason the reader is here.
+                    autoFocus
+                    disabled={collections.isCreating}
+                    placeholder={t('post_collection_name_placeholder')}
+                    data-testid={subTestId(testId, 'input')}
+                    onChange={event => setName(event.target.value)}
+                    onKeyDown={event => {
+                        if (event.key !== 'Enter') return
+                        // Enter inside the composer would otherwise publish the post.
+                        event.preventDefault()
+                        void create()
+                    }}
+                    className="type-body-default rounded-(--radius-sm) border border-(--input-border) bg-transparent px-3 py-2 text-(--text-title) placeholder:text-(--text-placeholder)"
+                />
+                <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                        variant="secondary"
+                        size="medium"
+                        disabled={collections.isCreating}
+                        onClick={() => {
+                            setName('')
+                            setCreating(false)
+                        }}
+                        data-testid={subTestId(testId, 'cancel')}
+                    >
+                        {t('common_cancel')}
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="medium"
+                        disabled={!name.trim() || collections.isCreating}
+                        onClick={() => void create()}
+                        data-testid={subTestId(testId, 'submit')}
+                    >
+                        {t('post_collection_create')}
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
     return (
-        <div data-testid={testId} className="flex flex-col gap-2">
-            {alwaysOpen ? null : (
-                <button
-                    type="button"
-                    data-testid={subTestId(testId, 'trigger')}
-                    aria-expanded={open}
-                    disabled={disabled}
-                    onClick={() => setExpanded(current => !current)}
-                    className="type-dense-emphasis flex items-center justify-between text-(--text-title)"
-                >
-                    <span>{t('post_collection_title')}</span>
-                    <span className="type-caption-meta text-(--text-placeholder)">
-                        {selected.length > 0
-                            ? t('post_collection_selected', { count: selected.length })
-                            : t('post_collection_none')}
-                    </span>
-                </button>
+        <div data-testid={testId} className="flex flex-col">
+            {collections.isLoading ? (
+                <div className="flex flex-col gap-3 py-2" aria-busy="true">
+                    <Skeleton h={20} className="w-2/3 rounded-(--radius-sm)" />
+                    <Skeleton h={20} className="w-1/2 rounded-(--radius-sm)" />
+                </div>
+            ) : collections.isError ? (
+                <div className="flex items-center gap-3 py-3">
+                    <p className="type-dense-default text-(--text-subtitle)">
+                        {t('post_collection_error')}
+                    </p>
+                    <Button
+                        variant="secondary"
+                        size="small"
+                        onClick={() => collections.refetch()}
+                        data-testid={subTestId(testId, 'retry')}
+                    >
+                        {t('common_retry')}
+                    </Button>
+                </div>
+            ) : (
+                <>
+                    {collections.collections.map(collection => {
+                        const inside = selected.includes(collection.id)
+                        return (
+                            <div
+                                key={collection.id}
+                                data-option-value={collection.id}
+                                className="flex items-center justify-between gap-3 py-2"
+                            >
+                                <span className="flex min-w-0 flex-col gap-1">
+                                    <span className="type-body-strong truncate text-(--text-title)">
+                                        {collection.name}
+                                    </span>
+                                    {/*
+                                     * The count, with legacy's leading dot. Drawn only above zero —
+                                     * an empty collection has nothing to count, and "0 posts" under
+                                     * its name is a statement nobody needs.
+                                     */}
+                                    {collection.post_count > 0 ? (
+                                        <span className="type-caption-meta flex items-center gap-1 text-(--text-placeholder)">
+                                            <span
+                                                aria-hidden="true"
+                                                className="size-1 rounded-full bg-current"
+                                            />
+                                            {t('post_collection_count', {
+                                                count: collection.post_count,
+                                                formatted: formatCompactCount(
+                                                    collection.post_count,
+                                                    currentLanguage,
+                                                ),
+                                            })}
+                                        </span>
+                                    ) : null}
+                                </span>
+
+                                {/*
+                                 * Legacy's outlined pill, and its two words. It says what pressing
+                                 * does rather than what the state is — which is the difference
+                                 * between this and the checkbox that was here before.
+                                 */}
+                                <Button
+                                    variant="secondary"
+                                    size="small"
+                                    disabled={disabled}
+                                    onClick={() => toggle(collection.id)}
+                                    data-testid={subTestId(testId, 'option')}
+                                    className="flex-none"
+                                >
+                                    {inside
+                                        ? t('post_collection_remove')
+                                        : t('post_collection_add')}
+                                </Button>
+                            </div>
+                        )
+                    })}
+
+                    {collections.collections.length === 0 ? (
+                        <p
+                            data-testid={subTestId(testId, 'message')}
+                            className="type-dense-default py-3 text-(--text-placeholder)"
+                        >
+                            {t('post_collection_empty')}
+                        </p>
+                    ) : null}
+
+                    {/*
+                     * Said plainly rather than paged over: the picker asks for one page, and a
+                     * creator with more collections would otherwise scroll a list that never grows.
+                     * It becomes an infinite query when a collections screen exists to justify one.
+                     */}
+                    {collections.hasMore ? (
+                        <p className="type-caption-meta py-2 text-(--text-placeholder)">
+                            {t('post_collection_more')}
+                        </p>
+                    ) : null}
+                </>
             )}
 
-            {open ? (
-                <div className="flex flex-col gap-2">
-                    {collections.isLoading ? (
-                        <div className="flex flex-col gap-2" aria-busy="true">
-                            <Skeleton h={20} className="w-2/3 rounded-(--radius-sm)" />
-                            <Skeleton h={20} className="w-1/2 rounded-(--radius-sm)" />
-                        </div>
-                    ) : collections.isError ? (
-                        <div className="flex items-center gap-2">
-                            <p className="type-dense-default text-(--text-subtitle)">
-                                {t('post_collection_error')}
-                            </p>
-                            <Button
-                                variant="secondary"
-                                size="small"
-                                onClick={() => collections.refetch()}
-                                data-testid={subTestId(testId, 'retry')}
-                            >
-                                {t('common_retry')}
-                            </Button>
-                        </div>
-                    ) : (
-                        <>
-                            {/*
-                             * `Checkbox` **is** a `<label>` and its own header says never to nest it
-                             * in another one — so the copy is a sibling `<label htmlFor>` rather
-                             * than a wrapper. `Radio` takes an `as` prop and could have been
-                             * wrapped; this one cannot, and the two are not interchangeable.
-                             */}
-                            {collections.collections.map(collection => {
-                                const inputId = `${testId ?? 'collection'}-${collection.id}`
-                                return (
-                                    <div
-                                        key={collection.id}
-                                        className="flex items-center gap-2"
-                                        data-option-value={collection.id}
-                                    >
-                                        <Checkbox
-                                            id={inputId}
-                                            checked={selected.includes(collection.id)}
-                                            disabled={disabled}
-                                            onChange={() => toggle(collection.id)}
-                                            data-testid={subTestId(testId, 'option')}
-                                        />
-                                        <label
-                                            htmlFor={inputId}
-                                            className="type-dense-default min-w-0 cursor-pointer truncate text-(--text-title)"
-                                        >
-                                            {collection.name}
-                                        </label>
-                                    </div>
-                                )
-                            })}
-
-                            {collections.collections.length === 0 ? (
-                                <p
-                                    data-testid={subTestId(testId, 'message')}
-                                    className="type-dense-default text-(--text-placeholder)"
-                                >
-                                    {t('post_collection_empty')}
-                                </p>
-                            ) : null}
-
-                            {/*
-                             * Said plainly rather than paged over: the picker asks for one page, and
-                             * a creator with more collections than that would otherwise scroll a
-                             * list that never grows. It becomes an infinite query when a collections
-                             * screen exists to justify one.
-                             */}
-                            {collections.hasMore ? (
-                                <p className="type-caption-meta text-(--text-placeholder)">
-                                    {t('post_collection_more')}
-                                </p>
-                            ) : null}
-                        </>
-                    )}
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            value={name}
-                            disabled={disabled || collections.isCreating}
-                            placeholder={t('post_collection_new_placeholder')}
-                            data-testid={subTestId(testId, 'input')}
-                            onChange={event => setName(event.target.value)}
-                            onKeyDown={event => {
-                                if (event.key !== 'Enter') return
-                                // Enter inside a composer would otherwise submit the post.
-                                event.preventDefault()
-                                void createAndSelect()
-                            }}
-                            className="type-dense-default min-w-0 flex-1 rounded-(--radius-sm) border border-(--input-border) bg-transparent px-2 py-1 text-(--text-title) placeholder:text-(--text-placeholder)"
-                        />
-                        <Button
-                            variant="secondary"
-                            size="small"
-                            disabled={!name.trim() || collections.isCreating || disabled}
-                            onClick={() => void createAndSelect()}
-                            data-testid={subTestId(testId, 'submit')}
-                        >
-                            {t('post_collection_create')}
-                        </Button>
-                    </div>
-                </div>
-            ) : null}
+            {/* Legacy's own footer button, glyph and all. */}
+            <Button
+                variant="ghost"
+                size="medium"
+                disabled={disabled}
+                onClick={() => setCreating(true)}
+                data-testid={subTestId(testId, 'trigger')}
+                className="mt-2 self-start"
+            >
+                <Icon name="plus" size={20} />
+                {t('post_collection_create_new')}
+            </Button>
         </div>
     )
 }

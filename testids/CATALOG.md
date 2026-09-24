@@ -1046,7 +1046,7 @@ name; you need it to know the element exists.
 | `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
-| `PostCollectionPicker` | `src/features/post/components/post-collection-picker.tsx` | `-input` `-message` `-option` `-retry` `-submit` `-trigger` |
+| `PostCollectionPicker` | `src/features/post/components/post-collection-picker.tsx` | `-cancel` `-input` `-message` `-option` `-panel` `-retry` `-submit` `-trigger` |
 | `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-clear` `-error` `-field` `-input` `-item` `-list` `-remove` `-slide` `-trigger` |
 | `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-group` `-header` `-label-data` `-list` `-panel` `-prefix` `-row` `-submit` `-suffix` `-trigger` |
 | `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
