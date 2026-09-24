@@ -54,7 +54,7 @@ describe('emptyPostDraft', () => {
         const d = emptyPostDraft()
         expect(d.replyAllowedUser).toBe('FOLLOWERS')
         expect(d.replyAllowedLink).toBe(true)
-        expect(d.audience).toBe('everyone')
+        expect(d.audience).toBe('EVERYONE')
         expect(d.markedNsfw).toBe(false)
     })
 })
@@ -126,19 +126,19 @@ describe('postDraftProblem', () => {
      */
     it('refuses a non-positive price on a members-only post', () => {
         expect(
-            postDraftProblem(draft({ text: 'x', audience: 'stargazers', price: 0 }), LIMITS),
+            postDraftProblem(draft({ text: 'x', audience: 'STARGAZERS', price: 0 }), LIMITS),
         ).toBe('bad-price')
         expect(
-            postDraftProblem(draft({ text: 'x', audience: 'stargazers', price: -5 }), LIMITS),
+            postDraftProblem(draft({ text: 'x', audience: 'STARGAZERS', price: -5 }), LIMITS),
         ).toBe('bad-price')
         expect(
-            postDraftProblem(draft({ text: 'x', audience: 'stargazers', price: 5 }), LIMITS),
+            postDraftProblem(draft({ text: 'x', audience: 'STARGAZERS', price: 5 }), LIMITS),
         ).toBe(null)
     })
 
     /** A price on a public post is not a price — the field is ignored, so it cannot be wrong. */
     it('ignores a price on a public post', () => {
-        expect(postDraftProblem(draft({ text: 'x', audience: 'everyone', price: 0 }), LIMITS)).toBe(
+        expect(postDraftProblem(draft({ text: 'x', audience: 'EVERYONE', price: 0 }), LIMITS)).toBe(
             null,
         )
     })
@@ -174,34 +174,34 @@ describe('buildPostBody — where legacy web and iOS disagree', () => {
      * reaches nobody but its author — not the public, and no membership, because it names none.
      */
     it('publishes a members-only post with no tier and no price as public', () => {
-        const body = buildPostBody(draft({ text: 'x', audience: 'stargazers' }), UPLOADED)
-        expect(body.viewer).toBe('everyone')
+        const body = buildPostBody(draft({ text: 'x', audience: 'STARGAZERS' }), UPLOADED)
+        expect(body.viewer).toBe('EVERYONE')
         expect('required_packages' in body).toBe(false)
         expect('price' in body).toBe(false)
     })
 
     it('keeps it members-only once a tier is chosen', () => {
         const body = buildPostBody(
-            draft({ text: 'x', audience: 'stargazers', requiredPackages: ['tier-1'] }),
+            draft({ text: 'x', audience: 'STARGAZERS', requiredPackages: ['tier-1'] }),
             UPLOADED,
         )
-        expect(body.viewer).toBe('stargazers')
+        expect(body.viewer).toBe('STARGAZERS')
         expect(body.required_packages).toEqual(['tier-1'])
     })
 
     it('keeps it members-only once a price is set, and names the currency', () => {
         const body = buildPostBody(
-            draft({ text: 'x', audience: 'stargazers', price: 20 }),
+            draft({ text: 'x', audience: 'STARGAZERS', price: 20 }),
             UPLOADED,
         )
-        expect(body.viewer).toBe('stargazers')
+        expect(body.viewer).toBe('STARGAZERS')
         expect(body.price).toBe(20)
         expect(body.price_currency).toBe('TVS')
     })
 
     it('sends no price at all on a public post', () => {
         const body = buildPostBody(draft({ text: 'x', price: 20 }), UPLOADED)
-        expect(body.viewer).toBe('everyone')
+        expect(body.viewer).toBe('EVERYONE')
         expect('price' in body).toBe(false)
         expect('price_currency' in body).toBe(false)
     })
@@ -212,7 +212,7 @@ describe('buildPostBody — where legacy web and iOS disagree', () => {
      */
     it('sends a cover only for a paid video post', () => {
         const cover = { uri: 'https://cdn.invalid/cover.jpg', w: 16, h: 9 }
-        const paidVideo = draft({ text: 'x', audience: 'stargazers', price: 5, video: video() })
+        const paidVideo = draft({ text: 'x', audience: 'STARGAZERS', price: 5, video: video() })
 
         expect(
             buildPostBody(paidVideo, { ...UPLOADED, videoId: 'v', coverImage: cover }).cover_image,
@@ -229,7 +229,7 @@ describe('buildPostBody — where legacy web and iOS disagree', () => {
         // Paid, but no video: no cover either.
         expect(
             'cover_image' in
-                buildPostBody(draft({ text: 'x', audience: 'stargazers', price: 5 }), {
+                buildPostBody(draft({ text: 'x', audience: 'STARGAZERS', price: 5 }), {
                     ...UPLOADED,
                     coverImage: cover,
                 }),
@@ -264,6 +264,21 @@ describe('buildPostBody — where legacy web and iOS disagree', () => {
         expect(body.reply_allowed_user).toBe('FOLLOWERS')
         expect(body.reply_allowed_link).toBe(true)
         expect(body.marked_nsfw).toBe(true)
+    })
+})
+
+describe('the audience casing', () => {
+    /**
+     * Measured: 20 consecutive posts carry `EVERYONE` or `STARGAZERS`. It was declared lower-case
+     * at first, which would have written `viewer: 'stargazers'` while `post-access.ts` read
+     * `viewer === 'STARGAZERS'` — the same feature disagreeing with itself about one field, and a
+     * paid post that nothing in the app would treat as paid.
+     */
+    it('is upper-case on the wire, both ways', () => {
+        expect(buildPostBody(draft({ text: 'x' }), UPLOADED).viewer).toBe('EVERYONE')
+        expect(
+            buildPostBody(draft({ text: 'x', audience: 'STARGAZERS', price: 5 }), UPLOADED).viewer,
+        ).toBe('STARGAZERS')
     })
 })
 

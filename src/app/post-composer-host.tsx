@@ -1,6 +1,7 @@
 'use client'
 
 import { useMyChannel } from '@features/channel'
+import { useMyMembershipTier } from '@features/monetization'
 import {
     PostComposerDialog,
     type ReplyComposerAuthor,
@@ -38,6 +39,7 @@ import { useMemo } from 'react'
 export function PostComposerHost() {
     const { myChannel, isPremium, verifiedTickBadge } = useMyChannel()
     const { benefits } = usePremiumBenefits()
+    const { tier } = useMyMembershipTier()
     const isOpen = usePostComposerStore(state => state.isOpen)
     const setOpen = usePostComposerStore(state => state.setOpen)
 
@@ -73,7 +75,22 @@ export function PostComposerHost() {
         [myChannel, isPremium, verifiedTickBadge],
     )
 
+    /**
+     * The tiers a post can be gated behind — at most one, because that is what a creator has.
+     *
+     * Legacy reads `mySubscriptionPackages[0].id` and sends a single-element array; the field is
+     * plural on the wire and this keeps that shape without pretending there can be several. An empty
+     * array is a creator with no membership, and the composer then does not offer the route at all.
+     */
+    const tiers = useMemo(() => (tier?.id ? [{ id: tier.id, name: tier.name ?? '' }] : []), [tier])
+
     return (
-        <PostComposerDialog open={isOpen} onOpenChange={setOpen} author={author} limits={limits} />
+        <PostComposerDialog
+            open={isOpen}
+            onOpenChange={setOpen}
+            author={author}
+            limits={limits}
+            tiers={tiers}
+        />
     )
 }

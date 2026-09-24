@@ -1,5 +1,6 @@
 'use client'
 
+import { rawGrantNumber, usePermission } from '@features/permission'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { DialogScreenHeader } from '@shared/components/dialog-screen-header'
 import { useTranslation } from '@shared/i18n/use-translation'
@@ -20,10 +21,13 @@ import {
     type PostDraftVideo,
     type PostUploadLimits,
     postDraftProblem,
+    STAR_PRICE_MAX,
+    STAR_PRICE_MIN_DEFAULT,
     VIDEO_TYPES,
 } from '../lib/post-draft'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { captureVideoPoster, probeVideo, readVideoCodec } from '../lib/video-file'
+import { PostSettingsPanel } from './post-settings-panel'
 
 /**
  * **New post** — legacy's `PostForm`, as far as words and pictures go.
@@ -54,6 +58,7 @@ export function PostComposerDialog({
     onOpenChange,
     author = null,
     limits = NO_UPLOAD_LIMITS,
+    tiers = [],
     onPublished,
     testId = 'post-composer',
 }: {
@@ -69,6 +74,14 @@ export function PostComposerDialog({
      * is also what legacy does when the entitlement is missing.
      */
     limits?: PostUploadLimits
+    /**
+     * The creator's membership tiers, for the members-only route.
+     *
+     * A prop for the third time and the same reason: they live in `features/membership`, which
+     * reaches this feature through `features/channel`. Empty — the default — means the route is not
+     * offered at all, which is right for a creator who has no membership set up.
+     */
+    tiers?: { id: string; name: string }[]
     /** The post landed. The shell closes the dialog and may send the author to it. */
     onPublished?: () => void
     testId?: string
@@ -97,7 +110,23 @@ export function PostComposerDialog({
         videoResolutionMax: limits.videoResolutionMax ?? config.video.resolutionMax,
     }
 
-    const problem = postDraftProblem(draft, { characterLimit: limit, limits: effectiveLimits })
+    /**
+     * The floor under a paid post, from this account's own grant.
+     *
+     * `post.meta.minimum_price_tvs` — legacy reads the same field with a `|| 1` fallback. A
+     * backoffice that has set a higher floor for an account is saying its posts may not be sold
+     * below it, and a composer that ignored that would offer a price the write then refuses.
+     */
+    const { permission } = usePermission()
+    const minPrice =
+        (permission ? rawGrantNumber(permission, 'post', 'minimum_price_tvs') : null) ??
+        STAR_PRICE_MIN_DEFAULT
+
+    const problem = postDraftProblem(draft, {
+        characterLimit: limit,
+        limits: effectiveLimits,
+        minPrice,
+    })
 
     const create = useCreatePost({
         onCreated: () => {
@@ -229,7 +258,9 @@ export function PostComposerDialog({
                     ? t('post_create_video_too_big', {
                           pixels: effectiveLimits.videoResolutionMax ?? 0,
                       })
-                    : null)
+                    : problem === 'price-out-of-range'
+                      ? t('post_create_price_range', { min: minPrice, max: STAR_PRICE_MAX })
+                      : null)
 
     return (
         <Dialog
@@ -362,6 +393,15 @@ export function PostComposerDialog({
                             ))}
                         </ul>
                     ) : null}
+
+                    <PostSettingsPanel
+                        draft={draft}
+                        onChange={next => setDraft(current => ({ ...current, ...next }))}
+                        minPrice={minPrice}
+                        tiers={tiers}
+                        disabled={create.isPending}
+                        testId={subTestId(testId, 'panel')}
+                    />
 
                     {message ? (
                         <p

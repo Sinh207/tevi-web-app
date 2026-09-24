@@ -1046,7 +1046,7 @@ name; you need it to know the element exists.
 | `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
-| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-clear` `-error` `-field` `-header` `-input` `-item` `-label-data` `-list` `-prefix` `-remove` `-slide` `-submit` `-trigger` |
+| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-clear` `-error` `-field` `-header` `-input` `-item` `-label-data` `-list` `-panel` `-prefix` `-remove` `-slide` `-submit` `-trigger` |
 | `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
 | `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` |
@@ -1055,6 +1055,7 @@ name; you need it to know the element exists.
 | `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-panel` `-remove` `-trigger` |
 | `PostNsfwGuard` | `src/features/post/components/post-nsfw-guard.tsx` | `-close` `-reveal` `-title` `-trigger` |
 | `PostReportDialog` | `src/features/post/components/post-report-dialog.tsx` | `-close` `-confirm` `-description` `-input` `-option` `-retry` `-submit` `-title` |
+| `PostSettingsPanel` | `src/features/post/components/post-settings-panel.tsx` | `-affix` `-confirm` `-field` `-group` `-input` `-item` `-list` `-option` `-panel` `-reveal` |
 | `PostUnlockDialogs` | `src/features/post/components/post-unlock-dialogs.tsx` | `-cancel` `-confirm` `-description` `-next` `-option` `-title` |
 | `ReplyAudienceNotice` | `src/features/post/components/reply-audience-notice.tsx` | `-description` `-panel` `-title` `-trigger` |
 | `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-item` `-list` `-remove` `-submit` `-trigger` |

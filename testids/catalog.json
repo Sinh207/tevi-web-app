@@ -12278,6 +12278,7 @@
                 "item",
                 "label-data",
                 "list",
+                "panel",
                 "prefix",
                 "remove",
                 "slide",
@@ -12374,6 +12375,23 @@
                 "retry",
                 "submit",
                 "title"
+            ]
+        },
+        "src/features/post/components/post-settings-panel.tsx": {
+            "accepts": [
+                "PostSettingsPanel"
+            ],
+            "parts": [
+                "affix",
+                "confirm",
+                "field",
+                "group",
+                "input",
+                "item",
+                "list",
+                "option",
+                "panel",
+                "reveal"
             ]
         },
         "src/features/post/components/post-unlock-dialogs.tsx": {

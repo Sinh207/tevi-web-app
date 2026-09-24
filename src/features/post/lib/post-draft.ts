@@ -47,8 +47,16 @@ export interface UploadedImage {
     h: number | null
 }
 
-/** Who may see the post. The two values the backend's `viewer` field takes. */
-export type PostAudience = 'everyone' | 'stargazers'
+/**
+ * Who may see the post — the two values the backend's `viewer` field takes, **upper-case**.
+ *
+ * ⚠ It was declared lower-case here, which would have sent `viewer: 'stargazers'` on every paid
+ * post. Measured against the service: 20 consecutive posts carry `EVERYONE` or `STARGAZERS`, and
+ * `post-access.ts` has been reading `viewer === 'STARGAZERS'` all along — so the write and the read
+ * would have disagreed about the same field in the same feature. Legacy's `AUDIENCE_OPTIONS` is
+ * upper-case too.
+ */
+export type PostAudience = 'EVERYONE' | 'STARGAZERS'
 
 /** A video the reader has attached but not yet uploaded. */
 export interface PostDraftVideo {
@@ -107,7 +115,7 @@ export function emptyPostDraft(): PostDraft {
         images: [],
         video: null,
         coverImage: null,
-        audience: 'everyone',
+        audience: 'EVERYONE',
         requiredPackages: [],
         price: null,
         /*
@@ -141,6 +149,8 @@ export type PostDraftProblem =
     | 'video-too-big-resolution'
     /** Members-only, with a price that is not a number the backend can charge. */
     | 'bad-price'
+    /** Priced below the floor the backoffice set for this account, or above the ceiling. */
+    | 'price-out-of-range'
 
 /**
  * The video containers the upload accepts.
@@ -186,6 +196,18 @@ export const NO_UPLOAD_LIMITS: PostUploadLimits = {
 }
 
 /**
+ * What a paid post may be priced at.
+ *
+ * The ceiling is legacy's own constant. The floor comes from the account's **channel permission** —
+ * `post.meta.minimum_price_tvs`, which legacy reads as `|| 1` — so an account the backoffice has
+ * given a higher floor cannot undercut it. `1` is the fallback when the grant says nothing, and it
+ * is a real floor rather than a placeholder: a post priced at `0` is the shape `postUnlockPrice`
+ * already refuses to draw a confirm button for.
+ */
+export const STAR_PRICE_MAX = 1_000_000
+export const STAR_PRICE_MIN_DEFAULT = 1
+
+/**
  * The most images one post may carry.
  *
  * Legacy's `LIMIT_UPLOAD_IMAGE`. Ten is also the reply ceiling, which is a coincidence rather than
@@ -199,10 +221,13 @@ export function postDraftProblem(
     {
         characterLimit,
         limits,
+        minPrice = STAR_PRICE_MIN_DEFAULT,
     }: {
         characterLimit: number
         /** What this account may upload. `NO_UPLOAD_LIMITS` refuses nothing. */
         limits: PostUploadLimits
+        /** The floor under a paid post, from this account's grant. */
+        minPrice?: number
     },
 ): PostDraftProblem | null {
     const text = draft.text.trim()
@@ -255,8 +280,9 @@ export function postDraftProblem(
      * "unlock for 0" — so it is refused at the point it is written rather than at the point some
      * reader meets it.
      */
-    if (draft.audience === 'stargazers' && draft.price !== null && !(draft.price > 0)) {
-        return 'bad-price'
+    if (draft.audience === 'STARGAZERS' && draft.price !== null) {
+        if (!(draft.price > 0)) return 'bad-price'
+        if (draft.price < minPrice || draft.price > STAR_PRICE_MAX) return 'price-out-of-range'
     }
 
     return null
@@ -321,7 +347,7 @@ export function buildPostBody(
      * stargazers`), and sending it on a free post would attach a second poster the reader never
      * chose to a video they can already watch.
      */
-    if (coverImage && videoId && draft.audience === 'stargazers') {
+    if (coverImage && videoId && draft.audience === 'STARGAZERS') {
         body.cover_image = coverImage
     }
 
@@ -332,10 +358,10 @@ export function buildPostBody(
      * "the creator asked for a paywall and then set none".
      */
     const paywalled =
-        draft.audience === 'stargazers' &&
+        draft.audience === 'STARGAZERS' &&
         (draft.requiredPackages.length > 0 || (draft.price !== null && draft.price > 0))
 
-    body.viewer = paywalled ? 'stargazers' : 'everyone'
+    body.viewer = paywalled ? 'STARGAZERS' : 'EVERYONE'
 
     if (paywalled) {
         if (draft.requiredPackages.length > 0) body.required_packages = draft.requiredPackages

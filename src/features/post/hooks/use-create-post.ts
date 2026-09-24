@@ -89,7 +89,7 @@ export function useCreatePost({ onCreated }: { onCreated?: (post: Post | null) =
              * bytes spent on a field that is then dropped.
              */
             let coverImage: UploadedImage | null = null
-            if (draft.coverImage && videoId && draft.audience === 'stargazers') {
+            if (draft.coverImage && videoId && draft.audience === 'STARGAZERS') {
                 /*
                  * Keyed **past** the pictures. Everything in one post shares a timestamp, so the
                  * index is the only thing keeping the objects apart — and `images.length + index`
