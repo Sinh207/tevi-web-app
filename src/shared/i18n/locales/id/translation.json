@@ -2057,5 +2057,9 @@
     "who_can_reply_none": "Balasan dinonaktifkan untuk postingan ini.",
     "who_can_reply_follow_space": "Ikuti space ini",
     "who_can_reply_unlock_post": "Buka postingan untuk membalas",
-    "who_can_reply_become_member": "Jadi anggota"
+    "who_can_reply_become_member": "Jadi anggota",
+    "reply_action_reply": "Balas",
+    "reply_hide_answers": "Sembunyikan tanggapan",
+    "reply_answers_error": "Tanggapan gagal dimuat.",
+    "reply_answers_more": "Tampilkan tanggapan lainnya"
 }

@@ -2057,5 +2057,9 @@
     "who_can_reply_none": "這則貼文已關閉回覆。",
     "who_can_reply_follow_space": "追蹤這個空間",
     "who_can_reply_unlock_post": "解鎖貼文後回覆",
-    "who_can_reply_become_member": "成為會員"
+    "who_can_reply_become_member": "成為會員",
+    "reply_action_reply": "回覆",
+    "reply_hide_answers": "隱藏回應",
+    "reply_answers_error": "無法載入回應。",
+    "reply_answers_more": "顯示更多回應"
 }

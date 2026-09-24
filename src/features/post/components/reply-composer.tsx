@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@features/auth'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
@@ -10,8 +11,9 @@ import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { useEffect, useId, useRef, useState } from 'react'
+import { isOwnReply, type Reply } from '../api/reply-types'
 import type { Post } from '../api/types'
-import { useCreateReply } from '../hooks/use-create-reply'
+import { type ReplyDestination, useCreateReply } from '../hooks/use-create-reply'
 import { replyCost } from '../lib/post-access'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
 import {
@@ -70,21 +72,43 @@ import { ReplyAudienceNotice } from './reply-audience-notice'
  */
 export function ReplyComposer({
     post,
+    replyTo = null,
     author = null,
     isPremiumReader = false,
+    autoFocus = false,
     onReplied,
     testId,
 }: {
+    /**
+     * The post being replied **to or under** — always the parent post, even when answering a reply.
+     *
+     * Every rule the box obeys is the post's: whether this reader may reply at all, whether links
+     * are allowed, what the charge is. Legacy passes exactly these three down to each comment row
+     * (`canReply`, `replyAllowedUser`, `replyAllowedLink` from `postInfo`), because a reply carries
+     * none of them.
+     */
     post: Post
+    /**
+     * Answering **this reply** rather than the post.
+     *
+     * Only the destination changes — `v1/posts/replies/{id}/child-replies/` instead of the post's
+     * own — plus one exemption: answering your own comment is free, which is legacy's `isMyComment`
+     * term in the paid-interaction condition.
+     */
+    replyTo?: Reply | null
     /** The reader's own space, for the avatar and the identity line. `null` draws neither. */
     author?: ReplyComposerAuthor | null
     /** Premium readers are exempt from paid interaction — `features/premium`'s fact, not the post's. */
     isPremiumReader?: boolean
+    /** Opened on purpose — an answer box the reader has just asked for should already be focused. */
+    autoFocus?: boolean
     /** The reply landed; the screen refetches the list and the count. */
     onReplied?: () => void
     testId?: string
 }) {
     const { t, currentLanguage } = useTranslation()
+    const { currentUser } = useAuth()
+    const userId = (currentUser?.id as string | number | undefined) ?? null
     const inputId = useId()
     const fileRef = useRef<HTMLInputElement>(null)
     const textRef = useRef<HTMLTextAreaElement>(null)
@@ -111,11 +135,21 @@ export function ReplyComposer({
      */
     const limit = useWebConfig().post.createPost.characterLimit
 
-    const cost = replyCost(post, { isPremiumReader })
+    /*
+     * Answering your own comment is free. Legacy's paid-interaction condition carries the term
+     * (`!isMyComment`) alongside the ones `replyCost` already covers, and it is not a nicety: a
+     * creator working through the answers under their own comment would otherwise pay per reply.
+     */
+    const ownComment = replyTo ? isOwnReply(replyTo, userId) : false
+    const cost = ownComment ? null : replyCost(post, { isPremiumReader })
     const linksAllowed = allowsReplyLinks(post)
     const problem = replyDraftProblem(draft, { linksAllowed })
 
-    const reply = useCreateReply(post, {
+    const destination: ReplyDestination = replyTo
+        ? { kind: 'reply', reply: replyTo }
+        : { kind: 'post', post }
+
+    const reply = useCreateReply(destination, {
         cost,
         onCreated: () => {
             setDraft(current => {
@@ -286,6 +320,8 @@ export function ReplyComposer({
                             value={draft.text}
                             maxLength={limit}
                             rows={1}
+                            // biome-ignore lint/a11y/noAutofocus: the box is mounted by a press on Reply, so focus is the point of the press.
+                            autoFocus={autoFocus}
                             placeholder={t('post_reply_placeholder')}
                             aria-invalid={message ? true : undefined}
                             aria-describedby={message ? `${inputId}-message` : undefined}

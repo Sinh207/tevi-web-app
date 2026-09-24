@@ -8,7 +8,13 @@ import { uploadApi } from '@shared/lib/api/upload-api'
 import { fileExtension, uploadKey } from '@shared/lib/api/upload-key'
 import { eventBus } from '@shared/lib/event-bus'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { INSUFFICIENT_STARS_CODE, postApi, postKeys, type ReplyImage } from '../api/post-api'
+import {
+    INSUFFICIENT_STARS_CODE,
+    postApi,
+    postKeys,
+    type ReplyImage,
+    type ReplyTarget,
+} from '../api/post-api'
 import type { Reply } from '../api/reply-types'
 import type { Post } from '../api/types'
 import { type ReplyDraft, replyText } from '../lib/reply-draft'
@@ -56,8 +62,21 @@ import { type ReplyDraft, replyText } from '../lib/reply-draft'
  * two taps away, and a reply — or a charge — that resolves after a switch must still belong to the
  * account that made it.
  */
+/**
+ * What is being replied to, as the hook needs it.
+ *
+ * The **post** case carries the whole post because the charge is priced off its `channel`; the
+ * **reply** case carries the reply for the same reason, off its `post_channel`. Neither is a bare
+ * id: a caller holding only an id could not have computed the cost it passes in, and the two would
+ * then be free to disagree about which space is being paid.
+ */
+export type ReplyDestination =
+    | { kind: 'post'; post: Post }
+    /** An answer to a reply. `reply.post_channel` prices it — never `owner_channel`. */
+    | { kind: 'reply'; reply: Reply }
+
 export function useCreateReply(
-    post: Post,
+    destination: ReplyDestination,
     {
         cost,
         onCreated,
@@ -82,7 +101,23 @@ export function useCreateReply(
      * replying for nothing on a space that charges.
      */
     const priced = cost !== null && cost > 0
-    const beneficiary = priced ? (post.channel?.id ?? null) : null
+    /*
+     * Which space is credited, and it is read from a **different field** on each branch: a post is
+     * priced by its own `channel`, an answer to a reply by the parent post's `post_channel`. The
+     * reply's `owner_channel` is neither, and paying it would move the reader's Star to whoever
+     * happened to write the comment being answered.
+     */
+    const beneficiary = priced
+        ? ((destination.kind === 'post'
+              ? destination.post.channel?.id
+              : destination.reply.post_channel?.id) ?? null)
+        : null
+
+    /** The endpoint's own discriminator — ids only, which is all the request needs. */
+    const target: ReplyTarget =
+        destination.kind === 'post'
+            ? { kind: 'post', postId: destination.post.id }
+            : { kind: 'reply', replyId: destination.reply.id }
 
     const mutation = useMutation({
         mutationFn: async ({
@@ -109,7 +144,7 @@ export function useCreateReply(
              */
             if (!text && images.length === 0) throw new Error('reply has no content')
 
-            return postApi.createReply({ postId: post.id, text, images }, accountId)
+            return postApi.createReply({ target, text, images }, accountId)
         },
         onSuccess: reply => {
             /*

@@ -2057,5 +2057,9 @@
     "who_can_reply_none": "이 게시물은 답글이 꺼져 있습니다.",
     "who_can_reply_follow_space": "이 스페이스 팔로우",
     "who_can_reply_unlock_post": "게시물을 잠금 해제하고 답글 달기",
-    "who_can_reply_become_member": "멤버 되기"
+    "who_can_reply_become_member": "멤버 되기",
+    "reply_action_reply": "답글",
+    "reply_hide_answers": "답글 숨기기",
+    "reply_answers_error": "답글을 불러오지 못했습니다.",
+    "reply_answers_more": "답글 더 보기"
 }

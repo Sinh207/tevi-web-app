@@ -15,7 +15,7 @@ import { usePostReplies } from '../hooks/use-post-replies'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { PostCard } from './post-card'
 import { ReplyComposer } from './reply-composer'
-import { ReplyRow } from './reply-row'
+import { ReplyThread } from './reply-thread'
 
 /**
  * `/@{slug}/post/{code}` — one post and its replies.
@@ -180,6 +180,8 @@ export function PostDetailView({
 
             <RepliesSection
                 replies={replies}
+                post={post}
+                author={author}
                 isPremiumReader={isPremiumReader}
                 observe={observe}
                 heightFor={heightFor}
@@ -205,6 +207,8 @@ export function PostDetailView({
 
 function RepliesSection({
     replies,
+    post,
+    author,
     isPremiumReader,
     observe,
     heightFor,
@@ -212,6 +216,9 @@ function RepliesSection({
     testId,
 }: {
     replies: ReturnType<typeof usePostReplies>
+    /** The parent post — a thread's composer takes every rule from it. */
+    post: Post
+    author: ReplyComposerAuthor | null
     isPremiumReader: boolean
     observe: ReturnType<typeof useRenderWindow>['observe']
     heightFor: ReturnType<typeof useRenderWindow>['heightFor']
@@ -293,8 +300,10 @@ function RepliesSection({
                                 style={height === null ? undefined : { height }}
                             >
                                 {height === null ? (
-                                    <ReplyRow
+                                    <ReplyThread
+                                        post={post}
                                         reply={reply}
+                                        author={author}
                                         isPremiumReader={isPremiumReader}
                                         onChanged={() => replies.refetch()}
                                         testId={subTestId(testId, 'row')}

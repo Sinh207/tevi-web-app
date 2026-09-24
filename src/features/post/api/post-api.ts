@@ -352,7 +352,7 @@ export const postApi = {
     },
 
     /**
-     * Post a reply under a post.
+     * Post a reply — under a **post**, or under another **reply**.
      *
      * ## The body is three fields, and two of them are conditional
      *
@@ -387,7 +387,11 @@ export const postApi = {
      * will not parse degrades to `null`; the reply still landed, and the list refetch recovers it.
      */
     async createReply(
-        { postId, text, images }: { postId: string; text: string | null; images: ReplyImage[] },
+        {
+            target,
+            text,
+            images,
+        }: { target: ReplyTarget; text: string | null; images: ReplyImage[] },
         accountId?: string | null,
     ): Promise<Reply | null> {
         const body: {
@@ -398,12 +402,19 @@ export const postApi = {
         if (text) body.text = text
         if (images.length > 0) body.images = images
 
+        /*
+         * Two endpoints, **one body**. Legacy splits the call the same way — `createCommentPost`
+         * and `createCommentReply` — and keeps a single `handleProcessCommentData` behind both,
+         * which is the half worth copying: an answer to a reply is a reply, and a second body
+         * builder is a second place for `lang` or the image shape to drift.
+         */
+        const path =
+            target.kind === 'post'
+                ? postPath(target.postId, 'replies/')
+                : replyPath(target.replyId, 'child-replies/')
+
         return normalizeReply(
-            await api.post<unknown>(
-                postPath(postId, 'replies/'),
-                body,
-                accountId ? { accountId } : undefined,
-            ),
+            await api.post<unknown>(path, body, accountId ? { accountId } : undefined),
         )
     },
 
@@ -516,6 +527,19 @@ export const postApi = {
  * child-reply list the backend expands inline. Twenty of those is a visibly slower first paint.
  */
 export const REPLIES_PAGE_SIZE = 10
+
+/**
+ * What a new reply hangs off.
+ *
+ * A discriminated union rather than two optional ids, so a caller cannot pass both, pass neither,
+ * or pass a reply's id where a post's belongs — which is the mistake that turns into a 404 rather
+ * than a type error, exactly as it did when replies were reacted to through the post endpoints.
+ */
+export type ReplyTarget =
+    /** A top-level reply: `v1/posts/{id}/replies/`. */
+    | { kind: 'post'; postId: string }
+    /** An answer to a reply: `v1/posts/replies/{id}/child-replies/`. */
+    | { kind: 'reply'; replyId: string }
 
 /**
  * One uploaded image, in the shape `createReply` sends it.

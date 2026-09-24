@@ -2057,5 +2057,9 @@
     "who_can_reply_none": "Bài viết này đã tắt phản hồi.",
     "who_can_reply_follow_space": "Theo dõi space này",
     "who_can_reply_unlock_post": "Mở khoá bài viết để phản hồi",
-    "who_can_reply_become_member": "Trở thành thành viên"
+    "who_can_reply_become_member": "Trở thành thành viên",
+    "reply_action_reply": "Trả lời",
+    "reply_hide_answers": "Ẩn trả lời",
+    "reply_answers_error": "Không tải được phần trả lời.",
+    "reply_answers_more": "Xem thêm trả lời"
 }

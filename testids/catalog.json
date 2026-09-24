@@ -12403,12 +12403,25 @@
                 "header",
                 "label-data",
                 "message",
+                "next",
                 "overlay",
                 "panel",
                 "remove",
                 "reveal",
                 "slide",
                 "trigger"
+            ]
+        },
+        "src/features/post/components/reply-thread.tsx": {
+            "accepts": [
+                "ReplyThread"
+            ],
+            "parts": [
+                "item",
+                "next",
+                "panel",
+                "retry",
+                "row"
             ]
         },
         "src/features/search/components/creator-picker-view.tsx": {

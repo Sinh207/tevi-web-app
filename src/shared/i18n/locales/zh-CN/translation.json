@@ -2057,5 +2057,9 @@
     "who_can_reply_none": "该帖子已关闭回复。",
     "who_can_reply_follow_space": "关注该空间",
     "who_can_reply_unlock_post": "解锁帖子后回复",
-    "who_can_reply_become_member": "成为会员"
+    "who_can_reply_become_member": "成为会员",
+    "reply_action_reply": "回复",
+    "reply_hide_answers": "隐藏回应",
+    "reply_answers_error": "无法加载回应。",
+    "reply_answers_more": "查看更多回应"
 }

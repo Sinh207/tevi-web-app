@@ -2057,5 +2057,9 @@
     "who_can_reply_none": "Balasan dimatikan untuk siaran ini.",
     "who_can_reply_follow_space": "Ikuti space ini",
     "who_can_reply_unlock_post": "Buka siaran untuk membalas",
-    "who_can_reply_become_member": "Jadi ahli"
+    "who_can_reply_become_member": "Jadi ahli",
+    "reply_action_reply": "Balas",
+    "reply_hide_answers": "Sembunyikan maklum balas",
+    "reply_answers_error": "Maklum balas tidak dapat dimuatkan.",
+    "reply_answers_more": "Tunjuk lagi maklum balas"
 }

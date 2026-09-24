@@ -2109,5 +2109,9 @@
     "who_can_reply_none": "تم إيقاف الردود على هذا المنشور.",
     "who_can_reply_follow_space": "متابعة هذه المساحة",
     "who_can_reply_unlock_post": "افتح المنشور للرد",
-    "who_can_reply_become_member": "اشترك كعضو"
+    "who_can_reply_become_member": "اشترك كعضو",
+    "reply_action_reply": "رد",
+    "reply_hide_answers": "إخفاء الردود",
+    "reply_answers_error": "تعذّر تحميل الردود.",
+    "reply_answers_more": "عرض ردود أخرى"
 }

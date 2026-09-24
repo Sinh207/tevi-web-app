@@ -1057,7 +1057,8 @@ name; you need it to know the element exists.
 | `PostUnlockDialogs` | `src/features/post/components/post-unlock-dialogs.tsx` | `-cancel` `-confirm` `-description` `-next` `-option` `-title` |
 | `ReplyAudienceNotice` | `src/features/post/components/reply-audience-notice.tsx` | `-description` `-panel` `-title` `-trigger` |
 | `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-item` `-list` `-remove` `-submit` `-trigger` |
-| `ReplyRow` | `src/features/post/components/reply-row.tsx` | `-description` `-header` `-label-data` `-message` `-overlay` `-panel` `-remove` `-reveal` `-slide` `-trigger` |
+| `ReplyRow` | `src/features/post/components/reply-row.tsx` | `-description` `-header` `-label-data` `-message` `-next` `-overlay` `-panel` `-remove` `-reveal` `-slide` `-trigger` |
+| `ReplyThread` | `src/features/post/components/reply-thread.tsx` | `-item` `-next` `-panel` `-retry` `-row` |
 | `CreatorPickerView` | `src/features/search/components/creator-picker-view.tsx` | `-field` `-item` `-retry` |
 | `ShareQrPanel` | `src/features/share/components/share-qr-panel.tsx` | `-copy` `-qr` `-submit` |
 | `ActionRows`, `ActionRowsSkeleton` | `src/shared/components/action-rows.tsx` | `-row` |

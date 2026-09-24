@@ -15,7 +15,11 @@ import type { ReplyDraft, ReplyDraftImage } from '../lib/reply-draft'
 const calls: string[] = []
 
 /** The body `createReply` is called with, as the test reads it back. */
-type ReplyBody = { postId: string; text: string | null; images: { uri: string }[] }
+type ReplyBody = {
+    target: { kind: 'post'; postId: string } | { kind: 'reply'; replyId: string }
+    text: string | null
+    images: { uri: string }[]
+}
 
 const chargeInteraction = vi.fn((_charge: unknown, _accountId: string | null) => {
     calls.push('charge')
@@ -108,7 +112,7 @@ function mount(post: Post, cost: number | null = null) {
     const created = vi.fn()
     const out = { current: null as ReturnType<typeof useCreateReply> | null }
     function Probe() {
-        out.current = useCreateReply(post, { cost, onCreated: created })
+        out.current = useCreateReply({ kind: 'post', post }, { cost, onCreated: created })
         return null
     }
     const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
@@ -136,7 +140,7 @@ describe('a free reply', () => {
         await waitFor(() => expect(created).toHaveBeenCalled())
         expect(calls).toEqual(['create'])
         expect(createReply).toHaveBeenCalledWith(
-            { postId: 'p1', text: 'hello', images: [] },
+            { target: { kind: 'post', postId: 'p1' }, text: 'hello', images: [] },
             'acc-1',
         )
         expect(chargeInteraction).not.toHaveBeenCalled()
@@ -266,6 +270,67 @@ describe('images', () => {
             calls.push(`upload:${key}`)
             return Promise.resolve<string | null>(`https://cdn.invalid/${key}`)
         })
+    })
+})
+
+describe('answering a reply', () => {
+    /**
+     * A different endpoint, decided by the destination rather than by an extra id — which is what
+     * makes sending a reply's id to the post path a type error instead of a 404.
+     */
+    it('targets the child-replies endpoint', async () => {
+        const parent = { id: 'r-parent' } as never
+        const created = vi.fn()
+        const out = { current: null as ReturnType<typeof useCreateReply> | null }
+        function Probe() {
+            out.current = useCreateReply(
+                { kind: 'reply', reply: parent },
+                { cost: null, onCreated: created },
+            )
+            return null
+        }
+        const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+        render(
+            <QueryClientProvider client={client}>
+                <Probe />
+            </QueryClientProvider>,
+        )
+
+        act(() => out.current?.submit(draft({ text: 'answering' })))
+        await waitFor(() => expect(created).toHaveBeenCalled())
+
+        expect(createReply.mock.calls[0]?.[0]).toEqual({
+            target: { kind: 'reply', replyId: 'r-parent' },
+            text: 'answering',
+            images: [],
+        })
+    })
+
+    /**
+     * A priced answer credits the **parent post's** space, read off the reply's `post_channel`.
+     * `owner_channel` is the reply author's own space and is never the beneficiary.
+     */
+    it('credits post_channel when the answer is priced', async () => {
+        const parent = {
+            id: 'r-parent',
+            post_channel: { id: 'ch-post' },
+            owner_channel: { id: 'ch-author' },
+        } as never
+        const out = { current: null as ReturnType<typeof useCreateReply> | null }
+        function Probe() {
+            out.current = useCreateReply({ kind: 'reply', reply: parent }, { cost: 5 })
+            return null
+        }
+        const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+        render(
+            <QueryClientProvider client={client}>
+                <Probe />
+            </QueryClientProvider>,
+        )
+
+        act(() => out.current?.submit(draft({ text: 'answering' })))
+        await waitFor(() => expect(chargeInteraction).toHaveBeenCalled())
+        expect(chargeInteraction.mock.calls[0]?.[0]).toMatchObject({ channelId: 'ch-post' })
     })
 })
 

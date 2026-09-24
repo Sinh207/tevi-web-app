@@ -57,23 +57,40 @@ import { PostMediaLightbox } from './post-media-lightbox'
  * name at 14/700 over a 12px timestamp), everything expressible in tokens from the DS. When the
  * comps arrive this file is what changes; the endpoints and the gates below do not.
  *
- * ## Child replies are counted, not drawn
+ * ## The thread is `ReplyThread`'s, not this row's
  *
- * A reply carries `reply_count` of its **own** answers, and `v1/posts/replies/{id}/child-replies/`
- * serves them (`postApi.getChildReplies`). The count is shown; expanding the thread, and writing
- * into it, is the next cut — an inline list with its own composer, its own paging and its own
- * charge. A disclosure that opened nothing would be worse than a figure that is honest about being
- * one.
+ * A reply has answers of its own (`reply_count`, served by
+ * `v1/posts/replies/{id}/child-replies/`), and drawing them means a second list, a second composer
+ * and a paging cursor. None of that belongs in a row: this component takes `onReply` and
+ * `onToggleAnswers` as callbacks and stays a row. `ReplyThread` owns the state and renders both
+ * levels with it.
+ *
+ * **Two levels, and no more.** A child row is given neither callback, so it offers no *Reply* and
+ * its own count is plain text. Legacy is the same shape — `showReplyButton` reaches top-level
+ * comments only — and the reason is that a third level has nowhere to be drawn.
  */
 export function ReplyRow({
     reply,
     isPremiumReader = false,
+    onReply,
+    onToggleAnswers,
+    answersOpen = false,
     onChanged,
     testId,
 }: {
     reply: Reply
     /** Premium readers are exempt from paid interaction — the screen supplies it. */
     isPremiumReader?: boolean
+    /**
+     * Answer this reply. Absent on a **child** row, which is what keeps the thread two levels deep
+     * — legacy passes `showReplyButton` only to top-level comments, and its own child rows get no
+     * Reply control at all.
+     */
+    onReply?: () => void
+    /** Open or close the answers under this reply. Absent when there are none, or on a child row. */
+    onToggleAnswers?: () => void
+    /** Whether they are open — the control says *Hide* rather than *View* while they are. */
+    answersOpen?: boolean
     /** A write from this row landed; the owning list refetches. */
     onChanged?: () => void
     testId?: string
@@ -159,7 +176,15 @@ export function ReplyRow({
                     </p>
                 ) : null}
 
-                <ReplyActions reply={reply} cost={cost} locale={currentLanguage} testId={testId} />
+                <ReplyActions
+                    reply={reply}
+                    cost={cost}
+                    locale={currentLanguage}
+                    onReply={onReply}
+                    onToggleAnswers={onToggleAnswers}
+                    answersOpen={answersOpen}
+                    testId={testId}
+                />
             </div>
 
             {lightbox !== null ? (
@@ -348,11 +373,17 @@ function ReplyActions({
     reply,
     cost,
     locale,
+    onReply,
+    onToggleAnswers,
+    answersOpen,
     testId,
 }: {
     reply: Reply
     cost: number | null
     locale: string
+    onReply?: () => void
+    onToggleAnswers?: () => void
+    answersOpen?: boolean
     testId?: string
 }) {
     const { t } = useTranslation()
@@ -388,17 +419,44 @@ function ReplyActions({
                 </span>
             </span>
 
+            {onReply ? (
+                <button
+                    type="button"
+                    onClick={onReply}
+                    data-testid={subTestId(testId, 'next')}
+                    className="type-caption-meta text-(--text-subtitle) hover:underline"
+                >
+                    {t('reply_action_reply')}
+                </button>
+            ) : null}
+
             {/*
-             * Drawn only when there are answers. A zero here would be a control-shaped thing with
-             * nothing behind it — and `PostActions` already treats a zero tally as nothing to print.
+             * The count is a **control** when there is a thread to open and plain text when the row
+             * cannot open one — a child row has answers of its own on the wire but no level below
+             * it to show them in, so making it pressable would promise a third level that does not
+             * exist. A zero prints nothing at all, which is `PostActions`' rule for a tally.
              */}
             {reply.reply_count > 0 ? (
-                <span
-                    data-testid={subTestId(testId, 'label-data')}
-                    className="type-caption-meta text-(--text-placeholder)"
-                >
-                    {t('reply_child_count', { count: reply.reply_count })}
-                </span>
+                onToggleAnswers ? (
+                    <button
+                        type="button"
+                        onClick={onToggleAnswers}
+                        aria-expanded={answersOpen}
+                        data-testid={subTestId(testId, 'label-data')}
+                        className="type-caption-meta text-(--text-subtitle) hover:underline"
+                    >
+                        {answersOpen
+                            ? t('reply_hide_answers')
+                            : t('reply_child_count', { count: reply.reply_count })}
+                    </button>
+                ) : (
+                    <span
+                        data-testid={subTestId(testId, 'label-data')}
+                        className="type-caption-meta text-(--text-placeholder)"
+                    >
+                        {t('reply_child_count', { count: reply.reply_count })}
+                    </span>
+                )
             ) : null}
         </div>
     )

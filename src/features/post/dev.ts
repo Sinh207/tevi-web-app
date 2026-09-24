@@ -41,6 +41,7 @@ export { PostNsfwGuard } from './components/post-nsfw-guard'
 export { ReplyAudienceNotice } from './components/reply-audience-notice'
 export { ReplyComposer } from './components/reply-composer'
 export { ReplyRow } from './components/reply-row'
+export { ReplyThread } from './components/reply-thread'
 export { postIntent } from './lib/post-intent'
 export { postHref } from './lib/post-link'
 
