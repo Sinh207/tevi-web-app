@@ -2097,5 +2097,16 @@
     "post_settings_reply_verified": "인증된 스페이스",
     "post_settings_reply_mentioned": "내가 언급한 스페이스",
     "post_settings_reply_none": "아무도 없음",
-    "post_create_price_range": "가격은 {{min}}~{{max}} 스타 사이여야 합니다."
+    "post_create_price_range": "가격은 {{min}}~{{max}} 스타 사이여야 합니다.",
+    "post_collection_section": "컬렉션",
+    "post_collection_title": "컬렉션에 추가",
+    "post_collection_none": "없음",
+    "post_collection_selected_one": "{{count}}개 선택됨",
+    "post_collection_selected_other": "{{count}}개 선택됨",
+    "post_collection_empty": "아직 컬렉션이 없습니다.",
+    "post_collection_error": "컬렉션을 불러오지 못했습니다.",
+    "post_collection_more": "첫 번째 컬렉션들을 보여주고 있습니다.",
+    "post_collection_new_placeholder": "새 컬렉션 이름",
+    "post_collection_create": "만들기",
+    "post_collection_create_failed": "컬렉션을 만들지 못했습니다"
 }

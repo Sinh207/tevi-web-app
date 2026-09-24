@@ -3,6 +3,7 @@ import { ApiError } from '@shared/lib/api/errors'
 import { createApiModel } from '@shared/lib/api/model'
 import type { PageCursor } from '@shared/lib/api/page-cursor'
 import type { PostBody, UploadedImage } from '../lib/post-draft'
+import { normalizeCollection, normalizeCollections, type PostCollection } from './collection-types'
 import { normalizeReplies, normalizeReply, type Reply } from './reply-types'
 import { normalizePost, type Post } from './types'
 
@@ -100,6 +101,9 @@ export const postKeys = {
     /** Every page of child replies under one reply — a different endpoint, so a different key. */
     childReplies: (replyId: string, accountId: string | null) =>
         [...POST_SCOPE, 'child-replies', replyId, accountId ?? 'anon'] as const,
+    /** The creator's own collections. Account-scoped like everything else here. */
+    collections: (accountId: string | null) =>
+        [...POST_SCOPE, 'collections', accountId ?? 'anon'] as const,
 }
 
 /**
@@ -353,6 +357,72 @@ export const postApi = {
     },
 
     /**
+     * The collections this creator has, one page at a time.
+     *
+     * ## Three of legacy's thirteen, and the other ten belong to a screen nobody has ported
+     *
+     * `PostModel` has list, read, create, rename, delete, add-posts, remove-posts and more. What the
+     * **composer** needs is three: see what exists, make a new one, and file the post once it is
+     * published. The rest are a collections screen — browsing one, reordering it, deleting it — and
+     * adding them here would be exported methods with no caller, which `post-report-api.ts` already
+     * argues against.
+     *
+     * Page-numbered, not cursor-paginated, and legacy asks for ten at a time.
+     */
+    async getCollections({
+        page = 1,
+        accountId,
+        signal,
+    }: {
+        page?: number
+        accountId?: string | null
+        signal?: AbortSignal
+    }) {
+        const body = await api.get<{ results?: unknown; next?: string | null; count?: number }>(
+            `${VERSION}/posts/collections/`,
+            { page, page_size: COLLECTIONS_PAGE_SIZE },
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        return {
+            results: normalizeCollections(body?.results),
+            hasMore: Boolean(body?.next),
+        }
+    },
+
+    /** Make one. The body is a name and nothing else — legacy's `createCollection`. */
+    async createCollection(
+        name: string,
+        accountId?: string | null,
+    ): Promise<PostCollection | null> {
+        return normalizeCollection(
+            await api.post<unknown>(
+                `${VERSION}/posts/collections/`,
+                { name },
+                accountId ? { accountId } : undefined,
+            ),
+        )
+    },
+
+    /**
+     * File a post into collections — **after** it is created.
+     *
+     * ⚠ Addressed by the **post**, not by the collection: `v1/posts/{id}/add-collections/` with
+     * `collection_ids`, which is the endpoint legacy's composer calls. There is a mirror-image one
+     * (`collections/{id}/add-posts/` with `post_ids`) and it is a different call — the composer has
+     * one post and several collections, so this is the direction that takes one request.
+     *
+     * A failure here does **not** un-publish the post. The post exists; it is simply not filed, and
+     * telling the author their post failed would be false. `useCreatePost` treats it accordingly.
+     */
+    addPostToCollections(postId: string, collectionIds: string[], accountId?: string | null) {
+        return api.post<unknown>(
+            postPath(postId, 'add-collections/'),
+            { collection_ids: collectionIds },
+            accountId ? { accountId } : undefined,
+        )
+    },
+
+    /**
      * Publish a post.
      *
      * ## `v3/channel/my-channel/threads/`, which is not where the rest of this file points
@@ -564,6 +634,9 @@ export const postApi = {
  * child-reply list the backend expands inline. Twenty of those is a visibly slower first paint.
  */
 export const REPLIES_PAGE_SIZE = 10
+
+/** Legacy's own page size for the collection picker. */
+export const COLLECTIONS_PAGE_SIZE = 10
 
 /**
  * What a new reply hangs off.

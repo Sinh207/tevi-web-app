@@ -106,6 +106,14 @@ export interface PostDraft {
     markedNsfw: boolean
     /** The post this one quotes, by id. */
     quotedPostId: string | null
+    /**
+     * Collections to file the post into once it exists.
+     *
+     * **Not part of the body.** `add-collections/` is a second request against the created post —
+     * legacy does the same (`addCollectionToPost` after `createPost`), and it has to: the post has
+     * no id until it is published.
+     */
+    collectionIds: string[]
 }
 
 /** Nothing typed, nothing attached — the resting state, and the one that cannot be posted. */
@@ -129,6 +137,7 @@ export function emptyPostDraft(): PostDraft {
         pinned: false,
         markedNsfw: false,
         quotedPostId: null,
+        collectionIds: [],
     }
 }
 

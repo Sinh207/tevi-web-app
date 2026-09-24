@@ -114,7 +114,25 @@ export function useCreatePost({ onCreated }: { onCreated?: (post: Post | null) =
                 lang: postLang(currentLanguage),
             })
 
-            return postApi.createPost(body, accountId)
+            const post = await postApi.createPost(body, accountId)
+
+            /*
+             * Filing is a **second request against the created post**, so it can only happen now —
+             * the post had no id a moment ago. Legacy does the same thing in the same order.
+             *
+             * Its failure is swallowed on purpose. The post is published; it is simply not filed,
+             * and surfacing that as "couldn't publish your post" would be false. The author can file
+             * it from the collection itself, once that screen exists. **B110**.
+             */
+            if (post?.id && draft.collectionIds.length > 0) {
+                try {
+                    await postApi.addPostToCollections(post.id, draft.collectionIds, accountId)
+                } catch {
+                    // Published, unfiled. Not a failed post.
+                }
+            }
+
+            return post
         },
         onSuccess: post => {
             /*

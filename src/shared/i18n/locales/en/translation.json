@@ -2097,5 +2097,16 @@
     "post_settings_reply_verified": "Verified spaces",
     "post_settings_reply_mentioned": "Spaces you mention",
     "post_settings_reply_none": "No one",
-    "post_create_price_range": "Price must be between {{min}} and {{max}} Star."
+    "post_create_price_range": "Price must be between {{min}} and {{max}} Star.",
+    "post_collection_section": "Collections",
+    "post_collection_title": "Add to a collection",
+    "post_collection_none": "None",
+    "post_collection_selected_one": "{{count}} selected",
+    "post_collection_selected_other": "{{count}} selected",
+    "post_collection_empty": "You have no collections yet.",
+    "post_collection_error": "Couldn't load your collections.",
+    "post_collection_more": "Showing your first collections.",
+    "post_collection_new_placeholder": "New collection name",
+    "post_collection_create": "Create",
+    "post_collection_create_failed": "Couldn't create that collection"
 }

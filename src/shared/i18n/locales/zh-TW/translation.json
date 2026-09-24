@@ -2097,5 +2097,16 @@
     "post_settings_reply_verified": "已驗證的空間",
     "post_settings_reply_mentioned": "你提到的空間",
     "post_settings_reply_none": "沒有人",
-    "post_create_price_range": "價格需介於 {{min}} 至 {{max}} 星幣之間。"
+    "post_create_price_range": "價格需介於 {{min}} 至 {{max}} 星幣之間。",
+    "post_collection_section": "合集",
+    "post_collection_title": "加入合集",
+    "post_collection_none": "無",
+    "post_collection_selected_one": "已選 {{count}} 個",
+    "post_collection_selected_other": "已選 {{count}} 個",
+    "post_collection_empty": "你還沒有合集。",
+    "post_collection_error": "無法載入你的合集。",
+    "post_collection_more": "正在顯示你最前面的合集。",
+    "post_collection_new_placeholder": "新合集名稱",
+    "post_collection_create": "建立",
+    "post_collection_create_failed": "無法建立該合集"
 }

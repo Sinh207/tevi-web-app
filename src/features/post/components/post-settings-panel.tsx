@@ -9,6 +9,7 @@ import { useId } from 'react'
 import type { PostDraft } from '../lib/post-draft'
 import { STAR_PRICE_MAX } from '../lib/post-draft'
 import type { ReplyAudience } from '../lib/who-can-reply'
+import { PostCollectionPicker } from './post-collection-picker'
 
 /**
  * Everything about a post that is not its words — audience, paywall, who may reply, and the three
@@ -142,6 +143,15 @@ export function PostSettingsPanel({
                         testId={subTestId(testId, 'item')}
                     />
                 ) : null}
+            </Section>
+
+            <Section title={t('post_collection_section')} testId={subTestId(testId, 'row')}>
+                <PostCollectionPicker
+                    selected={draft.collectionIds}
+                    onChange={ids => onChange({ collectionIds: ids })}
+                    disabled={disabled}
+                    testId={subTestId(testId, 'suffix')}
+                />
             </Section>
 
             <Section title={t('who_can_reply_title')} testId={subTestId(testId, 'list')}>

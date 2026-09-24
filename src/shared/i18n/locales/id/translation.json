@@ -2097,5 +2097,16 @@
     "post_settings_reply_verified": "Space terverifikasi",
     "post_settings_reply_mentioned": "Space yang kamu sebut",
     "post_settings_reply_none": "Tidak ada",
-    "post_create_price_range": "Harga harus antara {{min}} dan {{max}} Star."
+    "post_create_price_range": "Harga harus antara {{min}} dan {{max}} Star.",
+    "post_collection_section": "Koleksi",
+    "post_collection_title": "Tambahkan ke koleksi",
+    "post_collection_none": "Tidak ada",
+    "post_collection_selected_one": "{{count}} dipilih",
+    "post_collection_selected_other": "{{count}} dipilih",
+    "post_collection_empty": "Kamu belum punya koleksi.",
+    "post_collection_error": "Koleksi kamu gagal dimuat.",
+    "post_collection_more": "Menampilkan koleksi pertama kamu.",
+    "post_collection_new_placeholder": "Nama koleksi baru",
+    "post_collection_create": "Buat",
+    "post_collection_create_failed": "Koleksi itu gagal dibuat"
 }

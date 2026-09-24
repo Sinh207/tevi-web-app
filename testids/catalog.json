@@ -12264,6 +12264,19 @@
                 "slide"
             ]
         },
+        "src/features/post/components/post-collection-picker.tsx": {
+            "accepts": [
+                "PostCollectionPicker"
+            ],
+            "parts": [
+                "input",
+                "message",
+                "option",
+                "retry",
+                "submit",
+                "trigger"
+            ]
+        },
         "src/features/post/components/post-composer-dialog.tsx": {
             "accepts": [
                 "PostComposerDialog"
@@ -12391,7 +12404,9 @@
                 "list",
                 "option",
                 "panel",
-                "reveal"
+                "reveal",
+                "row",
+                "suffix"
             ]
         },
         "src/features/post/components/post-unlock-dialogs.tsx": {

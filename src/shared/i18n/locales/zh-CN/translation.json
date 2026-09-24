@@ -2097,5 +2097,16 @@
     "post_settings_reply_verified": "已认证的空间",
     "post_settings_reply_mentioned": "你提到的空间",
     "post_settings_reply_none": "没有人",
-    "post_create_price_range": "价格需在 {{min}} 到 {{max}} 星币之间。"
+    "post_create_price_range": "价格需在 {{min}} 到 {{max}} 星币之间。",
+    "post_collection_section": "合集",
+    "post_collection_title": "添加到合集",
+    "post_collection_none": "无",
+    "post_collection_selected_one": "已选 {{count}} 个",
+    "post_collection_selected_other": "已选 {{count}} 个",
+    "post_collection_empty": "你还没有合集。",
+    "post_collection_error": "无法加载你的合集。",
+    "post_collection_more": "正在显示你最前面的合集。",
+    "post_collection_new_placeholder": "新合集名称",
+    "post_collection_create": "创建",
+    "post_collection_create_failed": "无法创建该合集"
 }

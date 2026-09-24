@@ -2097,5 +2097,16 @@
     "post_settings_reply_verified": "Space disahkan",
     "post_settings_reply_mentioned": "Space yang anda sebut",
     "post_settings_reply_none": "Tiada sesiapa",
-    "post_create_price_range": "Harga mesti antara {{min}} dan {{max}} Star."
+    "post_create_price_range": "Harga mesti antara {{min}} dan {{max}} Star.",
+    "post_collection_section": "Koleksi",
+    "post_collection_title": "Tambah ke koleksi",
+    "post_collection_none": "Tiada",
+    "post_collection_selected_one": "{{count}} dipilih",
+    "post_collection_selected_other": "{{count}} dipilih",
+    "post_collection_empty": "Anda belum mempunyai koleksi.",
+    "post_collection_error": "Koleksi anda tidak dapat dimuatkan.",
+    "post_collection_more": "Menunjukkan koleksi pertama anda.",
+    "post_collection_new_placeholder": "Nama koleksi baharu",
+    "post_collection_create": "Cipta",
+    "post_collection_create_failed": "Koleksi itu tidak dapat dicipta"
 }

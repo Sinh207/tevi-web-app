@@ -2153,5 +2153,20 @@
     "post_settings_reply_verified": "المساحات الموثّقة",
     "post_settings_reply_mentioned": "المساحات التي تذكرها",
     "post_settings_reply_none": "لا أحد",
-    "post_create_price_range": "يجب أن يكون السعر بين {{min}} و{{max}} نجمة."
+    "post_create_price_range": "يجب أن يكون السعر بين {{min}} و{{max}} نجمة.",
+    "post_collection_section": "المجموعات",
+    "post_collection_title": "إضافة إلى مجموعة",
+    "post_collection_none": "لا شيء",
+    "post_collection_selected_zero": "لم يتم اختيار أي شيء",
+    "post_collection_selected_one": "تم اختيار واحدة",
+    "post_collection_selected_two": "تم اختيار اثنتين",
+    "post_collection_selected_few": "تم اختيار {{count}}",
+    "post_collection_selected_many": "تم اختيار {{count}}",
+    "post_collection_selected_other": "تم اختيار {{count}}",
+    "post_collection_empty": "ليس لديك مجموعات بعد.",
+    "post_collection_error": "تعذّر تحميل مجموعاتك.",
+    "post_collection_more": "يتم عرض أول مجموعاتك.",
+    "post_collection_new_placeholder": "اسم المجموعة الجديدة",
+    "post_collection_create": "إنشاء",
+    "post_collection_create_failed": "تعذّر إنشاء تلك المجموعة"
 }

@@ -2097,5 +2097,16 @@
     "post_settings_reply_verified": "Space đã xác minh",
     "post_settings_reply_mentioned": "Space bạn nhắc đến",
     "post_settings_reply_none": "Không ai",
-    "post_create_price_range": "Giá phải nằm trong khoảng {{min}} đến {{max}} Sao."
+    "post_create_price_range": "Giá phải nằm trong khoảng {{min}} đến {{max}} Sao.",
+    "post_collection_section": "Bộ sưu tập",
+    "post_collection_title": "Thêm vào bộ sưu tập",
+    "post_collection_none": "Không có",
+    "post_collection_selected_one": "Đã chọn {{count}}",
+    "post_collection_selected_other": "Đã chọn {{count}}",
+    "post_collection_empty": "Bạn chưa có bộ sưu tập nào.",
+    "post_collection_error": "Không tải được bộ sưu tập của bạn.",
+    "post_collection_more": "Đang hiển thị những bộ sưu tập đầu tiên.",
+    "post_collection_new_placeholder": "Tên bộ sưu tập mới",
+    "post_collection_create": "Tạo",
+    "post_collection_create_failed": "Không thể tạo bộ sưu tập đó"
 }
