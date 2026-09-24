@@ -2071,5 +2071,11 @@
     "post_create_too_long": "This post is too long.",
     "post_create_failed": "Couldn't publish your post",
     "post_create_image_limit_one": "You can attach {{count}} picture to a post.",
-    "post_create_image_limit_other": "You can attach up to {{count}} pictures to a post."
+    "post_create_image_limit_other": "You can attach up to {{count}} pictures to a post.",
+    "post_create_add_video": "Add a video",
+    "post_create_remove_video": "Remove video",
+    "post_create_video_unreadable": "This browser can't read that video.",
+    "post_create_video_too_long": "Videos can be up to {{minutes}} minutes.",
+    "post_create_video_too_large": "Videos can be up to {{size}} MB.",
+    "post_create_video_too_big": "Videos can be up to {{pixels}}p."
 }

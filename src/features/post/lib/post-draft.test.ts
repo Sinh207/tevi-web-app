@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
     buildPostBody,
     emptyPostDraft,
+    isAttachableVideo,
+    NO_UPLOAD_LIMITS,
     POST_IMAGE_MAX,
     type PostDraft,
     postDraftProblem,
@@ -26,15 +28,20 @@ function video(durationSeconds = 30) {
     return {
         file: new File([], 'clip.mp4', { type: 'video/mp4' }),
         durationSeconds,
-        width: 1920,
-        height: 1080,
+        // Inside every ceiling — the long edge is 960 against a 1080 cap — so a test about
+        // duration is only about duration.
+        width: 960,
+        height: 540,
         codec: null,
         poster: null,
         previewUrl: 'blob:clip',
     }
 }
 
-const LIMITS = { characterLimit: 500, videoDurationMax: 180 }
+const LIMITS = {
+    characterLimit: 500,
+    limits: { videoDurationMax: 180, videoSizeMaxMb: 500, videoResolutionMax: 1080 },
+}
 const UPLOADED = { images: [], videoId: null, coverImage: null, lang: 'en' }
 
 describe('emptyPostDraft', () => {
@@ -77,15 +84,40 @@ describe('postDraftProblem', () => {
         expect(postDraftProblem(draft({ images }), LIMITS)).toBe('too-many-images')
     })
 
-    it('refuses a clip longer than the console allows', () => {
+    it('refuses a clip longer than the account allows', () => {
         expect(postDraftProblem(draft({ video: video(181) }), LIMITS)).toBe('video-too-long')
         expect(postDraftProblem(draft({ video: video(180) }), LIMITS)).toBe(null)
     })
 
-    /** No configured ceiling is not a ceiling of zero — an unset limit refuses nothing. */
-    it('refuses no length when the console has set none', () => {
-        const noLimit = { characterLimit: 500, videoDurationMax: null }
-        expect(postDraftProblem(draft({ video: video(99999) }), noLimit)).toBe(null)
+    /**
+     * No configured ceiling is not a ceiling of zero — an unset limit refuses nothing, which is
+     * legacy's own `if (LIMIT)` guard. It matters because two of the three come from a Premium
+     * entitlement this client can only read for a Premium account.
+     */
+    it('refuses nothing when no limits could be read', () => {
+        const noLimits = { characterLimit: 500, limits: NO_UPLOAD_LIMITS }
+        expect(postDraftProblem(draft({ video: video(99999) }), noLimits)).toBe(null)
+    })
+
+    it('refuses a file bigger than the size ceiling', () => {
+        const big = video()
+        Object.defineProperty(big.file, 'size', { value: 600 * 1024 * 1024 })
+        expect(postDraftProblem(draft({ video: big }), LIMITS)).toBe('video-too-large')
+    })
+
+    /**
+     * The **long** edge. A portrait 1080×1920 clip is a 1920 video, and comparing width alone waves
+     * it past a 1080 ceiling — which is the shape a phone recording arrives in.
+     */
+    it('measures resolution on the long edge, whichever way round the clip is', () => {
+        const portrait = { ...video(), width: 1080, height: 1920 }
+        const landscape = { ...video(), width: 1920, height: 1080 }
+        expect(postDraftProblem(draft({ video: portrait }), LIMITS)).toBe(
+            'video-too-big-resolution',
+        )
+        expect(postDraftProblem(draft({ video: landscape }), LIMITS)).toBe(
+            'video-too-big-resolution',
+        )
     })
 
     /**
@@ -251,5 +283,20 @@ describe('postLang', () => {
         expect(postLang('')).toBe('en')
         expect(postLang('x')).toBe('en')
         expect(postLang('123')).toBe('en')
+    })
+})
+
+describe('isAttachableVideo', () => {
+    it('accepts the three containers the upload takes', () => {
+        for (const type of ['video/mp4', 'video/quicktime', 'video/webm']) {
+            expect(isAttachableVideo({ type })).toBe(true)
+        }
+    })
+
+    /** The type, never the name: the pre-signed URL is signed with the `Content-Type`. */
+    it('refuses anything else', () => {
+        expect(isAttachableVideo({ type: 'video/x-matroska' })).toBe(false)
+        expect(isAttachableVideo({ type: 'image/jpeg' })).toBe(false)
+        expect(isAttachableVideo({ type: '' })).toBe(false)
     })
 })

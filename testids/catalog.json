@@ -12269,6 +12269,8 @@
                 "PostComposerDialog"
             ],
             "parts": [
+                "affix",
+                "clear",
                 "error",
                 "field",
                 "header",
@@ -12276,7 +12278,9 @@
                 "item",
                 "label-data",
                 "list",
+                "prefix",
                 "remove",
+                "slide",
                 "submit",
                 "trigger"
             ]

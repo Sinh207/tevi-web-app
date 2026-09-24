@@ -2071,5 +2071,11 @@
     "post_create_too_long": "這則貼文太長了。",
     "post_create_failed": "無法發布你的貼文",
     "post_create_image_limit_one": "每則貼文最多可附加 {{count}} 張圖片。",
-    "post_create_image_limit_other": "每則貼文最多可附加 {{count}} 張圖片。"
+    "post_create_image_limit_other": "每則貼文最多可附加 {{count}} 張圖片。",
+    "post_create_add_video": "新增影片",
+    "post_create_remove_video": "移除影片",
+    "post_create_video_unreadable": "此瀏覽器無法讀取該影片。",
+    "post_create_video_too_long": "影片最長 {{minutes}} 分鐘。",
+    "post_create_video_too_large": "影片最大 {{size}} MB。",
+    "post_create_video_too_big": "影片最高 {{pixels}}p。"
 }

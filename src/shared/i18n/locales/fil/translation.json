@@ -2071,5 +2071,11 @@
     "post_create_too_long": "Masyadong mahaba ang post na ito.",
     "post_create_failed": "Hindi na-publish ang iyong post",
     "post_create_image_limit_one": "Puwede kang maglakip ng {{count}} larawan sa isang post.",
-    "post_create_image_limit_other": "Puwede kang maglakip ng hanggang {{count}} larawan sa isang post."
+    "post_create_image_limit_other": "Puwede kang maglakip ng hanggang {{count}} larawan sa isang post.",
+    "post_create_add_video": "Magdagdag ng video",
+    "post_create_remove_video": "Alisin ang video",
+    "post_create_video_unreadable": "Hindi mabasa ng browser na ito ang video na iyon.",
+    "post_create_video_too_long": "Hanggang {{minutes}} minuto lang ang video.",
+    "post_create_video_too_large": "Hanggang {{size}} MB lang ang video.",
+    "post_create_video_too_big": "Hanggang {{pixels}}p lang ang video."
 }

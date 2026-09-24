@@ -12,12 +12,18 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useCreatePost } from '../hooks/use-create-post'
 import {
     emptyPostDraft,
+    isAttachableVideo,
+    NO_UPLOAD_LIMITS,
     POST_IMAGE_MAX,
     type PostDraft,
     type PostDraftImage,
+    type PostDraftVideo,
+    type PostUploadLimits,
     postDraftProblem,
+    VIDEO_TYPES,
 } from '../lib/post-draft'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
+import { captureVideoPoster, probeVideo, readVideoCodec } from '../lib/video-file'
 
 /**
  * **New post** — legacy's `PostForm`, as far as words and pictures go.
@@ -47,12 +53,22 @@ export function PostComposerDialog({
     open,
     onOpenChange,
     author = null,
+    limits = NO_UPLOAD_LIMITS,
     onPublished,
     testId = 'post-composer',
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     author?: ReplyComposerAuthor | null
+    /**
+     * What this account may upload.
+     *
+     * A prop for the same reason `author` is: two of the three ceilings come from a **Premium
+     * entitlement** (`features/premium`, which reaches this feature through `features/channel`), so
+     * the host reads them. Omitted, nothing is refused client-side and the backend decides — which
+     * is also what legacy does when the entitlement is missing.
+     */
+    limits?: PostUploadLimits
     /** The post landed. The shell closes the dialog and may send the author to it. */
     onPublished?: () => void
     testId?: string
@@ -60,23 +76,28 @@ export function PostComposerDialog({
     const { t } = useTranslation()
     const inputId = useId()
     const fileRef = useRef<HTMLInputElement>(null)
+    const videoRef = useRef<HTMLInputElement>(null)
 
     const [draft, setDraft] = useState<PostDraft>(emptyPostDraft)
+    /** A file the browser would not decode. Not a draft problem — the clip never got in. */
+    const [videoError, setVideoError] = useState<string | null>(null)
 
-    const limit = useWebConfig().post.createPost.characterLimit
-    const problem = postDraftProblem(draft, {
-        characterLimit: limit,
-        /*
-         * No ceiling yet, because nothing can attach a clip yet.
-         *
-         * ⚠ It is **not** in remote config, which is where it looks like it should be:
-         * `post.create_post.video.resolution_max` is a *resolution*. Legacy reads the duration from
-         * a **Premium entitlement** — `enhancedStorageUploadPremium`'s `video-length` row, whose
-         * metadata carries `free` and `prem` in **minutes** and is multiplied by 60. That lives in
-         * `features/premium`, so wiring it is part of the video cut rather than a line here.
-         */
-        videoDurationMax: null,
-    })
+    const config = useWebConfig().post.createPost
+    const limit = config.characterLimit
+
+    /**
+     * The one ceiling this component can read for itself.
+     *
+     * `video.resolution_max` is remote config, so it is known for every reader; the duration and
+     * size ceilings are Premium entitlements and arrive as props. Merged here rather than in the
+     * host so a caller cannot forget the half that needs no permission.
+     */
+    const effectiveLimits: PostUploadLimits = {
+        ...limits,
+        videoResolutionMax: limits.videoResolutionMax ?? config.video.resolutionMax,
+    }
+
+    const problem = postDraftProblem(draft, { characterLimit: limit, limits: effectiveLimits })
 
     const create = useCreatePost({
         onCreated: () => {
@@ -98,14 +119,77 @@ export function PostComposerDialog({
     useEffect(
         () => () => {
             for (const image of draftRef.current.images) URL.revokeObjectURL(image.previewUrl)
+            if (draftRef.current.video) URL.revokeObjectURL(draftRef.current.video.previewUrl)
         },
         [],
     )
 
     function reset() {
+        setVideoError(null)
         setDraft(current => {
             for (const image of current.images) URL.revokeObjectURL(image.previewUrl)
+            if (current.video) URL.revokeObjectURL(current.video.previewUrl)
             return emptyPostDraft()
+        })
+    }
+
+    /** Reading a clip takes two decodes and a byte scan, so the picker reports while it works. */
+    const [readingVideo, setReadingVideo] = useState(false)
+
+    async function attachVideo(files: FileList | null) {
+        const file = files?.[0]
+        if (!file || !isAttachableVideo(file)) return
+
+        setReadingVideo(true)
+        try {
+            const probe = await probeVideo(file)
+            /*
+             * No measurement, no attachment. `duration_seconds`, `width` and `height` are required
+             * by `video/upload-url/`, and a clip this browser cannot decode is one it cannot
+             * describe — sending zeroes would put nonsense on the object.
+             */
+            if (!probe) {
+                setVideoError(t('post_create_video_unreadable'))
+                return
+            }
+
+            /*
+             * The poster and the codec are both **allowed to fail**: the endpoint takes a null
+             * codec, and a missing poster costs a black first frame until the transcode produces
+             * one. Neither is worth refusing the clip over, so they run after the measurement that
+             * is not optional.
+             */
+            const [poster, codec] = await Promise.all([
+                captureVideoPoster(file),
+                readVideoCodec(file),
+            ])
+
+            const video: PostDraftVideo = {
+                file,
+                durationSeconds: probe.durationSeconds,
+                width: probe.width,
+                height: probe.height,
+                codec,
+                poster,
+                previewUrl: URL.createObjectURL(file),
+            }
+            setVideoError(null)
+            setDraft(current => {
+                if (current.video) URL.revokeObjectURL(current.video.previewUrl)
+                // A post is words plus **one kind** of media — legacy allows no mixing either.
+                for (const image of current.images) URL.revokeObjectURL(image.previewUrl)
+                return { ...current, video, images: [] }
+            })
+        } finally {
+            setReadingVideo(false)
+        }
+    }
+
+    function removeVideo() {
+        setVideoError(null)
+        setDraft(current => {
+            if (current.video) URL.revokeObjectURL(current.video.previewUrl)
+            return { ...current, video: null }
         })
     }
 
@@ -130,11 +214,22 @@ export function PostComposerDialog({
 
     const remaining = limit - draft.text.length
     const message =
-        problem === 'too-long'
+        videoError ??
+        (problem === 'too-long'
             ? t('post_create_too_long')
             : problem === 'too-many-images'
               ? t('post_create_image_limit', { count: POST_IMAGE_MAX })
-              : null
+              : problem === 'video-too-long'
+                ? t('post_create_video_too_long', {
+                      minutes: Math.floor((effectiveLimits.videoDurationMax ?? 0) / 60),
+                  })
+                : problem === 'video-too-large'
+                  ? t('post_create_video_too_large', { size: effectiveLimits.videoSizeMaxMb ?? 0 })
+                  : problem === 'video-too-big-resolution'
+                    ? t('post_create_video_too_big', {
+                          pixels: effectiveLimits.videoResolutionMax ?? 0,
+                      })
+                    : null)
 
     return (
         <Dialog
@@ -201,6 +296,40 @@ export function PostComposerDialog({
                             />
                         </div>
                     </div>
+
+                    {draft.video ? (
+                        <div
+                            data-testid={subTestId(testId, 'slide')}
+                            className="relative overflow-hidden rounded-[8px] bg-(--background-segment)"
+                        >
+                            {/*
+                             * `controls`, and no autoplay. The author is checking they attached the
+                             * right clip, which is a thing they scrub; a card in a feed is a
+                             * different question and `PostCard` answers it its own way.
+                             */}
+                            {/* biome-ignore lint/a11y/useMediaCaption: a clip the author is about to publish has no track to caption it with. */}
+                            <video
+                                src={draft.video.previewUrl}
+                                controls
+                                playsInline
+                                preload="metadata"
+                                className="max-h-64 w-full"
+                            />
+                            <button
+                                type="button"
+                                data-testid={subTestId(testId, 'clear')}
+                                aria-label={t('post_create_remove_video')}
+                                disabled={create.isPending}
+                                onClick={removeVideo}
+                                className="absolute end-1 top-1 flex size-8 items-center justify-center rounded-full bg-(--background-overlay) text-(--text-on)"
+                            >
+                                <Icon name="xmark" size={16} />
+                            </button>
+                            <span className="absolute bottom-1 end-1 rounded-full bg-(--background-overlay) px-2 py-0.5 type-micro-overline text-(--text-on)">
+                                {formatClipLength(draft.video.durationSeconds)}
+                            </span>
+                        </div>
+                    ) : null}
 
                     {draft.images.length > 0 ? (
                         <ul
@@ -279,6 +408,40 @@ export function PostComposerDialog({
                         >
                             <Icon name="image" size={20} />
                         </button>
+
+                        <input
+                            ref={videoRef}
+                            type="file"
+                            accept={VIDEO_TYPES.join(',')}
+                            hidden
+                            data-testid={subTestId(testId, 'affix')}
+                            onChange={event => {
+                                void attachVideo(event.target.files)
+                                event.target.value = ''
+                            }}
+                        />
+                        {/*
+                         * One clip per post, and never beside pictures — legacy's own rule
+                         * (`TOO_MANY_VIDEOS`, and a media picker that clears the other kind).
+                         * Attaching a clip drops the pictures rather than refusing, because that is
+                         * the action the reader just asked for; the button is what says no.
+                         */}
+                        <button
+                            type="button"
+                            data-testid={subTestId(testId, 'prefix')}
+                            aria-label={t('post_create_add_video')}
+                            aria-busy={readingVideo || undefined}
+                            disabled={
+                                draft.video !== null ||
+                                draft.images.length > 0 ||
+                                readingVideo ||
+                                create.isPending
+                            }
+                            onClick={() => videoRef.current?.click()}
+                            className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+                        >
+                            <Icon name="video" size={20} />
+                        </button>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -313,6 +476,14 @@ export function PostComposerDialog({
             </DialogContent>
         </Dialog>
     )
+}
+
+/** `m:ss`, the badge legacy draws on a clip. Not `formatDuration` — that is `lib/post-media.ts`'s
+ *  and takes a post's video, which a local file is not yet. */
+function formatClipLength(seconds: number): string {
+    const whole = Math.max(0, Math.round(seconds))
+    const minutes = Math.floor(whole / 60)
+    return `${minutes}:${String(whole % 60).padStart(2, '0')}`
 }
 
 /**

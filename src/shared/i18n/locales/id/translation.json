@@ -2071,5 +2071,11 @@
     "post_create_too_long": "Postingan ini terlalu panjang.",
     "post_create_failed": "Postingan kamu gagal diterbitkan",
     "post_create_image_limit_one": "Kamu bisa melampirkan maksimal {{count}} gambar per postingan.",
-    "post_create_image_limit_other": "Kamu bisa melampirkan maksimal {{count}} gambar per postingan."
+    "post_create_image_limit_other": "Kamu bisa melampirkan maksimal {{count}} gambar per postingan.",
+    "post_create_add_video": "Tambahkan video",
+    "post_create_remove_video": "Hapus video",
+    "post_create_video_unreadable": "Browser ini tidak bisa membaca video tersebut.",
+    "post_create_video_too_long": "Video maksimal {{minutes}} menit.",
+    "post_create_video_too_large": "Video maksimal {{size}} MB.",
+    "post_create_video_too_big": "Video maksimal {{pixels}}p."
 }

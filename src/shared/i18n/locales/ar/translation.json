@@ -2127,5 +2127,11 @@
     "post_create_image_limit_two": "يمكنك إرفاق صورتين بالمنشور.",
     "post_create_image_limit_few": "يمكنك إرفاق حتى {{count}} صور بالمنشور.",
     "post_create_image_limit_many": "يمكنك إرفاق حتى {{count}} صورة بالمنشور.",
-    "post_create_image_limit_other": "يمكنك إرفاق حتى {{count}} صورة بالمنشور."
+    "post_create_image_limit_other": "يمكنك إرفاق حتى {{count}} صورة بالمنشور.",
+    "post_create_add_video": "إضافة فيديو",
+    "post_create_remove_video": "إزالة الفيديو",
+    "post_create_video_unreadable": "لا يستطيع هذا المتصفح قراءة ذلك الفيديو.",
+    "post_create_video_too_long": "يمكن أن تصل مدة الفيديو إلى {{minutes}} دقيقة.",
+    "post_create_video_too_large": "يمكن أن يصل حجم الفيديو إلى {{size}} ميغابايت.",
+    "post_create_video_too_big": "يمكن أن تصل دقة الفيديو إلى {{pixels}}p."
 }

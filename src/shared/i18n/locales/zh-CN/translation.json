@@ -2071,5 +2071,11 @@
     "post_create_too_long": "这条帖子太长了。",
     "post_create_failed": "帖子发布失败",
     "post_create_image_limit_one": "每条帖子最多可添加 {{count}} 张图片。",
-    "post_create_image_limit_other": "每条帖子最多可添加 {{count}} 张图片。"
+    "post_create_image_limit_other": "每条帖子最多可添加 {{count}} 张图片。",
+    "post_create_add_video": "添加视频",
+    "post_create_remove_video": "移除视频",
+    "post_create_video_unreadable": "此浏览器无法读取该视频。",
+    "post_create_video_too_long": "视频最长 {{minutes}} 分钟。",
+    "post_create_video_too_large": "视频最大 {{size}} MB。",
+    "post_create_video_too_big": "视频最高 {{pixels}}p。"
 }

@@ -1046,7 +1046,7 @@ name; you need it to know the element exists.
 | `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
-| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-error` `-field` `-header` `-input` `-item` `-label-data` `-list` `-remove` `-submit` `-trigger` |
+| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-clear` `-error` `-field` `-header` `-input` `-item` `-label-data` `-list` `-prefix` `-remove` `-slide` `-submit` `-trigger` |
 | `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
 | `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` |

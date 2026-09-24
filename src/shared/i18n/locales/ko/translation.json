@@ -2071,5 +2071,11 @@
     "post_create_too_long": "게시물이 너무 깁니다.",
     "post_create_failed": "게시물을 올리지 못했습니다",
     "post_create_image_limit_one": "게시물 하나에 사진은 최대 {{count}}장까지 첨부할 수 있습니다.",
-    "post_create_image_limit_other": "게시물 하나에 사진은 최대 {{count}}장까지 첨부할 수 있습니다."
+    "post_create_image_limit_other": "게시물 하나에 사진은 최대 {{count}}장까지 첨부할 수 있습니다.",
+    "post_create_add_video": "동영상 추가",
+    "post_create_remove_video": "동영상 삭제",
+    "post_create_video_unreadable": "이 브라우저에서는 해당 동영상을 읽을 수 없습니다.",
+    "post_create_video_too_long": "동영상은 최대 {{minutes}}분까지 가능합니다.",
+    "post_create_video_too_large": "동영상은 최대 {{size}}MB까지 가능합니다.",
+    "post_create_video_too_big": "동영상은 최대 {{pixels}}p까지 가능합니다."
 }

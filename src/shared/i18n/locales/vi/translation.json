@@ -2071,5 +2071,11 @@
     "post_create_too_long": "Bài viết này quá dài.",
     "post_create_failed": "Không thể đăng bài viết của bạn",
     "post_create_image_limit_one": "Bạn có thể đính kèm tối đa {{count}} ảnh cho mỗi bài viết.",
-    "post_create_image_limit_other": "Bạn có thể đính kèm tối đa {{count}} ảnh cho mỗi bài viết."
+    "post_create_image_limit_other": "Bạn có thể đính kèm tối đa {{count}} ảnh cho mỗi bài viết.",
+    "post_create_add_video": "Thêm video",
+    "post_create_remove_video": "Xoá video",
+    "post_create_video_unreadable": "Trình duyệt này không đọc được video đó.",
+    "post_create_video_too_long": "Video dài tối đa {{minutes}} phút.",
+    "post_create_video_too_large": "Video nặng tối đa {{size}} MB.",
+    "post_create_video_too_big": "Video tối đa {{pixels}}p."
 }

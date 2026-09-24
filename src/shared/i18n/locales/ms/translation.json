@@ -2071,5 +2071,11 @@
     "post_create_too_long": "Siaran ini terlalu panjang.",
     "post_create_failed": "Siaran anda tidak dapat diterbitkan",
     "post_create_image_limit_one": "Anda boleh melampirkan sehingga {{count}} gambar bagi setiap siaran.",
-    "post_create_image_limit_other": "Anda boleh melampirkan sehingga {{count}} gambar bagi setiap siaran."
+    "post_create_image_limit_other": "Anda boleh melampirkan sehingga {{count}} gambar bagi setiap siaran.",
+    "post_create_add_video": "Tambah video",
+    "post_create_remove_video": "Buang video",
+    "post_create_video_unreadable": "Pelayar ini tidak dapat membaca video itu.",
+    "post_create_video_too_long": "Video maksimum {{minutes}} minit.",
+    "post_create_video_too_large": "Video maksimum {{size}} MB.",
+    "post_create_video_too_big": "Video maksimum {{pixels}}p."
 }

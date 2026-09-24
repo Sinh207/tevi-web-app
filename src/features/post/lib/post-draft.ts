@@ -137,8 +137,53 @@ export type PostDraftProblem =
     | 'too-long'
     | 'too-many-images'
     | 'video-too-long'
+    | 'video-too-large'
+    | 'video-too-big-resolution'
     /** Members-only, with a price that is not a number the backend can charge. */
     | 'bad-price'
+
+/**
+ * The video containers the upload accepts.
+ *
+ * Legacy's `MEDIA_UPLOAD_MESSAGES` names MP4, MOV and WebM, and the check is on the **file's own
+ * type** rather than its name — the extension is a claim, and the pre-signed URL is signed with the
+ * `Content-Type`, so a mislabelled file fails at Google with a 403 that reads like a backend fault.
+ */
+export const VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'] as const
+
+export function isAttachableVideo(file: { type: string }): boolean {
+    return (VIDEO_TYPES as readonly string[]).includes(file.type)
+}
+
+/**
+ * What the reader's account is allowed to upload.
+ *
+ * ## Every one of these is `null` for "no ceiling", and that is legacy's own behaviour
+ *
+ * Legacy guards each check with `if (LIMIT)`, so an unset limit refuses nothing. That matters more
+ * than it looks: two of the three come from a **Premium entitlement**
+ * (`enhanced-storage-upload`'s `video-length` and `file-upload-size`), which this client can only
+ * read for an account that *has* Premium — `usePremiumInfo` is gated on it. A reader without
+ * Premium therefore gets no client-side ceiling and the backend refuses instead, which is worse
+ * than checking but better than inventing a number. **B110**.
+ *
+ * `resolutionMax` is the one that comes from remote config and is therefore known for everybody.
+ */
+export interface PostUploadLimits {
+    /** Seconds. The entitlement carries **minutes**; the caller multiplies. */
+    videoDurationMax: number | null
+    /** Megabytes, as the entitlement states them. */
+    videoSizeMaxMb: number | null
+    /** Pixels on the **long** edge — legacy compares `Math.max(width, height)`. */
+    videoResolutionMax: number | null
+}
+
+/** No ceilings at all: what a reader gets when nothing could be read. */
+export const NO_UPLOAD_LIMITS: PostUploadLimits = {
+    videoDurationMax: null,
+    videoSizeMaxMb: null,
+    videoResolutionMax: null,
+}
 
 /**
  * The most images one post may carry.
@@ -153,11 +198,11 @@ export function postDraftProblem(
     draft: PostDraft,
     {
         characterLimit,
-        videoDurationMax,
+        limits,
     }: {
         characterLimit: number
-        /** Seconds. `null` when the console has not set one — then no length is refused. */
-        videoDurationMax: number | null
+        /** What this account may upload. `NO_UPLOAD_LIMITS` refuses nothing. */
+        limits: PostUploadLimits
     },
 ): PostDraftProblem | null {
     const text = draft.text.trim()
@@ -171,13 +216,37 @@ export function postDraftProblem(
     if (text.length > characterLimit) return 'too-long'
     if (draft.images.length > POST_IMAGE_MAX) return 'too-many-images'
 
-    if (
-        draft.video &&
-        videoDurationMax !== null &&
-        videoDurationMax > 0 &&
-        draft.video.durationSeconds > videoDurationMax
-    ) {
-        return 'video-too-long'
+    if (draft.video) {
+        const { videoDurationMax, videoSizeMaxMb, videoResolutionMax } = limits
+
+        if (
+            videoDurationMax !== null &&
+            videoDurationMax > 0 &&
+            draft.video.durationSeconds > videoDurationMax
+        ) {
+            return 'video-too-long'
+        }
+
+        if (
+            videoSizeMaxMb !== null &&
+            videoSizeMaxMb > 0 &&
+            draft.video.file.size / (1024 * 1024) > videoSizeMaxMb
+        ) {
+            return 'video-too-large'
+        }
+
+        /*
+         * The **long** edge, which is how legacy compares it (`Math.max(width, height)`). A
+         * portrait 1080×1920 clip is a 1920 video, and comparing width alone would wave it past a
+         * 1080 ceiling.
+         */
+        if (
+            videoResolutionMax !== null &&
+            videoResolutionMax > 0 &&
+            Math.max(draft.video.width, draft.video.height) > videoResolutionMax
+        ) {
+            return 'video-too-big-resolution'
+        }
     }
 
     /*

@@ -77,6 +77,7 @@ export {
     replyCost,
     spaceTierBadge,
 } from './lib/post-access'
+export { NO_UPLOAD_LIMITS, type PostUploadLimits } from './lib/post-draft'
 export { formatPostTimestamp } from './lib/post-format'
 export { type PostIntent, postIntent, postUnlockPrice } from './lib/post-intent'
 export { postHref, postPath } from './lib/post-link'
@@ -118,4 +119,6 @@ export {
  * the post route into a 404. `lib/reply-author.ts` carries the whole account.
  */
 export type { ReplyComposerAuthor } from './lib/reply-author'
+/** The host reads the Premium benefit table; this turns it into the two ceilings that matter. */
+export { type BenefitDetailRow, uploadLimitsFromBenefits } from './lib/upload-limits'
 export { openPostComposer, usePostComposerStore } from './store/composer-store'

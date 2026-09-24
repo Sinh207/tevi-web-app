@@ -1,7 +1,13 @@
 'use client'
 
 import { useMyChannel } from '@features/channel'
-import { PostComposerDialog, type ReplyComposerAuthor, usePostComposerStore } from '@features/post'
+import {
+    PostComposerDialog,
+    type ReplyComposerAuthor,
+    uploadLimitsFromBenefits,
+    usePostComposerStore,
+} from '@features/post'
+import { usePremiumBenefits } from '@features/premium'
 import { useMemo } from 'react'
 
 /**
@@ -31,8 +37,25 @@ import { useMemo } from 'react'
  */
 export function PostComposerHost() {
     const { myChannel, isPremium, verifiedTickBadge } = useMyChannel()
+    const { benefits } = usePremiumBenefits()
     const isOpen = usePostComposerStore(state => state.isOpen)
     const setOpen = usePostComposerStore(state => state.setOpen)
+
+    /**
+     * What this account may upload — the duration and size ceilings, from the Premium benefit table.
+     *
+     * Read **here** for the same reason the author is: `features/premium` reaches `features/post`
+     * through `features/channel`, so the post feature cannot ask for it.
+     *
+     * `v1/benefits/` is **platform-wide** — the same answer for everybody — so this works for a
+     * reader without Premium too, and `isPremium` only picks which column of each row applies. That
+     * is better than legacy manages: its ceilings come from the same table but through a provider
+     * that is only populated on some screens, so it enforces nothing when the entitlement is absent.
+     */
+    const limits = useMemo(() => {
+        const rows = benefits.find(b => b.slug === 'enhanced-storage-upload')?.details
+        return uploadLimitsFromBenefits(rows, { isPremium })
+    }, [benefits, isPremium])
 
     /** The five fields the composer draws, flattened — `features/post` cannot name `Channel`. */
     const author = useMemo<ReplyComposerAuthor | null>(
@@ -50,5 +73,7 @@ export function PostComposerHost() {
         [myChannel, isPremium, verifiedTickBadge],
     )
 
-    return <PostComposerDialog open={isOpen} onOpenChange={setOpen} author={author} />
+    return (
+        <PostComposerDialog open={isOpen} onOpenChange={setOpen} author={author} limits={limits} />
+    )
 }
