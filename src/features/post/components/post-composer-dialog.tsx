@@ -311,7 +311,13 @@ export function PostComposerDialog({
             }}
         >
             <DialogContent
-                className="flex max-h-[90dvh] w-full max-w-[612px] flex-col gap-0 p-0"
+                /*
+                 * `overflow-hidden`, because the body below scrolls itself — `DialogContent` has
+                 * `overflow-y-auto` of its own and two scrollers leave the inner one unbounded, so
+                 * the whole popup scrolls and the action bar goes with it. The settings dialogs
+                 * carry the same line and the longer account of it.
+                 */
+                className="flex max-h-[90dvh] w-full max-w-[612px] flex-col gap-0 overflow-hidden p-0"
                 data-testid={testId}
             >
                 <div className="relative">

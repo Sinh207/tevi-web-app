@@ -154,7 +154,18 @@ function SettingsDialog({
             }}
         >
             <DialogContent
-                className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 p-0"
+                /*
+                 * `overflow-hidden` is **load-bearing**, and its absence is what broke this.
+                 *
+                 * `DialogContent` carries `overflow-y-auto` of its own (its own note explains the
+                 * short-viewport bug that put it there). A call site that scrolls its own body has
+                 * to turn that off, or there are two scrollers: the inner one never gets a bounded
+                 * height, so `min-h-0 flex-1` resolves to the full content and the popup scrolls
+                 * instead — taking the header and the sticky footer with it. A long collection list
+                 * then pushes *Create new collection* off the bottom, which is exactly what it did.
+                 * The pattern is written down in `shared/ui/dialog.tsx`; this missed it.
+                 */
+                className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
                 data-testid={testId}
             >
                 <DialogScreenHeader
