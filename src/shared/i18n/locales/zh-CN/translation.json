@@ -2063,6 +2063,8 @@
     "reply_answers_error": "无法加载回应。",
     "reply_answers_more": "查看更多回应",
     "post_create_title": "新帖子",
+    "post_preview_action": "预览",
+    "post_preview_title": "受众视图",
     "post_create_placeholder": "你在想什么？",
     "post_create_submit": "发布",
     "post_create_posting": "发布中…",

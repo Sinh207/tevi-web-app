@@ -7,7 +7,12 @@ import Image from 'next/image'
 import type { Post } from '../api/types'
 import { postGate } from '../lib/post-access'
 import { postUnlockPrice } from '../lib/post-intent'
-import { formatDurationPadded, lockCoverAspectRatio, POST_COLUMN_SIZES } from '../lib/post-media'
+import {
+    formatDurationPadded,
+    isLocalImageSrc,
+    lockCoverAspectRatio,
+    POST_COLUMN_SIZES,
+} from '../lib/post-media'
 import { LockIcon, LockMediaIcon } from './legacy-icons'
 
 /**
@@ -124,6 +129,8 @@ export function PostLockPanel({
                     alt=""
                     fill
                     sizes={POST_COLUMN_SIZES}
+                    /* The composer's *Preview* renders this panel over a `blob:` cover. */
+                    unoptimized={isLocalImageSrc(coverSrc)}
                     className="object-cover"
                     style={{ filter: cover?.blur ? 'blur(10px)' : undefined }}
                 />

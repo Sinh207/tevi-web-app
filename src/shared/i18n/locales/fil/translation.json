@@ -2063,6 +2063,8 @@
     "reply_answers_error": "Hindi ma-load ang mga sagot.",
     "reply_answers_more": "Magpakita pa ng mga sagot",
     "post_create_title": "Bagong post",
+    "post_preview_action": "Preview",
+    "post_preview_title": "Audience View mo",
     "post_create_placeholder": "Ano ang nasa isip mo?",
     "post_create_submit": "I-post",
     "post_create_posting": "Nagpo-post…",

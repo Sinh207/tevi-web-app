@@ -24,11 +24,13 @@ import {
     STAR_PRICE_MAX,
     STAR_PRICE_MIN_DEFAULT,
 } from '../lib/post-draft'
+import { buildPreviewPost } from '../lib/post-preview'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { isAttachableImage } from '../lib/reply-draft'
 import { captureVideoPoster, probeVideo, readVideoCodec } from '../lib/video-file'
 import { PostComposerBody } from './post-composer-body'
 import { type ComposerDialog, PostComposerDialogs } from './post-composer-dialogs'
+import { PostPreviewDialog } from './post-preview-dialog'
 
 /**
  * **New post** — legacy's `PostForm`, as far as words and pictures go.
@@ -43,10 +45,8 @@ import { type ComposerDialog, PostComposerDialogs } from './post-composer-dialog
  *
  * ## What it does not carry yet
  *
- * Video, the audience and paywall controls, who-can-reply, the collection picker and the preview.
- * Each is its own cut and each is listed at the point it plugs in, so the gap is visible in the code
- * rather than only in a plan. The **draft** already models all of them (`lib/post-draft.ts`), so
- * they arrive as controls over fields that exist rather than as a reshaping of this component.
+ * Quoting a post — the draft models `quotedPostId` and nothing writes it. That is the last field on
+ * `PostDraft` with no control over it, so the gap is visible in the code rather than only in a plan.
  *
  * ## The reader is a prop, again
  *
@@ -101,6 +101,15 @@ export function PostComposerDialog({
      * behind whichever one is open.
      */
     const [settingsDialog, setSettingsDialog] = useState<ComposerDialog>(null)
+
+    /**
+     * *Your audience view* is open — a fifth dialog, and deliberately not a `ComposerDialog`.
+     *
+     * The other four **edit** the draft and share one shell; this one only reads it, takes a
+     * different body and is opened from the action bar rather than from the chips. Folding it into
+     * that union would make a setting out of something that sets nothing.
+     */
+    const [previewOpen, setPreviewOpen] = useState(false)
 
     const [draft, setDraft] = useState<PostDraft>(emptyPostDraft)
     /** A file the browser would not decode. Not a draft problem — the clip never got in. */
@@ -304,8 +313,9 @@ export function PostComposerDialog({
                 if (create.isPending) return
                 if (!next) {
                     reset()
-                    // Any settings popup goes with it — reopening should not land on one.
+                    // Any popup over it goes too — reopening should not land on one.
                     setSettingsDialog(null)
+                    setPreviewOpen(false)
                 }
                 onOpenChange(next)
             }}
@@ -448,6 +458,27 @@ export function PostComposerDialog({
                                 {remaining}
                             </span>
                         ) : null}
+                        {/*
+                         * *Preview*, beside *Post* — legacy's trailing pair, in its order.
+                         *
+                         * Off on an **empty** draft and on nothing else: legacy gates it on
+                         * `!text && !images.length && !videos`, which is `problem === 'empty'`
+                         * here. It stays on for a draft that is too long or priced out of range,
+                         * and that is the right call — those are the drafts whose author most
+                         * wants to see what they have before fixing it, and the preview charges
+                         * nothing and writes nothing.
+                         */}
+                        <Button
+                            variant="secondary"
+                            size="medium"
+                            disabled={problem === 'empty' || create.isPending}
+                            onClick={() => setPreviewOpen(true)}
+                            data-testid={subTestId(testId, 'reveal')}
+                        >
+                            <Icon name="eye" size={20} className="flex-none" />
+                            {/* Icon-only below `sm`, which is where legacy drops the word too. */}
+                            <span className="hidden sm:inline">{t('post_preview_action')}</span>
+                        </Button>
                         <Button
                             variant="primary"
                             size="medium"
@@ -475,6 +506,17 @@ export function PostComposerDialog({
                 tiers={tiers}
                 disabled={create.isPending}
                 testId={testId}
+            />
+
+            {/*
+             * Built **on open**, not on every keystroke: it walks the draft's media and runs the
+             * post parser, and nothing reads the result until the dialog is up. Mounted here beside
+             * the other four so it stacks over the composer rather than replacing it.
+             */}
+            <PostPreviewDialog
+                open={previewOpen}
+                onClose={() => setPreviewOpen(false)}
+                post={previewOpen ? buildPreviewPost(draft, { author }) : null}
             />
         </Dialog>
     )

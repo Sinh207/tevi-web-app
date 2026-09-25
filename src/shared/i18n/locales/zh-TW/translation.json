@@ -2063,6 +2063,8 @@
     "reply_answers_error": "無法載入回應。",
     "reply_answers_more": "顯示更多回應",
     "post_create_title": "新貼文",
+    "post_preview_action": "預覽",
+    "post_preview_title": "您的觀眾視圖",
     "post_create_placeholder": "你在想什麼？",
     "post_create_submit": "發布",
     "post_create_posting": "發布中…",

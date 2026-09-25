@@ -34,6 +34,15 @@ import {
  * Each is a titled dialog with a close control and nothing else; the bodies already exist as
  * components. `SettingsDialog` is that shell, so the four differ only by title and contents rather
  * than by four near-identical copies of the same markup.
+ *
+ * ## The shell and its body do not share an id
+ *
+ * Each body takes `…-panel` **under** its dialog's scope, not the dialog's own id. They shared it
+ * at first, which is `docs/TEST_IDS.md` §5's first-match failure and not a cosmetic one: a driver
+ * asking for `post-composer-group` got the popup *and* the audience form, so anything scoped to it
+ * was ambiguous. Found by a browser probe, which is the only thing that finds this class of bug —
+ * nothing type-checks and nothing renders wrong. The composing body already had its own scope for
+ * the same reason.
  */
 
 /** Which settings dialog is open, if any. */
@@ -74,7 +83,7 @@ export function PostComposerDialogs({
                     minPrice={minPrice}
                     tiers={tiers}
                     disabled={disabled}
-                    testId={subTestId(testId, 'group')}
+                    testId={subTestId(subTestId(testId, 'group'), 'panel')}
                 />
             </SettingsDialog>
 
@@ -88,7 +97,7 @@ export function PostComposerDialogs({
                     draft={draft}
                     onChange={onChange}
                     disabled={disabled}
-                    testId={subTestId(testId, 'list')}
+                    testId={subTestId(subTestId(testId, 'list'), 'panel')}
                 />
             </SettingsDialog>
 
@@ -106,7 +115,7 @@ export function PostComposerDialogs({
                     draft={draft}
                     onChange={onChange}
                     disabled={disabled}
-                    testId={subTestId(testId, 'tab')}
+                    testId={subTestId(subTestId(testId, 'tab'), 'panel')}
                 />
             </SettingsDialog>
 
@@ -120,7 +129,7 @@ export function PostComposerDialogs({
                     selected={draft.collectionIds}
                     onChange={ids => onChange({ collectionIds: ids })}
                     disabled={disabled}
-                    testId={subTestId(testId, 'row')}
+                    testId={subTestId(subTestId(testId, 'row'), 'panel')}
                 />
             </SettingsDialog>
         </>

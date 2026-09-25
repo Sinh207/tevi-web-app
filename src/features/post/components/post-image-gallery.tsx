@@ -6,7 +6,12 @@ import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import { useCallback, useRef, useState } from 'react'
 import type { PostImage } from '../api/types'
-import { detectAspectRatio, gallerySlideRatio, POST_COLUMN_SIZES } from '../lib/post-media'
+import {
+    detectAspectRatio,
+    gallerySlideRatio,
+    isLocalImageSrc,
+    POST_COLUMN_SIZES,
+} from '../lib/post-media'
 
 /**
  * A post's images — one image sized by its own ratio, several as a horizontal row.
@@ -100,6 +105,8 @@ export function PostImageGallery({
                     alt={t('post_image_alt')}
                     fill
                     sizes={POST_COLUMN_SIZES}
+                    /* A `blob:` src is the composer's own file — `isLocalImageSrc` says why. */
+                    unoptimized={isLocalImageSrc(src)}
                     className="object-cover"
                 />
             </Frame>
@@ -162,6 +169,7 @@ export function PostImageGallery({
                                     alt={t('post_image_alt')}
                                     fill
                                     sizes="(max-width: 768px) 100vw, 33vw"
+                                    unoptimized={isLocalImageSrc(src)}
                                     className="object-cover"
                                 />
                             ) : null}

@@ -2063,6 +2063,8 @@
     "reply_answers_error": "Couldn't load answers.",
     "reply_answers_more": "Show more answers",
     "post_create_title": "New post",
+    "post_preview_action": "Preview",
+    "post_preview_title": "Your audience view",
     "post_create_placeholder": "What's on your mind?",
     "post_create_submit": "Post",
     "post_create_posting": "Posting…",

@@ -246,3 +246,25 @@ export function gallerySlideRatio(image: PostImage): number {
  * over-declare — which is why it survives a glance at the network panel.
  */
 export const POST_COLUMN_SIZES = '(max-width: 612px) 100vw, 612px'
+
+/**
+ * Whether a source is a picture **this browser is holding**, not one a server can serve.
+ *
+ * ⚠ Every `next/image` in this feature has to ask, because the composer's *Preview* renders the
+ * same components over a draft: a `blob:` URL is the file the reader just picked, and the optimizer
+ * would be asked to fetch `/_next/image?url=blob:…`, which it cannot resolve and which fails as a
+ * broken tile rather than as an error anybody sees. `unoptimized` makes Next emit the src verbatim,
+ * which is the only thing that can work — there is nothing to optimise in a local file that will
+ * never be requested twice, and no loader that accepts it.
+ *
+ * Derived from the src rather than threaded down as a prop, for the reason `button.tsx`'s
+ * `rendersNativeButton` gives: a flag every call site has to remember is a flag one of them will
+ * forget, and this one fails **silently** at the tile.
+ *
+ * `data:` for the same reason — nothing produces one here today, but it is the other scheme with
+ * bytes in the URL rather than a host behind it.
+ */
+export function isLocalImageSrc(src: string | null | undefined): boolean {
+    if (!src) return false
+    return src.startsWith('blob:') || src.startsWith('data:')
+}

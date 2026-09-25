@@ -12305,6 +12305,7 @@
                 "label-data",
                 "panel",
                 "prefix",
+                "reveal",
                 "submit",
                 "suffix",
                 "trigger"
@@ -12396,6 +12397,19 @@
                 "reveal",
                 "title",
                 "trigger"
+            ]
+        },
+        "src/features/post/components/post-preview-dialog.tsx": {
+            "accepts": [
+                "PostPreviewDialog"
+            ],
+            "parts": [
+                "description",
+                "header",
+                "item",
+                "overlay",
+                "panel",
+                "slide"
             ]
         },
         "src/features/post/components/post-report-dialog.tsx": {

@@ -312,6 +312,30 @@ export interface PostBody {
 }
 
 /**
+ * Whether this draft will actually be published behind a paywall.
+ *
+ * **Not `draft.audience === 'STARGAZERS'`**, and the difference is the whole reason this is a
+ * function. A members-only post with no tier and no price names no way in: the public cannot see it
+ * and no membership grants it, so the only account it reaches is its author's. Publishing it as
+ * `everyone` is the honest reading of "the creator asked for a paywall and then set none" — the
+ * fallback is iOS's rather than legacy web's, which sends the audience verbatim.
+ *
+ * Exported because **two** things have to agree about it: `buildPostBody`, which decides what is
+ * sent, and `buildPreviewPost`, which decides what the *Preview* dialog draws. Legacy recomputes
+ * the rule by hand in `useReviewPost` (`audienceSettings.isPaid && hasStargazersAudience`), missing
+ * the tier half — so its preview shows an open post that publishes locked, and a locked one that
+ * publishes open. A preview that can disagree with the publish is worse than none.
+ */
+export function isPaywalled(
+    draft: Pick<PostDraft, 'audience' | 'requiredPackages' | 'price'>,
+): boolean {
+    return (
+        draft.audience === 'STARGAZERS' &&
+        (draft.requiredPackages.length > 0 || (draft.price !== null && draft.price > 0))
+    )
+}
+
+/**
  * Turn a draft whose media has already been uploaded into the request body.
  *
  * **Uploads are the caller's**, which is what keeps this function pure and therefore testable
@@ -355,15 +379,8 @@ export function buildPostBody(
         body.cover_image = coverImage
     }
 
-    /*
-     * The paid fallback, and it is iOS's rather than legacy web's. A members-only post with no tier
-     * and no price names no way in: the public cannot see it and no membership grants it, so the
-     * only account it reaches is its author's. Publishing it as `everyone` is the honest reading of
-     * "the creator asked for a paywall and then set none".
-     */
-    const paywalled =
-        draft.audience === 'STARGAZERS' &&
-        (draft.requiredPackages.length > 0 || (draft.price !== null && draft.price > 0))
+    /* The fallback when the paywall names no way in is `isPaywalled`'s; its doc carries the why. */
+    const paywalled = isPaywalled(draft)
 
     body.viewer = paywalled ? 'STARGAZERS' : 'EVERYONE'
 

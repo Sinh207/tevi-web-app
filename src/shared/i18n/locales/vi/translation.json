@@ -2063,6 +2063,8 @@
     "reply_answers_error": "Không tải được phần trả lời.",
     "reply_answers_more": "Xem thêm trả lời",
     "post_create_title": "Bài viết mới",
+    "post_preview_action": "Xem trước",
+    "post_preview_title": "Chế độ xem của khán giả",
     "post_create_placeholder": "Bạn đang nghĩ gì?",
     "post_create_submit": "Đăng",
     "post_create_posting": "Đang đăng…",

@@ -2115,6 +2115,8 @@
     "reply_answers_error": "تعذّر تحميل الردود.",
     "reply_answers_more": "عرض ردود أخرى",
     "post_create_title": "منشور جديد",
+    "post_preview_action": "معاينة",
+    "post_preview_title": "وجهة نظر جمهورك",
     "post_create_placeholder": "بماذا تفكر؟",
     "post_create_submit": "نشر",
     "post_create_posting": "جارٍ النشر…",

@@ -40,21 +40,32 @@ export function PostHeader({
     testId,
 }: {
     post: Post
-    /** The four menu writes, owned by `PostCard` — see `PostMenu`'s prop doc for why. */
-    actions: PostActions
+    /**
+     * The four menu writes, owned by `PostCard` — see `PostMenu`'s prop doc for why.
+     *
+     * **Optional, and its absence makes the whole header a picture**: no kebab menu, and the
+     * identity is a `span` rather than a `Link`. Same rule `PostLockPanel` states for `onPress` and
+     * `PostImageGallery` for `onOpen` — a surface that cannot act on a post does not grow controls
+     * that do nothing. The composer's *Preview* is the caller that needs it: a menu there would
+     * offer to delete a post that does not exist, and a link to the author's space would throw the
+     * draft away to go somewhere the author already is.
+     */
+    actions?: PostActions
     /**
      * The **optimistic** pin state, not `post.pinned`.
      *
      * A press on *Pin* has to move this marker immediately; reading the prop would leave the header
-     * showing the old state until the list refetches, which on a feed is never.
+     * showing the old state until the list refetches, which on a feed is never. Defaults to the
+     * post's own field, which is right for a header with no writes behind it.
      */
-    pinned: boolean
+    pinned?: boolean
     testId?: string
 }) {
     const { t, currentLanguage } = useTranslation()
     const channel = post.channel
     const name = channel?.name ?? ''
-    const channelHref = channel?.slug ? `/@${channel.slug}` : null
+    const channelHref = actions && channel?.slug ? `/@${channel.slug}` : null
+    const isPinned = pinned ?? post.pinned
     const gated = isGated(post)
     const tierBadge = spaceTierBadge(channel)
 
@@ -155,7 +166,7 @@ export function PostHeader({
              * smaller mark nearer the text it qualifies.
              */}
             <span className="flex flex-none items-center gap-1">
-                {pinned ? (
+                {isPinned ? (
                     <Icon
                         name="thumbtack"
                         size={16}
@@ -169,9 +180,11 @@ export function PostHeader({
                  * trigger is, and the popup is covered by `shouldNavigate`'s `[role="menuitem"]`
                  * clause. Both halves are needed and neither covers the other.
                  */}
-                <span data-no-navigate>
-                    <PostMenu post={post} actions={actions} testId={testId} />
-                </span>
+                {actions ? (
+                    <span data-no-navigate>
+                        <PostMenu post={post} actions={actions} testId={testId} />
+                    </span>
+                ) : null}
             </span>
         </header>
     )

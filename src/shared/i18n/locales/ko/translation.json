@@ -2063,6 +2063,8 @@
     "reply_answers_error": "답글을 불러오지 못했습니다.",
     "reply_answers_more": "답글 더 보기",
     "post_create_title": "새 게시물",
+    "post_preview_action": "미리보기",
+    "post_preview_title": "시청자 보기",
     "post_create_placeholder": "무슨 생각을 하고 있나요?",
     "post_create_submit": "게시",
     "post_create_posting": "게시 중…",
