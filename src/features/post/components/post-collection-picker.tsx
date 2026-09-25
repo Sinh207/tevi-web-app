@@ -27,6 +27,15 @@ import { useCollections } from '../hooks/use-collections'
  * still a **screen** rather than the inline field this had at first: naming a collection is a step,
  * and a field wedged under a list reads as an afterthought.
  */
+/**
+ * Past this many, legacy stops offering *Create new collection*.
+ *
+ * The same number as the page size, and not a coincidence: the picker reads one page, so a creator
+ * with more than this cannot see what they already have — and a new collection made blind is one
+ * they cannot then find to file into.
+ */
+const COLLECTION_CREATE_LIMIT = 10
+
 export function PostCollectionPicker({
     selected,
     onChange,
@@ -135,13 +144,26 @@ export function PostCollectionPicker({
                 </div>
             ) : (
                 <>
-                    {collections.collections.map(collection => {
+                    {collections.collections.map((collection, index) => {
                         const inside = selected.includes(collection.id)
                         return (
                             <div
                                 key={collection.id}
                                 data-option-value={collection.id}
-                                className="flex items-center justify-between gap-3 py-2"
+                                /*
+                                 * A hairline **between** rows, not under each of them — so the list
+                                 * ends on a row rather than on a rule, and the first one does not
+                                 * carry a line that separates it from the dialog's own header.
+                                 * Legacy draws no divider here at all; this is the one addition to
+                                 * its markup on this screen, and it earns its place: the rows are
+                                 * two lines tall with a button on the end, and without a rule they
+                                 * read as one block of text.
+                                 */
+                                className={
+                                    index === 0
+                                        ? 'flex items-center justify-between gap-3 py-3'
+                                        : 'flex items-center justify-between gap-3 border-(--separator-default) border-t py-3'
+                                }
                             >
                                 <span className="flex min-w-0 flex-col gap-1">
                                     <span className="type-body-strong truncate text-(--text-title)">
@@ -212,18 +234,35 @@ export function PostCollectionPicker({
                 </>
             )}
 
-            {/* Legacy's own footer button, glyph and all. */}
-            <Button
-                variant="ghost"
-                size="medium"
-                disabled={disabled}
-                onClick={() => setCreating(true)}
-                data-testid={subTestId(testId, 'trigger')}
-                className="mt-2 self-start"
-            >
-                <Icon name="plus" size={20} />
-                {t('post_collection_create_new')}
-            </Button>
+            {/*
+             * Legacy's footer button: a brand-coloured pill on the **trailing** edge (its
+             * `DialogActions` aligns right), with a `+` glyph in the same colour.
+             *
+             * The colour is `--text-brand` rather than legacy's raw `#3C1490`, which sits between
+             * `--primary-600` and `--primary-700` and has no token of its own. `--text-brand` is
+             * what this design system calls that colour, and it moves with the theme where a hex
+             * cannot — `DESIGN_SYSTEM.md` bars the raw value outright. The hover is
+             * `--background-segment` for the same reason: reaching into the Primary ramp for a
+             * `--primary-50` tint would pick a *dark* fill in dark mode, since that ramp inverts.
+             *
+             * Hidden past ten, as legacy hides it (`collections.length < 10`): the list asks for one
+             * page, so past that the creator cannot see what they already have and a new one would
+             * be filed somewhere they cannot check.
+             */}
+            {collections.collections.length < COLLECTION_CREATE_LIMIT ? (
+                <div className="flex justify-end pt-3">
+                    <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setCreating(true)}
+                        data-testid={subTestId(testId, 'trigger')}
+                        className="type-dense-emphasis flex h-10 items-center gap-1 rounded-[40px] border-[1.5px] border-(--text-brand) bg-(--background-surface) px-4 text-(--text-brand) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+                    >
+                        <Icon name="plus" size={20} className="flex-none" />
+                        {t('post_collection_create_new')}
+                    </button>
+                </div>
+            ) : null}
         </div>
     )
 }
