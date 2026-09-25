@@ -212,7 +212,12 @@ export function PostComposerBody({
                         aria-busy={readingVideo || undefined}
                         disabled={disabled || readingVideo || limitReached}
                         onClick={() => fileRef.current?.click()}
-                        className="flex size-9 flex-none items-center justify-center rounded-full text-(--text-link) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+                        /*
+                         * Black, not blue. The `IconButton` around it is `#007AFF`, but that colour
+                         * never reaches the glyph — legacy renders an `<img>`, and the asset's own
+                         * paths are `#141414`. The button's colour only tints its ripple.
+                         */
+                        className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-default) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
                     >
                         {/*
                          * `images`, not `image`. Legacy's `upload-media.svg` is **two stacked

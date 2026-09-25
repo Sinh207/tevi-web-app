@@ -397,7 +397,15 @@ export function PostComposerDialog({
                 <div className="flex items-center justify-between gap-2 border-(--separator-default) border-t px-4 py-3">
                     <div className="flex min-w-0 items-center gap-2">
                         <SettingChip
-                            icon={draft.audience === 'STARGAZERS' ? 'lock-simple' : 'globe'}
+                            /*
+                             * The same pair the audience dialog heads its two sections with —
+                             * `BtnAudience` swaps between exactly these two glyphs, so the chip and
+                             * the screen it opens carry the same mark for the same state. A globe
+                             * and a padlock were this file's own invention and said something else:
+                             * *public* and *locked*, where the product's words are *free* and
+                             * *exclusive*.
+                             */
+                            icon={draft.audience === 'STARGAZERS' ? 'badge-dollar' : 'users'}
                             label={
                                 draft.audience === 'STARGAZERS'
                                     ? t('post_audience_exclusive')
@@ -408,7 +416,13 @@ export function PostComposerDialog({
                             testId={subTestId(testId, 'trigger')}
                         />
                         <SettingChip
-                            icon="comment"
+                            /*
+                             * `comments-text`: legacy's `BtnReplySetting` is a filled bubble
+                             * carrying lines of text over a second one behind it, not the empty
+                             * outline `comment` draws. Identified by rendering the legacy SVG
+                             * rather than reading its path data.
+                             */
+                            icon="comments-text"
                             label={t(replyAudienceLabelKey(draft.replyAllowedUser))}
                             disabled={create.isPending}
                             onPress={() => setSettingsDialog('reply')}
@@ -522,7 +536,8 @@ function HeaderAction({
             aria-label={label}
             disabled={disabled}
             onClick={onPress}
-            className="flex size-9 items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+            /* `#141414` in both legacy buttons — the full-strength icon colour, not the muted one. */
+            className="flex size-9 items-center justify-center rounded-full text-(--icon-default) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
         >
             <Icon name={icon} size={20} />
         </button>
