@@ -96,13 +96,17 @@ export function PostComposerDialogs({
                 open={open === 'settings'}
                 onClose={onClose}
                 title={t('post_settings_title')}
-                testId={subTestId(testId, 'panel')}
+                /*
+                 * `tab`, not `panel`: the composing body owns `panel` now, and two surfaces under
+                 * one scope is a first-match lookup waiting to go wrong (`docs/TEST_IDS.md` §5).
+                 */
+                testId={subTestId(testId, 'tab')}
             >
                 <PostSettingsScreen
                     draft={draft}
                     onChange={onChange}
                     disabled={disabled}
-                    testId={subTestId(testId, 'panel')}
+                    testId={subTestId(testId, 'tab')}
                 />
             </SettingsDialog>
 

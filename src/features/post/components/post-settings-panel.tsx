@@ -1,8 +1,10 @@
 'use client'
 
+import { StarMark } from '@shared/components/star-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import { Icon } from '@shared/ui/icon'
+import type { TeviIconName } from '@shared/ui/icon-names'
 import { Radio } from '@shared/ui/radio'
 import { Toggle } from '@shared/ui/toggle'
 import { useId } from 'react'
@@ -46,6 +48,9 @@ export function PostAudienceScreen({
     const paidRoute = draft.price !== null
     const memberRoute = draft.requiredPackages.length > 0
     const free = !paidRoute && !memberRoute
+    /** The same rule `postDraftProblem` applies, so the field and the Post button agree. */
+    const priceOutOfRange =
+        draft.price !== null && (draft.price < minPrice || draft.price > STAR_PRICE_MAX)
 
     /**
      * Turning a route on or off, and keeping `audience` in step.
@@ -74,6 +79,14 @@ export function PostAudienceScreen({
              * "not free" is not an instruction until one of the routes below is chosen.
              */}
             <SwitchRow
+                /*
+                 * Legacy draws a glyph beside each of these two, and they are not decoration: they
+                 * are how the dialog says *public* and *paid* before the words are read. Rendered
+                 * from the legacy SVGs to identify them — two people for Free, the notched
+                 * dollar badge for Exclusive, which is the same `badge-dollar` `PostHeader` already
+                 * uses to mark a gated post.
+                 */
+                icon="users"
                 label={t('post_audience_free')}
                 checked={free}
                 disabled={disabled}
@@ -85,7 +98,8 @@ export function PostAudienceScreen({
 
             <Rule />
 
-            <h3 className="type-dense-emphasis pt-3 pb-1 text-(--text-title)">
+            <h3 className="type-body-strong flex items-center gap-2 pt-3 pb-1 text-(--text-title)">
+                <Icon name="badge-dollar" size={20} className="flex-none" />
                 {t('post_audience_exclusive')}
             </h3>
 
@@ -99,33 +113,67 @@ export function PostAudienceScreen({
             />
 
             {paidRoute ? (
-                <label className="flex items-center gap-2 pb-3">
-                    <span className="type-dense-default text-(--text-subtitle)">
-                        {t('post_settings_price')}
-                    </span>
-                    <input
-                        type="number"
-                        inputMode="numeric"
-                        min={minPrice}
-                        max={STAR_PRICE_MAX}
-                        value={draft.price ?? minPrice}
-                        disabled={disabled}
-                        data-testid={subTestId(testId, 'input')}
-                        onChange={event => {
-                            /*
-                             * An empty field is not a price of zero. Clearing it while typing is
-                             * ordinary, so it falls back to the floor rather than to a value
-                             * `postDraftProblem` would then refuse — the author is mid-edit.
-                             */
-                            const parsed = Number(event.target.value)
-                            setRoutes({
-                                price: Number.isFinite(parsed) && parsed > 0 ? parsed : minPrice,
-                            })
-                        }}
-                        className="type-body-default w-28 rounded-(--radius-sm) border border-(--input-border) bg-transparent px-2 py-1 text-(--text-title)"
-                    />
-                    <Icon name="star" size={16} className="text-(--icon-secondary)" />
-                </label>
+                <div className="flex flex-col gap-1 pb-3">
+                    {/*
+                     * Legacy's field: **full width**, 45px tall, 12px corners, and the Star mark as
+                     * a **leading** adornment inside the box. This had a narrow 112px input with a
+                     * "Price" label beside it and the star trailing — three differences from a
+                     * control whose whole job is to be typed a number into.
+                     *
+                     * `StarMark` rather than a sprite glyph: Star is a currency in this product and
+                     * `shared/components/star-mark.tsx` is the one drawing of it, which is what
+                     * keeps it identical here and on the buttons that spend it.
+                     */}
+                    <div
+                        className={
+                            priceOutOfRange
+                                ? 'flex h-[45px] items-center gap-2 rounded-xl border border-(--input-border-error) bg-(--background-surface) px-3'
+                                : 'flex h-[45px] items-center gap-2 rounded-xl border border-(--input-border) bg-(--background-surface) px-3'
+                        }
+                    >
+                        <StarMark size={16} />
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            min={minPrice}
+                            max={STAR_PRICE_MAX}
+                            value={draft.price ?? minPrice}
+                            disabled={disabled}
+                            aria-label={t('post_settings_price')}
+                            aria-invalid={priceOutOfRange || undefined}
+                            data-testid={subTestId(testId, 'input')}
+                            onChange={event => {
+                                /*
+                                 * An empty field is not a price of zero. Clearing it while typing is
+                                 * ordinary, so it falls back to the floor rather than to a value
+                                 * `postDraftProblem` would then refuse — the author is mid-edit.
+                                 */
+                                const parsed = Number(event.target.value)
+                                setRoutes({
+                                    price:
+                                        Number.isFinite(parsed) && parsed > 0 ? parsed : minPrice,
+                                })
+                            }}
+                            className="type-body-default min-w-0 flex-1 bg-transparent text-(--text-title) outline-none disabled:opacity-60"
+                        />
+                    </div>
+                    {/*
+                     * Legacy's own helper line, shown only when the number is outside the range —
+                     * and it names both ends, because a floor the backoffice set for this account
+                     * is not a number the creator can guess.
+                     */}
+                    {priceOutOfRange ? (
+                        <p
+                            data-testid={subTestId(testId, 'error')}
+                            className="type-caption-meta text-(--text-error)"
+                        >
+                            {t('post_create_price_range', {
+                                min: minPrice,
+                                max: STAR_PRICE_MAX,
+                            })}
+                        </p>
+                    ) : null}
+                </div>
             ) : null}
 
             {/*
@@ -317,6 +365,7 @@ function Rule() {
  * what names the switch, and the hint is joined to it so a screen reader hears the qualification.
  */
 function SwitchRow({
+    icon,
     label,
     hint,
     checked,
@@ -324,6 +373,8 @@ function SwitchRow({
     onChange,
     testId,
 }: {
+    /** Legacy draws one beside the audience rows and none beside the post settings. */
+    icon?: TeviIconName
     label: string
     hint?: string
     checked: boolean
@@ -336,7 +387,10 @@ function SwitchRow({
 
     return (
         <div className="flex items-start justify-between gap-3 py-3">
-            <span className="flex min-w-0 flex-col gap-1">
+            {icon ? (
+                <Icon name={icon} size={20} className="mt-0.5 flex-none text-(--icon-default)" />
+            ) : null}
+            <span className="flex min-w-0 flex-1 flex-col gap-1">
                 <span id={labelId} className="type-body-strong text-(--text-title)">
                     {label}
                 </span>

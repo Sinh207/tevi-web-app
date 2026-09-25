@@ -12303,6 +12303,7 @@
                 "affix",
                 "header",
                 "label-data",
+                "panel",
                 "prefix",
                 "submit",
                 "suffix",
@@ -12317,8 +12318,8 @@
                 "group",
                 "header",
                 "list",
-                "panel",
-                "row"
+                "row",
+                "tab"
             ]
         },
         "src/features/post/components/post-detail-view.tsx": {
@@ -12420,6 +12421,7 @@
             ],
             "parts": [
                 "affix",
+                "error",
                 "field",
                 "input",
                 "item",

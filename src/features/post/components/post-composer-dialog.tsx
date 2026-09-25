@@ -377,7 +377,15 @@ export function PostComposerDialog({
                         onRemoveImage={removeImage}
                         onRemoveVideo={removeVideo}
                         message={message}
-                        testId={testId}
+                        /*
+                         * Its **own** scope, not the dialog's. The body draws a `trigger` (the
+                         * upload button) and a `list`; so does the dialog around it — the chip that
+                         * opens the audience popup, and the reply popup's own list. Sharing a scope
+                         * made `post-composer-trigger` resolve to whichever came first in the DOM,
+                         * which is the failure `docs/TEST_IDS.md` §5 describes. A browser probe
+                         * found it: it could not click the chip.
+                         */
+                        testId={subTestId(testId, 'panel')}
                     />
                 </div>
 

@@ -60,8 +60,6 @@ import {
     POST_VIDEO_BARE,
     type Post,
     PostCard,
-    PostCollectionPicker,
-    PostComposerBody,
     PostComposerDialog,
     type PostDraft,
     REPLY_DELETED,
@@ -657,8 +655,8 @@ const HARNESS_AUTHOR = {
 
 export function PostPreview() {
     const [composerOpen, setComposerOpen] = useState(false)
-    const [harnessDraft, setHarnessDraft] = useState<PostDraft>(emptyPostDraft)
-    const [harnessCollections, setHarnessCollections] = useState<string[]>([])
+    const [_harnessDraft, _setHarnessDraft] = useState<PostDraft>(emptyPostDraft)
+    const [_harnessCollections, _setHarnessCollections] = useState<string[]>([])
 
     return (
         <div className="flex flex-col gap-12">
@@ -683,38 +681,14 @@ export function PostPreview() {
                 />
 
                 {/*
-                 * The collection picker on its own — the popup's body, without the portal, so its
-                 * rules, its Add/Remove pills and the brand-coloured create button can be reviewed.
+                 * No standalone copies of the body or the picker here any more.
+                 *
+                 * They were added to review geometry without a portal in the way, and they carried
+                 * the **same testid scope** as the real dialog — so `post-composer-trigger` matched
+                 * three elements and a browser probe could not tell the chip from the upload
+                 * button. The dialog above opens from the button, which is the thing to review
+                 * anyway; a second copy of a surface is a second set of names for it.
                  */}
-                <div className="max-w-[512px] rounded-xl bg-(--background-surface) p-4">
-                    <PostCollectionPicker
-                        selected={harnessCollections}
-                        onChange={setHarnessCollections}
-                        testId="post-composer-row"
-                    />
-                </div>
-
-                {/*
-                 * The composing screen on its own, outside the dialog — the only way to review the
-                 * geometry without a portal in the way. The dialog above is the real thing; this is
-                 * the same component it renders.
-                 */}
-                <div className="max-w-[612px] rounded-xl bg-(--background-surface) p-4">
-                    <PostComposerBody
-                        draft={harnessDraft}
-                        author={HARNESS_AUTHOR}
-                        characterLimit={500}
-                        limitReached={false}
-                        disabled={false}
-                        readingVideo={false}
-                        onText={text => setHarnessDraft(current => ({ ...current, text }))}
-                        onPickFiles={() => {}}
-                        onRemoveImage={() => {}}
-                        onRemoveVideo={() => {}}
-                        message={null}
-                        testId="post-composer"
-                    />
-                </div>
             </section>
 
             <section className="flex flex-col gap-6">

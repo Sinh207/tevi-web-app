@@ -214,7 +214,13 @@ export function PostComposerBody({
                         onClick={() => fileRef.current?.click()}
                         className="flex size-9 flex-none items-center justify-center rounded-full text-(--text-link) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
                     >
-                        <Icon name="image" size={24} />
+                        {/*
+                         * `images`, not `image`. Legacy's `upload-media.svg` is **two stacked
+                         * frames** — rendered from the real asset to identify it — which is what
+                         * says "photos or a video" rather than "a photo". The single frame was the
+                         * first guess.
+                         */}
+                        <Icon name="images" size={24} />
                     </button>
                     {readingVideo ? (
                         <span className="type-caption-meta text-(--text-placeholder)">
