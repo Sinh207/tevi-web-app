@@ -248,9 +248,20 @@ export function PostCollectionPicker({
              * Hidden past ten, as legacy hides it (`collections.length < 10`): the list asks for one
              * page, so past that the creator cannot see what they already have and a new one would
              * be filed somewhere they cannot check.
+             *
+             * It also carries `pb-3` on the scroller's own padding rather than its own, so the
+             * sticky edge sits flush with the dialog's bottom instead of floating a gap above it.
              */}
             {collections.collections.length < COLLECTION_CREATE_LIMIT ? (
-                <div className="flex justify-end pt-3">
+                /*
+                 * **Sticky**, because legacy puts this in `DialogActions` — a footer outside the
+                 * scrolling area. Left in the flow it scrolls away with the list, and a creator
+                 * with a screen's worth of collections has to scroll past all of them to find the
+                 * one control that makes another. Sticky is the same outcome without the picker
+                 * having to own the dialog's layout: it needs its own background, or the rows pass
+                 * underneath it.
+                 */
+                <div className="sticky bottom-0 flex justify-end border-(--separator-default) border-t bg-(--background-surface) pt-3">
                     <button
                         type="button"
                         disabled={disabled}

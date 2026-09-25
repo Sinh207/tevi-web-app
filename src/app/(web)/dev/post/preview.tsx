@@ -60,6 +60,7 @@ import {
     POST_VIDEO_BARE,
     type Post,
     PostCard,
+    PostCollectionPicker,
     PostComposerBody,
     PostComposerDialog,
     type PostDraft,
@@ -657,6 +658,7 @@ const HARNESS_AUTHOR = {
 export function PostPreview() {
     const [composerOpen, setComposerOpen] = useState(false)
     const [harnessDraft, setHarnessDraft] = useState<PostDraft>(emptyPostDraft)
+    const [harnessCollections, setHarnessCollections] = useState<string[]>([])
 
     return (
         <div className="flex flex-col gap-12">
@@ -679,6 +681,18 @@ export function PostPreview() {
                     onOpenChange={setComposerOpen}
                     author={HARNESS_AUTHOR}
                 />
+
+                {/*
+                 * The collection picker on its own — the popup's body, without the portal, so its
+                 * rules, its Add/Remove pills and the brand-coloured create button can be reviewed.
+                 */}
+                <div className="max-w-[512px] rounded-xl bg-(--background-surface) p-4">
+                    <PostCollectionPicker
+                        selected={harnessCollections}
+                        onChange={setHarnessCollections}
+                        testId="post-composer-row"
+                    />
+                </div>
 
                 {/*
                  * The composing screen on its own, outside the dialog — the only way to review the
