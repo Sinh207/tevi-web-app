@@ -27,15 +27,6 @@ import { useCollections } from '../hooks/use-collections'
  * still a **screen** rather than the inline field this had at first: naming a collection is a step,
  * and a field wedged under a list reads as an afterthought.
  */
-/**
- * Past this many, legacy stops offering *Create new collection*.
- *
- * The same number as the page size, and not a coincidence: the picker reads one page, so a creator
- * with more than this cannot see what they already have — and a new collection made blind is one
- * they cannot then find to file into.
- */
-const COLLECTION_CREATE_LIMIT = 10
-
 export function PostCollectionPicker({
     selected,
     onChange,
@@ -245,35 +236,38 @@ export function PostCollectionPicker({
              * `--background-segment` for the same reason: reaching into the Primary ramp for a
              * `--primary-50` tint would pick a *dark* fill in dark mode, since that ramp inverts.
              *
-             * Hidden past ten, as legacy hides it (`collections.length < 10`): the list asks for one
-             * page, so past that the creator cannot see what they already have and a new one would
-             * be filed somewhere they cannot check.
+             * ⚠ **Always drawn**, where legacy hides it past ten (`collections.length < 10`).
              *
-             * It also carries `pb-3` on the scroller's own padding rather than its own, so the
-             * sticky edge sits flush with the dialog's bottom instead of floating a gap above it.
+             * That condition was ported and it is wrong *here*: legacy has a collections screen of
+             * its own, so a creator at the limit can still make one somewhere else. This app has no
+             * such screen yet — the composer is the only place a collection can be created at all —
+             * so hiding the button is not a limit, it is a dead end. A creator with ten collections
+             * simply could never make an eleventh.
+             *
+             * Port it back the day that screen exists, and not before.
              */}
-            {collections.collections.length < COLLECTION_CREATE_LIMIT ? (
-                /*
-                 * **Sticky**, because legacy puts this in `DialogActions` — a footer outside the
-                 * scrolling area. Left in the flow it scrolls away with the list, and a creator
-                 * with a screen's worth of collections has to scroll past all of them to find the
-                 * one control that makes another. Sticky is the same outcome without the picker
-                 * having to own the dialog's layout: it needs its own background, or the rows pass
-                 * underneath it.
-                 */
-                <div className="sticky bottom-0 flex justify-end border-(--separator-default) border-t bg-(--background-surface) pt-3">
-                    <button
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => setCreating(true)}
-                        data-testid={subTestId(testId, 'trigger')}
-                        className="type-dense-emphasis flex h-10 items-center gap-1 rounded-[40px] border-[1.5px] border-(--text-brand) bg-(--background-surface) px-4 text-(--text-brand) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
-                    >
-                        <Icon name="plus" size={20} className="flex-none" />
-                        {t('post_collection_create_new')}
-                    </button>
-                </div>
-            ) : null}
+            {/*
+             * **Sticky**, because legacy puts this in `DialogActions` — a footer outside the
+             * scrolling area. Left in the flow it scrolls away with the list, and a creator with a
+             * screen's worth of collections has to scroll past all of them to find the one control
+             * that makes another. Sticky is the same outcome without the picker having to own the
+             * dialog's layout: it needs its own background, or the rows pass underneath it.
+             *
+             * `--background-subtle`, which is what `DialogContent` paints — `--background-surface`
+             * is a shade lighter and the footer read as a separate slab floating over the list.
+             */}
+            <div className="sticky bottom-0 flex justify-end border-(--separator-default) border-t bg-(--background-subtle) pt-3">
+                <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => setCreating(true)}
+                    data-testid={subTestId(testId, 'trigger')}
+                    className="type-dense-emphasis flex h-10 items-center gap-1 rounded-[40px] border-[1.5px] border-(--text-brand) bg-(--background-surface) px-4 text-(--text-brand) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+                >
+                    <Icon name="plus" size={20} className="flex-none" />
+                    {t('post_collection_create_new')}
+                </button>
+            </div>
         </div>
     )
 }
