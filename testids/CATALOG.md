@@ -1047,12 +1047,12 @@ name; you need it to know the element exists.
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
 | `PostCollectionPicker` | `src/features/post/components/post-collection-picker.tsx` | `-cancel` `-input` `-message` `-option` `-panel` `-retry` `-submit` `-trigger` |
-| `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-clear` `-error` `-field` `-input` `-item` `-list` `-remove` `-slide` `-trigger` |
+| `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-clear` `-error` `-field` `-input` `-list` `-slide` `-trigger` |
 | `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-header` `-label-data` `-panel` `-prefix` `-reveal` `-submit` `-suffix` `-trigger` |
 | `PostComposerDialogs` | `src/features/post/components/post-composer-dialogs.tsx` | `-group` `-header` `-list` `-row` `-tab` |
 | `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
-| `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` |
+| `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` `-remove` |
 | `PostLockPanel` | `src/features/post/components/post-lock-panel.tsx` | `-label` `-title` |
 | `PostMediaLightbox` | `src/features/post/components/post-media-lightbox.tsx` | `-close` `-label` `-next` `-overlay` `-prev` `-slide` |
 | `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-panel` `-remove` `-trigger` |

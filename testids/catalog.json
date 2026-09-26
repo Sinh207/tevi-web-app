@@ -12288,9 +12288,7 @@
                 "error",
                 "field",
                 "input",
-                "item",
                 "list",
-                "remove",
                 "slide",
                 "trigger"
             ]
@@ -12350,7 +12348,8 @@
             ],
             "parts": [
                 "next",
-                "prev"
+                "prev",
+                "remove"
             ]
         },
         "src/features/post/components/post-lock-panel.tsx": {
