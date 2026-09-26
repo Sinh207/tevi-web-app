@@ -2,10 +2,11 @@ import { env } from '@shared/config/env'
 import { ApiError } from '@shared/lib/api/errors'
 import { createApiModel } from '@shared/lib/api/model'
 import type { PageCursor } from '@shared/lib/api/page-cursor'
+import type { BookmarkPage } from '../lib/bookmark-page'
 import type { PostBody, UploadedImage } from '../lib/post-draft'
 import { normalizeCollection, normalizeCollections, type PostCollection } from './collection-types'
 import { normalizeReplies, normalizeReply, type Reply } from './reply-types'
-import { normalizePost, type Post } from './types'
+import { normalizePost, normalizePosts, type Post } from './types'
 
 /**
  * A post as a thing in its own right — `core/v1/posts/**`.
@@ -104,6 +105,9 @@ export const postKeys = {
     /** The creator's own collections. Account-scoped like everything else here. */
     collections: (accountId: string | null) =>
         [...POST_SCOPE, 'collections', accountId ?? 'anon'] as const,
+    /** Every page of the reader's bookmarked posts. */
+    bookmarks: (accountId: string | null) =>
+        [...POST_SCOPE, 'bookmarks', accountId ?? 'anon'] as const,
 }
 
 /**
@@ -230,6 +234,59 @@ export const postApi = {
     async removeBookmark(postId: string, accountId?: string | null): Promise<boolean> {
         const body = await api.del<unknown>(
             postPath(postId, 'bookmark/'),
+            undefined,
+            accountId ? { accountId } : undefined,
+        )
+        return isSuccessBody(body)
+    },
+
+    /**
+     * One page of what the reader has bookmarked.
+     *
+     * ⚠ **Same path as `addBookmark`, different method.** `POST v1/posts/bookmark/` files a post and
+     * `GET v1/posts/bookmark/` lists them, which is worth saying out loud because the pair reads
+     * like a mistake in a diff.
+     *
+     * Page-numbered, so the cursor is `PageCursor` and the stop condition lives in
+     * `lib/bookmark-page.ts` with the size it has to agree with. `normalizePosts` **drops**
+     * unparseable rows rather than degrading them — same reasoning as a feed: a gap is ordinary, a
+     * blank card the reader can tap is a defect.
+     *
+     * The rows are ordinary posts, so nothing here needs to know they were bookmarked. The card
+     * reads `is_bookmark` off the post itself.
+     */
+    async getBookmarks({
+        params,
+        accountId,
+        signal,
+    }: {
+        params: PageCursor
+        accountId?: string | null
+        signal?: AbortSignal
+    }): Promise<BookmarkPage> {
+        const body = await api.get<{ results?: unknown; count?: number; next?: string | null }>(
+            `${VERSION}/posts/bookmark/`,
+            params,
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        return {
+            results: normalizePosts(body?.results),
+            count: typeof body?.count === 'number' ? body.count : 0,
+            next: body?.next,
+        }
+    },
+
+    /**
+     * Empty the whole list — legacy's `deleteAllBookmark`, and the only action its top bar offers.
+     *
+     * A sub-path rather than a body of ids (`DELETE v1/posts/bookmark/all/`), so there is nothing
+     * to page through first: a reader with four hundred bookmarks clears them in one request rather
+     * than in thirty-four. `isSuccessBody` for the same reason the two writes above use it —
+     * legacy treats a 2xx without the flag as a write that did not land (**B106**).
+     */
+    async clearBookmarks(accountId?: string | null): Promise<boolean> {
+        const body = await api.del<unknown>(
+            `${VERSION}/posts/bookmark/all/`,
             undefined,
             accountId ? { accountId } : undefined,
         )

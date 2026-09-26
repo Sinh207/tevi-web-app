@@ -36,6 +36,16 @@ export {
     type QuotedPost,
     type UnlockDetail,
 } from './api/types'
+/**
+ * `/bookmarks` — the screen and the one control its app bar carries.
+ *
+ * Two exports rather than one because the bar is composed by the **route**, on the server, the way
+ * `/notification` composes its own: `PageBackBar` is `features/navigation`'s and takes an `actions`
+ * slot. The hook behind both stays internal — a consumer holding `useBookmarks` could render a
+ * *Clear all* with no list under it.
+ */
+export { BookmarkBarActions } from './components/bookmark-bar-actions'
+export { BookmarkList } from './components/bookmark-list'
 export type { PostMiniAppApp } from './components/post-attachments'
 export { PostCard } from './components/post-card'
 /**

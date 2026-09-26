@@ -181,7 +181,7 @@ Also present on every route it is mounted under — `src/features/navigation/com
 
 ## `channel` — Channel / space, following, profile settings
 
-Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/membership/[[...tier]]`, `/[slug]/post/[code]`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
+Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/membership/[[...tier]]`, `/[slug]/post/[code]`, `/bookmarks`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
 
 | testid | companions | source |
 |---|---|---|
@@ -627,7 +627,7 @@ Routes: `/my-wallet`, `/my-wallet/payout-method`, `/my-wallet/payout-request`, `
 
 ## `navigation` — Shell — rail, top bar, tab bar, account drawer, end rail
 
-Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/post/[code]`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
+Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/post/[code]`, `/bookmarks`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
 
 Also present on every route it is mounted under — `src/app/(web)/(main)/layout.tsx`.
 
@@ -885,7 +885,7 @@ Routes: `/my-wallet/payout-method`, `/my-wallet/payout-request`, `/my-wallet/pay
 
 ## `post` — Post card
 
-Routes: `/[slug]/post/[code]`
+Routes: `/[slug]/post/[code]`, `/bookmarks`
 
 | testid | companions | source |
 |---|---|---|
@@ -1045,6 +1045,8 @@ name; you need it to know the element exists.
 | `HomePostFeed` | `src/features/home/components/home-post-feed.tsx` | `-item` |
 | `TotalBalanceCard` | `src/features/my-wallet/components/total-balance-card.tsx` | `-count` |
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
+| `BookmarkBarActions` | `src/features/post/components/bookmark-bar-actions.tsx` | `-clear` `-confirm` |
+| `BookmarkList` | `src/features/post/components/bookmark-list.tsx` | `-item` `-list` `-message` `-retry` |
 | `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
