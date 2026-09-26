@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-812 ids across 28 surfaces.
+813 ids across 28 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -887,7 +887,9 @@ Routes: `/my-wallet/payout-method`, `/my-wallet/payout-request`, `/my-wallet/pay
 
 Routes: `/[slug]/post/[code]`
 
-_No ids yet._
+| testid | companions | source |
+|---|---|---|
+| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:614` |
 
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone
 
@@ -1047,9 +1049,10 @@ name; you need it to know the element exists.
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
 | `PostCollectionPicker` | `src/features/post/components/post-collection-picker.tsx` | `-cancel` `-input` `-message` `-option` `-panel` `-retry` `-submit` `-trigger` |
-| `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-clear` `-error` `-field` `-input` `-list` `-slide` `-trigger` |
+| `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-error` `-field` `-input` `-list` `-trigger` |
 | `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-header` `-label-data` `-panel` `-prefix` `-reveal` `-submit` `-suffix` `-trigger` |
 | `PostComposerDialogs` | `src/features/post/components/post-composer-dialogs.tsx` | `-group` `-header` `-list` `-row` `-tab` |
+| `PostComposerVideo` | `src/features/post/components/post-composer-video.tsx` | `-apply` `-clear` `-field` `-item` `-remove` `-reveal` `-slide` `-trigger` |
 | `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
 | `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` `-remove` |
@@ -1081,6 +1084,7 @@ name; you need it to know the element exists.
 | `PickerList` | `src/shared/components/picker-list.tsx` | `-option` |
 | `StickyTabs` | `src/shared/components/sticky-tabs.tsx` | `-panel` `-tab` |
 | `VerifiedBadgeDialog` | `src/shared/components/verified-badge-dialog.tsx` | `-close` `-panel` `-title` |
+| `VideoTrimmer` | `src/shared/components/video-trimmer.tsx` | `-error` `-header` `-label-data` `-list` `-next` `-prev` `-reveal` `-slide` `-submit` |
 | `ConfirmDialog` | `src/shared/ui/confirm-dialog.tsx` | `-cancel` `-confirm` `-description` `-title` |
 | `DialogOverlay`, `DialogContent` | `src/shared/ui/dialog.tsx` | `-overlay` |
 | `SearchBar` | `src/shared/ui/search-bar.tsx` | `-clear` |

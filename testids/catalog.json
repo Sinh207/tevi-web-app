@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 812,
+        "ids": 813,
         "surfaces": 28
     },
     "surfaces": {
@@ -11385,6 +11385,13 @@
             ],
             "source": "src/features/payout/components/payout-config-form.tsx:186"
         },
+        "post-trimmer": {
+            "scope": "post",
+            "routes": [
+                "/[slug]/post/[code]"
+            ],
+            "source": "src/features/post/components/post-composer-dialog.tsx:614"
+        },
         "premium-about": {
             "scope": "premium",
             "routes": [
@@ -12284,12 +12291,10 @@
                 "PostComposerBody"
             ],
             "parts": [
-                "clear",
                 "error",
                 "field",
                 "input",
                 "list",
-                "slide",
                 "trigger"
             ]
         },
@@ -12319,6 +12324,21 @@
                 "list",
                 "row",
                 "tab"
+            ]
+        },
+        "src/features/post/components/post-composer-video.tsx": {
+            "accepts": [
+                "PostComposerVideo"
+            ],
+            "parts": [
+                "apply",
+                "clear",
+                "field",
+                "item",
+                "remove",
+                "reveal",
+                "slide",
+                "trigger"
             ]
         },
         "src/features/post/components/post-detail-view.tsx": {
@@ -12681,6 +12701,22 @@
                 "close",
                 "panel",
                 "title"
+            ]
+        },
+        "src/shared/components/video-trimmer.tsx": {
+            "accepts": [
+                "VideoTrimmer"
+            ],
+            "parts": [
+                "error",
+                "header",
+                "label-data",
+                "list",
+                "next",
+                "prev",
+                "reveal",
+                "slide",
+                "submit"
             ]
         },
         "src/shared/ui/confirm-dialog.tsx": {

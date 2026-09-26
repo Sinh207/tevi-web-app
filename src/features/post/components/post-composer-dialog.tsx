@@ -2,6 +2,7 @@
 
 import { rawGrantNumber, usePermission } from '@features/permission'
 import { DialogScreenHeader } from '@shared/components/dialog-screen-header'
+import { VideoTrimmer } from '@shared/components/video-trimmer'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { useWebConfig } from '@shared/lib/remote-config'
 import { subTestId } from '@shared/lib/test-id'
@@ -111,6 +112,17 @@ export function PostComposerDialog({
      */
     const [previewOpen, setPreviewOpen] = useState(false)
 
+    /**
+     * The trimmer is open over the composer.
+     *
+     * A sixth dialog, and the only one that is not this feature's — `shared/components`, because
+     * the space's custom-profile screen trims an avatar clip with the same component and neither
+     * feature may import the other. Dynamically imported: it pulls in the frame sampler and, once
+     * *Save* is pressed, 24 MB of ffmpeg core, and a composer that never attaches a video should
+     * pay for none of that.
+     */
+    const [trimOpen, setTrimOpen] = useState(false)
+
     const [draft, setDraft] = useState<PostDraft>(emptyPostDraft)
     /** A file the browser would not decode. Not a draft problem — the clip never got in. */
     const [videoError, setVideoError] = useState<string | null>(null)
@@ -169,6 +181,10 @@ export function PostComposerDialog({
         () => () => {
             for (const image of draftRef.current.images) URL.revokeObjectURL(image.previewUrl)
             if (draftRef.current.video) URL.revokeObjectURL(draftRef.current.video.previewUrl)
+            // The cover is a fourth object URL and was the one this list forgot.
+            if (draftRef.current.coverImage) {
+                URL.revokeObjectURL(draftRef.current.coverImage.previewUrl)
+            }
         },
         [],
     )
@@ -178,6 +194,7 @@ export function PostComposerDialog({
         setDraft(current => {
             for (const image of current.images) URL.revokeObjectURL(image.previewUrl)
             if (current.video) URL.revokeObjectURL(current.video.previewUrl)
+            if (current.coverImage) URL.revokeObjectURL(current.coverImage.previewUrl)
             return emptyPostDraft()
         })
     }
@@ -233,9 +250,12 @@ export function PostComposerDialog({
 
     function removeVideo() {
         setVideoError(null)
+        setTrimOpen(false)
         setDraft(current => {
             if (current.video) URL.revokeObjectURL(current.video.previewUrl)
-            return { ...current, video: null }
+            // The cover exists only to stand in front of a clip; without one it is orphaned state.
+            if (current.coverImage) URL.revokeObjectURL(current.coverImage.previewUrl)
+            return { ...current, video: null, coverImage: null }
         })
     }
 
@@ -267,6 +287,52 @@ export function PostComposerDialog({
             return { ...current, video: null, images: [...current.images, ...measured] }
         })
         setVideoError(null)
+    }
+
+    /**
+     * Replace the attached clip with the trimmed one.
+     *
+     * `codec` and `poster` carry over unchanged, and that is not laziness: the cut is a **stream
+     * copy**, so the codec is by definition the same one, and the poster was grabbed at 0.1s from a
+     * clip whose first frame the trim may well have kept. `durationSeconds` is the trimmer's own
+     * measurement of what it produced.
+     *
+     * `width`/`height` carry over too — a container rewrite cannot change the frame size, and
+     * re-probing would be a second decode to learn a number already known.
+     */
+    function applyTrim(result: { file: File; durationSeconds: number }) {
+        setDraft(current => {
+            const previous = current.video
+            if (!previous) return current
+            // The old preview is the old bytes; nothing on screen points at it after this.
+            URL.revokeObjectURL(previous.previewUrl)
+            return {
+                ...current,
+                video: {
+                    ...previous,
+                    file: result.file,
+                    durationSeconds: result.durationSeconds,
+                    previewUrl: URL.createObjectURL(result.file),
+                },
+            }
+        })
+        setTrimOpen(false)
+    }
+
+    async function pickCover(file: File | null) {
+        if (!file || !isAttachableImage(file)) return
+        const measured = await measureImage(file)
+        setDraft(current => {
+            if (current.coverImage) URL.revokeObjectURL(current.coverImage.previewUrl)
+            return { ...current, coverImage: measured }
+        })
+    }
+
+    function removeCover() {
+        setDraft(current => {
+            if (current.coverImage) URL.revokeObjectURL(current.coverImage.previewUrl)
+            return { ...current, coverImage: null }
+        })
     }
 
     function removeImage(id: string) {
@@ -316,6 +382,7 @@ export function PostComposerDialog({
                     // Any popup over it goes too — reopening should not land on one.
                     setSettingsDialog(null)
                     setPreviewOpen(false)
+                    setTrimOpen(false)
                 }
                 onOpenChange(next)
             }}
@@ -386,6 +453,9 @@ export function PostComposerDialog({
                         onPickFiles={files => void pickFiles(files)}
                         onRemoveImage={removeImage}
                         onRemoveVideo={removeVideo}
+                        onEditVideo={() => setTrimOpen(true)}
+                        onPickCover={file => void pickCover(file)}
+                        onRemoveCover={removeCover}
                         message={message}
                         /*
                          * Its **own** scope, not the dialog's. The body draws a `trigger` (the
@@ -518,6 +588,32 @@ export function PostComposerDialog({
                 onClose={() => setPreviewOpen(false)}
                 post={previewOpen ? buildPreviewPost(draft, { author }) : null}
             />
+
+            {/*
+             * Mounted only while it is open, which is what keeps the frame sampler and the ffmpeg
+             * loader out of a composer that attaches nothing. `source` is rebuilt each render and
+             * that is fine — the trimmer keys its own state on the preview URL.
+             */}
+            {trimOpen && draft.video ? (
+                <VideoTrimmer
+                    open
+                    source={{
+                        file: draft.video.file,
+                        previewUrl: draft.video.previewUrl,
+                        durationSeconds: draft.video.durationSeconds,
+                        width: draft.video.width,
+                        height: draft.video.height,
+                    }}
+                    onCancel={() => setTrimOpen(false)}
+                    onTrimmed={applyTrim}
+                    /*
+                     * Its **own** scope, like the preview dialog's — `post-composer-…` is spoken
+                     * for by the composer's own backdrop and its four settings popups, and the
+                     * trimmer is a surface rather than a part of the composer.
+                     */
+                    testId="post-trimmer"
+                />
+            ) : null}
         </Dialog>
     )
 }

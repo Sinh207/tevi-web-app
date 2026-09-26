@@ -9,6 +9,7 @@ import { Icon } from '@shared/ui/icon'
 import { useId, useLayoutEffect, useRef } from 'react'
 import { type PostDraft, uploadAccept } from '../lib/post-draft'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
+import { PostComposerVideo } from './post-composer-video'
 import { PostImageGallery } from './post-image-gallery'
 
 /**
@@ -38,6 +39,9 @@ export function PostComposerBody({
     onPickFiles,
     onRemoveImage,
     onRemoveVideo,
+    onEditVideo,
+    onPickCover,
+    onRemoveCover,
     message,
     testId,
 }: {
@@ -52,6 +56,11 @@ export function PostComposerBody({
     onPickFiles: (files: FileList | null) => void
     onRemoveImage: (id: string) => void
     onRemoveVideo: () => void
+    /** Open the trimmer over the composer — `PostComposerVideo` decides when it is offered. */
+    onEditVideo: () => void
+    /** A picture to stand in front of a **paid** clip; see `PostComposerVideo`. */
+    onPickCover: (file: File | null) => void
+    onRemoveCover: () => void
     message: string | null
     testId?: string
 }) {
@@ -169,32 +178,15 @@ export function PostComposerBody({
                 />
 
                 {draft.video ? (
-                    <div
-                        data-testid={subTestId(testId, 'slide')}
-                        className="relative overflow-hidden rounded-[8px] bg-(--background-segment)"
-                    >
-                        {/* biome-ignore lint/a11y/useMediaCaption: a clip the author is about to publish has no track to caption it with. */}
-                        <video
-                            src={draft.video.previewUrl}
-                            controls
-                            playsInline
-                            preload="metadata"
-                            className="max-h-64 w-full"
-                        />
-                        <button
-                            type="button"
-                            data-testid={subTestId(testId, 'clear')}
-                            aria-label={t('post_create_remove_video')}
-                            disabled={disabled}
-                            onClick={onRemoveVideo}
-                            className="absolute end-1 top-1 flex size-8 items-center justify-center rounded-full bg-(--background-overlay) text-(--text-on)"
-                        >
-                            <Icon name="xmark" size={16} />
-                        </button>
-                        <span className="absolute bottom-1 end-1 rounded-full bg-(--background-overlay) px-2 py-0.5 type-micro-overline text-(--text-on)">
-                            {formatClipLength(draft.video.durationSeconds)}
-                        </span>
-                    </div>
+                    <PostComposerVideo
+                        draft={draft}
+                        disabled={disabled}
+                        onRemoveVideo={onRemoveVideo}
+                        onEdit={onEditVideo}
+                        onPickCover={onPickCover}
+                        onRemoveCover={onRemoveCover}
+                        testId={testId}
+                    />
                 ) : null}
 
                 {/*
@@ -310,11 +302,4 @@ export function PostComposerBody({
             </div>
         </div>
     )
-}
-
-/** `m:ss`, the badge legacy draws on a clip. */
-function formatClipLength(seconds: number): string {
-    const whole = Math.max(0, Math.round(seconds))
-    const minutes = Math.floor(whole / 60)
-    return `${minutes}:${String(whole % 60).padStart(2, '0')}`
 }

@@ -46,3 +46,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# The ffmpeg.wasm core, copied out of node_modules by `scripts/copy-ffmpeg-core.mjs` in front of
+# `dev` and `build`. 24 MB of WebAssembly whose version is already pinned by the lockfile — that
+# script's header explains why this one generated artefact is not committed like the others.
+/public/ffmpeg/
