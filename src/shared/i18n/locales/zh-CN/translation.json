@@ -2102,7 +2102,7 @@
     "post_audience_pay_per_post_hint": "允许关注者无需会员即可购买这条帖子。",
     "post_audience_members": "会员",
     "post_audience_members_hint": "选择等级后，会员即可查看这条帖子。",
-    "post_reply_setting_subtitle": "选择谁可以回复这条帖子。",
+    "post_reply_setting_subtitle": "选择谁能回复这条帖子。请注意，被提及的人始终可以回复。",
     "post_reply_option_followers": "关注者",
     "post_reply_option_followers_hint": "所有关注你的人都可以回复",
     "post_reply_option_paid": "付费观众",

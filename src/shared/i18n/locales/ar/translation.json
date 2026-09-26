@@ -2158,7 +2158,7 @@
     "post_audience_pay_per_post_hint": "اسمح للمتابعين بشراء هذا المنشور دون عضوية.",
     "post_audience_members": "الأعضاء",
     "post_audience_members_hint": "اختيار الفئات يمنح الأعضاء الوصول إلى هذا المنشور.",
-    "post_reply_setting_subtitle": "اختر من يمكنه الرد على هذا المنشور.",
+    "post_reply_setting_subtitle": "اختر من يمكنه الرد على هذه المشاركة. تذكر أن أي شخص مذكور يمكنه الرد دائمًا.",
     "post_reply_option_followers": "المتابعون",
     "post_reply_option_followers_hint": "يمكن لكل من يتابعك الرد",
     "post_reply_option_paid": "المشاهدون المدفوعون",

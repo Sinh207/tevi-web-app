@@ -2102,7 +2102,7 @@
     "post_audience_pay_per_post_hint": "允許追蹤者無需會員即可購買這則貼文。",
     "post_audience_members": "會員",
     "post_audience_members_hint": "選擇等級後，會員即可查看這則貼文。",
-    "post_reply_setting_subtitle": "選擇誰可以回覆這則貼文。",
+    "post_reply_setting_subtitle": "選擇誰可以回覆此貼文。請注意，被提及的人始終可以回覆。",
     "post_reply_option_followers": "追蹤者",
     "post_reply_option_followers_hint": "所有追蹤你的人都可以回覆",
     "post_reply_option_paid": "付費觀眾",

@@ -2102,7 +2102,7 @@
     "post_audience_pay_per_post_hint": "Cho phép người theo dõi mua bài này mà không cần gói thành viên.",
     "post_audience_members": "Thành viên",
     "post_audience_members_hint": "Chọn hạng thành viên để họ được xem bài này.",
-    "post_reply_setting_subtitle": "Chọn ai có thể phản hồi bài viết này.",
+    "post_reply_setting_subtitle": "Chọn đối tượng có thể trả lời bài đăng này. Lưu ý rằng bất kỳ ai được nhắc đến luôn có thể trả lời.",
     "post_reply_option_followers": "Người theo dõi",
     "post_reply_option_followers_hint": "Mọi người theo dõi bạn đều có thể phản hồi",
     "post_reply_option_paid": "Người đã trả phí",

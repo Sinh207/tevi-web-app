@@ -181,9 +181,24 @@ function SettingsDialog({
                 className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
                 data-testid={testId}
             >
+                {/*
+                 * A **back arrow**, not a cross — all four of legacy's composer dialogs draw one
+                 * (`M21.75 12…`, an arrow-left), and it is the truer verb: the composer is still on
+                 * screen behind this popup, so the press returns to the draft rather than closing
+                 * anything the reader was working on.
+                 *
+                 * The glyph is `angle-left` rather than legacy's long arrow because that is the
+                 * mark this band uses everywhere else (`DESIGN_SYSTEM.md` §7, and
+                 * `DialogScreenHeader` picks it from `onBack` alone). One chevron across the app
+                 * beats matching a legacy asset on one screen.
+                 *
+                 * This does not contradict the composer's own header keeping its cross: that one is
+                 * the way *out*, and turning it into a back arrow — which an earlier pass did —
+                 * takes the way out away.
+                 */}
                 <DialogScreenHeader
                     title={title}
-                    onClose={onClose}
+                    onBack={onClose}
                     testId={subTestId(testId, 'header')}
                 />
                 <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">{children}</div>

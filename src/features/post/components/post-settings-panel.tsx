@@ -3,6 +3,7 @@
 import { StarMark } from '@shared/components/star-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
+import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
 import type { TeviIconName } from '@shared/ui/icon-names'
 import { Radio } from '@shared/ui/radio'
@@ -215,42 +216,70 @@ export function PostReplyAudienceScreen({
                 {t('post_reply_setting_subtitle')}
             </p>
 
-            {REPLY_AUDIENCES.map(audience => (
-                // biome-ignore lint/a11y/noLabelWithoutControl: `Radio` renders the `<input type="radio">` this label wraps; the rule cannot see through a component.
-                <label
-                    key={audience.value}
-                    className="flex cursor-pointer items-start gap-2"
-                    data-option-value={audience.value}
-                >
-                    {/*
-                     * `as="span"`, because `Radio` defaults to rendering a `<label>` around its own
-                     * input — and a label inside a label gives the words to the outer one and the
-                     * control to the inner, so pressing the text toggles nothing.
-                     */}
-                    <Radio
-                        as="span"
-                        name="post-reply-audience"
-                        checked={draft.replyAllowedUser === audience.value}
-                        disabled={disabled}
-                        onChange={() => onChange({ replyAllowedUser: audience.value })}
-                        data-testid={subTestId(testId, 'option')}
-                        className="mt-0.5 flex-none"
-                    />
-                    <span className="flex min-w-0 flex-col">
-                        <span className="type-dense-emphasis text-(--text-title)">
-                            {t(audience.labelKey)}
+            <div className="flex flex-col">
+                {REPLY_AUDIENCES.map((audience, index) => (
+                    // biome-ignore lint/a11y/noLabelWithoutControl: `Radio` renders the `<input type="radio">` this label wraps; the rule cannot see through a component.
+                    <label
+                        key={audience.value}
+                        /*
+                         * `justify-between` with the words **first**: legacy's `FormControlLabel`
+                         * is `row-reverse` + `space-between`, so the control sits on the trailing
+                         * edge and the six labels start on one line. A leading radio — which this
+                         * had — indents every label by the control's width and turns a settings
+                         * list into a form.
+                         *
+                         * `items-center`, not `items-start`: the mark centres against the two-line
+                         * block rather than against the first line, which is where legacy's
+                         * `alignItems: center` puts it.
+                         */
+                        className={cn(
+                            'flex cursor-pointer items-center justify-between gap-3 py-2.5',
+                            /*
+                             * A hairline **between** rows — legacy draws `borderBottom` on each and
+                             * removes it from the last, which is the same figure drawn from the
+                             * other end. Without it six two-line rows read as one block of text;
+                             * `PostCollectionPicker` carries the same rule for the same reason.
+                             */
+                            index > 0 && 'border-(--separator-default) border-t',
+                        )}
+                        data-option-value={audience.value}
+                    >
+                        <span className="flex min-w-0 flex-col">
+                            {/* 16/600 — legacy's inner `Typography`, not the 14/500 its wrapper sets. */}
+                            <span className="type-body-strong text-(--text-title)">
+                                {t(audience.labelKey)}
+                            </span>
+                            {/*
+                             * Each choice carries its own second line, as legacy's do. *Spaces you
+                             * follow* is not self-evident, and a bare list of six would leave the
+                             * creator guessing at three of them.
+                             *
+                             * `--text-subtitle` and not `--text-placeholder`: legacy's `#666` is a
+                             * readable grey, and the placeholder token is two steps lighter — at
+                             * 12px it turned the half of this screen that explains it into
+                             * furniture.
+                             */}
+                            <span className="type-caption-meta text-(--text-subtitle)">
+                                {t(audience.hintKey)}
+                            </span>
                         </span>
                         {/*
-                         * Each choice carries its own second line, as legacy's do. *Spaces you
-                         * follow* is not self-evident, and a bare list of six would leave the
-                         * creator guessing at three of them.
+                         * `as="span"`, because `Radio` defaults to rendering a `<label>` around its own
+                         * input — and a label inside a label gives the words to the outer one and the
+                         * control to the inner, so pressing the text toggles nothing.
                          */}
-                        <span className="type-caption-meta text-(--text-placeholder)">
-                            {t(audience.hintKey)}
-                        </span>
-                    </span>
-                </label>
-            ))}
+                        <Radio
+                            as="span"
+                            name="post-reply-audience"
+                            checked={draft.replyAllowedUser === audience.value}
+                            disabled={disabled}
+                            onChange={() => onChange({ replyAllowedUser: audience.value })}
+                            data-testid={subTestId(testId, 'option')}
+                            className="flex-none"
+                        />
+                    </label>
+                ))}
+            </div>
         </div>
     )
 }

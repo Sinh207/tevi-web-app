@@ -2102,7 +2102,7 @@
     "post_audience_pay_per_post_hint": "Allow followers to buy this post without a membership.",
     "post_audience_members": "Members",
     "post_audience_members_hint": "Choosing tiers grants members access to this post.",
-    "post_reply_setting_subtitle": "Pick who can reply to this post.",
+    "post_reply_setting_subtitle": "Pick who can reply to this post. Keep in mind that anyone mentioned can always reply.",
     "post_reply_option_followers": "Followers",
     "post_reply_option_followers_hint": "Everyone who follows you can reply",
     "post_reply_option_paid": "Paid viewers",

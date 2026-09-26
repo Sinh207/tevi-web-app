@@ -2102,7 +2102,7 @@
     "post_audience_pay_per_post_hint": "Izinkan pengikut membeli postingan ini tanpa keanggotaan.",
     "post_audience_members": "Anggota",
     "post_audience_members_hint": "Memilih tier memberi anggota akses ke postingan ini.",
-    "post_reply_setting_subtitle": "Pilih siapa yang bisa membalas postingan ini.",
+    "post_reply_setting_subtitle": "Pilih siapa yang bisa balas post ini. Ingat, siapa pun yang disebut tetap bisa balas.",
     "post_reply_option_followers": "Pengikut",
     "post_reply_option_followers_hint": "Semua yang mengikuti kamu bisa membalas",
     "post_reply_option_paid": "Penonton berbayar",
