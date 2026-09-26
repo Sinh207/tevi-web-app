@@ -6,7 +6,7 @@ import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import { Icon } from '@shared/ui/icon'
-import { useId, useRef } from 'react'
+import { useId, useLayoutEffect, useRef } from 'react'
 import type { PostDraft } from '../lib/post-draft'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
 
@@ -57,6 +57,34 @@ export function PostComposerBody({
     const { t } = useTranslation()
     const inputId = useId()
     const fileRef = useRef<HTMLInputElement>(null)
+    const textRef = useRef<HTMLTextAreaElement>(null)
+
+    /**
+     * Size the box to its content, between one line and the five the class caps it at.
+     *
+     * Keyed on the **committed** text rather than done in `onChange`, which is what `ReplyComposer`
+     * does. The two differ here and the difference is visible: this composer's `onText` slices to
+     * the character limit, so a paste over the limit would size the box for the words that were
+     * refused. Reading state after the fact cannot disagree with what is on screen.
+     *
+     * `useLayoutEffect` so the height lands in the same frame as the character — in an effect the
+     * box paints at its old size first, which at the moment a line wraps is a visible jump.
+     */
+    useLayoutEffect(() => {
+        const element = textRef.current
+        if (!element) return
+        /*
+         * `auto` first, or `scrollHeight` is measured against the height already set and the box can
+         * only ever get taller — deleting a line would leave the space it occupied behind.
+         */
+        element.style.height = 'auto'
+        /*
+         * Empty clears the inline height rather than setting a measured one, so the box falls back
+         * to the single row the markup asks for — the same `shrink` `ReplyComposer` does. Measuring
+         * an empty textarea works too, but it pins a pixel figure that stops tracking the font.
+         */
+        element.style.height = draft.text ? `${element.scrollHeight}px` : ''
+    }, [draft.text])
 
     return (
         <div className="flex min-w-0 gap-2">
@@ -114,15 +142,29 @@ export function PostComposerBody({
                     {t('post_create_placeholder')}
                 </label>
                 <textarea
+                    ref={textRef}
                     id={inputId}
                     data-testid={subTestId(testId, 'input')}
                     value={draft.text}
-                    rows={3}
+                    /*
+                     * **One row when empty**, and it grows from there. This was `rows={3}` plus a
+                     * `min-h-20`, which reserved four lines of blank box under the placeholder on
+                     * every open — a composer that looks half-filled before a word is in it.
+                     */
+                    rows={1}
                     placeholder={t('post_create_placeholder')}
                     aria-invalid={message ? true : undefined}
                     disabled={disabled}
                     onChange={event => onText(event.target.value)}
-                    className="type-body-default max-h-64 min-h-20 w-full resize-none bg-transparent text-(--text-title) outline-none placeholder:text-(--text-placeholder) disabled:opacity-60"
+                    /*
+                     * The cap is **five lines**, written as the arithmetic rather than as `max-h-30`:
+                     * the two factors are the type scale's own, so a change to either moves the cap
+                     * with it instead of silently turning five lines into four. Past the cap the box
+                     * scrolls — the media previews and the upload button below it must stay on
+                     * screen, which is what a box free to grow takes away. (Legacy's `maxRows` is 8;
+                     * five is this product's call.)
+                     */
+                    className="type-body-default max-h-[calc(5*var(--line-height-default)*1em)] w-full resize-none overflow-y-auto bg-transparent text-(--text-title) outline-none placeholder:text-(--text-placeholder) disabled:opacity-60"
                 />
 
                 {draft.video ? (
