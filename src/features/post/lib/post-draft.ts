@@ -1,3 +1,5 @@
+import { REPLY_IMAGE_TYPES } from './reply-draft'
+
 /**
  * What a new post is, and what it turns into on the wire.
  *
@@ -168,6 +170,33 @@ export const VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'] as con
 
 export function isAttachableVideo(file: { type: string }): boolean {
     return (VIDEO_TYPES as readonly string[]).includes(file.type)
+}
+
+/**
+ * What the composer's one picker accepts, **given what the draft already holds**.
+ *
+ * A post is words plus one *kind* of media, so the picker narrows rather than letting a choice
+ * through that the next step would have to undo:
+ *
+ * | draft | accepts |
+ * |---|---|
+ * | nothing | pictures and video |
+ * | pictures | pictures — a clip here would drop every picture already attached |
+ * | a video | nothing: the control is **not drawn**, so this is never asked |
+ *
+ * ⚠ **Derived from the two type lists, never written out.** It was a hand-written string beside
+ * them, which is two statements of one fact: adding a container to `VIDEO_TYPES` would leave the
+ * picker refusing to show it, and dropping one would leave the picker offering a file
+ * `isAttachableVideo` then silently discards. Neither shows up as an error.
+ *
+ * `accept` is a filter the file dialog applies and **not** a guarantee — a drag-and-drop, a
+ * platform that ignores it, or a file whose type the OS reports differently all get past it. So
+ * `pickFiles` still sorts by type and still drops the other kind. The narrowing is what keeps the
+ * ordinary path away from the destructive one; the sort is what makes the extraordinary path safe.
+ */
+export function uploadAccept(draft: Pick<PostDraft, 'images'>): string {
+    const images = REPLY_IMAGE_TYPES.join(',')
+    return draft.images.length > 0 ? images : `${images},${VIDEO_TYPES.join(',')}`
 }
 
 /**

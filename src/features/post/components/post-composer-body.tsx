@@ -7,7 +7,7 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import { Icon } from '@shared/ui/icon'
 import { useId, useLayoutEffect, useRef } from 'react'
-import type { PostDraft } from '../lib/post-draft'
+import { type PostDraft, uploadAccept } from '../lib/post-draft'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { PostImageGallery } from './post-image-gallery'
 
@@ -237,51 +237,67 @@ export function PostComposerBody({
 
                 {/*
                  * The upload control sits **under the input**, inside the body — legacy's
-                 * `MediaUpload`, not its action bar. One button, both kinds, sorted by the file's
-                 * own type.
+                 * `MediaUpload`, not its action bar. One button, and what it accepts narrows as the
+                 * draft fills: see `uploadAccept`.
+                 *
+                 * ⚠ **Gone entirely once a clip is attached**, which is the bug this fixes. A post
+                 * takes one clip *or* several pictures, so with a video in the draft this button
+                 * could only ever mean "replace your video with pictures" — and it did that
+                 * silently, revoking the clip's preview URL on the way. The icon said *add a
+                 * picture* and the press destroyed a video, with nothing asked and nothing said.
+                 *
+                 * Legacy is not the authority here: it keeps the button and does exactly that
+                 * (`useUploadMedia.handleFileChange` calls `handleRemoveVideo('clear-all')` before
+                 * taking the images). iOS hides the whole attachment row as soon as there is any
+                 * media — `hideAttachmentView(isHidden: hasPhotoListingView || hasVideoView)` — and
+                 * that is the reading this follows for the video half. The way back is the clip's
+                 * own remove control, which is already on screen.
                  */}
-                <div className="flex items-center gap-2">
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        accept={UPLOAD_ACCEPT}
-                        multiple
-                        hidden
-                        data-testid={subTestId(testId, 'field')}
-                        onChange={event => {
-                            onPickFiles(event.target.files)
-                            // Cleared, so picking the same file twice still fires `change`.
-                            event.target.value = ''
-                        }}
-                    />
-                    <button
-                        type="button"
-                        data-testid={subTestId(testId, 'trigger')}
-                        aria-label={t('post_create_add_media')}
-                        aria-busy={readingVideo || undefined}
-                        disabled={disabled || readingVideo || limitReached}
-                        onClick={() => fileRef.current?.click()}
-                        /*
-                         * Black, not blue. The `IconButton` around it is `#007AFF`, but that colour
-                         * never reaches the glyph — legacy renders an `<img>`, and the asset's own
-                         * paths are `#141414`. The button's colour only tints its ripple.
-                         */
-                        className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-default) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
-                    >
-                        {/*
-                         * `images`, not `image`. Legacy's `upload-media.svg` is **two stacked
-                         * frames** — rendered from the real asset to identify it — which is what
-                         * says "photos or a video" rather than "a photo". The single frame was the
-                         * first guess.
-                         */}
-                        <Icon name="images" size={24} />
-                    </button>
-                    {readingVideo ? (
-                        <span className="type-caption-meta text-(--text-placeholder)">
-                            {t('post_create_reading_video')}
-                        </span>
-                    ) : null}
-                </div>
+                {draft.video ? null : (
+                    <div className="flex items-center gap-2">
+                        <input
+                            ref={fileRef}
+                            type="file"
+                            accept={uploadAccept(draft)}
+                            multiple
+                            hidden
+                            data-testid={subTestId(testId, 'field')}
+                            onChange={event => {
+                                onPickFiles(event.target.files)
+                                // Cleared, so picking the same file twice still fires `change`.
+                                event.target.value = ''
+                            }}
+                        />
+                        <button
+                            type="button"
+                            data-testid={subTestId(testId, 'trigger')}
+                            aria-label={t('post_create_add_media')}
+                            aria-busy={readingVideo || undefined}
+                            disabled={disabled || readingVideo || limitReached}
+                            onClick={() => fileRef.current?.click()}
+                            /*
+                             * Black, not blue. The `IconButton` around it is `#007AFF`, but that
+                             * colour never reaches the glyph — legacy renders an `<img>`, and the
+                             * asset's own paths are `#141414`. The button's colour only tints its
+                             * ripple.
+                             */
+                            className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-default) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+                        >
+                            {/*
+                             * `images`, not `image`. Legacy's `upload-media.svg` is **two stacked
+                             * frames** — rendered from the real asset to identify it — which is
+                             * what says "photos or a video" rather than "a photo". The single frame
+                             * was the first guess.
+                             */}
+                            <Icon name="images" size={24} />
+                        </button>
+                        {readingVideo ? (
+                            <span className="type-caption-meta text-(--text-placeholder)">
+                                {t('post_create_reading_video')}
+                            </span>
+                        ) : null}
+                    </div>
+                )}
 
                 {message ? (
                     <p
@@ -295,15 +311,6 @@ export function PostComposerBody({
         </div>
     )
 }
-
-/**
- * What the one picker accepts.
- *
- * Legacy's own list, minus the three containers its `accept` names but its validator then rejects
- * (`video/x-msvideo`, `video/x-ms-wmv`, and `video/mov`, which is not a media type at all — the
- * QuickTime one is `video/quicktime`). Offering a file the next step refuses is a picker that lies.
- */
-const UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm'
 
 /** `m:ss`, the badge legacy draws on a clip. */
 function formatClipLength(seconds: number): string {

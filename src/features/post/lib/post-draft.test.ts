@@ -8,7 +8,10 @@ import {
     type PostDraft,
     postDraftProblem,
     postLang,
+    uploadAccept,
+    VIDEO_TYPES,
 } from './post-draft'
+import { isAttachableImage, REPLY_IMAGE_TYPES } from './reply-draft'
 
 function draft(overrides: Partial<PostDraft> = {}): PostDraft {
     return { ...emptyPostDraft(), ...overrides }
@@ -313,5 +316,33 @@ describe('isAttachableVideo', () => {
         expect(isAttachableVideo({ type: 'video/x-matroska' })).toBe(false)
         expect(isAttachableVideo({ type: 'image/jpeg' })).toBe(false)
         expect(isAttachableVideo({ type: '' })).toBe(false)
+    })
+})
+
+describe('uploadAccept', () => {
+    /**
+     * ⚠ The picker's list and the validator's list are one fact, and they were two. `accept` is
+     * **derived** from `VIDEO_TYPES` and `REPLY_IMAGE_TYPES`, so a container added to either shows
+     * up in the file dialog — where a hand-written copy would have left the picker refusing to show
+     * a file the composer would then have accepted, with nothing anywhere saying so.
+     */
+    it('offers exactly the types the composer will take', () => {
+        const offered = uploadAccept(draft()).split(',')
+        expect(offered).toEqual([...REPLY_IMAGE_TYPES, ...VIDEO_TYPES])
+        for (const type of offered) {
+            const file = { type }
+            expect(isAttachableVideo(file) || isAttachableImage(file)).toBe(true)
+        }
+    })
+
+    /**
+     * A post is words plus one **kind** of media. Picking a clip with pictures attached drops every
+     * one of them (`pickFiles` has to choose), so the dialog does not offer the choice in the first
+     * place — the narrowing is what keeps the ordinary path away from the destructive one.
+     */
+    it('drops video from the list once a picture is attached', () => {
+        const withImage = uploadAccept(draft({ images: [image('a')] }))
+        expect(withImage).toBe(REPLY_IMAGE_TYPES.join(','))
+        for (const type of VIDEO_TYPES) expect(withImage).not.toContain(type)
     })
 })
