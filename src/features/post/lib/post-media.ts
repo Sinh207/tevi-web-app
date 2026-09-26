@@ -219,6 +219,19 @@ export function formatDurationPadded(seconds: number | null): string | null {
 export const GALLERY_HEIGHT = { mobile: 260, desktop: 310 } as const
 
 /**
+ * The same row, shorter — what the **composer** previews an attachment at.
+ *
+ * Legacy's `ImagePreview` is the feed's figure drawn smaller: `height: { xs: 200, md: 300 }`, slides
+ * at `slidesPerView: 'auto'` with each one's own `aspectRatio`. Identical geometry, so it is the
+ * same component with one number changed rather than a second preview strip — which is what the
+ * composer had, and it could not page between pictures at all.
+ *
+ * Shorter because the box it sits in is shorter: the composer is a dialog with a caption above and
+ * an upload row and an action bar below, and a feed-height gallery pushes both off screen.
+ */
+export const COMPOSER_GALLERY_HEIGHT = { mobile: 200, desktop: 300 } as const
+
+/**
  * A slide's shape in the row — its own ratio, or a square when the payload does not say.
  *
  * Legacy computes a **pixel width** (`commonHeight * ratio`) because its height is a JS constant it

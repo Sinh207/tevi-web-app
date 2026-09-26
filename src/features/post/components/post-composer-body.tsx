@@ -9,6 +9,7 @@ import { Icon } from '@shared/ui/icon'
 import { useId, useLayoutEffect, useRef } from 'react'
 import type { PostDraft } from '../lib/post-draft'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
+import { PostImageGallery } from './post-image-gallery'
 
 /**
  * The composing half of the post dialog — who is posting, the words, and the media.
@@ -196,36 +197,42 @@ export function PostComposerBody({
                     </div>
                 ) : null}
 
+                {/*
+                 * **The feed's gallery, shorter** — not a strip of thumbnails, which is what this
+                 * was. Legacy's `ImagePreview` is the same figure as its post gallery at
+                 * `{ xs: 200, md: 300 }`, so each picture is shown at its own shape and the author
+                 * can page between them with the same arrows a reader gets. A row of 96px squares
+                 * says *that* four pictures are attached; it does not show what any of them will
+                 * look like, which is the question the composer is there to answer.
+                 *
+                 * `previewUrl` becomes `uri` and the measured size becomes `w`/`h`, which is the
+                 * whole adaptation — `gallerySlideRatio` reads exactly those, and a picture the
+                 * browser would not measure falls back to a square rather than to nothing.
+                 */}
                 {draft.images.length > 0 ? (
-                    <ul
-                        data-testid={subTestId(testId, 'list')}
-                        className="flex snap-x gap-2 overflow-x-auto"
-                    >
-                        {draft.images.map(image => (
-                            <li
-                                key={image.id}
-                                data-testid={subTestId(testId, 'item')}
-                                className="relative size-24 flex-none snap-start overflow-hidden rounded-[8px] bg-(--background-segment)"
-                            >
-                                {/* biome-ignore lint/performance/noImgElement: a blob: URL has nothing for next/image to optimise and no loader that accepts it. */}
-                                <img
-                                    src={image.previewUrl}
-                                    alt=""
-                                    className="size-full object-cover"
-                                />
-                                <button
-                                    type="button"
-                                    data-testid={subTestId(testId, 'remove')}
-                                    aria-label={t('post_create_remove_image')}
-                                    disabled={disabled}
-                                    onClick={() => onRemoveImage(image.id)}
-                                    className="absolute end-1 top-1 flex size-6 items-center justify-center rounded-full bg-(--background-overlay) text-(--text-on)"
-                                >
-                                    <Icon name="xmark" size={16} />
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+                    <PostImageGallery
+                        images={draft.images.map(image => ({
+                            uri: image.previewUrl,
+                            thumb: null,
+                            blur: null,
+                            w: image.width,
+                            h: image.height,
+                            width: null,
+                            height: null,
+                        }))}
+                        size="compact"
+                        /*
+                         * The gallery counts positions and the draft keys by id, so the index is
+                         * resolved here rather than the gallery being taught about ids. A removal
+                         * that misses would take the wrong picture off, so it reads the array it
+                         * was just handed.
+                         */
+                        onRemove={index => {
+                            const going = draft.images[index]
+                            if (going && !disabled) onRemoveImage(going.id)
+                        }}
+                        testId={subTestId(testId, 'list')}
+                    />
                 ) : null}
 
                 {/*

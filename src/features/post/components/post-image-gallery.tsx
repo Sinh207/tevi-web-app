@@ -2,6 +2,7 @@
 
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
+import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import { useCallback, useRef, useState } from 'react'
@@ -38,10 +39,21 @@ import {
  *
  * A single image does not join the row — it takes the full width at its own snapped ratio
  * (`detectAspectRatio`), which is the shape the feed is built around.
+ *
+ * ## The composer draws the same figure, shorter
+ *
+ * `size="compact"` is 200/300 instead of 260/310 — legacy's `ImagePreview`, which is this same row
+ * with one number changed. It was a strip of 96px squares here, which is a different thing: a
+ * contact sheet shows you *that* you attached four pictures, a gallery shows you what each one will
+ * look like, and the composer's job is the second. In compact the row is used for **one** image
+ * too, where the feed would go full width — a picture in a dialog beside a caption is not the shape
+ * the feed is built around.
  */
 export function PostImageGallery({
     images,
     onOpen,
+    onRemove,
+    size = 'default',
     testId,
 }: {
     images: PostImage[]
@@ -54,6 +66,17 @@ export function PostImageGallery({
      * clickable everywhere, including in previews.
      */
     onOpen?: (index: number) => void
+    /**
+     * Take this one off — the composer's only addition to the feed's gallery.
+     *
+     * Its disc is a **sibling** of the tile rather than a child, so it stays valid markup when
+     * `onOpen` also makes that tile a `<button>`: a button inside a button is markup browsers
+     * resolve by breaking one of the two. No call site passes both today; the arrangement means one
+     * could.
+     */
+    onRemove?: (index: number) => void
+    /** `compact` is the composer's 200/300 row — see the note above. */
+    size?: 'default' | 'compact'
     testId?: string
 }) {
     const { t } = useTranslation()
@@ -82,7 +105,9 @@ export function PostImageGallery({
 
     if (images.length === 0) return null
 
-    if (images.length === 1) {
+    const rowHeight = size === 'compact' ? 'h-[200px] md:h-[300px]' : 'h-[260px] md:h-[310px]'
+
+    if (images.length === 1 && size === 'default') {
         const only = images[0]
         const src = only.uri ?? only.thumb
         if (!src) return null
@@ -124,56 +149,87 @@ export function PostImageGallery({
                  * `[scrollbar-width:none]` because the row is short and a scrollbar under a 260px
                  * image reads as a rendering fault rather than an affordance.
                  */
-                className="flex h-[260px] snap-x gap-1 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] md:h-[310px] [&::-webkit-scrollbar]:hidden"
+                className={cn(
+                    'flex snap-x gap-1 overflow-x-auto overscroll-x-contain',
+                    '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+                    rowHeight,
+                )}
             >
                 {images.map((image, index) => {
                     const src = image.uri ?? image.thumb
                     const Tile = onOpen ? 'button' : 'div'
                     return (
-                        <Tile
-                            /*
-                             * Keyed on the **index alone**, and `src` is deliberately not in it.
-                             *
-                             * A post's images carry no id, so order is the only identity they have —
-                             * and the same URL can legitimately appear twice in one post (a creator
-                             * repeating a frame, or the same asset uploaded twice). Keying on `src`
-                             * made those two tiles collide: React warns about duplicate keys and is
-                             * free to drop or duplicate one of them.
-                             *
-                             * Index keys are the wrong default when a list can be reordered,
-                             * inserted into or filtered — none of which happens here. This array is
-                             * a fixed property of one immutable post; nothing in the app mutates it,
-                             * and a post whose images changed arrives as a different post.
-                             */
-                            // biome-ignore lint/suspicious/noArrayIndexKey: order is the only identity these rows have — see above.
+                        /*
+                         * The slide's **box** — the ratio, the row height and the snap point live
+                         * here so the tile and its remove disc are siblings inside it. See
+                         * `onRemove`'s note for why that nesting is the one that works.
+                         */
+                        <div
+                            // biome-ignore lint/suspicious/noArrayIndexKey: order is the only identity these rows have — see the tile below.
                             key={index}
-                            {...(onOpen
-                                ? {
-                                      type: 'button' as const,
-                                      onClick: () => onOpen(index),
-                                      'aria-label': t('post_image_open'),
-                                  }
-                                : {})}
-                            /*
-                             * The index rides a **companion attribute**, never the testid:
-                             * `docs/TEST_IDS.md` bars interpolating a value into an id, and a
-                             * position is a value. A test addresses the row and reads this.
-                             */
-                            data-media-index={index}
-                            className="relative h-full flex-none snap-start overflow-hidden rounded-[8px] bg-(--background-segment)"
+                            className="relative h-full flex-none snap-start"
                             style={{ aspectRatio: gallerySlideRatio(image) }}
                         >
-                            {src ? (
-                                <Image
-                                    src={src}
-                                    alt={t('post_image_alt')}
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, 33vw"
-                                    unoptimized={isLocalImageSrc(src)}
-                                    className="object-cover"
-                                />
+                            <Tile
+                                /*
+                                 * Keyed on the **index alone**, and `src` is deliberately not in it.
+                                 *
+                                 * A post's images carry no id, so order is the only identity they have —
+                                 * and the same URL can legitimately appear twice in one post (a creator
+                                 * repeating a frame, or the same asset uploaded twice). Keying on `src`
+                                 * made those two tiles collide: React warns about duplicate keys and is
+                                 * free to drop or duplicate one of them.
+                                 *
+                                 * Index keys are the wrong default when a list can be reordered,
+                                 * inserted into or filtered — none of which happens here. This array is
+                                 * a fixed property of one immutable post; nothing in the app mutates it,
+                                 * and a post whose images changed arrives as a different post.
+                                 */
+                                {...(onOpen
+                                    ? {
+                                          type: 'button' as const,
+                                          onClick: () => onOpen(index),
+                                          'aria-label': t('post_image_open'),
+                                      }
+                                    : {})}
+                                /*
+                                 * The index rides a **companion attribute**, never the testid:
+                                 * `docs/TEST_IDS.md` bars interpolating a value into an id, and a
+                                 * position is a value. A test addresses the row and reads this.
+                                 */
+                                data-media-index={index}
+                                className="relative block size-full overflow-hidden rounded-[8px] bg-(--background-segment)"
+                            >
+                                {src ? (
+                                    <Image
+                                        src={src}
+                                        alt={t('post_image_alt')}
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 33vw"
+                                        unoptimized={isLocalImageSrc(src)}
+                                        className="object-cover"
+                                    />
+                                ) : null}
+                            </Tile>
+
+                            {/*
+                             * Legacy's disc: 28px, `rgba(0,0,0,0.6)`, a 16px white cross, inset 8.
+                             * Fixed black rather than a token for `LockPill`'s reason — it sits on an
+                             * arbitrary photograph, so it has to be legible against whatever was
+                             * uploaded rather than against the page.
+                             */}
+                            {onRemove ? (
+                                <button
+                                    type="button"
+                                    data-testid={subTestId(testId, 'remove')}
+                                    aria-label={t('post_create_remove_image')}
+                                    onClick={() => onRemove(index)}
+                                    className="absolute end-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+                                >
+                                    <Icon name="xmark" size={16} />
+                                </button>
                             ) : null}
-                        </Tile>
+                        </div>
                     )
                 })}
             </div>
