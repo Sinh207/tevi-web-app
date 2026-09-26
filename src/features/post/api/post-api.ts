@@ -3,6 +3,7 @@ import { ApiError } from '@shared/lib/api/errors'
 import { createApiModel } from '@shared/lib/api/model'
 import type { PageCursor } from '@shared/lib/api/page-cursor'
 import type { BookmarkPage } from '../lib/bookmark-page'
+import type { CollectionPostPage } from '../lib/collection-page'
 import type { PostBody, UploadedImage } from '../lib/post-draft'
 import { normalizeCollection, normalizeCollections, type PostCollection } from './collection-types'
 import { normalizeReplies, normalizeReply, type Reply } from './reply-types'
@@ -108,6 +109,12 @@ export const postKeys = {
     /** Every page of the reader's bookmarked posts. */
     bookmarks: (accountId: string | null) =>
         [...POST_SCOPE, 'bookmarks', accountId ?? 'anon'] as const,
+    /** One collection's own row — its name and count, for the screen's title. */
+    collection: (collectionId: string, accountId: string | null) =>
+        [...POST_SCOPE, 'collection', collectionId, accountId ?? 'anon'] as const,
+    /** Every page of posts filed into one collection. */
+    collectionPosts: (collectionId: string, accountId: string | null) =>
+        [...POST_SCOPE, 'collection-posts', collectionId, accountId ?? 'anon'] as const,
 }
 
 /**
@@ -444,6 +451,104 @@ export const postApi = {
             results: normalizeCollections(body?.results),
             hasMore: Boolean(body?.next),
         }
+    },
+
+    /**
+     * One collection's own row.
+     *
+     * Its own request rather than a find in the list, because the detail screen is linkable: a
+     * reader arriving from a shared URL has no list in the cache to look in, and paging the list
+     * until the row turns up would be several requests to learn a name.
+     */
+    async getCollection(
+        collectionId: string,
+        accountId?: string | null,
+        signal?: AbortSignal,
+    ): Promise<PostCollection | null> {
+        return normalizeCollection(
+            await api.get<unknown>(`${VERSION}/posts/collections/${collectionId}/`, undefined, {
+                signal,
+                ...(accountId ? { accountId } : {}),
+            }),
+        )
+    },
+
+    /**
+     * One page of the posts filed into a collection.
+     *
+     * Page-numbered like the collections list itself; the size and the stop condition live together
+     * in `lib/collection-page.ts`. The rows are ordinary posts — a collection is a filing cabinet,
+     * not a different kind of content — so the card renders them exactly as a feed does.
+     */
+    async getCollectionPosts({
+        collectionId,
+        params,
+        accountId,
+        signal,
+    }: {
+        collectionId: string
+        params: PageCursor
+        accountId?: string | null
+        signal?: AbortSignal
+    }): Promise<CollectionPostPage> {
+        const body = await api.get<{ results?: unknown; count?: number; next?: string | null }>(
+            `${VERSION}/posts/collections/${collectionId}/posts/`,
+            params,
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        return {
+            results: normalizePosts(body?.results),
+            count: typeof body?.count === 'number' ? body.count : 0,
+            next: body?.next,
+        }
+    },
+
+    /** Rename one. `PATCH` with the one field, which is all legacy's `editCollection` sends. */
+    async renameCollection(
+        collectionId: string,
+        name: string,
+        accountId?: string | null,
+    ): Promise<PostCollection | null> {
+        return normalizeCollection(
+            await api.patch<unknown>(
+                `${VERSION}/posts/collections/${collectionId}/`,
+                { name },
+                accountId ? { accountId } : undefined,
+            ),
+        )
+    },
+
+    /**
+     * Delete the collection itself.
+     *
+     * ⚠ The **collection**, not its posts. Nothing here removes a post from the product — a post
+     * filed in a deleted collection is still on its space, which is what makes this recoverable
+     * enough to offer behind one confirmation.
+     */
+    async deleteCollection(collectionId: string, accountId?: string | null): Promise<void> {
+        await api.del<unknown>(
+            `${VERSION}/posts/collections/${collectionId}/`,
+            undefined,
+            accountId ? { accountId } : undefined,
+        )
+    },
+
+    /**
+     * Take posts out of a collection — legacy's `deletePostsInCollection`.
+     *
+     * A `DELETE` **with a body**, which is legacy's shape and unusual enough to be worth flagging:
+     * the ids go in `post_ids`, not on the path, so one request can unfile several.
+     */
+    async removePostsFromCollection(
+        collectionId: string,
+        postIds: string[],
+        accountId?: string | null,
+    ): Promise<void> {
+        await api.del<unknown>(
+            `${VERSION}/posts/collections/${collectionId}/remove-posts/`,
+            { post_ids: postIds },
+            accountId ? { accountId } : undefined,
+        )
     },
 
     /** Make one. The body is a name and nothing else — legacy's `createCollection`. */

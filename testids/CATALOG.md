@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-813 ids across 28 surfaces.
+814 ids across 28 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -181,7 +181,7 @@ Also present on every route it is mounted under — `src/features/navigation/com
 
 ## `channel` — Channel / space, following, profile settings
 
-Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/membership/[[...tier]]`, `/[slug]/post/[code]`, `/bookmarks`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
+Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/membership/[[...tier]]`, `/[slug]/post/[code]`, `/bookmarks`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
 
 | testid | companions | source |
 |---|---|---|
@@ -627,7 +627,7 @@ Routes: `/my-wallet`, `/my-wallet/payout-method`, `/my-wallet/payout-request`, `
 
 ## `navigation` — Shell — rail, top bar, tab bar, account drawer, end rail
 
-Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/post/[code]`, `/bookmarks`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
+Routes: `/[slug]/collections`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/post/[code]`, `/bookmarks`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
 
 Also present on every route it is mounted under — `src/app/(web)/(main)/layout.tsx`.
 
@@ -885,10 +885,11 @@ Routes: `/my-wallet/payout-method`, `/my-wallet/payout-request`, `/my-wallet/pay
 
 ## `post` — Post card
 
-Routes: `/[slug]/post/[code]`, `/bookmarks`
+Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/post/[code]`, `/bookmarks`
 
 | testid | companions | source |
 |---|---|---|
+| `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:33` |
 | `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:614` |
 
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone
@@ -1047,6 +1048,8 @@ name; you need it to know the element exists.
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
 | `BookmarkBarActions` | `src/features/post/components/bookmark-bar-actions.tsx` | `-clear` `-confirm` |
 | `BookmarkList` | `src/features/post/components/bookmark-list.tsx` | `-item` `-list` `-message` `-retry` |
+| `CollectionDetail` | `src/features/post/components/collection-detail.tsx` | `-apply` `-clear` `-confirm` `-header` `-input` `-item` `-list` `-message` `-panel` `-prev` `-remove` `-retry` `-submit` `-title` |
+| `CollectionList` | `src/features/post/components/collection-list.tsx` | `-list` `-message` `-retry` `-row` |
 | `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |

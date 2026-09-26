@@ -46,6 +46,15 @@ export {
  */
 export { BookmarkBarActions } from './components/bookmark-bar-actions'
 export { BookmarkList } from './components/bookmark-list'
+/**
+ * The two collection screens.
+ *
+ * The hooks behind them stay internal for the reason the barrel's header gives about the dialogs: a
+ * consumer holding `useCollection` could render a *Delete collection* with no collection on screen,
+ * or a list that pages a query nothing else is reading.
+ */
+export { CollectionDetail } from './components/collection-detail'
+export { CollectionList } from './components/collection-list'
 export type { PostMiniAppApp } from './components/post-attachments'
 export { PostCard } from './components/post-card'
 /**
