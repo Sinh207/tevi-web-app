@@ -2139,6 +2139,7 @@
     "video_trim_title": "تحرير الفيديو",
     "video_trim_working": "جارٍ القص…",
     "video_trim_failed": "تعذّر قص هذا المقطع. حاول مرة أخرى.",
+    "video_trim_failed_load": "تعذّر تحميل محرّر الفيديو. تحقّق من اتصالك وحاول مرة أخرى.",
     "video_trim_selected": "{{length}} من {{total}}",
     "video_trim_mute": "كتم الصوت",
     "video_trim_unmute": "إلغاء كتم الصوت",

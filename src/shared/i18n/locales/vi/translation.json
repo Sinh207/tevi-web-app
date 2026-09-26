@@ -2083,6 +2083,7 @@
     "video_trim_title": "Chỉnh sửa video",
     "video_trim_working": "Đang cắt…",
     "video_trim_failed": "Không cắt được video này. Vui lòng thử lại.",
+    "video_trim_failed_load": "Không tải được trình chỉnh sửa video. Kiểm tra kết nối rồi thử lại.",
     "video_trim_selected": "{{length}} trên {{total}}",
     "video_trim_mute": "Tắt tiếng",
     "video_trim_unmute": "Bật tiếng",

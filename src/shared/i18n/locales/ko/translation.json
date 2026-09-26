@@ -2083,6 +2083,7 @@
     "video_trim_title": "동영상 편집",
     "video_trim_working": "자르는 중…",
     "video_trim_failed": "동영상을 자르지 못했습니다. 다시 시도해 주세요.",
+    "video_trim_failed_load": "동영상 편집기를 불러오지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요.",
     "video_trim_selected": "{{total}} 중 {{length}}",
     "video_trim_mute": "음소거",
     "video_trim_unmute": "음소거 해제",

@@ -2083,6 +2083,7 @@
     "video_trim_title": "I-edit ang video",
     "video_trim_working": "Pinuputol…",
     "video_trim_failed": "Hindi naputol ang video na ito. Pakisubukan ulit.",
+    "video_trim_failed_load": "Hindi na-load ang video editor. Suriin ang iyong koneksyon at subukan ulit.",
     "video_trim_selected": "{{length}} ng {{total}}",
     "video_trim_mute": "I-mute",
     "video_trim_unmute": "I-unmute",

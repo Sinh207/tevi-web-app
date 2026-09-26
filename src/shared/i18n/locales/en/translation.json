@@ -2083,6 +2083,7 @@
     "video_trim_title": "Edit video",
     "video_trim_working": "Trimming…",
     "video_trim_failed": "Couldn’t trim this clip. Please try again.",
+    "video_trim_failed_load": "Couldn’t load the video editor. Check your connection and try again.",
     "video_trim_selected": "{{length}} of {{total}}",
     "video_trim_mute": "Mute",
     "video_trim_unmute": "Unmute",

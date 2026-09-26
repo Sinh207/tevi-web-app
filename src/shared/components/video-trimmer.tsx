@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslation } from '@shared/i18n/use-translation'
-import { trimVideo } from '@shared/lib/ffmpeg'
+import { resetFfmpeg, TrimError, trimVideo } from '@shared/lib/ffmpeg'
 import { subTestId } from '@shared/lib/test-id'
 import {
     clampRange,
@@ -107,7 +107,8 @@ export function VideoTrimmer({
     const [frames, setFrames] = useState<string[]>([])
     const [muted, setMuted] = useState(true)
     const [busy, setBusy] = useState(false)
-    const [failed, setFailed] = useState(false)
+    /** Which half failed, or `null`. Two sentences, because they need different answers. */
+    const [failed, setFailed] = useState<'load' | 'run' | null>(null)
 
     /*
      * Opening on a different clip is a different trim. Keyed on the preview URL rather than on
@@ -118,8 +119,16 @@ export function VideoTrimmer({
     useEffect(() => {
         if (!open || !previewUrl) return
         setRange(fullRange(duration))
-        setFailed(false)
+        setFailed(null)
     }, [open, previewUrl, duration])
+
+    /**
+     * A trim in flight when this unmounts keeps decoding with nobody left to answer it.
+     *
+     * Empty deps, so it runs once on the way out — the dialog is mounted only while it is open
+     * (its caller unmounts it), so "closed" and "unmounted" are the same event here.
+     */
+    useEffect(() => () => resetFfmpeg(), [])
 
     /** The filmstrip. Aborted on close, and its object URLs released with it. */
     useEffect(() => {
@@ -232,7 +241,7 @@ export function VideoTrimmer({
     async function save() {
         if (!source || busy) return
         setBusy(true)
-        setFailed(false)
+        setFailed(null)
         const safe = clampRange(range, duration)
         const length = rangeDuration(safe)
         try {
@@ -242,13 +251,16 @@ export function VideoTrimmer({
                 durationSeconds: length,
             })
             onTrimmed({ file, durationSeconds: length, startSeconds: safe.start })
-        } catch {
+        } catch (error) {
             /*
-             * One message, and deliberately not the error's own. What comes out of a wasm build is
-             * `Error: FS error` or an exit code — text written for whoever ported ffmpeg, not for
-             * somebody who wanted a shorter clip.
+             * The sentence is ours, never the error's own: what comes out of a wasm build is an
+             * exit code or a bare string — text written for whoever ported ffmpeg, not for somebody
+             * who wanted a shorter clip. But the original is the only thing that can explain a
+             * report, and nothing else in the app will have seen it, so it goes to the console the
+             * way `use-ledger-bonuses.ts` does with its own invisible failures.
              */
-            setFailed(true)
+            console.warn('[trim] the clip could not be cut', error)
+            setFailed(error instanceof TrimError && error.stage === 'load' ? 'load' : 'run')
         } finally {
             setBusy(false)
         }
@@ -404,7 +416,7 @@ export function VideoTrimmer({
                             data-testid={subTestId(testId, 'error')}
                             className="type-dense-default text-(--text-error)"
                         >
-                            {t('video_trim_failed')}
+                            {t(failed === 'load' ? 'video_trim_failed_load' : 'video_trim_failed')}
                         </p>
                     ) : null}
                 </div>

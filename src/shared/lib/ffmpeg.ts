@@ -42,12 +42,21 @@
  * typically under two seconds. `-avoid_negative_ts make_zero` is what stops that becoming a clip
  * whose first frames carry negative timestamps and which some players then refuse.
  *
- * ## One instance, and it is disposable
+ * ## ⚠ One instance **per trim**, thrown away afterwards
  *
- * The core is 24 MB. It loads once per tab and is kept, because a reader who trims one clip often
- * trims another — but `resetFfmpeg()` exists because 0.11 offers no way to cancel a `run()` that is
- * already going: the only way out is to throw the whole instance away. The trimmer calls it on
- * unmount.
+ * The single-thread core is **single-use**. Emscripten exits its runtime when `main` returns, so a
+ * second `run()` on the same instance aborts — and 0.11 never clears its own "running" flag on an
+ * abort, so every call after that fails with *"ffmpeg.wasm can only run one command at a time"*.
+ *
+ * This file used to keep the instance, on the reasoning that a reader who trims one clip often
+ * trims another. That is true and it is exactly why the bug mattered: the **first** trim in a tab
+ * worked and every one after it failed, with the same one-line message and nothing to tell the two
+ * apart. Found by trimming three times in a row in a browser; a single-trim test cannot see it.
+ *
+ * So `trimVideo` resets in its `finally`, which is what legacy does too
+ * (`releaseFfmpegResources()` after every trim). The cost is re-instantiating the wasm on the next
+ * trim — the 24 MB is in the HTTP cache by then, so it is a compile, not a download. The trimmer
+ * also resets on unmount, because a dialog closed mid-run leaves a core still decoding.
  *
  * ## Single-thread, deliberately
  *
@@ -156,12 +165,12 @@ export async function loadFfmpeg(): Promise<{ ffmpeg: FfmpegInstance; fetchFile:
 }
 
 /**
- * Throw the instance away.
+ * Throw the instance away — after **every** trim, and whenever a trimmer unmounts.
  *
- * The **only** way to stop a `run()` that is already going: 0.11 exposes no abort, and the core
- * will otherwise keep decoding after the dialog that started it has closed. `exit()` is wrapped
- * because it throws when the instance was never loaded, and a cleanup path that can throw is a
- * cleanup path that skips whatever came after it.
+ * Two jobs. It is the only way to stop a `run()` that is already going (0.11 exposes no abort), and
+ * it is what makes the *next* trim possible at all: see the note above on the core being
+ * single-use. `exit()` is wrapped because it throws when the instance was never loaded, and a
+ * cleanup path that can throw is a cleanup path that skips whatever came after it.
  */
 export function resetFfmpeg(): void {
     try {
@@ -172,6 +181,27 @@ export function resetFfmpeg(): void {
     instance = null
     fetchFileFn = null
     loading = null
+}
+
+/**
+ * A trim that failed, and **which half** of it failed.
+ *
+ * One sentence for both was what shipped first, and it is the reason a report of *"Couldn't trim
+ * this clip"* could not be acted on: loading the core is a 24 MB download over a policy that has to
+ * permit wasm, and running it is a container the muxer may refuse. Those need different answers
+ * from the reader, and they are the two things this module does.
+ *
+ * `cause` carries the original, which `console.warn` prints — nothing else can: an ffmpeg failure
+ * arrives as an exit code or a bare string, and neither is text to put on a screen.
+ */
+export class TrimError extends Error {
+    constructor(
+        readonly stage: 'load' | 'run',
+        override readonly cause: unknown,
+    ) {
+        super(`ffmpeg ${stage} failed`)
+        this.name = 'TrimError'
+    }
 }
 
 export interface TrimRequest {
@@ -192,7 +222,15 @@ export async function trimVideo({
     startSeconds,
     durationSeconds,
 }: TrimRequest): Promise<File> {
-    const { ffmpeg, fetchFile } = await loadFfmpeg()
+    let ffmpeg: FfmpegInstance
+    let fetchFile: FetchFile
+    try {
+        ;({ ffmpeg, fetchFile } = await loadFfmpeg())
+    } catch (error) {
+        // Nothing to reset: the instance either never existed or never loaded.
+        resetFfmpeg()
+        throw new TrimError('load', error)
+    }
 
     const input = 'input.mp4'
     const output = 'output.mp4'
@@ -224,18 +262,15 @@ export async function trimVideo({
             type: file.type || 'video/mp4',
             lastModified: Date.now(),
         })
+    } catch (error) {
+        throw new TrimError('run', error)
     } finally {
         /*
-         * The virtual filesystem is the instance's, so an input left behind is the whole clip held
-         * in its heap until the tab closes. Each unlink is its own try: the output does not exist
-         * when `run` failed, and one throw here would skip the other.
+         * The whole instance goes, which also releases the virtual filesystem holding both copies
+         * of the clip. Unlinking them individually was what this did first and it is strictly
+         * worse: it leaves a core that the next trim cannot use, and it throws on an aborted run
+         * where the output was never written.
          */
-        for (const name of [input, output]) {
-            try {
-                ffmpeg.FS('unlink', name)
-            } catch {
-                // Never written, or already gone.
-            }
-        }
+        resetFfmpeg()
     }
 }

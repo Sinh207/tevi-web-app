@@ -2083,6 +2083,7 @@
     "video_trim_title": "Edit video",
     "video_trim_working": "Memotong…",
     "video_trim_failed": "Tidak dapat memotong video ini. Silakan coba lagi.",
+    "video_trim_failed_load": "Tidak dapat memuat editor video. Periksa koneksi Anda lalu coba lagi.",
     "video_trim_selected": "{{length}} dari {{total}}",
     "video_trim_mute": "Bisukan",
     "video_trim_unmute": "Bunyikan",

@@ -2083,6 +2083,7 @@
     "video_trim_title": "编辑视频",
     "video_trim_working": "正在修剪…",
     "video_trim_failed": "无法修剪此视频，请重试。",
+    "video_trim_failed_load": "无法加载视频编辑器，请检查网络后重试。",
     "video_trim_selected": "{{total}} 中的 {{length}}",
     "video_trim_mute": "静音",
     "video_trim_unmute": "取消静音",
