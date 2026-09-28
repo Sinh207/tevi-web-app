@@ -58,6 +58,17 @@
  * trim — the 24 MB is in the HTTP cache by then, so it is a compile, not a download. The trimmer
  * also resets on unmount, because a dialog closed mid-run leaves a core still decoding.
  *
+ * ## ⚠ It is **desktop-only**, and that is a product decision with a measurement behind it
+ *
+ * The post composer hides its *Edit video* control below `md`, so nothing here runs on a phone.
+ * That is not an ergonomic call: a trim fetches 24 MB, compiles it, and holds the input **and** the
+ * output in this instance's virtual filesystem — a clip recorded on the same phone is the largest
+ * file it will ever hand the tab, and the single-thread core has no worker to spread it over. The
+ * honest answer is not to offer the control rather than to offer one that kills the tab.
+ *
+ * Anything that wants to call `trimVideo` from a new surface has to answer that question first;
+ * `post-composer-video.tsx` carries the gate and the reason the breakpoint stands in for it.
+ *
  * ## Single-thread, deliberately
  *
  * The multi-thread core needs `SharedArrayBuffer`, which needs cross-origin isolation, which needs

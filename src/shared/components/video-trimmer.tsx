@@ -18,7 +18,6 @@ import { cn } from '@shared/lib/utils'
 import { captureVideoFrames, revokeFrames } from '@shared/lib/video-frames'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
-import type { SheetSide } from '@shared/ui/sheet'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DialogScreenHeader } from './dialog-screen-header'
 import { ResponsiveDialog } from './responsive-dialog'
@@ -56,6 +55,14 @@ import { ResponsiveDialog } from './responsive-dialog'
  *
  * Sound is off to begin with, as every autoplaying video in this app is, and `volume` /
  * `volume-off-slash` toggle it.
+ *
+ * ## ⚠ It takes no `side`, because it is never opened at a width where one would apply
+ *
+ * `ResponsiveDialog` turns into a sheet below `--breakpoint-sm`; the post composer withholds the
+ * control that opens this below `md`, on the grounds that a phone cannot be asked to run ffmpeg as
+ * WebAssembly (`post-composer-video.tsx` has the account). So the compact branch is unreachable
+ * from the one caller there is, and a `side` prop would be a choice nothing can make. Add it back
+ * the day a caller exists that opens this on a phone — and answer that question first.
  */
 
 export interface VideoTrimmerSource {
@@ -84,7 +91,6 @@ export function VideoTrimmer({
     onCancel,
     onTrimmed,
     nested = false,
-    side = 'end',
     testId,
 }: {
     open: boolean
@@ -98,11 +104,6 @@ export function VideoTrimmer({
      * `DialogContent`'s own `nested` says what it changes.
      */
     nested?: boolean
-    /**
-     * Which edge it comes from below the breakpoint — `SheetContent`'s `side`. The post composer
-     * opens it as a bottom sheet with the rest of its popups; a standalone screen would not.
-     */
-    side?: SheetSide
     /**
      * The scope, **from the caller**. `shared/` never authors one (`scripts/check-testids.mjs`
      * rejects a literal here), and this component is reached from two different features — so a
@@ -289,7 +290,6 @@ export function VideoTrimmer({
                 if (!next && !busy) onCancel()
             }}
             nested={nested}
-            side={side}
             className="flex max-h-[90dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
             data-testid={testId}
         >

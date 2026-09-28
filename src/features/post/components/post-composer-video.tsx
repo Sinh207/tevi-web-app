@@ -17,9 +17,25 @@ import type { PostDraft } from '../lib/post-draft'
  * because the composer's vertical space is already spoken for by the caption above and the action
  * bar below.
  *
- * Legacy hides *Edit video* below `md` (`if (!matchUpMd) return null`) — a trimmer dragged with a
- * thumb on a 64px strip is a fair thing to withhold. That is kept: the button is `hidden md:flex`,
- * and a phone can still attach, preview and remove.
+ * ## ⚠ *Edit video* is hidden below `md`, and the reason is the **device**, not the layout
+ *
+ * Legacy hides it too (`if (!matchUpMd) return null`) and its reason is ergonomic — a 64px strip is
+ * awkward to drag with a thumb. That is not why it is kept here, and the difference matters to
+ * anyone tempted to remove the gate now that the trimmer has a phone-shaped shell:
+ *
+ * **Trimming is ffmpeg compiled to WebAssembly.** It fetches a 24 MB core, compiles it, and holds
+ * the input *and* the output in a virtual filesystem inside the tab's heap — `shared/lib/ffmpeg.ts`
+ * has the shape of it. On a mid-range phone that is a long wait at best and a killed tab at worst,
+ * and the clip a creator records on that phone is the largest one they will ever hand it. The
+ * honest answer is not to offer the control.
+ *
+ * So the breakpoint is a **proxy for capability**, which is worth saying because it is not what a
+ * breakpoint usually means here. It is a coarse proxy: a 900px window on a powerful laptop is
+ * treated as a phone. That is the trade — the alternative is sniffing `deviceMemory` and
+ * `hardwareConcurrency`, which are absent or rounded on the browsers that matter most.
+ *
+ * A phone can still attach a clip, preview it, choose a cover and remove it. Only the cut is
+ * withheld.
  *
  * One plain `<video>`, not legacy's video.js. The source is a local `blob:` the browser has already
  * measured — there is no HLS manifest to negotiate until the clip has been through the backend's

@@ -12059,7 +12059,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/post-composer-dialog.tsx:431"
+            "source": "src/features/post/components/post-composer-dialog.tsx:430"
         },
         "premium-about": {
             "scope": "premium",

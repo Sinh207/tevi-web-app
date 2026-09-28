@@ -132,6 +132,7 @@ export function ResponsiveDialog({
             <DialogContent nested={nested} className={className} data-testid={props['data-testid']}>
                 {children}
             </DialogContent>
+            {overlays}
         </Dialog>
     )
 }
