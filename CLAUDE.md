@@ -12,9 +12,9 @@ Auth is Bearer-JWT via the Authorization header; tokens live in localStorage und
 migration upgrades legacy keys, e.g. `user_logged_list` / `user_id`, on first load).
 
 **Where the port stands:** the foundation is done and business features are landing on top of it —
-28 feature modules today (payment/Stripe, premium, membership, donation, payout, gift-code,
-star-transfer, affiliate, analytics, monetization, notification, search, channel, identification,
-mini-app…). What is *not* built yet is read out of the legacy app, which lives at `../tevi-web-app` and stays the reference for
+29 feature modules today (payment/Stripe, premium, membership, donation, payout, gift-code,
+star-transfer, affiliate, analytics, monetization, notification, message, search, channel,
+identification, mini-app…). What is *not* built yet is read out of the legacy app, which lives at `../tevi-web-app` and stays the reference for
 behavior/parity questions. Per-feature open items live in `docs/` — see the map below.
 
 ## Stack
@@ -189,8 +189,8 @@ mounted per top-level route: sibling layouts unmount on a client-side navigation
    `shared/lib/socket/` (injected `io`, so it is testable without a browser) behind a dynamic
    import, because a guest must never download 40KB to be told nothing.
    - The **user room** (`shared/lib/socket/user-room.ts`, connected by `@features/realtime`),
-     `${DOORMAN}/user` at path `/doorman/`: this account's balance, Premium state and
-     `inbox_change`. Open **only for a real account** — every visitor carries
+     `${DOORMAN}/user` at path `/doorman/`: this account's balance, Premium state,
+     `inbox_change` and the six direct-message frames (`features/message`). Open **only for a real account** — every visitor carries
      an anonymous session, so without that gate the app holds a websocket per guest. Lives for the
      session, pinned to the account, re-pinned on a switch. Subscribe with
      `useSocketEvent(name, handler)`.

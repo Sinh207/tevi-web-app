@@ -1,6 +1,6 @@
 'use client'
 
-import { useRequireAuth } from '@features/auth'
+import { isMessagesPath, MESSAGES_PATH } from '@features/message/routes'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Icon } from '@shared/ui/icon'
@@ -17,9 +17,8 @@ import { CreateTabBarFab } from './create-tab-bar-fab'
  * The rail (`AppNavbar`) has nine entries; this has five. They are different Figma
  * components with different contents, not one component at two sizes.
  *
- * Home, Following and My Space are real links; the FAB opens the Create list (`CreateTabBarFab`,
- * the same two options the rail's `+` offers). **Messages is the only inert entry left**, rather
- * than pointing at a route that would 404. Give each a `href` as its route lands.
+ * All four destinations are real links; the FAB opens the Create list (`CreateTabBarFab`, the same
+ * two options the rail's `+` offers).
  *
  * My Space is selected for `/@{slug}` too, so tapping through to your own channel keeps the tab lit —
  * the alternative leaves the bar looking as though you navigated away from every tab.
@@ -28,11 +27,6 @@ export function AppTabBar() {
     const { t } = useTranslation()
     const pathname = usePathname()
     const avatar = useAvatarSource()
-    const requireAuth = useRequireAuth()
-    /** Same rule as the rail: everything but Home belongs to an account. */
-    const gated = requireAuth(() => {
-        // TODO: navigate here as each destination lands.
-    })
 
     return (
         <TabBar data-testid="navigation-tab-bar" aria-label={t('nav_main')}>
@@ -59,17 +53,22 @@ export function AppTabBar() {
             />
             {/* The FAB, the Create list it opens and the app prompt behind its event row. */}
             <CreateTabBarFab />
+            {/*
+             * A real `href`, like Following: `/messages` renders a sign-in prompt for a guest rather
+             * than a list, so the route needs no gate. Lit inside a conversation too
+             * (`/@{slug}/messages`), which is still this tab.
+             */}
             <TabBarItem
                 data-testid="navigation-tab-bar-messages"
+                href={MESSAGES_PATH}
+                selected={isMessagesPath(pathname)}
                 knockout
-                onClick={gated}
                 label={t('nav_messages')}
                 icon={<Icon name="comment-dots" weight="duotone" size={24} />}
             />
             {/*
-             * A real `href`, not the gated no-op the other entries still use — and that is not a
-             * hole in "gate the action, never the route". The route is *not* gated: `/my-space`
-             * renders a sign-in prompt for an anonymous visitor and a create-space prompt for
+             * A real `href` — and that is not a hole in "gate the action, never the route". The
+             * route is *not* gated: `/my-space` renders a sign-in prompt for an anonymous visitor and a create-space prompt for
              * someone with no channel. Being a link is strictly better than an onClick: middle-click,
              * prefetch and copy-link all work, and it needs no slug, so there is nothing to wait for.
              */}

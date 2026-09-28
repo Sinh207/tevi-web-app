@@ -1,3 +1,5 @@
+import { MESSAGES_PATH } from '@features/message/routes'
+
 /**
  * Which routes the mobile tab bar belongs to.
  *
@@ -30,15 +32,16 @@
 /**
  * The tab destinations that are plain URLs.
  *
- * Messages is absent because its route does not exist yet — `AppTabBar` renders it as a gated
- * no-op. It becomes a line here on the day it gets an `href`, and the bar will follow it without
- * anything else changing.
+ * `/messages` comes from `features/message/routes`, the feature's import-free leaf, so the shell does
+ * not pull the conversation list in to learn one string. A conversation (`/@{slug}/messages`) is
+ * deliberately **not** a tab destination: it is a screen with its own composer along the bottom,
+ * where the bar would sit — the way the apps drop it inside a chat.
  *
  * `/following` is a literal rather than `features/channel`'s `FOLLOWING_PATH`, which is the same
  * string: a feature may not import another feature's internals, and the barrel that exports it is
  * `features/channel`'s. `FOLLOWING_PATH`'s own note records the other side of this.
  */
-export const TAB_PATHS: readonly string[] = ['/', '/following', '/my-space']
+export const TAB_PATHS: readonly string[] = ['/', '/following', MESSAGES_PATH, '/my-space']
 
 /**
  * Whether the tab bar belongs on this screen.

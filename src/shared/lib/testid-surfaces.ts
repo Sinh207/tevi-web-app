@@ -63,6 +63,7 @@ export const TESTID_SURFACES: Record<string, TestIdSurface> = {
     identification: { kind: 'screen', label: 'Identity verification (KYC)' },
     legal: { kind: 'screen', label: 'Legal documents' },
     membership: { kind: 'screen', label: 'Memberships' },
+    message: { kind: 'screen', label: 'Direct messages — the conversation list' },
     'my-star': {
         kind: 'screen',
         label: 'Star balance and ledger, and choosing who to gift Star to',

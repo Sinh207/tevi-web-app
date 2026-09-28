@@ -3295,6 +3295,49 @@ Encoded in: `features/post/lib/post-draft.ts` (`buildPostBody`, `postLang`),
 
 ---
 
+## B111 — **the conversation list** (`messenger/v2/rpc/…`): no schema, read field by field from legacy · **six guesses behind one screen**
+
+`/messages` reads `get_recent_conversations` and `search_conversation`, and writes `mark_seen_all`
+and `flush_conversation`. None of them is in a schema; every field name is the one legacy's
+`containers/directMessage` reads, and `features/message/api/types.ts` parses each defensively. What
+the client assumes, and what changes if it is wrong:
+
+**1. Paging.** The client replays the **query string** of `next_url` against
+`get_recent_conversations` and ignores its path — legacy's `new URL(origin + next_url).search`. A
+`next_url` with no query is treated as the last page. Is `next_url` always a relative path whose
+query is the complete next request (cursor, `limit`, `filter`)? If the cursor lives in the path, the
+list stops after page one.
+
+**2. `count`.** Read as the folder's total, and used for the Unread tab's badge via a separate
+`limit=1&filter=UNREAD` request. Is `count` present on `filter=UNREAD`, and is it the number of
+*conversations* with something unread (not of messages)? If it is absent the badge falls back to 0
+or 1.
+
+**3. Timestamps.** `latest_message.created_at` goes into `new Date()` in legacy, while
+`recipient.last_online_at` is divided by 1000 — i.e. milliseconds. The client accepts ISO, epoch
+seconds or epoch ms for both. Which is each, really?
+
+**4. `recipient.active`.** Missing is treated as **inactive** (legacy's `active || false`): the row
+shows "Tevi user", no avatar and no link. Is the field always sent? If not, every conversation
+would render anonymised.
+
+**5. `flush_conversation`.** Legacy sends `both_members=false` as a **query parameter** with an empty
+body (its `post(uri, params, data)` puts the object in `params`), and the client does the same. Is
+the query the intended place, and does the conversation come back into this account's list when the
+other side writes again?
+
+**6. The socket frames.** `new_message`, `update_message`, `deleted_message`, `seen_message` and
+`update_conversation` are used as signals only — the list refetches. `change_chat_action` is read:
+`{ conversation_id, action: 'NONE' | 'TYPING' | 'UPLOADING_PHOTO' }`. Does a typing sender repeat
+`TYPING` while typing (the client expires an indicator after 6s without one), and is a frame
+delivered for the reader's own typing in another tab?
+
+Encoded in: `features/message/api/types.ts`, `features/message/api/message-api.ts`,
+`features/message/lib/conversation-page.ts` (`cursorFromNextUrl`),
+`features/message/hooks/use-chat-actions.ts`.
+
+---
+
 ## Closed
 
 Answered and acted on. Kept as one line so the `Bnn` references in the code still resolve; the

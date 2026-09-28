@@ -221,6 +221,23 @@ const SOURCES = [
         url: `${CDN}/web/web-app/images/theo-empty-inbox.svg`,
         mode: 'copy',
     },
+    /*
+     * Direct messages' two empty states — "Welcome to your chat!" (no conversations, and the empty
+     * Unread folder) and "No results found" (a search). Both are real vectors of 8–9 KB with no
+     * embedded raster, so `copy`, for the reason the row above gives.
+     */
+    {
+        name: 'message-empty',
+        out: 'message/empty-conversation.svg',
+        url: `${CDN}/web/web-app/direct-message/empty-conversation.svg`,
+        mode: 'copy',
+    },
+    {
+        name: 'message-no-results',
+        out: 'message/no-results.svg',
+        url: `${CDN}/web/web-app/direct-message/isolation.svg`,
+        mode: 'copy',
+    },
     {
         name: 'no-cards',
         out: 'payment/no-cards.webp',

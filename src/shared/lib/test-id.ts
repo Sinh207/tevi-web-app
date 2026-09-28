@@ -178,6 +178,11 @@ export const TESTID_COMPANIONS = [
     'data-account-id',
     'data-card-id',
     'data-channel-slug',
+    /**
+     * A direct-message conversation's id — every row on `/messages` is `message-row`. Not
+     * `data-channel-slug`: an inactive account's conversation has no slug, and it is still a row.
+     */
+    'data-conversation-id',
     'data-currency-code',
     'data-date',
     /**

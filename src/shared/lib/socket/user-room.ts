@@ -48,7 +48,17 @@
  */
 
 /** The wire events this room forwards. */
-export const USER_ROOM_EVENTS = ['balance_change', 'premium_info', 'inbox_change'] as const
+export const USER_ROOM_EVENTS = [
+    'balance_change',
+    'premium_info',
+    'inbox_change',
+    'new_message',
+    'update_message',
+    'deleted_message',
+    'seen_message',
+    'update_conversation',
+    'change_chat_action',
+] as const
 export type UserRoomEvent = (typeof USER_ROOM_EVENTS)[number]
 
 /**
@@ -69,6 +79,19 @@ export type UserRoomEvent = (typeof USER_ROOM_EVENTS)[number]
  * ⚠ Note the spelling. The **wire** name is `inbox_change`; legacy's transport re-emits it to its
  * consumers as `inboxChange`, so a grep for the camel-case form in the old app finds the consumer
  * and not the socket event.
+ *
+ * ## The six direct-message events
+ *
+ * `new_message` through `change_chat_action` arrived with `features/message`, which subscribes to
+ * all six (`useConversationLive`). Legacy binds them on the raw socket instance under these exact
+ * names (`containers/directMessage/hooks/useSocketDM.js`), so, unlike `inbox_change`, there is no
+ * second spelling to trip over.
+ *
+ * Five of them are signals in the usual sense: the list invalidates and asks. The sixth,
+ * `change_chat_action`, is the one whose payload is read — "typing…" is not server state that any
+ * query owns, it is a transient the socket is the *only* source of, so there is nothing to refetch.
+ * `features/message/hooks/use-chat-actions.ts` holds it, with a timeout for the `NONE` that never
+ * comes.
  */
 
 export type UserRoomStatus = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error'

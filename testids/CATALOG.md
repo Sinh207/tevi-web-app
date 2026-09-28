@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-814 ids across 28 surfaces.
+830 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -472,6 +472,29 @@ Routes: `/[slug]/membership/[[...tier]]`, `/app/[channelSlug]/membership/[packag
 | `membership-tabs` | — | `src/features/membership/components/holdings/my-membership-view.tsx:519` |
 | `membership-view-detail` | — | `src/features/membership/components/join/become-a-member-button.tsx:126` |
 
+## `message` — Direct messages — the conversation list
+
+Routes: `/messages`
+
+| testid | companions | source |
+|---|---|---|
+| `message-delete-confirm` | — | `src/features/message/components/messages-view.tsx:272` |
+| `message-error` | — | `src/features/message/components/messages-view.tsx:95` |
+| `message-loading` | — | `src/features/message/components/conversation-skeleton.tsx:19` |
+| `message-retry` | — | `src/features/message/components/messages-view.tsx:103` |
+| `message-row` | — | `src/features/message/components/conversation-list.tsx:78` |
+| `message-row-link` | — | `src/features/message/components/conversation-row.tsx:202` |
+| `message-row-menu-delete` | — | `src/features/message/components/conversation-row-menu.tsx:64` |
+| `message-row-menu-space` | — | `src/features/message/components/conversation-row-menu.tsx:56` |
+| `message-row-menu-trigger` | — | `src/features/message/components/conversation-row-menu.tsx:45` |
+| `message-row-online` | — | `src/features/message/components/conversation-row.tsx:187` |
+| `message-search-empty` | — | `src/features/message/components/messages-view.tsx:147` |
+| `message-search-input` | — | `src/features/message/components/messages-view.tsx:191` |
+| `message-search-list` | — | `src/features/message/components/messages-view.tsx:139` |
+| `message-sign-in` | — | `src/features/message/components/messages-view.tsx:127` |
+| `message-signed-out` | — | `src/features/message/components/messages-view.tsx:118` |
+| `message-tab` | `data-tab-id` | `src/features/message/components/messages-view.tsx:208` |
+
 ## `mini-app` — Mini-app player — window, tabs, top-up
 
 Routes: `/app/privacy/mini-app`, `/app/tos/mini-app`, `/privacy/mini-app`, `/tos/mini-app`
@@ -664,31 +687,31 @@ Also present on every route it is mounted under — `src/app/(web)/(main)/layout
 | `navigation-menu-sign-out-confirm` | — | `src/features/navigation/components/menu/menu-drawer.tsx:880` |
 | `navigation-menu-storage-row` | `data-row-key` | `src/features/navigation/components/menu/data-storage-screen.tsx:129` |
 | `navigation-menu-withdraw` | — | `src/features/navigation/components/menu/menu-drawer.tsx:619` |
-| `navigation-navbar` | — | `src/features/navigation/components/app-navbar.tsx:85` |
-| `navigation-navbar-chat` | — | `src/features/navigation/components/app-navbar.tsx:161` |
+| `navigation-navbar` | — | `src/features/navigation/components/app-navbar.tsx:63` |
+| `navigation-navbar-chat` | — | `src/features/navigation/components/app-navbar.tsx:144` |
 | `navigation-navbar-create` | — | `src/features/navigation/components/create-rail-entry.tsx:69` |
 | `navigation-navbar-create-menu` | — | `src/features/navigation/components/create-rail-entry.tsx:106` |
 | `navigation-navbar-create-menu-item` | `data-option-value` | `src/features/navigation/components/create-rail-entry.tsx:111` |
 | `navigation-navbar-create-prompt` | — | `src/features/navigation/components/create-rail-entry.tsx:134` |
-| `navigation-navbar-following` | — | `src/features/navigation/components/app-navbar.tsx:113` |
-| `navigation-navbar-home` | — | `src/features/navigation/components/app-navbar.tsx:98` |
-| `navigation-navbar-language` | — | `src/features/navigation/components/app-navbar.tsx:260` |
-| `navigation-navbar-menu` | — | `src/features/navigation/components/app-navbar.tsx:242` |
-| `navigation-navbar-notifications` | — | `src/features/navigation/components/app-navbar.tsx:196` |
-| `navigation-navbar-profile` | — | `src/features/navigation/components/app-navbar.tsx:231` |
-| `navigation-navbar-search` | — | `src/features/navigation/components/app-navbar.tsx:180` |
+| `navigation-navbar-following` | — | `src/features/navigation/components/app-navbar.tsx:91` |
+| `navigation-navbar-home` | — | `src/features/navigation/components/app-navbar.tsx:76` |
+| `navigation-navbar-language` | — | `src/features/navigation/components/app-navbar.tsx:251` |
+| `navigation-navbar-menu` | — | `src/features/navigation/components/app-navbar.tsx:233` |
+| `navigation-navbar-notifications` | — | `src/features/navigation/components/app-navbar.tsx:187` |
+| `navigation-navbar-profile` | — | `src/features/navigation/components/app-navbar.tsx:222` |
+| `navigation-navbar-search` | — | `src/features/navigation/components/app-navbar.tsx:171` |
 | `navigation-page-back` | — | `src/features/navigation/components/page-back-bar.tsx:130` |
-| `navigation-tab-bar` | — | `src/features/navigation/components/app-tab-bar.tsx:38` |
+| `navigation-tab-bar` | — | `src/features/navigation/components/app-tab-bar.tsx:32` |
 | `navigation-tab-bar-create` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:57` |
 | `navigation-tab-bar-create-dialog` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:64` |
 | `navigation-tab-bar-create-dialog-close` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:108` |
 | `navigation-tab-bar-create-list` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:70` |
 | `navigation-tab-bar-create-list-row` | `data-row-key` | `src/features/navigation/components/create-tab-bar-fab.tsx:80` |
 | `navigation-tab-bar-create-prompt` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:115` |
-| `navigation-tab-bar-following` | — | `src/features/navigation/components/app-tab-bar.tsx:54` |
-| `navigation-tab-bar-home` | — | `src/features/navigation/components/app-tab-bar.tsx:40` |
-| `navigation-tab-bar-messages` | — | `src/features/navigation/components/app-tab-bar.tsx:63` |
-| `navigation-tab-bar-my-space` | — | `src/features/navigation/components/app-tab-bar.tsx:77` |
+| `navigation-tab-bar-following` | — | `src/features/navigation/components/app-tab-bar.tsx:48` |
+| `navigation-tab-bar-home` | — | `src/features/navigation/components/app-tab-bar.tsx:34` |
+| `navigation-tab-bar-messages` | — | `src/features/navigation/components/app-tab-bar.tsx:62` |
+| `navigation-tab-bar-my-space` | — | `src/features/navigation/components/app-tab-bar.tsx:76` |
 | `navigation-top-bar` | — | `src/features/navigation/components/app-top-bar.tsx:62` |
 | `navigation-top-bar-menu` | — | `src/features/navigation/components/app-top-bar.tsx:65` |
 | `navigation-top-bar-notifications` | — | `src/features/navigation/components/app-top-bar.tsx:151` |
