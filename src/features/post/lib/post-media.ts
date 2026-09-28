@@ -152,6 +152,13 @@ export function lockedSummary(detail: UnlockDetail | null): {
  * `imageAspectRatio` supports, and the two are kept separate so the choice stays visible rather than
  * being buried in one function that does both.
  */
+/*
+ * ⚠ **Nothing draws with this today.** It was the gallery's single-image branch, which was removed
+ * — legacy has no such branch, and at `3/4` it made a portrait photo 816px tall in a 612px column
+ * (`post-image-gallery.tsx` has the account). Kept exported and tested rather than deleted: it is
+ * the only place the five-bucket snapping rule is written down, and a surface that wants a shape
+ * before the bytes land will want it again. Delete it if that surface never arrives.
+ */
 export function detectAspectRatio(image: PostImage): string {
     const width = image.width ?? image.w
     const height = image.height ?? image.h

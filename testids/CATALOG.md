@@ -889,7 +889,7 @@ Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/po
 
 | testid | companions | source |
 |---|---|---|
-| `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:33` |
+| `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:32` |
 | `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:614` |
 
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone

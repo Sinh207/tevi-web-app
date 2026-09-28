@@ -12049,7 +12049,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:33"
+            "source": "src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:32"
         },
         "post-trimmer": {
             "scope": "post",

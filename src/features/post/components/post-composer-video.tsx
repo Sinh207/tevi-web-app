@@ -64,9 +64,23 @@ export function PostComposerVideo({
 
     return (
         <div className="flex flex-col gap-2">
+            {/*
+             * ⚠ **A portrait clip is drawn at 70% width**, which is legacy's own rule
+             * (`width: aspectRatio === '16/9' ? '100%' : '70%'`) and was dropped when this was
+             * first written.
+             *
+             * Without it the box is the column's full width at `3/4` — 580 × 773 inside a 612px
+             * dialog — so the caption above and the action bar below are pushed off screen by the
+             * one shape phones produce most. At 70% it is 406 × 541: still the tallest thing in
+             * the composer, and small enough that the controls stay in view.
+             */}
             <div
                 data-testid={subTestId(testId, 'slide')}
-                className="relative w-full overflow-hidden rounded-[12px] bg-black"
+                className={
+                    video.width >= video.height
+                        ? 'relative w-full overflow-hidden rounded-[12px] bg-black'
+                        : 'relative w-[70%] self-start overflow-hidden rounded-[12px] bg-black'
+                }
                 style={{ aspectRatio: video.width >= video.height ? '16 / 9' : '3 / 4' }}
             >
                 <video

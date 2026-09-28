@@ -90,10 +90,20 @@ describe('PostImageGallery', () => {
         expect(without.container.querySelectorAll('[data-media-index]')).toHaveLength(2)
     })
 
-    /** A single image does not join the row — it takes the full width at its own snapped ratio. */
-    it('renders one image without the scrolling row', () => {
+    /**
+     * ⚠ **A single image is a slide like any other**, and this test used to assert the opposite.
+     *
+     * There was a branch drawing one image at full width and its own snapped ratio; legacy has no
+     * such branch, and at `3/4` it made a portrait photo 612 × 816 in a 612px column — taller than
+     * most laptop viewports, so the card's own actions scrolled away under it. The old assertion
+     * was pinning that divergence rather than a requirement.
+     *
+     * What is worth pinning is that the row treats one image the same as four: same fixed height,
+     * width from its own ratio.
+     */
+    it('puts a single image in the row, as every other image', () => {
         const { container } = render(<PostImageGallery images={[image('/a.webp')]} />)
-        expect(container.querySelectorAll('[data-media-index]')).toHaveLength(0)
+        expect(container.querySelectorAll('[data-media-index]')).toHaveLength(1)
         expect(screen.getAllByRole('img')).toHaveLength(1)
     })
 

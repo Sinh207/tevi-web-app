@@ -5,14 +5,9 @@ import { subTestId } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PostImage } from '../api/types'
-import {
-    detectAspectRatio,
-    gallerySlideRatio,
-    isLocalImageSrc,
-    POST_COLUMN_SIZES,
-} from '../lib/post-media'
+import { gallerySlideRatio, isLocalImageSrc } from '../lib/post-media'
 
 /**
  * A post's images — one image sized by its own ratio, several as a horizontal row.
@@ -37,8 +32,19 @@ import {
  * **260px tall on mobile and 310 on desktop**, and each is as wide as its own aspect ratio makes it
  * at that height. Letterboxing is what the alternative costs.
  *
- * A single image does not join the row — it takes the full width at its own snapped ratio
- * (`detectAspectRatio`), which is the shape the feed is built around.
+ * ## ⚠ A single image joins the row too, and it did not
+ *
+ * This had a branch drawing **one** image at full width and its own snapped ratio. Legacy has no
+ * such branch: `ImageGallery` puts every image, however many, in the fixed-height row and derives
+ * each width from its ratio (`getSlideWidth(image, commonHeight)`).
+ *
+ * The divergence was not cosmetic. `detectAspectRatio` snaps as far as `3/4`, so a portrait photo
+ * on its own became **612 × 816** in a 612px column — taller than the viewport on most laptops, so
+ * the card's own actions scrolled off under it. Every other shape was fine, which is why it
+ * survived: it is only wrong for the one aspect ratio phones produce most.
+ *
+ * `max-w-[90%]` per slide is legacy's too, and it is what stops a panorama filling the row edge to
+ * edge with nothing to suggest more follows.
  *
  * ## The composer draws the same figure, shorter
  *
@@ -82,7 +88,14 @@ export function PostImageGallery({
     const { t } = useTranslation()
     const scrollerRef = useRef<HTMLDivElement>(null)
     const [atStart, setAtStart] = useState(true)
-    const [atEnd, setAtEnd] = useState(false)
+    /*
+     * ⚠ **Starts `true`, so a row that does not scroll draws no arrow.** It started `false`, which
+     * was invisible while a single image had its own full-width branch — nothing reached the
+     * arrows with one slide. The moment one image joined the row, a *next* arrow appeared on every
+     * single-image post, pointing at nothing, until the reader scrolled a row that cannot scroll.
+     * Caught in a screenshot, not by a type.
+     */
+    const [atEnd, setAtEnd] = useState(true)
 
     /**
      * The arrows exist only when there is somewhere to go, and that is read off the element rather
@@ -97,6 +110,24 @@ export function PostImageGallery({
         setAtEnd(el.scrollLeft >= max - 1)
     }, [])
 
+    /**
+     * Measure once the row exists, and again whenever it is resized.
+     *
+     * `onScroll` alone only ever corrects the state **after** a scroll, so the first paint is
+     * whatever the initial values happen to be — right for a row that overflows and wrong for one
+     * that does not. A `ResizeObserver` covers the two ways the answer changes without a scroll: a
+     * page that reflows, and images that arrive and widen the track.
+     */
+    useEffect(() => {
+        const el = scrollerRef.current
+        if (!el) return
+        syncEdges()
+        if (typeof ResizeObserver === 'undefined') return
+        const observer = new ResizeObserver(syncEdges)
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [syncEdges])
+
     const scrollBy = useCallback((direction: 1 | -1) => {
         const el = scrollerRef.current
         if (!el) return
@@ -106,37 +137,6 @@ export function PostImageGallery({
     if (images.length === 0) return null
 
     const rowHeight = size === 'compact' ? 'h-[200px] md:h-[300px]' : 'h-[260px] md:h-[310px]'
-
-    if (images.length === 1 && size === 'default') {
-        const only = images[0]
-        const src = only.uri ?? only.thumb
-        if (!src) return null
-        const Frame = onOpen ? 'button' : 'div'
-        return (
-            <Frame
-                {...(onOpen
-                    ? {
-                          type: 'button' as const,
-                          onClick: () => onOpen(0),
-                          'aria-label': t('post_image_open'),
-                      }
-                    : {})}
-                data-testid={testId}
-                className="relative w-full overflow-hidden rounded-[8px] bg-(--background-segment)"
-                style={{ aspectRatio: detectAspectRatio(only) }}
-            >
-                <Image
-                    src={src}
-                    alt={t('post_image_alt')}
-                    fill
-                    sizes={POST_COLUMN_SIZES}
-                    /* A `blob:` src is the composer's own file — `isLocalImageSrc` says why. */
-                    unoptimized={isLocalImageSrc(src)}
-                    className="object-cover"
-                />
-            </Frame>
-        )
-    }
 
     return (
         <div data-testid={testId} className="group relative w-full">
@@ -167,7 +167,12 @@ export function PostImageGallery({
                         <div
                             // biome-ignore lint/suspicious/noArrayIndexKey: order is the only identity these rows have — see the tile below.
                             key={index}
-                            className="relative h-full flex-none snap-start"
+                            /*
+                             * `max-w-[90%]` is legacy's own (`maxWidth: '90%'` on each slide), and
+                             * it is what stops a wide panorama filling the row edge to edge with
+                             * no hint that anything follows it.
+                             */
+                            className="relative h-full max-w-[90%] flex-none snap-start"
                             style={{ aspectRatio: gallerySlideRatio(image) }}
                         >
                             <Tile

@@ -288,8 +288,15 @@ export function VideoTrimmer({
                 />
 
                 <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+                    {/*
+                     * Capped, for the reason the composer's own preview is: `3/4` across a 512px
+                     * dialog is 683px of video above a strip the reader has to reach. The cap
+                     * letterboxes a portrait clip rather than shrinking the dialog's width —
+                     * `object-contain` already keeps the whole frame visible, which is what a
+                     * trimmer needs and a feed does not.
+                     */}
                     <div
-                        className="relative w-full overflow-hidden rounded-[12px] bg-black"
+                        className="relative max-h-[45dvh] w-full overflow-hidden rounded-[12px] bg-black"
                         style={{ aspectRatio: previewAspect(source) }}
                     >
                         {previewUrl ? (
