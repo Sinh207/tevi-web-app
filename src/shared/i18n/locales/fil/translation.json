@@ -1117,6 +1117,7 @@
     "payment_total_usd_note": "Nasa USD — ang bangko mo ang magko-convert sa sariling rate.",
     "payment_pay_amount": "Bayaran ang {{amount}}",
     "payment_new_method": "Gumamit ng bagong paraan ng pagbabayad",
+    "payment_show_all_cards": "Ipakita ang lahat ng card ({{count}})",
     "payment_taking_you_to_gateway": "Dadalhin ka sa {{gateway}}…",
     "payment_unsupported_body": "Pumili ng ibang paraan ng pagbabayad at subukan muli.",
     "payment_packages_error_title": "Hindi ma-load ang mga Star package",

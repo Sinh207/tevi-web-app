@@ -1117,6 +1117,7 @@
     "payment_total_usd_note": "以美元顯示，實際換算依你的銀行匯率。",
     "payment_pay_amount": "支付 {{amount}}",
     "payment_new_method": "使用其他付款方式",
+    "payment_show_all_cards": "顯示全部卡片（{{count}}）",
     "payment_taking_you_to_gateway": "正在前往 {{gateway}}…",
     "payment_unsupported_body": "請改用其他付款方式再試一次。",
     "payment_packages_error_title": "無法載入星星方案",

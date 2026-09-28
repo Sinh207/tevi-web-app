@@ -1117,6 +1117,7 @@
     "payment_total_usd_note": "USD로 표시됩니다 — 환전은 은행 환율이 적용됩니다.",
     "payment_pay_amount": "{{amount}} 결제",
     "payment_new_method": "다른 결제 수단 사용",
+    "payment_show_all_cards": "모든 카드 보기 ({{count}})",
     "payment_taking_you_to_gateway": "{{gateway}}(으)로 이동 중…",
     "payment_unsupported_body": "다른 결제 수단을 선택해 다시 시도해 주세요.",
     "payment_packages_error_title": "스타 패키지를 불러올 수 없습니다",

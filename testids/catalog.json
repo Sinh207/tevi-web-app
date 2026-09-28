@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 929,
+        "ids": 930,
         "surfaces": 28
     },
     "surfaces": {
@@ -10923,7 +10923,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/pay-with-card-panel.tsx:191"
+            "source": "src/features/payment/components/pay-with-card-panel.tsx:240"
         },
         "payment-card-delete": {
             "scope": "payment",
@@ -10966,7 +10966,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/pay-with-card-panel.tsx:265"
+            "source": "src/features/payment/components/pay-with-card-panel.tsx:327"
         },
         "payment-card-panel-form": {
             "scope": "payment",
@@ -10976,7 +10976,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/pay-with-card-panel.tsx:141"
+            "source": "src/features/payment/components/pay-with-card-panel.tsx:169"
         },
         "payment-card-replace": {
             "scope": "payment",
@@ -11027,6 +11027,16 @@
             ],
             "source": "src/features/payment/components/card-management-view.tsx:164"
         },
+        "payment-card-show-all": {
+            "scope": "payment",
+            "routes": [
+                "/app/dev-checkout",
+                "/card-management",
+                "/get-star",
+                "/get-star/transaction-history"
+            ],
+            "source": "src/features/payment/components/pay-with-card-panel.tsx:300"
+        },
         "payment-card-submit": {
             "scope": "payment",
             "routes": [
@@ -11035,7 +11045,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/pay-with-card-panel.tsx:299"
+            "source": "src/features/payment/components/pay-with-card-panel.tsx:370"
         },
         "payment-cards-loading": {
             "scope": "payment",

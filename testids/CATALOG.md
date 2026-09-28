@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-929 ids across 28 surfaces.
+930 ids across 28 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -880,17 +880,18 @@ Routes: `/app/dev-checkout`, `/card-management`, `/get-star`, `/get-star/transac
 | `payment-card-add` | — | `src/features/payment/components/card-management-view.tsx:378` |
 | `payment-card-add-empty` | — | `src/features/payment/components/card-management-view.tsx:414` |
 | `payment-card-checkout-close` | — | `src/features/payment/components/card-checkout-dialog.tsx:71` |
-| `payment-card-choice` | — | `src/features/payment/components/pay-with-card-panel.tsx:191` |
+| `payment-card-choice` | — | `src/features/payment/components/pay-with-card-panel.tsx:240` |
 | `payment-card-delete` | `data-card-id` | `src/features/payment/components/saved-card-row.tsx:220` |
 | `payment-card-delete-confirm` | — | `src/features/payment/components/card-management-view.tsx:182` |
 | `payment-card-list-add` | — | `src/features/payment/components/saved-card-list.tsx:125` |
-| `payment-card-new` | — | `src/features/payment/components/pay-with-card-panel.tsx:265` |
-| `payment-card-panel-form` | — | `src/features/payment/components/pay-with-card-panel.tsx:141` |
+| `payment-card-new` | — | `src/features/payment/components/pay-with-card-panel.tsx:327` |
+| `payment-card-panel-form` | — | `src/features/payment/components/pay-with-card-panel.tsx:169` |
 | `payment-card-replace` | `data-card-id` | `src/features/payment/components/saved-card-row.tsx:188` |
 | `payment-card-row` | `data-card-id` | `src/features/payment/components/saved-card-row.tsx:149` |
 | `payment-card-set-default` | `data-card-id` | `src/features/payment/components/saved-card-row.tsx:199` |
 | `payment-card-set-default-confirm` | — | `src/features/payment/components/card-management-view.tsx:164` |
-| `payment-card-submit` | — | `src/features/payment/components/pay-with-card-panel.tsx:299` |
+| `payment-card-show-all` | — | `src/features/payment/components/pay-with-card-panel.tsx:300` |
+| `payment-card-submit` | — | `src/features/payment/components/pay-with-card-panel.tsx:370` |
 | `payment-cards-loading` | — | `src/features/payment/components/card-management-skeleton.tsx:29` |
 | `payment-cards-primary` | — | `src/features/payment/components/card-management-view.tsx:232` |
 | `payment-cards-retry` | — | `src/features/payment/components/card-management-view.tsx:310` |

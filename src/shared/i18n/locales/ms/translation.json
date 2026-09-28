@@ -1117,6 +1117,7 @@
     "payment_total_usd_note": "Dipaparkan dalam USD — bank anda menukar pada kadarnya sendiri.",
     "payment_pay_amount": "Bayar {{amount}}",
     "payment_new_method": "Guna kaedah pembayaran lain",
+    "payment_show_all_cards": "Tunjukkan semua kad ({{count}})",
     "payment_taking_you_to_gateway": "Membawa anda ke {{gateway}}…",
     "payment_unsupported_body": "Pilih kaedah pembayaran lain dan cuba lagi.",
     "payment_packages_error_title": "Tidak dapat memuatkan pakej Star",

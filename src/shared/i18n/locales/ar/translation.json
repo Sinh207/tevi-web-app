@@ -1141,6 +1141,7 @@
     "payment_total_usd_note": "المبلغ بالدولار — يتم التحويل بسعر مصرفك.",
     "payment_pay_amount": "ادفع {{amount}}",
     "payment_new_method": "استخدام طريقة دفع أخرى",
+    "payment_show_all_cards": "عرض كل البطاقات ({{count}})",
     "payment_taking_you_to_gateway": "جارٍ نقلك إلى {{gateway}}…",
     "payment_unsupported_body": "اختر طريقة دفع أخرى وحاول مرة أخرى.",
     "payment_packages_error_title": "تعذّر تحميل حزم النجوم",

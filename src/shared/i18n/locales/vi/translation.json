@@ -1117,6 +1117,7 @@
     "payment_total_usd_note": "Hiển thị bằng USD — ngân hàng của bạn sẽ quy đổi theo tỷ giá của họ.",
     "payment_pay_amount": "Trả {{amount}}",
     "payment_new_method": "Dùng phương thức khác",
+    "payment_show_all_cards": "Xem tất cả thẻ ({{count}})",
     "payment_taking_you_to_gateway": "Đang chuyển bạn tới {{gateway}}…",
     "payment_unsupported_body": "Hãy chọn phương thức khác và thử lại.",
     "payment_packages_error_title": "Không tải được gói Star",

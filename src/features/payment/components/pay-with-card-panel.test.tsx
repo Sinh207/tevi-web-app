@@ -205,3 +205,40 @@ describe('PayWithCardPanel — revealing the new-method form', () => {
         }
     })
 })
+
+describe('PayWithCardPanel — a long list folds', () => {
+    it('shows three cards and a "show all", and never hides the chosen one', () => {
+        vi.useFakeTimers()
+        try {
+            // Four expired ahead of a live one: the seed lands on the fifth, past the cut.
+            const { radios } = renderPanel([
+                card('1', 1, 2024),
+                card('2', 1, 2024),
+                card('3', 1, 2024),
+                card('4', 1, 2024),
+                card('5', 9, 2027, true),
+                card('6', 9, 2027),
+            ])
+            // Three + the chosen card + the new-method radio.
+            expect(radios()).toHaveLength(5)
+            expect(radios()[3]?.checked).toBe(true)
+
+            fireEvent.click(screen.getByTestId('payment-card-show-all'))
+            expect(radios()).toHaveLength(7)
+            expect(screen.queryByTestId('payment-card-show-all')).toBeNull()
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    it('does not fold a list only one card too long', () => {
+        vi.useFakeTimers()
+        try {
+            const { radios } = renderPanel([1, 2, 3, 4].map(i => card(String(i), 9, 2027)))
+            expect(radios()).toHaveLength(5)
+            expect(screen.queryByTestId('payment-card-show-all')).toBeNull()
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+})
