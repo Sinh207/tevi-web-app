@@ -284,13 +284,28 @@ Raised while building `features/channel` (the `/@{slug}` page). Legacy reference
 
 ## B12 — `media_type` on the threads endpoints: what values, and how is it repeated?
 
-Legacy builds a repeated bare key by hand (`media_type=image&media_type=video`); axios 1.x
+Legacy builds a repeated bare key by hand (`media_type=IMAGE&media_type=VIDEO`); axios 1.x
 would serialise an array as `media_type[]=image`, so the client sets
 `paramsSerializer: { indexes: null }` to match legacy's wire format.
 
 **If the server wants brackets or a comma-joined list instead:** the media tab returns
 *unfiltered* results and **looks like it works** — the grid fills with posts, just the wrong
 set. That is the failure mode worth naming: no error, no empty state, only wrong content.
+
+**Answered for the values, 2026-09-28 — measured on staging, `my-channel/threads/`:**
+
+| query | result |
+|---|---|
+| no `media_type` | 200 |
+| `media_type=IMAGE&media_type=VIDEO` | 200, images and videos only |
+| `media_type=IMAGE` | 200, images only |
+| `media_type=image` / `video` / `image&…video` / `image,video` | **500** — `runtime error: invalid memory address or nil pointer dereference` |
+
+The values are **upper case** — legacy's `TYPE_POST_IMAGE_SLIDE.IMAGE` / `.VIDEO`, which is what
+it actually sends; this entry used to quote it in lower case, and the client copied that. The
+repeated bare key is confirmed. Still open, for the backend: an unknown value should be a **400**,
+not a panic — the lower-case spelling took down the Media tab on every space and said only
+"Internal Server Error".
 
 ---
 

@@ -2008,6 +2008,7 @@
     "post_lightbox_title": "Media postingan",
     "post_slider_previous_post": "Postingan sebelumnya",
     "post_slider_next_post": "Postingan berikutnya",
+    "post_slider_more": "selengkapnya",
     "post_media_open": "Buka media",
     "post_media_photos_one": "{{count, number}} foto",
     "post_media_photos_other": "{{count, number}} foto",

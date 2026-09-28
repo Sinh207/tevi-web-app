@@ -75,20 +75,20 @@ export { PostComposerDialog } from './components/post-composer-dialog'
  */
 export { PostDetailView } from './components/post-detail-view'
 /**
- * The full-screen media viewer and the list state behind it.
- *
- * Exported together because neither is useful alone: the viewer pages between posts only when a
- * list answers `onPrevPost` / `onNextPost`, and the hook exists to be that answer. A surface that
- * renders `PostCard`s in a list wires both; a card on its own needs neither and keeps its own
- * viewer over its own media.
- */
-export { PostMediaLightbox } from './components/post-media-lightbox'
-/**
  * One cell of a space's Media grid. A component rather than its parts for the reason the header
  * gives: the tile owns the unlock flow and the lightbox it opens, and a grid that drew its own cell
  * would have the picture without either.
  */
 export { PostMediaTile } from './components/post-media-tile'
+/**
+ * The full-screen post slider and the list state behind it.
+ *
+ * Exported together because neither is useful alone: the slider needs the list to page through and
+ * the hook is what holds which post is open. A surface that renders `PostCard`s in a list wires
+ * both; a card on its own needs neither and keeps its own media viewer
+ * (`PostMediaLightbox`, still internal).
+ */
+export { PostSlider } from './components/post-slider'
 export type { PostActions } from './hooks/use-post-actions'
 export { usePostActions } from './hooks/use-post-actions'
 export { usePostBookmark } from './hooks/use-post-bookmark'

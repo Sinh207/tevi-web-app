@@ -200,7 +200,12 @@ export type ThreadKind = 'posts' | 'media'
  */
 const FIRST_PAGE: Record<ThreadKind, Record<string, unknown>> = {
     posts: { limit: 20, pinned: 0 },
-    media: { limit: 21, pinned: 0, media_type: ['image', 'video'] },
+    /*
+     * ⚠ **Upper case**, legacy's `TYPE_POST_IMAGE_SLIDE` values. The lower-case spelling is not
+     * ignored by the backend — it **panics** (500, nil pointer dereference), so the tab showed an
+     * error state on every space. Measured on staging, B12 has the table.
+     */
+    media: { limit: 21, pinned: 0, media_type: ['IMAGE', 'VIDEO'] },
 }
 
 /** The slug comes straight off the URL, so it is encoded at every use (DoD §8). */

@@ -30,3 +30,26 @@ export function formatPostTimestamp(iso: string, locale: string): string {
 
     return `${day} - ${time}`
 }
+
+/**
+ * How much of a caption the **slider** shows before *more* — legacy's `getDisplayText`.
+ *
+ * Eighty characters, cut back to the nearest space or newline so a word is never sliced in half.
+ * The fallback when there is no break in the first eighty — one long token, a URL, a language that
+ * does not space its words — is to cut at eighty anyway: a caption that refused to truncate would
+ * cover the media it belongs to.
+ *
+ * Returns the **whole** text when it is short enough, so the caller can compare identity to decide
+ * whether to draw the toggle at all rather than measuring twice.
+ */
+export const SLIDER_CAPTION_LIMIT = 80
+
+export function truncateSliderCaption(text: string): string {
+    if (text.length <= SLIDER_CAPTION_LIMIT) return text
+
+    let cut = SLIDER_CAPTION_LIMIT
+    while (cut > 0 && text[cut] !== ' ' && text[cut] !== '\n') cut -= 1
+    if (cut === 0) cut = SLIDER_CAPTION_LIMIT
+
+    return text.slice(0, cut).trim()
+}

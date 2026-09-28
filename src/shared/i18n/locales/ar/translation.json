@@ -2048,6 +2048,7 @@
     "post_lightbox_title": "وسائط المنشور",
     "post_slider_previous_post": "المنشور السابق",
     "post_slider_next_post": "المنشور التالي",
+    "post_slider_more": "المزيد",
     "post_media_open": "فتح الوسائط",
     "post_media_photos_one": "صورة واحدة",
     "post_media_photos_other": "{{count, number}} صورة",
