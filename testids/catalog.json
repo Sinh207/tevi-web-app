@@ -4357,7 +4357,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:146"
+            "source": "src/features/channel/components/channel-thread-list.tsx:140"
         },
         "channel-menu-follow": {
             "scope": "channel",
@@ -5738,7 +5738,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:175"
+            "source": "src/features/channel/components/channel-thread-list.tsx:169"
         },
         "channel-top-bar-loading": {
             "scope": "channel",
@@ -13133,11 +13133,7 @@
             ],
             "parts": [
                 "close",
-                "footer",
-                "header",
                 "label",
-                "label-data",
-                "list",
                 "next",
                 "overlay",
                 "prev",
@@ -13224,6 +13220,26 @@
                 "message",
                 "option",
                 "reveal"
+            ]
+        },
+        "src/features/post/components/post-slider.tsx": {
+            "accepts": [
+                "PostSlider"
+            ],
+            "parts": [
+                "apply",
+                "close",
+                "confirm",
+                "copy",
+                "description",
+                "footer",
+                "group",
+                "label-data",
+                "list",
+                "next",
+                "prev",
+                "reveal",
+                "slide"
             ]
         },
         "src/features/post/components/post-unlock-dialogs.tsx": {

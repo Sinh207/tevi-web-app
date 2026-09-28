@@ -129,10 +129,11 @@ describe('getThreads', () => {
         expect(get.mock.calls[0][1]).toEqual({ limit: 20, pinned: 0 })
 
         await channelApi.getThreads({ slug: 'ada', isOwner: false, kind: 'media' })
+        /* Upper case: the lower-case spelling makes the backend panic (B12). */
         expect(get.mock.calls[1][1]).toEqual({
             limit: 21,
             pinned: 0,
-            media_type: ['image', 'video'],
+            media_type: ['IMAGE', 'VIDEO'],
         })
     })
 
@@ -146,11 +147,11 @@ describe('getThreads', () => {
             slug: 'ada',
             isOwner: false,
             kind: 'media',
-            cursor: { created_at_lt: ['17'], media_type: ['image', 'video'] },
+            cursor: { created_at_lt: ['17'], media_type: ['IMAGE', 'VIDEO'] },
         })
         expect(get.mock.calls[0][1]).toEqual({
             created_at_lt: ['17'],
-            media_type: ['image', 'video'],
+            media_type: ['IMAGE', 'VIDEO'],
         })
         expect(get.mock.calls[0][1]).not.toHaveProperty('limit')
     })

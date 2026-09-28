@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Post } from '../api/types'
 
 /**
@@ -16,15 +16,16 @@ import type { Post } from '../api/types'
  * So the viewer asks and the list answers. This hook is the answer, written once: which post is
  * open, how to step, and when to ask the list for another page.
  *
- * ## Paging **loads**, it does not just move
+ * ## What it does **not** do, since the viewer became a scroller
  *
- * `onLoadMore` is called as the reader approaches the end rather than when they hit it — a viewer
- * that fetched only on the last post would stall on every page boundary, which is the one place a
- * full-screen reader notices. `LOAD_AHEAD` is how many posts from the end that is.
+ * `PostSlider` renders every loaded post as a snap target and reads the index off its own
+ * `scrollTop`, so stepping, counting and asking for the next page all live there — they are
+ * questions about a scroll position, and this hook has none. What is left is the part the **list**
+ * owns: whether the viewer is open, at which post, and on which picture.
+ *
+ * That is smaller than the first version, which carried `prev`/`next`/`positionLabel` for a viewer
+ * that showed one post at a time. Those moved rather than disappeared.
  */
-
-/** How close to the end of what is loaded before the next page is asked for. */
-const LOAD_AHEAD = 3
 
 export interface PostSliderTarget {
     /** Position in `posts`. */
@@ -36,28 +37,13 @@ export interface PostSliderTarget {
 export interface UsePostSliderResult {
     /** `null` when the viewer is closed. */
     open: PostSliderTarget | null
-    /** The post being viewed, or `null`. Resolved here so a caller never indexes the array itself. */
-    post: Post | null
     openAt: (index: number, target: number | 'video') => void
+    /** The viewer scrolled to a different post, or a chevron was pressed. */
+    goTo: (index: number) => void
     close: () => void
-    /** `undefined` at the ends, which is how `PostMediaLightbox` knows to draw no control. */
-    prev: (() => void) | undefined
-    next: (() => void) | undefined
-    /** `3 / 40`, or `undefined` for a list of one. */
-    positionLabel: string | undefined
 }
 
-export function usePostSlider(
-    posts: Post[],
-    {
-        onLoadMore,
-        hasMore = false,
-    }: {
-        /** Ask the list for another page. Safe to call repeatedly; the list debounces. */
-        onLoadMore?: () => void
-        hasMore?: boolean
-    } = {},
-): UsePostSliderResult {
+export function usePostSlider(posts: Post[]): UsePostSliderResult {
     const [open, setOpen] = useState<PostSliderTarget | null>(null)
 
     /*
@@ -66,43 +52,20 @@ export function usePostSlider(
      * row under them takes the place of the one that went.
      */
     const index = open === null ? -1 : Math.min(open.index, posts.length - 1)
-    const post = index >= 0 ? (posts[index] ?? null) : null
 
     useEffect(() => {
         if (open !== null && posts.length === 0) setOpen(null)
     }, [open, posts.length])
 
-    /** Approaching the end is what asks for more, not reaching it. */
-    useEffect(() => {
-        if (index < 0 || !hasMore) return
-        if (index >= posts.length - LOAD_AHEAD) onLoadMore?.()
-    }, [index, posts.length, hasMore, onLoadMore])
-
-    const step = useCallback(
-        (delta: 1 | -1) => {
-            setOpen(current => {
-                if (current === null) return current
-                const next = current.index + delta
-                if (next < 0 || next >= posts.length) return current
-                // A different post starts at its first picture; the reader chose the post, not a frame.
-                return { index: next, target: 0 }
-            })
-        },
-        [posts.length],
-    )
-
-    const positionLabel = useMemo(
-        () => (index >= 0 && posts.length > 1 ? `${index + 1} / ${posts.length}` : undefined),
-        [index, posts.length],
-    )
-
     return {
         open: open === null ? null : { index, target: open.target },
-        post,
         openAt: useCallback((at, target) => setOpen({ index: at, target }), []),
+        goTo: useCallback(
+            (at: number) =>
+                // A different post starts at its first picture: the reader chose the post, not a frame.
+                setOpen(current => (current === null ? current : { index: at, target: 0 })),
+            [],
+        ),
         close: useCallback(() => setOpen(null), []),
-        prev: index > 0 ? () => step(-1) : undefined,
-        next: index >= 0 && index < posts.length - 1 ? () => step(1) : undefined,
-        positionLabel,
     }
 }

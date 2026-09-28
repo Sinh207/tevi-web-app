@@ -1,12 +1,6 @@
 'use client'
 
-import {
-    type Post,
-    PostCard,
-    PostMediaLightbox,
-    PostMediaTile,
-    usePostSlider,
-} from '@features/post'
+import { type Post, PostCard, PostMediaTile, PostSlider, usePostSlider } from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
@@ -76,7 +70,7 @@ export function ChannelThreadList({
      * One viewer for the whole list, so it can page between **posts** — `usePostSlider` carries why
      * the list owns that and the viewer does not. Same arrangement as the share sheet above.
      */
-    const slider = usePostSlider(threads, { onLoadMore: fetchNextPage, hasMore: hasNextPage })
+    const slider = usePostSlider(threads)
 
     /* A post's id is the row's identity here, where home's is a whole group's. */
     const keys = useMemo(() => threads.map(thread => thread.id), [threads])
@@ -187,17 +181,15 @@ export function ChannelThreadList({
                 <ThreadListSkeleton kind={kind} rows={kind === 'media' ? 3 : 1} />
             )}
 
-            {slider.post && (
-                <PostMediaLightbox
-                    images={slider.post.images ?? []}
-                    video={slider.open?.target === 'video' ? slider.post.video : null}
-                    startIndex={typeof slider.open?.target === 'number' ? slider.open.target : 0}
-                    post={slider.post}
+            {slider.open && (
+                <PostSlider
+                    posts={threads}
+                    index={slider.open.index}
+                    onIndexChange={slider.goTo}
+                    onLoadMore={fetchNextPage}
+                    hasMore={hasNextPage}
                     isPremiumReader={isPremium}
-                    onShare={() => setSharing(slider.post)}
-                    onPrevPost={slider.prev}
-                    onNextPost={slider.next}
-                    positionLabel={slider.positionLabel}
+                    onShare={setSharing}
                     onClose={slider.close}
                 />
             )}

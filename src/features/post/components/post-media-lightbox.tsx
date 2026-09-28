@@ -2,45 +2,24 @@
 
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
-import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { Post, PostImage, PostVideo } from '../api/types'
+import type { PostImage, PostVideo } from '../api/types'
 import { videoFallbackSrc, videoSrc } from '../lib/post-media'
-import { PostActions } from './post-actions'
-import { PostHeader } from './post-header'
 
 /**
  * Media at full size — legacy's `ViewMediaSlide`, at the scope a card actually needs.
  *
  * ## What it is, and the one thing it deliberately is not
  *
- * A fullscreen overlay over one post's media: every image, arrow- and keyboard-navigable, plus the
- * video.
- *
- * ## It pages between **posts** too now, and the list is the caller's
- *
- * Legacy's `ViewMediaSlide` fetches the next posts itself (`handleGetNextPosts`,
- * `handleGetPostsHome`, a `typePost` discriminator and its own pagination) — four feeds' worth of
- * paging inside a media viewer. This header used to say that half was missing because there was no
- * feed to page through; there are four now, and it is still not done that way.
- *
- * Instead the viewer **asks** and the list **answers**: `onPrevPost` / `onNextPost` are supplied by
- * whoever owns the list, which already knows how to page and has already done so. The viewer stays
- * ignorant of feeds, the feed stays ignorant of the viewer's geometry, and a fifth list needs no
- * change here. It is the same division `onShare` and `onChanged` already use on the card.
- *
- * `post` is what turns it from a media viewer into legacy's **slider**: with one, the author and
- * the action row are drawn over the media, so a reader can react, comment or share without leaving.
- * Without one — a reply's pictures — it is the plain viewer it has always been.
- *
- * ⚠ It takes **no `onChanged`**, and that is not an omission. The header here is drawn without
- * `actions`, so there is no menu and none of the four writes that would need a list to refetch; the
- * action row's own writes (react, bookmark) keep their own optimistic state and invalidate their
- * own queries. A prop was declared for it at first and nothing could ever have called it — Biome
- * is what noticed.
+ * A fullscreen overlay over **this post's** media: every image, arrow- and keyboard-navigable, plus
+ * the video. Legacy's version also pages forward into the *next posts in the feed*
+ * (`handleGetNextPosts`, `handleGetPostsHome`, a `typePost` discriminator and its own pagination),
+ * and that half is not here — it needs a feed to page through, and this app has none yet. Building
+ * it now would mean guessing the shape of three lists that do not exist, which is exactly what
+ * `post-api.ts` refuses to do for the same reason.
  *
  * ⚠ **The video plays HLS, and one browser family can do that unaided.**
  *
@@ -73,12 +52,6 @@ export function PostMediaLightbox({
     video,
     startIndex = 0,
     onClose,
-    post,
-    isPremiumReader = false,
-    onShare,
-    onPrevPost,
-    onNextPost,
-    positionLabel,
     testId = 'post-lightbox',
 }: {
     images: PostImage[]
@@ -86,28 +59,6 @@ export function PostMediaLightbox({
     /** Which image was tapped. Ignored when the lightbox is opened on a video. */
     startIndex?: number
     onClose: () => void
-    /**
-     * The post the media belongs to — its author and its actions are drawn over the media.
-     *
-     * Optional, and its absence is what keeps this usable for a **reply's** pictures, which have no
-     * post around them and no action row to draw. Same rule every other optional handler on this
-     * feature follows: no data, no control.
-     */
-    post?: Post
-    /** Premium readers are exempt from paid interaction — the host's fact, not the post's. */
-    isPremiumReader?: boolean
-    onShare?: () => void
-    /**
-     * Page to the neighbouring **post**, supplied by whoever owns the list.
-     *
-     * The viewer never fetches: a list that can page has already done it once, and a media viewer
-     * that learned to paginate would be a fifth copy of the rules in `paged-list.ts`. Absent at
-     * either end of what is loaded, which is also how the control knows to disappear.
-     */
-    onPrevPost?: () => void
-    onNextPost?: () => void
-    /** `3 / 40`, from the list — the viewer cannot count posts it was handed one of. */
-    positionLabel?: string
     testId?: string
 }) {
     const { t } = useTranslation()
@@ -139,17 +90,10 @@ export function PostMediaLightbox({
             if (event.key === 'Escape') onClose()
             if (event.key === 'ArrowRight') step(1)
             if (event.key === 'ArrowLeft') step(-1)
-            /*
-             * Up and down move between **posts**, left and right between one post's pictures. That
-             * is the axis legacy's slider uses and it is the one that reads: the pictures are a
-             * row, the posts are a column you scroll.
-             */
-            if (event.key === 'ArrowDown') onNextPost?.()
-            if (event.key === 'ArrowUp') onPrevPost?.()
         }
         document.addEventListener('keydown', onKey)
         return () => document.removeEventListener('keydown', onKey)
-    }, [onClose, step, onNextPost, onPrevPost])
+    }, [onClose, step])
 
     /*
      * The page must not scroll behind a fullscreen overlay. Restored to whatever it was rather than
@@ -230,72 +174,6 @@ export function PostMediaLightbox({
                 ) : null}
             </div>
 
-            {post ? (
-                /*
-                 * The author over the media and the actions under it, both on their own scrim.
-                 * `PostHeader` is given no `actions`, so it draws no menu and is not a link — a
-                 * press inside a fullscreen viewer that navigated away would throw the viewer out.
-                 */
-                <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/70 to-transparent p-4 pb-10">
-                    <div className="pointer-events-auto mx-auto w-full max-w-[612px] pe-14 text-white [&_*]:text-white">
-                        <PostHeader post={post} testId={subTestId(testId, 'header')} />
-                    </div>
-                </div>
-            ) : null}
-
-            {post ? (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/70 to-transparent p-4 pt-10">
-                    <div className="pointer-events-auto mx-auto w-full max-w-[612px] text-white [&_*]:text-white">
-                        <PostActions
-                            post={post}
-                            isPremiumReader={isPremiumReader}
-                            onShare={onShare}
-                            testId={subTestId(testId, 'footer')}
-                        />
-                    </div>
-                </div>
-            ) : null}
-
-            {onPrevPost || onNextPost ? (
-                <>
-                    {/*
-                     * The **post** pager, on the vertical axis so it cannot be mistaken for the
-                     * picture pager on the horizontal one. Each disappears at its own end of the
-                     * list, which is what the absent callback means.
-                     */}
-                    {onPrevPost ? (
-                        <LightboxArrow
-                            side="up"
-                            label={t('post_slider_previous_post')}
-                            onPress={onPrevPost}
-                            /*
-                             * Scoped under `list`, because `prev`/`next` on this surface already
-                             * belong to the **pictures**. The thing this pages is the list of
-                             * posts, so it says so rather than borrowing a name that means the
-                             * other axis — `docs/TEST_IDS.md` §5 is what that borrowing costs.
-                             */
-                            testId={subTestId(subTestId(testId, 'list'), 'prev')}
-                        />
-                    ) : null}
-                    {onNextPost ? (
-                        <LightboxArrow
-                            side="down"
-                            label={t('post_slider_next_post')}
-                            onPress={onNextPost}
-                            testId={subTestId(subTestId(testId, 'list'), 'next')}
-                        />
-                    ) : null}
-                    {positionLabel ? (
-                        <span
-                            data-testid={subTestId(testId, 'label-data')}
-                            className="type-caption-meta absolute top-4 start-4 z-10 rounded-full bg-black/50 px-3 py-1 text-white"
-                        >
-                            {positionLabel}
-                        </span>
-                    ) : null}
-                </>
-            ) : null}
-
             {total > 1 && (
                 <>
                     {/*
@@ -317,18 +195,9 @@ export function PostMediaLightbox({
                         onPress={() => step(1)}
                         testId={subTestId(testId, 'next')}
                     />
-                    {/*
-                     * ⚠ **The picture counter moves when a post is drawn**, because the action row
-                     * is where it used to be. Left at `bottom-6` it printed `1 / 11` straight
-                     * through the react and comment counts — seen in a screenshot, and not
-                     * something either component could have known about the other.
-                     */}
                     <span
                         data-testid={subTestId(testId, 'label')}
-                        className={cn(
-                            'type-caption-meta absolute z-10 start-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-white rtl:translate-x-1/2',
-                            post ? 'bottom-24' : 'bottom-6',
-                        )}
+                        className="type-caption-meta absolute bottom-6 start-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-white rtl:translate-x-1/2"
                     >
                         {`${index + 1} / ${total}`}
                     </span>
@@ -345,20 +214,11 @@ function LightboxArrow({
     onPress,
     testId,
 }: {
-    /**
-     * Which edge it sits on, and therefore which axis it pages.
-     *
-     * `start`/`end` move between one post's **pictures**; `up`/`down` between **posts**. Two axes
-     * rather than one queue of everything, because they are two different questions — "the next
-     * picture of this" and "the next post" — and a reader who has learned one axis should not have
-     * it silently mean the other at the end of a gallery.
-     */
-    side: 'start' | 'end' | 'up' | 'down'
+    side: 'start' | 'end'
     label: string
     onPress: () => void
     testId?: string
 }) {
-    const vertical = side === 'up' || side === 'down'
     return (
         <button
             type="button"
@@ -368,30 +228,14 @@ function LightboxArrow({
             }}
             aria-label={label}
             data-testid={testId}
-            className={cn(
-                'absolute z-10 flex size-10 items-center justify-center rounded-full',
-                'bg-white/10 text-white hover:bg-white/20',
-                vertical
-                    ? [
-                          /*
-                           * Centred horizontally, and `-translate-x-1/2` with its RTL counterpart
-                           * for the reason every other centred overlay here needs one: `start-1/2`
-                           * flips but a transform does not.
-                           */
-                          'start-1/2 -translate-x-1/2 rtl:translate-x-1/2',
-                          side === 'up' ? 'top-20' : 'bottom-36',
-                      ]
-                    : ['top-1/2 -translate-y-1/2', side === 'start' ? 'start-4' : 'end-4'],
-            )}
+            className={`absolute top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 ${
+                side === 'start' ? 'start-4' : 'end-4'
+            }`}
         >
             <Icon
-                name={vertical ? 'angle-up' : 'angle-left'}
+                name={side === 'start' ? 'angle-left' : 'angle-right'}
                 size={24}
-                className={cn(
-                    side === 'down' && 'rotate-180',
-                    side === 'end' && 'rotate-180',
-                    !vertical && 'rtl:rotate-180',
-                )}
+                className="rtl:rotate-180"
             />
         </button>
     )

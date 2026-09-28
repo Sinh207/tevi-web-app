@@ -17,7 +17,7 @@ import type { Post } from '../api/types'
 import { useCollection } from '../hooks/use-collection-posts'
 import { usePostSlider } from '../hooks/use-post-slider'
 import { PostCard } from './post-card'
-import { PostMediaLightbox } from './post-media-lightbox'
+import { PostSlider } from './post-slider'
 
 /**
  * `/@{slug}/collections/{id}` — one collection's posts.
@@ -82,7 +82,7 @@ export function CollectionDetail({
      * One viewer for the whole list, so it can page between **posts** — `usePostSlider` carries
      * why the list owns that and the viewer does not. The same arrangement as the share sheet.
      */
-    const slider = usePostSlider(posts, { onLoadMore: loadMore, hasMore: hasNextPage })
+    const slider = usePostSlider(posts)
 
     const keys = useMemo(() => posts.map(post => post.id), [posts])
     const { observe, heightFor } = useRenderWindow(keys)
@@ -225,19 +225,15 @@ export function CollectionDetail({
 
                 {isFetchingNextPage ? <CollectionSkeleton rows={1} testId={testId} /> : null}
 
-                {slider.post ? (
-                    <PostMediaLightbox
-                        images={slider.post.images ?? []}
-                        video={slider.open?.target === 'video' ? slider.post.video : null}
-                        startIndex={
-                            typeof slider.open?.target === 'number' ? slider.open.target : 0
-                        }
-                        post={slider.post}
+                {slider.open ? (
+                    <PostSlider
+                        posts={posts}
+                        index={slider.open.index}
+                        onIndexChange={slider.goTo}
+                        onLoadMore={loadMore}
+                        hasMore={hasNextPage}
                         isPremiumReader={isPremiumReader}
-                        onShare={() => setSharing(slider.post)}
-                        onPrevPost={slider.prev}
-                        onNextPost={slider.next}
-                        positionLabel={slider.positionLabel}
+                        onShare={setSharing}
                         onClose={slider.close}
                     />
                 ) : null}

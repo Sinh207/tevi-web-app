@@ -62,8 +62,8 @@ import {
     PostCard,
     PostComposerDialog,
     type PostDraft,
-    PostMediaLightbox,
     PostMediaTile,
+    PostSlider,
     REPLY_DELETED,
     REPLY_EMPTY,
     REPLY_HTML_ONLY,
@@ -875,7 +875,7 @@ export function PostPreview() {
 function PostSliderSection() {
     /* Posts that actually carry media — the slider is opened by pressing a picture or a clip. */
     const posts = [POST_ONE_IMAGE, POST_MANY_IMAGES, POST_VIDEO, POST_VIDEO_AND_IMAGES]
-    const slider = usePostSlider(posts, { hasMore: false })
+    const slider = usePostSlider(posts)
 
     return (
         <section className="flex flex-col gap-2">
@@ -897,15 +897,13 @@ function PostSliderSection() {
                     />
                 ))}
             </div>
-            {slider.post ? (
-                <PostMediaLightbox
-                    images={slider.post.images ?? []}
-                    video={slider.open?.target === 'video' ? slider.post.video : null}
-                    startIndex={typeof slider.open?.target === 'number' ? slider.open.target : 0}
-                    post={slider.post}
-                    onPrevPost={slider.prev}
-                    onNextPost={slider.next}
-                    positionLabel={slider.positionLabel}
+            {slider.open ? (
+                <PostSlider
+                    posts={posts}
+                    index={slider.open.index}
+                    onIndexChange={slider.goTo}
+                    onShare={() => {}}
+                    onComment={() => {}}
                     onClose={slider.close}
                 />
             ) : null}

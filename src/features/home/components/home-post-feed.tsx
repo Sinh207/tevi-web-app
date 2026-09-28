@@ -1,7 +1,7 @@
 'use client'
 
 import { useMyChannel } from '@features/channel'
-import { type Post, PostCard, PostMediaLightbox, usePostSlider } from '@features/post'
+import { type Post, PostCard, PostSlider, usePostSlider } from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
@@ -92,10 +92,7 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
         () => groups.flatMap(group => visiblePosts(group, expanded.has(groupKey(group)))),
         [groups, expanded],
     )
-    const slider = usePostSlider(flatPosts, {
-        onLoadMore: fetchNextPage,
-        hasMore: hasNextPage,
-    })
+    const slider = usePostSlider(flatPosts)
 
     const keys = useMemo(() => groups.map(groupKey), [groups])
     const { observe, heightFor } = useRenderWindow(keys)
@@ -198,17 +195,16 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
              * `shareable_url` is ordinary for a few seconds after posting, and the sheet's own rows
              * already degrade to the URL they were given.
              */}
-            {slider.post && (
-                <PostMediaLightbox
-                    images={slider.post.images ?? []}
-                    video={slider.open?.target === 'video' ? slider.post.video : null}
-                    startIndex={typeof slider.open?.target === 'number' ? slider.open.target : 0}
-                    post={slider.post}
+
+            {slider.open && (
+                <PostSlider
+                    posts={flatPosts}
+                    index={slider.open.index}
+                    onIndexChange={slider.goTo}
+                    onLoadMore={fetchNextPage}
+                    hasMore={hasNextPage}
                     isPremiumReader={isPremium}
-                    onShare={() => setSharing(slider.post)}
-                    onPrevPost={slider.prev}
-                    onNextPost={slider.next}
-                    positionLabel={slider.positionLabel}
+                    onShare={setSharing}
                     onClose={slider.close}
                 />
             )}

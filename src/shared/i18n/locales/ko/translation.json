@@ -2008,6 +2008,7 @@
     "post_lightbox_title": "게시물 미디어",
     "post_slider_previous_post": "이전 게시물",
     "post_slider_next_post": "다음 게시물",
+    "post_slider_more": "더 보기",
     "post_media_open": "미디어 열기",
     "post_media_photos_one": "사진 {{count, number}}장",
     "post_media_photos_other": "사진 {{count, number}}장",
