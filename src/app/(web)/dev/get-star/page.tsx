@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import {
+    GatewayAccordionPreview,
     GatewayPreview,
     PackageGridPreview,
     SkeletonPreview,
@@ -37,6 +38,13 @@ export default function DevGetStarPage() {
                     &quot;you receive&quot;.
                 </p>
             </header>
+
+            <section className="flex max-w-[560px] flex-col gap-2">
+                <h2 className="type-micro-overline text-(--text-body)">
+                    /get-star — one card per method, tiles priced in its currency
+                </h2>
+                <GatewayAccordionPreview />
+            </section>
 
             <section className="flex max-w-[400px] flex-col gap-2">
                 <h2 className="type-micro-overline text-(--text-body)">

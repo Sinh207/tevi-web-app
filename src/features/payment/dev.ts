@@ -23,6 +23,7 @@ export { MAX_SAVED_CARDS } from './api/payment-methods-api'
  */
 export type { Gateway, SavedCard, StarPackage, StarTransaction } from './api/types'
 export { CardManagementSkeleton } from './components/card-management-skeleton'
+export { GatewayAccordion } from './components/gateway-accordion'
 export { GatewayList } from './components/gateway-list'
 /**
  * The **loading** and **not-supported** halves of `/get-star`, which no URL reaches: loading is a

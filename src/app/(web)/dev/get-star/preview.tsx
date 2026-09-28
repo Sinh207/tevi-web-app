@@ -2,6 +2,7 @@
 
 import {
     type Gateway,
+    GatewayAccordion,
     GatewayList,
     GetStarSkeleton,
     StarCatalogueUnavailable,
@@ -71,6 +72,21 @@ const GATEWAYS = [
 export function PackageGridPreview() {
     const [selected, setSelected] = useState<StarPackage | null>(PACKAGES[2] ?? null)
     return <StarPackageGrid packages={PACKAGES} selected={selected} onSelect={setSelected} />
+}
+
+export function GatewayAccordionPreview() {
+    const [gateway, setGateway] = useState<Gateway | null>(GATEWAYS[0] ?? null)
+    const [selected, setSelected] = useState<StarPackage | null>(PACKAGES[2] ?? null)
+    return (
+        <GatewayAccordion
+            gateways={GATEWAYS}
+            selected={gateway}
+            onSelect={setGateway}
+            packages={PACKAGES}
+            selectedPackage={selected}
+            onSelectPackage={setSelected}
+        />
+    )
 }
 
 export function GatewayPreview() {

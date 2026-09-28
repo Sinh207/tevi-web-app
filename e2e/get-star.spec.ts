@@ -79,9 +79,10 @@ test.describe('get star — gate the action, never the route', () => {
     })
 
     /**
-     * Both choices are radio **groups**, not rows of buttons: a grid of buttons announces eight
-     * independent actions and gives no way to hear which one is current. One package and one gateway
-     * are checked before anything is touched — the page is never in a "there is a list but nothing
+     * The packages are a radio **group**, not a row of buttons: a grid of buttons announces eight
+     * independent actions and gives no way to hear which one is current. The methods are an
+     * accordion, and the open card *is* the chosen method. One package is checked and one card is
+     * open before anything is touched — the page is never in a "there is a list but nothing
      * is selected" state, which is what lets the total below it always mean something.
      */
     test('opens with a package and a method already chosen', async ({ page }) => {
@@ -91,7 +92,9 @@ test.describe('get star — gate the action, never the route', () => {
         await expect(main.locator('[data-testid="payment-star-package"]:checked')).toHaveCount(1, {
             timeout: 15_000,
         })
-        await expect(main.locator('[data-testid="payment-gateway"]:checked')).toHaveCount(1)
+        await expect(
+            main.locator('[data-testid="payment-get-star-gateway"][aria-expanded="true"]'),
+        ).toHaveCount(1)
     })
 })
 

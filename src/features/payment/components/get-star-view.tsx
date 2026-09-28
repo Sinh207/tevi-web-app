@@ -17,14 +17,13 @@ import {
 } from '@shared/ui/alert'
 import { Button } from '@shared/ui/button'
 import { Loader } from '@shared/ui/loader'
-import { type ReactNode, useCallback, useRef, useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useGetStar } from '../hooks/use-get-star'
 import { GET_STAR_CONTAINER } from '../lib/container'
 import { formatCharge, gatewayFeeCharge } from '../lib/gateway-fee'
-import { GatewayList } from './gateway-list'
+import { GatewayAccordion } from './gateway-accordion'
 import { GetStarHeader } from './get-star-header'
 import { GetStarSkeleton } from './get-star-skeleton'
-import { StarPackageGrid } from './star-package-grid'
 
 /**
  * `/get-star` — everything below the page's back bar.
@@ -36,24 +35,26 @@ import { StarPackageGrid } from './star-package-grid'
  *  (face) Wondercat @wondercat            ★ 8,734
  *         ID: 1107201702           Current star balance
  *
- *  Choose an amount of Star
- *  ┌ ★ 100 ──┐ ┌ ★ 500 ──┐ ┌ ★ 1,000 ┐ ┌ ★ 5,000 ┐
  *  Payment method
- *  ◉ Card  [visa][mc]              ≈ $0.011 each
- *  ○ MoMo                            ≈ 280 ₫ each
+ *  ┌ [visa][mc] Card                 ≈ $0.011 each  ⌃ ┐
+ *  │ ┌ ★ 100 ──┐ ┌ ★ 500 ──┐ ┌ ★ 1,000 ┐ ┌ ★ 5,000 ┐   │
+ *  └──────────────────────────────────────────────────┘
+ *  ┌ MoMo                              ≈ 280 ₫ each  ⌄ ┐
  *  ─────────────────────────────────────────────
  *  Total                                  $10.29   ← sticky
  *  [                Pay $10.29               ]
  * ```
  *
- * ## One page, no steps
+ * ## One accordion per gateway, as legacy draws it
  *
- * The sheet has three steps because a 400px dialog cannot hold the grid, the method list and a total
- * at once. A page can, so it does — and every one of the sheet's Back presses disappears with them.
- * Changing your mind about the amount after seeing the total is a click here and a three-step
- * round-trip there. Legacy folds the grid *inside* an accordion per gateway, which renders the same
- * eight tiles once per method and hides the amounts behind a press; the choices are independent, so
- * they are two lists.
+ * Each payment method is a card, and the open one holds the package grid priced in **that** method's
+ * currency, fee included — legacy's `getStar/content/accordions`. An earlier pass split the two
+ * choices into a grid and a separate method list; it was reverted to legacy's shape, where comparing
+ * methods is opening another card and reading the same tiles' prices. `GatewayAccordion` records what
+ * still differs from legacy (no order-summary dialog; folding a card keeps its gateway chosen).
+ *
+ * The sheet (`StarPurchaseDialog`) keeps its three steps and the flat lists: a 400px dialog is the
+ * wrong place for eight tiles per method.
  *
  * ## What is on screen is what will be charged
  *
@@ -86,44 +87,6 @@ export function GetStarView() {
     const flow = useGetStar()
 
     const feeCharge = gatewayFeeCharge(flow.selected?.price ?? 0, flow.gateway)
-
-    const methodsRef = useRef<HTMLDivElement>(null)
-
-    /**
-     * Bring the method list into view once an amount has been chosen.
-     *
-     * The two choices are independent and stacked, so on a phone the second one is below the fold
-     * while the reader is making the first: they pick a package, the tile lights up, and nothing on
-     * screen says there is a step after it. This is that sentence, said by moving.
-     *
-     * **`block: 'nearest'` is the whole guard.** It scrolls the least it can, which means it does
-     * nothing at all when the list is already visible — on a desktop, or on the second press, or when
-     * a keyboard user is arrowing through the grid and every arrow fires this. Anything with a
-     * threshold of its own ("scroll if the top is past 60% of the viewport") would be a number
-     * invented to approximate what the browser already knows.
-     *
-     * The scroll margins on the wrapper are what keep the result out from under the two sticky bars —
-     * measured, not guessed: the back bar is 60 and the total bar is 222 at its tallest (every note
-     * showing). Too generous is harmless — the list simply lands a little higher; too small and the
-     * last gateway row is revealed underneath the Pay button.
-     *
-     * Called from `onSelect` rather than from an effect on `flow.selected`, so it cannot fire for the
-     * **seeded** selection: the catalogue arriving would otherwise scroll a page the reader has not
-     * touched yet.
-     */
-    const revealMethods = useCallback(() => {
-        methodsRef.current?.scrollIntoView({
-            block: 'nearest',
-            /*
-             * Read at the moment of the press rather than through `useMayAnimate`: that hook also
-             * folds in `navigator.connection.saveData`, which is about not downloading a video and
-             * has nothing to say about whether a page may scroll smoothly.
-             */
-            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                ? 'auto'
-                : 'smooth',
-        })
-    }, [])
 
     return (
         <div className={cn(GET_STAR_CONTAINER, 'flex flex-1 flex-col gap-6 pb-6')}>
@@ -186,30 +149,20 @@ export function GetStarView() {
                 )}
 
                 {/*
-                 * Both lists go inert while the machine is working. Not for tidiness: the order was
+                 * The accordion goes inert while the machine is working. Not for tidiness: the order was
                  * built from this selection and is already at the gateway, so a tile pressed now would
                  * change what the page claims is being bought while the reader is being charged for
                  * something else.
                  */}
-                <StarPackageGrid
-                    visibleLegend
+                <GatewayAccordion
+                    gateways={flow.gateways}
+                    selected={flow.gateway}
+                    onSelect={flow.selectGateway}
                     packages={flow.packages}
-                    selected={flow.selected}
-                    onSelect={pkg => {
-                        flow.select(pkg)
-                        revealMethods()
-                    }}
+                    selectedPackage={flow.selected}
+                    onSelectPackage={flow.select}
                     disabled={flow.isCheckoutBusy}
                 />
-
-                <div ref={methodsRef} className="scroll-mt-[72px] scroll-mb-[232px]">
-                    <GatewayList
-                        gateways={flow.gateways}
-                        selected={flow.gateway}
-                        onSelect={flow.selectGateway}
-                        disabled={flow.isCheckoutBusy}
-                    />
-                </div>
 
                 {/*
                  * `sticky bottom-0`, and `mt-auto` so it sits at the foot of a short page instead of

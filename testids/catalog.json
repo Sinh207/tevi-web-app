@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 928,
+        "ids": 929,
         "surfaces": 28
     },
     "surfaces": {
@@ -11170,6 +11170,19 @@
             ],
             "source": "src/features/payment/components/gateway-list.tsx:63"
         },
+        "payment-get-star-gateway": {
+            "scope": "payment",
+            "routes": [
+                "/app/dev-checkout",
+                "/card-management",
+                "/get-star",
+                "/get-star/transaction-history"
+            ],
+            "companions": [
+                "data-option-value"
+            ],
+            "source": "src/features/payment/components/gateway-accordion.tsx:153"
+        },
         "payment-get-star-get-app": {
             "scope": "payment",
             "routes": [
@@ -11178,7 +11191,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/get-star-view.tsx:397"
+            "source": "src/features/payment/components/get-star-view.tsx:350"
         },
         "payment-get-star-get-app-cta": {
             "scope": "payment",
@@ -11188,7 +11201,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/get-star-view.tsx:382"
+            "source": "src/features/payment/components/get-star-view.tsx:335"
         },
         "payment-get-star-history-link": {
             "scope": "payment",
@@ -11218,7 +11231,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/get-star-view.tsx:303"
+            "source": "src/features/payment/components/get-star-view.tsx:256"
         },
         "payment-get-star-retry": {
             "scope": "payment",
@@ -11228,7 +11241,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/get-star-view.tsx:156"
+            "source": "src/features/payment/components/get-star-view.tsx:119"
         },
         "payment-get-star-sign-in": {
             "scope": "payment",
@@ -11331,7 +11344,7 @@
             "companions": [
                 "data-package-id"
             ],
-            "source": "src/features/payment/components/star-package-grid.tsx:97"
+            "source": "src/features/payment/components/star-package-grid.tsx:105"
         },
         "payment-stripe-element": {
             "scope": "payment",

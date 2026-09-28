@@ -36,6 +36,7 @@ export function StarPackageGrid({
     onSelect,
     disabled,
     visibleLegend = false,
+    priceLabel,
 }: {
     packages: StarPackage[]
     selected: StarPackage | null
@@ -51,6 +52,13 @@ export function StarPackageGrid({
      * that fieldset's name, and the group would go back to being announced as unlabelled.
      */
     visibleLegend?: boolean
+    /**
+     * The figure under each tile. Defaults to the package's USD list price, which is what the sheet
+     * shows — it picks the amount *before* the method. `/get-star` draws the grid **inside** a
+     * gateway's panel, so there the tile carries what that gateway charges for it, fee included —
+     * legacy's `renderTotalCostDisplay(price, gateway)`.
+     */
+    priceLabel?: (pkg: StarPackage) => string
 }) {
     const { t, currentLanguage } = useTranslation()
     const recommended = recommendedIndex(packages)
@@ -126,7 +134,9 @@ export function StarPackageGrid({
                             </span>
 
                             <span className="type-dense-default text-(--text-subtitle)">
-                                {t('payment_price_usd', { amount: pkg.price.toFixed(2) })}
+                                {priceLabel
+                                    ? priceLabel(pkg)
+                                    : t('payment_price_usd', { amount: pkg.price.toFixed(2) })}
                             </span>
 
                             {/* Only on the selected tile: what actually arrives, bonus folded in. Every

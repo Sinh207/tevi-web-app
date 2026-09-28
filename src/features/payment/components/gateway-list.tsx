@@ -8,11 +8,11 @@ import type { Gateway } from '../api/types'
 import { gatewayRatePerStar, isSymbolFirst } from '../lib/gateway-fee'
 
 /**
- * The ways to pay, one row each — legacy's accordion list, flattened.
+ * The ways to pay, one row each — the **sheet's** step 2 (`StarPurchaseDialog`).
  *
- * Legacy makes each gateway an `Accordion` whose panel holds the whole package grid, so choosing a
- * method and choosing an amount are the same gesture and the grid is rendered once per gateway. Here
- * the amount is already chosen by the time this list appears, so a row is a row.
+ * `/get-star` draws legacy's accordion instead (`GatewayAccordion`), where each gateway's panel holds
+ * the package grid. In the sheet the amount is already chosen by the time this list appears, so a row
+ * is a row.
  *
  * ## The "≈ per Star" line is an estimate and says so
  *

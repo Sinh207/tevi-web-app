@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-928 ids across 28 surfaces.
+929 ids across 28 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -904,12 +904,13 @@ Routes: `/app/dev-checkout`, `/card-management`, `/get-star`, `/get-star/transac
 | `payment-checkout-view-star` | — | `src/features/payment/components/checkout-status-dialog.tsx:215` |
 | `payment-default-expired` | — | `src/features/payment/components/saved-card-list.tsx:149` |
 | `payment-gateway` | `data-option-value` | `src/features/payment/components/gateway-list.tsx:63` |
-| `payment-get-star-get-app` | — | `src/features/payment/components/get-star-view.tsx:397` |
-| `payment-get-star-get-app-cta` | — | `src/features/payment/components/get-star-view.tsx:382` |
+| `payment-get-star-gateway` | `data-option-value` | `src/features/payment/components/gateway-accordion.tsx:153` |
+| `payment-get-star-get-app` | — | `src/features/payment/components/get-star-view.tsx:350` |
+| `payment-get-star-get-app-cta` | — | `src/features/payment/components/get-star-view.tsx:335` |
 | `payment-get-star-history-link` | — | `src/features/payment/components/get-star-header.tsx:133` |
 | `payment-get-star-loading` | — | `src/features/payment/components/get-star-skeleton.tsx:33` |
-| `payment-get-star-pay` | — | `src/features/payment/components/get-star-view.tsx:303` |
-| `payment-get-star-retry` | — | `src/features/payment/components/get-star-view.tsx:156` |
+| `payment-get-star-pay` | — | `src/features/payment/components/get-star-view.tsx:256` |
+| `payment-get-star-retry` | — | `src/features/payment/components/get-star-view.tsx:119` |
 | `payment-get-star-sign-in` | — | `src/features/payment/components/get-star-header.tsx:169` |
 | `payment-history-retry` | — | `src/features/payment/components/transaction-history-view.tsx:156` |
 | `payment-history-sign-in` | — | `src/features/payment/components/transaction-history-view.tsx:133` |
@@ -919,7 +920,7 @@ Routes: `/app/dev-checkout`, `/card-management`, `/get-star`, `/get-star/transac
 | `payment-purchase-pay` | — | `src/features/payment/components/star-purchase-dialog.tsx:275` |
 | `payment-purchase-retry` | — | `src/features/payment/components/star-purchase-dialog.tsx:155` |
 | `payment-purchase-review` | — | `src/features/payment/components/star-purchase-dialog.tsx:204` |
-| `payment-star-package` | `data-package-id` | `src/features/payment/components/star-package-grid.tsx:97` |
+| `payment-star-package` | `data-package-id` | `src/features/payment/components/star-package-grid.tsx:105` |
 | `payment-stripe-element` | — | `src/features/payment/components/add-card-dialog.tsx:258` |
 
 ## `payout` — Payout tracking
