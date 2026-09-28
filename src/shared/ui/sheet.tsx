@@ -39,10 +39,23 @@ import { cn } from '@shared/lib/utils'
 
 export const Sheet = BaseDrawer.Root
 
+/**
+ * Keyboard-aware focus and scroll handling, for a **bottom sheet with form fields**.
+ *
+ * Base UI's own words. Re-exported here rather than imported from `@base-ui/react` at the call
+ * site, so every part of this component comes from one module — `responsive-dialog.tsx` decides
+ * *when* it applies, this decides *what* it is.
+ */
+export const VirtualKeyboardProvider = BaseDrawer.VirtualKeyboardProvider
+
+/** Which edge the panel comes from. See `SheetContent`'s `side`. */
+export type SheetSide = 'end' | 'bottom'
+
 export function SheetContent({
     className,
     children,
     direction = 'ltr',
+    side = 'end',
     ...props
 }: BaseDrawer.Popup.Props &
     TestIdProps & {
@@ -53,7 +66,22 @@ export function SheetContent({
          * the caller's — so the caller is where the two have to agree.
          */
         direction?: 'ltr' | 'rtl'
+        /**
+         * Which edge it comes from, and it decides the shape as much as the direction.
+         *
+         * - `end` — a **screen**: full width, full height, entering from the trailing edge. For a
+         *   popup that replaces what you were looking at (the composer's settings, a preview).
+         * - `bottom` — a **sheet**: full width, **as tall as its content** up to a cap, entering
+         *   from below with rounded top corners and a grab handle. For a popup that sits over what
+         *   you were doing and hands it back.
+         *
+         * Not interchangeable: a bottom sheet the height of the screen is a screen that animates
+         * from the wrong edge, and a side panel sized to its content is a card that has lost its
+         * margins.
+         */
+        side?: SheetSide
     }) {
+    const bottom = side === 'bottom'
     return (
         <BaseDrawer.Portal>
             {/*
@@ -84,33 +112,68 @@ export function SheetContent({
             <BaseDrawer.Viewport className="fixed inset-0 z-50">
             <BaseDrawer.Popup
                 className={cn(
-                    /*
-                     * Full bleed, pinned to the trailing edge **of the viewport part**, which is
-                     * what carries the `fixed inset-0` box. `h-full` rather than `100dvh` for the
-                     * same reason: the container is already exactly the visual viewport, so the
-                     * address-bar trap `dialog.tsx` records is handled one level up.
-                     */
-                    'absolute inset-y-0 end-0 flex h-full w-full flex-col',
-                    'bg-background-subtle outline-none',
-                    /*
-                     * The enter and exit transform is **logical**: `translate-x-full` moves right
-                     * in LTR and left in RTL, so the panel always leaves by the edge it came from.
-                     */
+                    'absolute flex flex-col bg-background-subtle outline-none',
                     'transition-transform duration-250 ease-out',
-                    'data-[starting-style]:translate-x-full data-[ending-style]:translate-x-full',
-                    'rtl:data-[starting-style]:-translate-x-full rtl:data-[ending-style]:-translate-x-full',
+                    bottom
+                        ? [
+                              /*
+                               * ⚠ **`h-auto`, not `h-full`** — the sheet is as tall as what is in
+                               * it. `max-h` is the ceiling rather than the height, so a short
+                               * popup is short and a long one scrolls inside itself; the body is
+                               * the `overflow-y-auto` child the caller already has.
+                               *
+                               * 90dvh rather than 100: the strip of page left showing above it is
+                               * what says *this is over something*, which is the whole difference
+                               * between a sheet and a screen.
+                               */
+                              'inset-x-0 bottom-0 h-auto max-h-[90dvh] w-full',
+                              'rounded-t-[16px]',
+                              'data-[starting-style]:translate-y-full data-[ending-style]:translate-y-full',
+                          ]
+                        : [
+                              /*
+                               * Full bleed, pinned to the trailing edge **of the viewport part**,
+                               * which is what carries the `fixed inset-0` box. `h-full` rather
+                               * than `100dvh` for the same reason: the container is already
+                               * exactly the visual viewport, so the address-bar trap `dialog.tsx`
+                               * records is handled one level up.
+                               */
+                              'inset-y-0 end-0 h-full w-full',
+                              /*
+                               * The enter and exit transform is **logical**: `translate-x-full`
+                               * moves right in LTR and left in RTL, so the panel always leaves by
+                               * the edge it came from.
+                               */
+                              'data-[starting-style]:translate-x-full data-[ending-style]:translate-x-full',
+                              'rtl:data-[starting-style]:-translate-x-full rtl:data-[ending-style]:-translate-x-full',
+                          ],
                     className,
                 )}
                 {...props}
             >
+                {bottom ? (
+                    /*
+                     * The grab handle. It is the affordance that says the panel can be pulled
+                     * down, and on a bottom sheet it is the only one — a side panel has a whole
+                     * edge to grab, this has a bar.
+                     */
+                    <span
+                        aria-hidden="true"
+                        className="mx-auto mt-2 h-1 w-9 flex-none rounded-full bg-(--separator-default)"
+                    />
+                ) : null}
                 {/*
-                 * The grab area, along the leading edge — the edge the panel would be pushed back
-                 * towards. It is `Drawer.SwipeArea`'s job to know what counts as a dismissing drag;
-                 * this only says where the reader may start one.
+                 * Where a dismissing drag may start: the leading edge for a side panel, the top
+                 * strip — the handle's own band — for a bottom sheet. It is `Drawer.SwipeArea`'s
+                 * job to know what counts as a dismissing drag; this only says where.
                  */}
                 <BaseDrawer.SwipeArea
-                    swipeDirection={direction === 'rtl' ? 'left' : 'right'}
-                    className="absolute inset-y-0 start-0 w-4"
+                    swipeDirection={bottom ? 'down' : direction === 'rtl' ? 'left' : 'right'}
+                    className={
+                        bottom
+                            ? 'absolute inset-x-0 top-0 h-6'
+                            : 'absolute inset-y-0 start-0 w-4'
+                    }
                 />
                 {children}
             </BaseDrawer.Popup>

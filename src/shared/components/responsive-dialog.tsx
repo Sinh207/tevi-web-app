@@ -5,7 +5,7 @@ import { htmlDir } from '@shared/i18n/settings'
 import { useTranslation } from '@shared/i18n/use-translation'
 import type { TestIdProps } from '@shared/lib/test-id'
 import { Dialog, DialogContent } from '@shared/ui/dialog'
-import { Sheet, SheetContent } from '@shared/ui/sheet'
+import { Sheet, SheetContent, type SheetSide, VirtualKeyboardProvider } from '@shared/ui/sheet'
 import type { ReactNode } from 'react'
 
 /**
@@ -34,13 +34,26 @@ export function ResponsiveDialog({
     open,
     onOpenChange,
     children,
+    overlays,
     className,
     nested,
+    side = 'end',
     ...props
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     children: ReactNode
+    /**
+     * Popups that stack **over** this one, mounted inside its root rather than beside it.
+     *
+     * Not a styling detail: Base UI decides a popup is *nested* from the React tree, and nesting is
+     * what makes it suppress the child's backdrop and route an outside press to the innermost one.
+     * Mounted as siblings of this component instead, each child would render a second full scrim
+     * over the first and the two would compound — `dialog.tsx`'s `nested` note has the arithmetic.
+     *
+     * So: a popup that belongs over this one goes here, and it keeps its own `nested`.
+     */
+    overlays?: ReactNode
     /**
      * Classes for the **dialog** shape only.
      *
@@ -51,6 +64,11 @@ export function ResponsiveDialog({
     className?: string
     /** Opened over another popup. See `DialogContent`'s `nested`. */
     nested?: boolean
+    /**
+     * Which edge the **sheet** comes from below the breakpoint. Ignored above it — a dialog is
+     * centred either way. `SheetContent`'s `side` says what each one is for.
+     */
+    side?: SheetSide
 } & TestIdProps) {
     const compact = useCompactViewport()
     const { currentLanguage } = useTranslation()
@@ -64,14 +82,45 @@ export function ResponsiveDialog({
                  * Swiping **towards the trailing edge** dismisses, which is the edge the panel
                  * entered from. Mirrored for RTL, where that edge is the left one.
                  */
-                swipeDirection={htmlDir(currentLanguage ?? 'en') === 'rtl' ? 'left' : 'right'}
+                swipeDirection={
+                    side === 'bottom'
+                        ? 'down'
+                        : htmlDir(currentLanguage ?? 'en') === 'rtl'
+                          ? 'left'
+                          : 'right'
+                }
             >
-                <SheetContent
-                    direction={htmlDir(currentLanguage ?? 'en')}
-                    data-testid={props['data-testid']}
-                >
-                    {children}
-                </SheetContent>
+                {/*
+                 * ⚠ **Only the bottom sheet gets it, and only it needs it.** Base UI:
+                 * *"keyboard-aware focus and scroll handling for bottom-sheet drawers with form
+                 * fields"* — a sheet sized to its content, pinned to the bottom edge, is exactly
+                 * what a software keyboard covers. Legacy hand-rolls this in its composer
+                 * (`bottom: keyboardHeight > 0 ? …`, with its own resize listener); this is the
+                 * same behaviour from the library.
+                 *
+                 * A side panel is full height and already scrolls, so the provider would wrap it
+                 * to no effect.
+                 */}
+                {side === 'bottom' ? (
+                    <VirtualKeyboardProvider>
+                        <SheetContent
+                            side={side}
+                            direction={htmlDir(currentLanguage ?? 'en')}
+                            data-testid={props['data-testid']}
+                        >
+                            {children}
+                        </SheetContent>
+                    </VirtualKeyboardProvider>
+                ) : (
+                    <SheetContent
+                        side={side}
+                        direction={htmlDir(currentLanguage ?? 'en')}
+                        data-testid={props['data-testid']}
+                    >
+                        {children}
+                    </SheetContent>
+                )}
+                {overlays}
             </Sheet>
         )
     }

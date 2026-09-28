@@ -2,12 +2,12 @@
 
 import { rawGrantNumber, usePermission } from '@features/permission'
 import { DialogScreenHeader } from '@shared/components/dialog-screen-header'
+import { ResponsiveDialog } from '@shared/components/responsive-dialog'
 import { VideoTrimmer } from '@shared/components/video-trimmer'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { useWebConfig } from '@shared/lib/remote-config'
 import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
-import { Dialog, DialogContent } from '@shared/ui/dialog'
 import { Icon } from '@shared/ui/icon'
 import type { TeviIconName } from '@shared/ui/icon-names'
 import { useEffect, useId, useRef, useState } from 'react'
@@ -367,201 +367,16 @@ export function PostComposerDialog({
                       ? t('post_create_price_range', { min: minPrice, max: STAR_PRICE_MAX })
                       : null)
 
-    return (
-        <Dialog
-            open={open}
-            onOpenChange={next => {
-                /*
-                 * A publish in flight is uploads in flight. Closing would unmount the draft the
-                 * uploads are reading from and leave a half-written post with no way back to it, so
-                 * the dialog refuses — the same reason `DialogScreenHeader` takes `disabled`.
-                 */
-                if (create.isPending) return
-                if (!next) {
-                    reset()
-                    // Any popup over it goes too — reopening should not land on one.
-                    setSettingsDialog(null)
-                    setPreviewOpen(false)
-                    setTrimOpen(false)
-                }
-                onOpenChange(next)
-            }}
-        >
-            <DialogContent
-                /*
-                 * `overflow-hidden`, because the body below scrolls itself — `DialogContent` has
-                 * `overflow-y-auto` of its own and two scrollers leave the inner one unbounded, so
-                 * the whole popup scrolls and the action bar goes with it. The settings dialogs
-                 * carry the same line and the longer account of it.
-                 */
-                className="flex max-h-[90dvh] w-full max-w-[612px] flex-col gap-0 overflow-hidden p-0"
-                data-testid={testId}
-            >
-                <div className="relative">
-                    {/*
-                     * The composer's own header never changes: a close button and one title. The
-                     * settings are separate dialogs over it, so there is no second state for this
-                     * control to be in — an earlier pass turned it into a back arrow, which takes
-                     * the way out away and asks the reader to notice that a button changed meaning.
-                     */}
-                    <DialogScreenHeader
-                        title={t('post_create_title')}
-                        disabled={create.isPending}
-                        testId={subTestId(testId, 'header')}
-                    />
-
-                    {/*
-                     * Legacy's two header actions, on the trailing edge: the collection picker and
-                     * the post settings. They are drawn beside the title rather than in the action
-                     * bar because that is where legacy puts them, and because the bar below is
-                     * already carrying the two settings that describe *who the post is for*.
-                     */}
-                    <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
-                        <HeaderAction
-                            /*
-                             * Legacy's own glyph: a stacked rectangle with a play triangle — a
-                             * *collection*, not a folder. `folder` was the first guess and says
-                             * something else about what the button opens.
-                             */
-                            icon="history-rectangle-play"
-                            label={t('post_collection_title')}
-                            disabled={create.isPending}
-                            onPress={() => setSettingsDialog('collections')}
-                            testId={subTestId(testId, 'affix')}
-                        />
-                        <HeaderAction
-                            icon="gear"
-                            label={t('post_settings_title')}
-                            disabled={create.isPending}
-                            onPress={() => setSettingsDialog('settings')}
-                            testId={subTestId(testId, 'prefix')}
-                        />
-                    </div>
-                </div>
-
-                <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3">
-                    <PostComposerBody
-                        draft={draft}
-                        author={author}
-                        characterLimit={limit}
-                        limitReached={draft.images.length >= POST_IMAGE_MAX}
-                        disabled={create.isPending}
-                        readingVideo={readingVideo}
-                        onText={text =>
-                            setDraft(current => ({ ...current, text: text.slice(0, limit) }))
-                        }
-                        onPickFiles={files => void pickFiles(files)}
-                        onRemoveImage={removeImage}
-                        onRemoveVideo={removeVideo}
-                        onEditVideo={() => setTrimOpen(true)}
-                        onPickCover={file => void pickCover(file)}
-                        onRemoveCover={removeCover}
-                        message={message}
-                        /*
-                         * Its **own** scope, not the dialog's. The body draws a `trigger` (the
-                         * upload button) and a `list`; so does the dialog around it — the chip that
-                         * opens the audience popup, and the reply popup's own list. Sharing a scope
-                         * made `post-composer-trigger` resolve to whichever came first in the DOM,
-                         * which is the failure `docs/TEST_IDS.md` §5 describes. A browser probe
-                         * found it: it could not click the chip.
-                         */
-                        testId={subTestId(testId, 'panel')}
-                    />
-                </div>
-
-                {/*
-                 * Legacy's action bar: the two settings that say **who the post is for** on the
-                 * leading side, and what happens to it on the trailing one. Always drawn — the
-                 * settings open over this dialog rather than replacing it.
-                 */}
-                <div className="flex items-center justify-between gap-2 border-(--separator-default) border-t px-4 py-3">
-                    <div className="flex min-w-0 items-center gap-2">
-                        <SettingChip
-                            /*
-                             * The same pair the audience dialog heads its two sections with —
-                             * `BtnAudience` swaps between exactly these two glyphs, so the chip and
-                             * the screen it opens carry the same mark for the same state. A globe
-                             * and a padlock were this file's own invention and said something else:
-                             * *public* and *locked*, where the product's words are *free* and
-                             * *exclusive*.
-                             */
-                            icon={draft.audience === 'STARGAZERS' ? 'badge-dollar' : 'users'}
-                            label={
-                                draft.audience === 'STARGAZERS'
-                                    ? t('post_audience_exclusive')
-                                    : t('post_audience_free')
-                            }
-                            disabled={create.isPending}
-                            onPress={() => setSettingsDialog('audience')}
-                            testId={subTestId(testId, 'trigger')}
-                        />
-                        <SettingChip
-                            /*
-                             * `comments-text`: legacy's `BtnReplySetting` is a filled bubble
-                             * carrying lines of text over a second one behind it, not the empty
-                             * outline `comment` draws. Identified by rendering the legacy SVG
-                             * rather than reading its path data.
-                             */
-                            icon="comments-text"
-                            label={t(replyAudienceLabelKey(draft.replyAllowedUser))}
-                            disabled={create.isPending}
-                            onPress={() => setSettingsDialog('reply')}
-                            testId={subTestId(testId, 'suffix')}
-                        />
-                    </div>
-
-                    <div className="flex flex-none items-center gap-2">
-                        {/*
-                         * The remaining count appears only as it runs out — legacy prints it
-                         * from the first keystroke, beside an empty box. 50 is far enough out
-                         * to be a warning and near enough not to be furniture.
-                         */}
-                        {remaining <= 50 ? (
-                            <span
-                                data-testid={subTestId(testId, 'label-data')}
-                                className={
-                                    remaining < 0
-                                        ? 'type-caption-meta text-(--text-error)'
-                                        : 'type-caption-meta text-(--text-placeholder)'
-                                }
-                            >
-                                {remaining}
-                            </span>
-                        ) : null}
-                        {/*
-                         * *Preview*, beside *Post* — legacy's trailing pair, in its order.
-                         *
-                         * Off on an **empty** draft and on nothing else: legacy gates it on
-                         * `!text && !images.length && !videos`, which is `problem === 'empty'`
-                         * here. It stays on for a draft that is too long or priced out of range,
-                         * and that is the right call — those are the drafts whose author most
-                         * wants to see what they have before fixing it, and the preview charges
-                         * nothing and writes nothing.
-                         */}
-                        <Button
-                            variant="secondary"
-                            size="medium"
-                            disabled={problem === 'empty' || create.isPending}
-                            onClick={() => setPreviewOpen(true)}
-                            data-testid={subTestId(testId, 'reveal')}
-                        >
-                            <Icon name="eye" size={20} className="flex-none" />
-                            {/* Icon-only below `sm`, which is where legacy drops the word too. */}
-                            <span className="hidden sm:inline">{t('post_preview_action')}</span>
-                        </Button>
-                        <Button
-                            variant="primary"
-                            size="medium"
-                            disabled={Boolean(problem) || create.isPending}
-                            onClick={() => create.publish(draft)}
-                            data-testid={subTestId(testId, 'submit')}
-                        >
-                            {create.isPending ? t('post_create_posting') : t('post_create_submit')}
-                        </Button>
-                    </div>
-                </div>
-            </DialogContent>
-
+    /**
+     * The popups that stack over this one.
+     *
+     * Hoisted to a const rather than left inline, because `ResponsiveDialog` takes them as a
+     * **prop** (`overlays`) and not as children: Base UI reads nesting off the React tree, so they
+     * have to mount inside this popup's root — its own prop doc has the reasoning. A hundred lines
+     * of JSX inside an opening tag is not readable, so it is named here.
+     */
+    const overlays = (
+        <>
             {/*
              * The four settings popups, mounted beside the composer's content so they stack over
              * it rather than replacing it — `post-composer-dialogs.tsx` says why that is the
@@ -615,7 +430,217 @@ export function PostComposerDialog({
                     testId="post-trimmer"
                 />
             ) : null}
-        </Dialog>
+        </>
+    )
+
+    return (
+        <ResponsiveDialog
+            open={open}
+            /**
+             * ⚠ **Up from the bottom, and only as tall as the draft** — a deliberate departure
+             * from legacy rather than a port that stopped short.
+             *
+             * Legacy's composer is `anchor='right'` and full height, the same shell its settings
+             * dialogs use. The call here is different and it is the better one: the composer is
+             * where you *start*, so it rises over the page and hands it back, while a settings
+             * screen you push into replaces it. Content height is what makes that read — a sheet
+             * filling the screen is a screen entering from the wrong edge.
+             *
+             * `side` means nothing above the breakpoint: there this is the same centred 612px
+             * dialog it has always been.
+             */
+            side="bottom"
+            overlays={overlays}
+            onOpenChange={next => {
+                /*
+                 * A publish in flight is uploads in flight. Closing would unmount the draft the
+                 * uploads are reading from and leave a half-written post with no way back to it, so
+                 * the dialog refuses — the same reason `DialogScreenHeader` takes `disabled`.
+                 */
+                if (create.isPending) return
+                if (!next) {
+                    reset()
+                    // Any popup over it goes too — reopening should not land on one.
+                    setSettingsDialog(null)
+                    setPreviewOpen(false)
+                    setTrimOpen(false)
+                }
+                onOpenChange(next)
+            }}
+            /*
+             * `overflow-hidden`, because the body below scrolls itself — `DialogContent` has
+             * `overflow-y-auto` of its own and two scrollers leave the inner one unbounded, so the
+             * whole popup scrolls and the action bar goes with it. The settings dialogs carry the
+             * same line and the longer account of it. The **sheet** takes none of these: it is
+             * already a bounded column, and a width cap means nothing on a full-bleed panel.
+             */
+            className="flex max-h-[90dvh] w-full max-w-[612px] flex-col gap-0 overflow-hidden p-0"
+            data-testid={testId}
+        >
+            <div className="relative">
+                {/*
+                 * The composer's own header never changes: a close button and one title. The
+                 * settings are separate dialogs over it, so there is no second state for this
+                 * control to be in — an earlier pass turned it into a back arrow, which takes
+                 * the way out away and asks the reader to notice that a button changed meaning.
+                 */}
+                <DialogScreenHeader
+                    title={t('post_create_title')}
+                    disabled={create.isPending}
+                    testId={subTestId(testId, 'header')}
+                />
+
+                {/*
+                 * Legacy's two header actions, on the trailing edge: the collection picker and
+                 * the post settings. They are drawn beside the title rather than in the action
+                 * bar because that is where legacy puts them, and because the bar below is
+                 * already carrying the two settings that describe *who the post is for*.
+                 */}
+                <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+                    <HeaderAction
+                        /*
+                         * Legacy's own glyph: a stacked rectangle with a play triangle — a
+                         * *collection*, not a folder. `folder` was the first guess and says
+                         * something else about what the button opens.
+                         */
+                        icon="history-rectangle-play"
+                        label={t('post_collection_title')}
+                        disabled={create.isPending}
+                        onPress={() => setSettingsDialog('collections')}
+                        testId={subTestId(testId, 'affix')}
+                    />
+                    <HeaderAction
+                        icon="gear"
+                        label={t('post_settings_title')}
+                        disabled={create.isPending}
+                        onPress={() => setSettingsDialog('settings')}
+                        testId={subTestId(testId, 'prefix')}
+                    />
+                </div>
+            </div>
+
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3">
+                <PostComposerBody
+                    draft={draft}
+                    author={author}
+                    characterLimit={limit}
+                    limitReached={draft.images.length >= POST_IMAGE_MAX}
+                    disabled={create.isPending}
+                    readingVideo={readingVideo}
+                    onText={text =>
+                        setDraft(current => ({ ...current, text: text.slice(0, limit) }))
+                    }
+                    onPickFiles={files => void pickFiles(files)}
+                    onRemoveImage={removeImage}
+                    onRemoveVideo={removeVideo}
+                    onEditVideo={() => setTrimOpen(true)}
+                    onPickCover={file => void pickCover(file)}
+                    onRemoveCover={removeCover}
+                    message={message}
+                    /*
+                     * Its **own** scope, not the dialog's. The body draws a `trigger` (the
+                     * upload button) and a `list`; so does the dialog around it — the chip that
+                     * opens the audience popup, and the reply popup's own list. Sharing a scope
+                     * made `post-composer-trigger` resolve to whichever came first in the DOM,
+                     * which is the failure `docs/TEST_IDS.md` §5 describes. A browser probe
+                     * found it: it could not click the chip.
+                     */
+                    testId={subTestId(testId, 'panel')}
+                />
+            </div>
+
+            {/*
+             * Legacy's action bar: the two settings that say **who the post is for** on the
+             * leading side, and what happens to it on the trailing one. Always drawn — the
+             * settings open over this dialog rather than replacing it.
+             */}
+            <div className="flex items-center justify-between gap-2 border-(--separator-default) border-t px-4 py-3">
+                <div className="flex min-w-0 items-center gap-2">
+                    <SettingChip
+                        /*
+                         * The same pair the audience dialog heads its two sections with —
+                         * `BtnAudience` swaps between exactly these two glyphs, so the chip and
+                         * the screen it opens carry the same mark for the same state. A globe
+                         * and a padlock were this file's own invention and said something else:
+                         * *public* and *locked*, where the product's words are *free* and
+                         * *exclusive*.
+                         */
+                        icon={draft.audience === 'STARGAZERS' ? 'badge-dollar' : 'users'}
+                        label={
+                            draft.audience === 'STARGAZERS'
+                                ? t('post_audience_exclusive')
+                                : t('post_audience_free')
+                        }
+                        disabled={create.isPending}
+                        onPress={() => setSettingsDialog('audience')}
+                        testId={subTestId(testId, 'trigger')}
+                    />
+                    <SettingChip
+                        /*
+                         * `comments-text`: legacy's `BtnReplySetting` is a filled bubble
+                         * carrying lines of text over a second one behind it, not the empty
+                         * outline `comment` draws. Identified by rendering the legacy SVG
+                         * rather than reading its path data.
+                         */
+                        icon="comments-text"
+                        label={t(replyAudienceLabelKey(draft.replyAllowedUser))}
+                        disabled={create.isPending}
+                        onPress={() => setSettingsDialog('reply')}
+                        testId={subTestId(testId, 'suffix')}
+                    />
+                </div>
+
+                <div className="flex flex-none items-center gap-2">
+                    {/*
+                     * The remaining count appears only as it runs out — legacy prints it
+                     * from the first keystroke, beside an empty box. 50 is far enough out
+                     * to be a warning and near enough not to be furniture.
+                     */}
+                    {remaining <= 50 ? (
+                        <span
+                            data-testid={subTestId(testId, 'label-data')}
+                            className={
+                                remaining < 0
+                                    ? 'type-caption-meta text-(--text-error)'
+                                    : 'type-caption-meta text-(--text-placeholder)'
+                            }
+                        >
+                            {remaining}
+                        </span>
+                    ) : null}
+                    {/*
+                     * *Preview*, beside *Post* — legacy's trailing pair, in its order.
+                     *
+                     * Off on an **empty** draft and on nothing else: legacy gates it on
+                     * `!text && !images.length && !videos`, which is `problem === 'empty'`
+                     * here. It stays on for a draft that is too long or priced out of range,
+                     * and that is the right call — those are the drafts whose author most
+                     * wants to see what they have before fixing it, and the preview charges
+                     * nothing and writes nothing.
+                     */}
+                    <Button
+                        variant="secondary"
+                        size="medium"
+                        disabled={problem === 'empty' || create.isPending}
+                        onClick={() => setPreviewOpen(true)}
+                        data-testid={subTestId(testId, 'reveal')}
+                    >
+                        <Icon name="eye" size={20} className="flex-none" />
+                        {/* Icon-only below `sm`, which is where legacy drops the word too. */}
+                        <span className="hidden sm:inline">{t('post_preview_action')}</span>
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="medium"
+                        disabled={Boolean(problem) || create.isPending}
+                        onClick={() => create.publish(draft)}
+                        data-testid={subTestId(testId, 'submit')}
+                    >
+                        {create.isPending ? t('post_create_posting') : t('post_create_submit')}
+                    </Button>
+                </div>
+            </div>
+        </ResponsiveDialog>
     )
 }
 
