@@ -87,6 +87,7 @@ export function PostCard({
     onChanged,
     onAuthorBlocked,
     onSeeMore,
+    onOpenMedia,
     attachments = true,
     disableDetail = false,
     className,
@@ -119,6 +120,18 @@ export function PostCard({
      * every other optional control on this card follows.
      */
     onSeeMore?: () => void
+    /**
+     * A press on the media, handed **up** to whoever owns the list.
+     *
+     * With it, the card opens no viewer of its own: the surface above mounts one, which is what
+     * lets that viewer page between *posts* — a card knows nothing about the list it is in, and a
+     * card that mounted its own pager would need to. Same arrangement as `onShare`, and the same
+     * reason: one instance per list rather than one per row.
+     *
+     * Absent, the card keeps its own lightbox over its own media, which is what a card standing on
+     * its own — a harness, an embed — needs.
+     */
+    onOpenMedia?: (target: number | 'video') => void
     /**
      * The mini-app banner, affiliate card and earnings strip. Legacy gates all three on
      * `typePost ∈ {POST_HOME, POST_DETAIL}`; this is that flag, defaulting to the feed's answer.
@@ -211,7 +224,7 @@ export function PostCard({
                                 testId={subTestId(testId, 'panel')}
                             />
                         ) : (
-                            <PostMediaBlock post={post} testId={testId} />
+                            <PostMediaBlock post={post} onOpenMedia={onOpenMedia} testId={testId} />
                         )}
 
                         {attachments && (
@@ -305,7 +318,15 @@ function shouldNavigate(event: React.MouseEvent<HTMLElement>): boolean {
  * post tells the reader nothing about why it is there. `PostNsfwGuard` carries the two-cover rule
  * and the account setting it reads.
  */
-function PostMediaBlock({ post, testId }: { post: Post; testId: string }) {
+function PostMediaBlock({
+    post,
+    onOpenMedia,
+    testId,
+}: {
+    post: Post
+    onOpenMedia?: (target: number | 'video') => void
+    testId: string
+}) {
     /** Which image the lightbox opened on, or `null` when it is closed. `'video'` opens the clip. */
     const [opened, setOpened] = useState<number | 'video' | null>(null)
 
@@ -321,14 +342,14 @@ function PostMediaBlock({ post, testId }: { post: Post; testId: string }) {
             {images.length > 0 ? (
                 <PostImageGallery
                     images={images}
-                    onOpen={index => setOpened(index)}
+                    onOpen={index => (onOpenMedia ? onOpenMedia(index) : setOpened(index))}
                     testId={subTestId(testId, 'item')}
                 />
             ) : null}
             {videoSrc(video) ? (
                 <PostVideoTile
                     post={post}
-                    onOpen={() => setOpened('video')}
+                    onOpen={() => (onOpenMedia ? onOpenMedia('video') : setOpened('video'))}
                     testId={subTestId(testId, 'slide')}
                 />
             ) : null}
@@ -345,7 +366,8 @@ function PostMediaBlock({ post, testId }: { post: Post; testId: string }) {
                 <div className="min-w-0">{media}</div>
             )}
 
-            {opened !== null ? (
+            {/* Only when nobody above wants the press — see `onOpenMedia`. */}
+            {!onOpenMedia && opened !== null ? (
                 <PostMediaLightbox
                     images={images}
                     video={opened === 'video' ? (video ?? null) : null}

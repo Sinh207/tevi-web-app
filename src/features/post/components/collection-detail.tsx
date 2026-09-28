@@ -15,7 +15,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import type { Post } from '../api/types'
 import { useCollection } from '../hooks/use-collection-posts'
+import { usePostSlider } from '../hooks/use-post-slider'
 import { PostCard } from './post-card'
+import { PostMediaLightbox } from './post-media-lightbox'
 
 /**
  * `/@{slug}/collections/{id}` — one collection's posts.
@@ -75,6 +77,12 @@ export function CollectionDetail({
     } = useCollection(collectionId, { onDeleted })
 
     const [sharing, setSharing] = useState<Post | null>(null)
+
+    /*
+     * One viewer for the whole list, so it can page between **posts** — `usePostSlider` carries
+     * why the list owns that and the viewer does not. The same arrangement as the share sheet.
+     */
+    const slider = usePostSlider(posts, { onLoadMore: loadMore, hasMore: hasNextPage })
 
     const keys = useMemo(() => posts.map(post => post.id), [posts])
     const { observe, heightFor } = useRenderWindow(keys)
@@ -166,7 +174,7 @@ export function CollectionDetail({
         <>
             {bar}
             <div data-testid={testId} className="flex min-w-0 flex-col gap-px">
-                {posts.map(post => {
+                {posts.map((post, index) => {
                     const height = heightFor(post.id)
                     return (
                         <div
@@ -183,6 +191,7 @@ export function CollectionDetail({
                                         post={post}
                                         isPremiumReader={isPremiumReader}
                                         onShare={() => setSharing(post)}
+                                        onOpenMedia={target => slider.openAt(index, target)}
                                         onChanged={refetch}
                                         onAuthorBlocked={refetch}
                                         testId={subTestId(testId, 'item')}
@@ -215,6 +224,23 @@ export function CollectionDetail({
                 <div ref={sentinelRef} aria-hidden="true" className="h-px" />
 
                 {isFetchingNextPage ? <CollectionSkeleton rows={1} testId={testId} /> : null}
+
+                {slider.post ? (
+                    <PostMediaLightbox
+                        images={slider.post.images ?? []}
+                        video={slider.open?.target === 'video' ? slider.post.video : null}
+                        startIndex={
+                            typeof slider.open?.target === 'number' ? slider.open.target : 0
+                        }
+                        post={slider.post}
+                        isPremiumReader={isPremiumReader}
+                        onShare={() => setSharing(slider.post)}
+                        onPrevPost={slider.prev}
+                        onNextPost={slider.next}
+                        positionLabel={slider.positionLabel}
+                        onClose={slider.close}
+                    />
+                ) : null}
 
                 {sharing ? (
                     <ShareDialog

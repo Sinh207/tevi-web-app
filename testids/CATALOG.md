@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-830 ids across 29 surfaces.
+831 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -294,6 +294,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-mcn-partnership-sign-in` | — | `src/features/channel/components/mcn-partnership-view.tsx:105` |
 | `channel-mcn-partnership-signed-out` | — | `src/features/channel/components/mcn-partnership-view.tsx:95` |
 | `channel-mcn-partnership-space` | — | `src/features/channel/components/mcn-partnership-view.tsx:423` |
+| `channel-media` | — | `src/features/channel/components/channel-thread-list.tsx:146` |
 | `channel-menu-follow` | — | `src/features/channel/components/channel-viewer-menu.tsx:143` |
 | `channel-message` | — | `src/features/channel/components/channel-viewer-actions.tsx:293` |
 | `channel-my-space-no-channel` | — | `src/features/channel/components/my-space-redirect.tsx:157` |
@@ -348,7 +349,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-suspended-guidelines` | — | `src/features/channel/components/channel-state-screens.tsx:117` |
 | `channel-tabs` | — | `src/features/channel/components/channel-tabs.tsx:86` |
 | `channel-tabs-loading` | — | `src/features/channel/components/channel-tabs-skeleton.tsx:35` |
-| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:157` |
+| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:175` |
 | `channel-top-bar-loading` | — | `src/features/channel/components/channel-top-bar-skeleton.tsx:43` |
 | `channel-unblock` | — | `src/features/channel/components/blocked-account-row.tsx:205` |
 | `channel-verified-badge` | — | `src/features/channel/components/channel-identity.tsx:94` |
@@ -1085,7 +1086,8 @@ name; you need it to know the element exists.
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
 | `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` `-remove` |
 | `PostLockPanel` | `src/features/post/components/post-lock-panel.tsx` | `-label` `-title` |
-| `PostMediaLightbox` | `src/features/post/components/post-media-lightbox.tsx` | `-close` `-label` `-next` `-overlay` `-prev` `-slide` |
+| `PostMediaLightbox` | `src/features/post/components/post-media-lightbox.tsx` | `-close` `-footer` `-header` `-label` `-label-data` `-list` `-next` `-overlay` `-prev` `-slide` |
+| `PostMediaTile` | `src/features/post/components/post-media-tile.tsx` | `-count` `-label` `-overlay` `-panel` `-slide` `-suffix` |
 | `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-panel` `-remove` `-trigger` |
 | `PostNsfwGuard` | `src/features/post/components/post-nsfw-guard.tsx` | `-close` `-reveal` `-title` `-trigger` |
 | `PostPreviewDialog` | `src/features/post/components/post-preview-dialog.tsx` | `-description` `-header` `-item` `-overlay` `-panel` `-slide` |

@@ -1,6 +1,12 @@
 'use client'
 
-import { type Post, PostCard } from '@features/post'
+import {
+    type Post,
+    PostCard,
+    PostMediaLightbox,
+    PostMediaTile,
+    usePostSlider,
+} from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
@@ -13,7 +19,6 @@ import { useChannelThreads } from '../hooks/use-channel-threads'
 import { useMyChannel } from '../providers/my-channel-provider'
 import { ChannelEmptyState } from './channel-empty-state'
 import { ChannelError } from './channel-error'
-import { ChannelMediaTile } from './channel-media-tile'
 
 /**
  * A channel's posts or media as an infinite list — the four states, and the sentinel.
@@ -66,6 +71,12 @@ export function ChannelThreadList({
      * and a QR canvas, so one per card would mount twenty to show at most one.
      */
     const [sharing, setSharing] = useState<Post | null>(null)
+
+    /*
+     * One viewer for the whole list, so it can page between **posts** — `usePostSlider` carries why
+     * the list owns that and the viewer does not. Same arrangement as the share sheet above.
+     */
+    const slider = usePostSlider(threads, { onLoadMore: fetchNextPage, hasMore: hasNextPage })
 
     /* A post's id is the row's identity here, where home's is a whole group's. */
     const keys = useMemo(() => threads.map(thread => thread.id), [threads])
@@ -126,8 +137,14 @@ export function ChannelThreadList({
             {kind === 'media' ? (
                 // Three across and gap-1, matching legacy's grid. 21 per page is seven full rows.
                 <div className="grid grid-cols-3 gap-1">
-                    {threads.map(thread => (
-                        <ChannelMediaTile key={thread.id} post={thread} />
+                    {threads.map((thread, index) => (
+                        <PostMediaTile
+                            key={thread.id}
+                            post={thread}
+                            onOpenMedia={target => slider.openAt(index, target)}
+                            onChanged={() => refetch()}
+                            testId="channel-media"
+                        />
                     ))}
                 </div>
             ) : (
@@ -138,7 +155,7 @@ export function ChannelThreadList({
                  * cell, so the DOM it accumulates is a fraction of a card's and the grid's own
                  * three-column layout is what a stood-down cell would have to reproduce.
                  */
-                threads.map(thread => {
+                threads.map((thread, index) => {
                     const height = heightFor(thread.id)
                     return (
                         <div
@@ -153,6 +170,7 @@ export function ChannelThreadList({
                                     post={thread}
                                     isPremiumReader={isPremium}
                                     onShare={() => setSharing(thread)}
+                                    onOpenMedia={target => slider.openAt(index, target)}
                                     onChanged={() => refetch()}
                                     testId="channel-thread"
                                 />
@@ -167,6 +185,21 @@ export function ChannelThreadList({
 
             {isFetchingNextPage && (
                 <ThreadListSkeleton kind={kind} rows={kind === 'media' ? 3 : 1} />
+            )}
+
+            {slider.post && (
+                <PostMediaLightbox
+                    images={slider.post.images ?? []}
+                    video={slider.open?.target === 'video' ? slider.post.video : null}
+                    startIndex={typeof slider.open?.target === 'number' ? slider.open.target : 0}
+                    post={slider.post}
+                    isPremiumReader={isPremium}
+                    onShare={() => setSharing(slider.post)}
+                    onPrevPost={slider.prev}
+                    onNextPost={slider.next}
+                    positionLabel={slider.positionLabel}
+                    onClose={slider.close}
+                />
             )}
 
             {sharing && (
