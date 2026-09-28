@@ -83,6 +83,8 @@ export function PostPreviewDialog({
             }}
         >
             <DialogContent
+                /* Opened over the composer — see `DialogContent`'s `nested` for what it buys. */
+                nested
                 /* `overflow-hidden` because the body below scrolls itself — see the settings dialogs. */
                 className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
                 data-testid={testId}

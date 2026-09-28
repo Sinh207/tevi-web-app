@@ -167,6 +167,8 @@ function SettingsDialog({
             }}
         >
             <DialogContent
+                /* Opened over the composer — see `DialogContent`'s `nested` for what it buys. */
+                nested
                 /*
                  * `overflow-hidden` is **load-bearing**, and its absence is what broke this.
                  *

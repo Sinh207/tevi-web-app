@@ -82,6 +82,7 @@ export function VideoTrimmer({
     source,
     onCancel,
     onTrimmed,
+    nested = false,
     testId,
 }: {
     open: boolean
@@ -90,6 +91,11 @@ export function VideoTrimmer({
     onCancel: () => void
     /** The cut clip. The trimmer closes itself after this resolves. */
     onTrimmed: (result: TrimmedVideo) => void
+    /**
+     * This opens **over another dialog** — the post composer does, a settings screen would not.
+     * `DialogContent`'s own `nested` says what it changes.
+     */
+    nested?: boolean
     /**
      * The scope, **from the caller**. `shared/` never authors one (`scripts/check-testids.mjs`
      * rejects a literal here), and this component is reached from two different features — so a
@@ -277,6 +283,7 @@ export function VideoTrimmer({
             }}
         >
             <DialogContent
+                nested={nested}
                 className="flex max-h-[90dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
                 data-testid={testId}
             >
