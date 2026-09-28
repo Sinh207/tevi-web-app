@@ -134,6 +134,49 @@ export function lockedSummary(detail: UnlockDetail | null): {
 }
 
 /**
+ * What one cell of a space's **Media** grid shows — legacy's `usePostMedia`, as a pure function.
+ *
+ * ## Both halves of the payload, because a locked row has only one
+ *
+ * An open post carries its media; a locked one carries `cover_image` and `unlock_detail` instead
+ * (`unlockDetailSchema` says why). Legacy reads `images.length || unlock_detail.images_count` and
+ * the same for the duration, so a locked tile still says "4 photos · 01:20" over its cover — which
+ * is what sells it. Kept.
+ *
+ * - `src` — the first image, then the video's poster, then the cover. `thumb` before `uri` for the
+ *   image, since the cell is a third of a column.
+ * - `blurCover` — only when the thumbnail **is** the cover and the backend asked for it blurred,
+ *   the same instruction `PostLockPanel` honours. A post's own media is never blurred here; the
+ *   sensitive-content cover is the tile's business, not this.
+ * - `duration` — legacy pads every part (`01:05`), unlike the card's tile, so this uses
+ *   `formatDurationPadded`.
+ */
+export function mediaTileSummary(
+    post: Pick<Post, 'images' | 'video' | 'cover_image' | 'unlock_detail'>,
+): {
+    src: string | null
+    blurCover: boolean
+    images: number
+    duration: string | null
+    hasVideo: boolean
+} {
+    const first = post.images?.[0]
+    const own = first?.thumb ?? first?.uri ?? post.video?.thumbnail ?? null
+    const cover = post.cover_image?.uri ?? null
+    const detail = post.unlock_detail
+
+    const seconds = post.video?.duration_seconds || detail?.video_duration_seconds || 0
+
+    return {
+        src: own ?? cover,
+        blurCover: own === null && cover !== null && Boolean(post.cover_image?.blur),
+        images: post.images?.length || detail?.images_count || 0,
+        duration: seconds > 0 ? formatDurationPadded(seconds) : null,
+        hasVideo: Boolean(videoSrc(post.video)),
+    }
+}
+
+/**
  * Legacy's **presentation** ratio for an image — one of five buckets, defaulting to `16/9`.
  *
  * ## Why this exists beside `imageAspectRatio`, which answers `null`

@@ -74,6 +74,12 @@ export { PostComposerDialog } from './components/post-composer-dialog'
  * the card applies, and the gates are the whole reason the card is reused here.
  */
 export { PostDetailView } from './components/post-detail-view'
+/**
+ * One cell of a space's Media grid. A component rather than its parts for the reason the header
+ * gives: the tile owns the unlock flow and the lightbox it opens, and a grid that drew its own cell
+ * would have the picture without either.
+ */
+export { PostMediaTile } from './components/post-media-tile'
 export type { PostActions } from './hooks/use-post-actions'
 export { usePostActions } from './hooks/use-post-actions'
 export { usePostBookmark } from './hooks/use-post-bookmark'
