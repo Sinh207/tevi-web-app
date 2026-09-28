@@ -74,7 +74,10 @@ export function ChannelThreadList({
 
     /* A post's id is the row's identity here, where home's is a whole group's. */
     const keys = useMemo(() => threads.map(thread => thread.id), [threads])
-    const { observe, heightFor } = useRenderWindow(keys)
+    const { observe, heightFor, shouldRender } = useRenderWindow(
+        keys,
+        kind === 'media' ? MEDIA_WINDOW : undefined,
+    )
 
     const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({
         enabled: hasNextPage && !isFetchingNextPage,
@@ -132,22 +135,35 @@ export function ChannelThreadList({
                 // Three across and gap-1, matching legacy's grid. 21 per page is seven full rows.
                 <div className="grid grid-cols-3 gap-1">
                     {threads.map((thread, index) => (
-                        <PostMediaTile
+                        /*
+                         * Windowed like the posts list below, and like legacy's grid
+                         * (`useInView(24)` + `isIndexInRender`). The cell is what stays mounted:
+                         * it is `aspect-square` in a three-column track, so a stood-down tile
+                         * keeps its exact box from the grid alone — no measured height to hold
+                         * open, and the rows below never move.
+                         */
+                        <div
                             key={thread.id}
-                            post={thread}
-                            onOpenMedia={target => slider.openAt(index, target)}
-                            onChanged={() => refetch()}
-                            testId="channel-media"
-                        />
+                            ref={observe}
+                            {...windowKeyProps(thread.id)}
+                            className="aspect-square min-w-0"
+                        >
+                            {shouldRender(thread.id) ? (
+                                <PostMediaTile
+                                    post={thread}
+                                    onOpenMedia={target => slider.openAt(index, target)}
+                                    onChanged={() => refetch()}
+                                    className="size-full"
+                                    testId="channel-media"
+                                />
+                            ) : null}
+                        </div>
                     ))}
                 </div>
             ) : (
                 /*
                  * Windowed, for the reason `useRenderWindow` states: a space with a long history
                  * is the same unbounded list home is, and a `PostCard` is the same expensive row.
-                 * The **media** grid above is not windowed — a tile is one `next/image` in a fixed
-                 * cell, so the DOM it accumulates is a fraction of a card's and the grid's own
-                 * three-column layout is what a stood-down cell would have to reproduce.
                  */
                 threads.map((thread, index) => {
                     const height = heightFor(thread.id)
@@ -209,6 +225,16 @@ export function ChannelThreadList({
         </div>
     )
 }
+
+/**
+ * The render window for the Media grid, counted in **tiles**, not rows.
+ *
+ * The hook's defaults are sized for a feed of cards, one per row: a 10-item floor and 4 items of
+ * overscan. In a three-wide grid that is barely three rows mounted and one row of overscan, so a
+ * flick paints empty cells. Legacy's grid keeps 24 (eight rows); overscan is three rows either
+ * side. Both multiples of three, so the window never cuts a row in half.
+ */
+const MEDIA_WINDOW = { minimum: 24, overscan: 9 }
 
 /**
  * The list's loading shape — the same geometry as the real rows, for the same reason
