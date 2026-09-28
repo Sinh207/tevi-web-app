@@ -1,9 +1,9 @@
 'use client'
 
 import { DialogScreenHeader } from '@shared/components/dialog-screen-header'
+import { ResponsiveDialog } from '@shared/components/responsive-dialog'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
-import { Dialog, DialogContent } from '@shared/ui/dialog'
 import type { Post } from '../api/types'
 import { postDisplay } from '../lib/post-access'
 import { videoSrc } from '../lib/post-media'
@@ -76,29 +76,26 @@ export function PostPreviewDialog({
     const { t } = useTranslation()
 
     return (
-        <Dialog
+        <ResponsiveDialog
             open={open && post !== null}
             onOpenChange={next => {
                 if (!next) onClose()
             }}
+            /* Opened over the composer — see `DialogContent`'s `nested` for what it buys. */
+            nested
+            /* `overflow-hidden` because the body below scrolls itself — see the settings dialogs. */
+            className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
+            data-testid={testId}
         >
-            <DialogContent
-                /* Opened over the composer — see `DialogContent`'s `nested` for what it buys. */
-                nested
-                /* `overflow-hidden` because the body below scrolls itself — see the settings dialogs. */
-                className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
-                data-testid={testId}
-            >
-                <DialogScreenHeader
-                    title={t('post_preview_title')}
-                    onClose={onClose}
-                    testId={subTestId(testId, 'header')}
-                />
-                <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-                    {post ? <PreviewCard post={post} testId={testId} /> : null}
-                </div>
-            </DialogContent>
-        </Dialog>
+            <DialogScreenHeader
+                title={t('post_preview_title')}
+                onClose={onClose}
+                testId={subTestId(testId, 'header')}
+            />
+            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+                {post ? <PreviewCard post={post} testId={testId} /> : null}
+            </div>
+        </ResponsiveDialog>
     )
 }
 

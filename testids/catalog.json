@@ -9795,7 +9795,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:51"
+            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:57"
         },
         "navigation-tab-bar-create-dialog": {
             "scope": "navigation",
@@ -9835,7 +9835,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:58"
+            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:64"
         },
         "navigation-tab-bar-create-dialog-close": {
             "scope": "navigation",
@@ -9875,7 +9875,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:102"
+            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:108"
         },
         "navigation-tab-bar-create-list": {
             "scope": "navigation",
@@ -9915,7 +9915,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:64"
+            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:70"
         },
         "navigation-tab-bar-create-list-row": {
             "scope": "navigation",
@@ -9958,7 +9958,7 @@
             "companions": [
                 "data-row-key"
             ],
-            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:74"
+            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:80"
         },
         "navigation-tab-bar-create-prompt": {
             "scope": "navigation",
@@ -9998,7 +9998,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:109"
+            "source": "src/features/navigation/components/create-tab-bar-fab.tsx:115"
         },
         "navigation-tab-bar-following": {
             "scope": "navigation",
@@ -10466,21 +10466,21 @@
             "routes": [
                 "/notification"
             ],
-            "source": "src/features/notification/components/notification-filter-dialog.tsx:121"
+            "source": "src/features/notification/components/notification-filter-dialog.tsx:127"
         },
         "notification-filter-close": {
             "scope": "notification",
             "routes": [
                 "/notification"
             ],
-            "source": "src/features/notification/components/notification-filter-dialog.tsx:315"
+            "source": "src/features/notification/components/notification-filter-dialog.tsx:321"
         },
         "notification-filter-retry": {
             "scope": "notification",
             "routes": [
                 "/notification"
             ],
-            "source": "src/features/notification/components/notification-filter-dialog.tsx:174"
+            "source": "src/features/notification/components/notification-filter-dialog.tsx:180"
         },
         "notification-filter-row": {
             "scope": "notification",
@@ -10490,14 +10490,14 @@
             "companions": [
                 "data-option-value"
             ],
-            "source": "src/features/notification/components/notification-filter-dialog.tsx:203"
+            "source": "src/features/notification/components/notification-filter-dialog.tsx:209"
         },
         "notification-filter-save": {
             "scope": "notification",
             "routes": [
                 "/notification"
             ],
-            "source": "src/features/notification/components/notification-filter-dialog.tsx:287"
+            "source": "src/features/notification/components/notification-filter-dialog.tsx:293"
         },
         "notification-filter-type": {
             "scope": "notification",
@@ -10507,7 +10507,7 @@
             "companions": [
                 "data-option-value"
             ],
-            "source": "src/features/notification/components/notification-filter-dialog.tsx:247"
+            "source": "src/features/notification/components/notification-filter-dialog.tsx:253"
         },
         "notification-get-app": {
             "scope": "notification",
@@ -10654,7 +10654,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/add-card-dialog.tsx:306"
+            "source": "src/features/payment/components/add-card-dialog.tsx:312"
         },
         "payment-add-card-close": {
             "scope": "payment",
@@ -10664,7 +10664,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/add-card-dialog.tsx:146"
+            "source": "src/features/payment/components/add-card-dialog.tsx:152"
         },
         "payment-add-card-close-x": {
             "scope": "payment",
@@ -10674,7 +10674,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/add-card-dialog.tsx:125"
+            "source": "src/features/payment/components/add-card-dialog.tsx:131"
         },
         "payment-add-card-default": {
             "scope": "payment",
@@ -10684,7 +10684,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/add-card-dialog.tsx:273"
+            "source": "src/features/payment/components/add-card-dialog.tsx:279"
         },
         "payment-add-card-form": {
             "scope": "payment",
@@ -10694,7 +10694,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/add-card-dialog.tsx:245"
+            "source": "src/features/payment/components/add-card-dialog.tsx:251"
         },
         "payment-add-card-submit": {
             "scope": "payment",
@@ -10704,7 +10704,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/add-card-dialog.tsx:318"
+            "source": "src/features/payment/components/add-card-dialog.tsx:324"
         },
         "payment-card-add": {
             "scope": "payment",
@@ -11099,7 +11099,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/star-purchase-dialog.tsx:329"
+            "source": "src/features/payment/components/star-purchase-dialog.tsx:335"
         },
         "payment-purchase-close": {
             "scope": "payment",
@@ -11119,7 +11119,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/star-purchase-dialog.tsx:275"
+            "source": "src/features/payment/components/star-purchase-dialog.tsx:281"
         },
         "payment-purchase-retry": {
             "scope": "payment",
@@ -11162,7 +11162,7 @@
                 "/get-star",
                 "/get-star/transaction-history"
             ],
-            "source": "src/features/payment/components/add-card-dialog.tsx:258"
+            "source": "src/features/payment/components/add-card-dialog.tsx:264"
         },
         "payout-copy": {
             "scope": "payout",
@@ -13466,6 +13466,14 @@
             ],
             "parts": [
                 "clear"
+            ]
+        },
+        "src/shared/ui/sheet.tsx": {
+            "accepts": [
+                "SheetContent"
+            ],
+            "parts": [
+                "overlay"
             ]
         }
     }

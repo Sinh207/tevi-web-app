@@ -242,6 +242,12 @@ export function StarPurchaseDialog({
                          * the figure the press commits to, and legacy puts it three rows up where it
                          * reads as one more line of the receipt.
                          *
+                         * ⚠ **A sheet exists now** — `shared/ui/sheet.tsx`, Base UI's `Drawer` behind this app's tokens,
+                         * wired to the post composer's popups through `ResponsiveDialog`. It is a **trailing-edge,
+                         * full-screen** panel (legacy's composer geometry); the DS's own `.tevi-bottom-sheet` is still
+                         * unreadable, so a *bottom* variant does not exist yet. This screen is deliberately not switched:
+                         * the composer was the agreed first cut, and moving anything else is a product call rather than a
+                         * refactor. Switching it is `ResponsiveDialog` plus the `className` already here.
                          * `converted: false` means no conversion rate was available, so the figure is
                          * still USD — said out loud rather than labelled with the gateway's currency,
                          * which is the mislabelling `gatewayTotal` documents.

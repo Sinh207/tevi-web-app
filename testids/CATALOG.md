@@ -679,12 +679,12 @@ Also present on every route it is mounted under — `src/app/(web)/(main)/layout
 | `navigation-navbar-search` | — | `src/features/navigation/components/app-navbar.tsx:180` |
 | `navigation-page-back` | — | `src/features/navigation/components/page-back-bar.tsx:130` |
 | `navigation-tab-bar` | — | `src/features/navigation/components/app-tab-bar.tsx:38` |
-| `navigation-tab-bar-create` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:51` |
-| `navigation-tab-bar-create-dialog` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:58` |
-| `navigation-tab-bar-create-dialog-close` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:102` |
-| `navigation-tab-bar-create-list` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:64` |
-| `navigation-tab-bar-create-list-row` | `data-row-key` | `src/features/navigation/components/create-tab-bar-fab.tsx:74` |
-| `navigation-tab-bar-create-prompt` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:109` |
+| `navigation-tab-bar-create` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:57` |
+| `navigation-tab-bar-create-dialog` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:64` |
+| `navigation-tab-bar-create-dialog-close` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:108` |
+| `navigation-tab-bar-create-list` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:70` |
+| `navigation-tab-bar-create-list-row` | `data-row-key` | `src/features/navigation/components/create-tab-bar-fab.tsx:80` |
+| `navigation-tab-bar-create-prompt` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:115` |
 | `navigation-tab-bar-following` | — | `src/features/navigation/components/app-tab-bar.tsx:54` |
 | `navigation-tab-bar-home` | — | `src/features/navigation/components/app-tab-bar.tsx:40` |
 | `navigation-tab-bar-messages` | — | `src/features/navigation/components/app-tab-bar.tsx:63` |
@@ -706,12 +706,12 @@ Routes: `/notification`
 | `notification-actions` | — | `src/features/notification/components/notification-bar-actions.tsx:117` |
 | `notification-delete` | — | `src/features/notification/components/notification-row-menu.tsx:95` |
 | `notification-delete-confirm` | — | `src/features/notification/components/notification-view.tsx:290` |
-| `notification-filter-all` | — | `src/features/notification/components/notification-filter-dialog.tsx:121` |
-| `notification-filter-close` | — | `src/features/notification/components/notification-filter-dialog.tsx:315` |
-| `notification-filter-retry` | — | `src/features/notification/components/notification-filter-dialog.tsx:174` |
-| `notification-filter-row` | `data-option-value` | `src/features/notification/components/notification-filter-dialog.tsx:203` |
-| `notification-filter-save` | — | `src/features/notification/components/notification-filter-dialog.tsx:287` |
-| `notification-filter-type` | `data-option-value` | `src/features/notification/components/notification-filter-dialog.tsx:247` |
+| `notification-filter-all` | — | `src/features/notification/components/notification-filter-dialog.tsx:127` |
+| `notification-filter-close` | — | `src/features/notification/components/notification-filter-dialog.tsx:321` |
+| `notification-filter-retry` | — | `src/features/notification/components/notification-filter-dialog.tsx:180` |
+| `notification-filter-row` | `data-option-value` | `src/features/notification/components/notification-filter-dialog.tsx:209` |
+| `notification-filter-save` | — | `src/features/notification/components/notification-filter-dialog.tsx:293` |
+| `notification-filter-type` | `data-option-value` | `src/features/notification/components/notification-filter-dialog.tsx:253` |
 | `notification-get-app` | — | `src/features/notification/components/notification-view.tsx:317` |
 | `notification-loading` | — | `src/features/notification/components/notification-skeleton.tsx:35` |
 | `notification-mark-all` | — | `src/features/notification/components/notification-bar-actions.tsx:130` |
@@ -748,12 +748,12 @@ Routes: `/app/dev-checkout`, `/card-management`, `/get-star`, `/get-star/transac
 
 | testid | companions | source |
 |---|---|---|
-| `payment-add-card-cancel` | — | `src/features/payment/components/add-card-dialog.tsx:306` |
-| `payment-add-card-close` | — | `src/features/payment/components/add-card-dialog.tsx:146` |
-| `payment-add-card-close-x` | — | `src/features/payment/components/add-card-dialog.tsx:125` |
-| `payment-add-card-default` | — | `src/features/payment/components/add-card-dialog.tsx:273` |
-| `payment-add-card-form` | — | `src/features/payment/components/add-card-dialog.tsx:245` |
-| `payment-add-card-submit` | — | `src/features/payment/components/add-card-dialog.tsx:318` |
+| `payment-add-card-cancel` | — | `src/features/payment/components/add-card-dialog.tsx:312` |
+| `payment-add-card-close` | — | `src/features/payment/components/add-card-dialog.tsx:152` |
+| `payment-add-card-close-x` | — | `src/features/payment/components/add-card-dialog.tsx:131` |
+| `payment-add-card-default` | — | `src/features/payment/components/add-card-dialog.tsx:279` |
+| `payment-add-card-form` | — | `src/features/payment/components/add-card-dialog.tsx:251` |
+| `payment-add-card-submit` | — | `src/features/payment/components/add-card-dialog.tsx:324` |
 | `payment-card-add` | — | `src/features/payment/components/card-management-view.tsx:378` |
 | `payment-card-add-empty` | — | `src/features/payment/components/card-management-view.tsx:414` |
 | `payment-card-checkout-close` | — | `src/features/payment/components/card-checkout-dialog.tsx:71` |
@@ -791,13 +791,13 @@ Routes: `/app/dev-checkout`, `/card-management`, `/get-star`, `/get-star/transac
 | `payment-history-retry` | — | `src/features/payment/components/transaction-history-view.tsx:156` |
 | `payment-history-sign-in` | — | `src/features/payment/components/transaction-history-view.tsx:133` |
 | `payment-purchase-back` | — | `src/features/payment/components/star-purchase-dialog.tsx:93` |
-| `payment-purchase-back-error` | — | `src/features/payment/components/star-purchase-dialog.tsx:329` |
+| `payment-purchase-back-error` | — | `src/features/payment/components/star-purchase-dialog.tsx:335` |
 | `payment-purchase-close` | — | `src/features/payment/components/star-purchase-dialog.tsx:104` |
-| `payment-purchase-pay` | — | `src/features/payment/components/star-purchase-dialog.tsx:275` |
+| `payment-purchase-pay` | — | `src/features/payment/components/star-purchase-dialog.tsx:281` |
 | `payment-purchase-retry` | — | `src/features/payment/components/star-purchase-dialog.tsx:155` |
 | `payment-purchase-review` | — | `src/features/payment/components/star-purchase-dialog.tsx:204` |
 | `payment-star-package` | `data-package-id` | `src/features/payment/components/star-package-grid.tsx:97` |
-| `payment-stripe-element` | — | `src/features/payment/components/add-card-dialog.tsx:258` |
+| `payment-stripe-element` | — | `src/features/payment/components/add-card-dialog.tsx:264` |
 
 ## `payout` — Payout tracking
 
@@ -1093,3 +1093,4 @@ name; you need it to know the element exists.
 | `ConfirmDialog` | `src/shared/ui/confirm-dialog.tsx` | `-cancel` `-confirm` `-description` `-title` |
 | `DialogOverlay`, `DialogContent` | `src/shared/ui/dialog.tsx` | `-overlay` |
 | `SearchBar` | `src/shared/ui/search-bar.tsx` | `-clear` |
+| `SheetContent` | `src/shared/ui/sheet.tsx` | `-overlay` |

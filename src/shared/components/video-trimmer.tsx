@@ -17,10 +17,10 @@ import {
 import { cn } from '@shared/lib/utils'
 import { captureVideoFrames, revokeFrames } from '@shared/lib/video-frames'
 import { Button } from '@shared/ui/button'
-import { Dialog, DialogContent } from '@shared/ui/dialog'
 import { Icon } from '@shared/ui/icon'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DialogScreenHeader } from './dialog-screen-header'
+import { ResponsiveDialog } from './responsive-dialog'
 
 /**
  * Cut a clip down to a range — legacy's `components/videoTrimmer`, ported.
@@ -276,166 +276,163 @@ export function VideoTrimmer({
     const canSave = isTrimmed(range, duration) && !busy
 
     return (
-        <Dialog
+        <ResponsiveDialog
             open={open && source !== null}
             onOpenChange={next => {
                 if (!next && !busy) onCancel()
             }}
+            nested={nested}
+            className="flex max-h-[90dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
+            data-testid={testId}
         >
-            <DialogContent
-                nested={nested}
-                className="flex max-h-[90dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
-                data-testid={testId}
-            >
-                <DialogScreenHeader
-                    title={t('video_trim_title')}
-                    onClose={onCancel}
-                    disabled={busy}
-                    testId={subTestId(testId, 'header')}
-                />
+            <DialogScreenHeader
+                title={t('video_trim_title')}
+                onClose={onCancel}
+                disabled={busy}
+                testId={subTestId(testId, 'header')}
+            />
 
-                <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-                    {/*
-                     * Capped, for the reason the composer's own preview is: `3/4` across a 512px
-                     * dialog is 683px of video above a strip the reader has to reach. The cap
-                     * letterboxes a portrait clip rather than shrinking the dialog's width —
-                     * `object-contain` already keeps the whole frame visible, which is what a
-                     * trimmer needs and a feed does not.
-                     */}
-                    <div
-                        className="relative max-h-[45dvh] w-full overflow-hidden rounded-[12px] bg-black"
-                        style={{ aspectRatio: previewAspect(source) }}
-                    >
-                        {previewUrl ? (
-                            <video
-                                ref={videoRef}
-                                src={previewUrl}
-                                autoPlay
-                                loop
-                                muted={muted}
-                                playsInline
-                                preload="metadata"
-                                data-testid={subTestId(testId, 'slide')}
-                                className="size-full object-contain"
-                            />
-                        ) : null}
-
-                        <button
-                            type="button"
-                            aria-label={t(muted ? 'video_trim_unmute' : 'video_trim_mute')}
-                            aria-pressed={muted}
-                            onClick={() => setMuted(current => !current)}
-                            data-testid={subTestId(testId, 'reveal')}
-                            /* Fixed black: it sits on the reader's own footage, not on the page. */
-                            className="absolute end-2 bottom-2 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
-                        >
-                            <Icon name={muted ? 'volume-off-slash' : 'volume'} size={16} />
-                        </button>
-                    </div>
-
-                    {/*
-                     * The strip. `touch-none` because a horizontal drag on a 64px band is exactly
-                     * what a browser reads as a page scroll, and it steals the gesture before the
-                     * pointer handlers see it.
-                     */}
-                    <div
-                        ref={stripRef}
-                        data-testid={subTestId(testId, 'list')}
-                        /*
-                         * ⚠ **Not `overflow-hidden`**, and the frames get their own clipping box
-                         * instead. A handle is `-translate-x-1/2`, so at 0% and at 100% half of it
-                         * sits outside this element — clipped here, the *start* handle was a 8px
-                         * sliver against the left edge and looked like a rendering fault rather
-                         * than a control. Found in a screenshot; nothing about it is a type error.
-                         */
-                        className="relative h-16 w-full touch-none rounded-[8px] bg-(--background-segment) select-none"
-                    >
-                        <div className="pointer-events-none absolute inset-0 flex overflow-hidden rounded-[8px]">
-                            {frames.map(url => (
-                                /* biome-ignore lint/performance/noImgElement: a `blob:` frame has nothing for next/image to optimise and no loader that accepts it. */
-                                <img
-                                    key={url}
-                                    src={url}
-                                    alt=""
-                                    className="h-full min-w-0 flex-1 object-cover"
-                                />
-                            ))}
-                        </div>
-
-                        {/* Everything outside the selection, dimmed — the band is what is kept. */}
-                        {/* What the cut throws away, dimmed. Rounded to match the frames beneath. */}
-                        <div
-                            className="pointer-events-none absolute inset-y-0 start-0 rounded-s-[8px] bg-black/55"
-                            style={{ width: style.left }}
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+                {/*
+                 * Capped, for the reason the composer's own preview is: `3/4` across a 512px
+                 * dialog is 683px of video above a strip the reader has to reach. The cap
+                 * letterboxes a portrait clip rather than shrinking the dialog's width —
+                 * `object-contain` already keeps the whole frame visible, which is what a
+                 * trimmer needs and a feed does not.
+                 */}
+                <div
+                    className="relative max-h-[45dvh] w-full overflow-hidden rounded-[12px] bg-black"
+                    style={{ aspectRatio: previewAspect(source) }}
+                >
+                    {previewUrl ? (
+                        <video
+                            ref={videoRef}
+                            src={previewUrl}
+                            autoPlay
+                            loop
+                            muted={muted}
+                            playsInline
+                            preload="metadata"
+                            data-testid={subTestId(testId, 'slide')}
+                            className="size-full object-contain"
                         />
-                        <div
-                            className="pointer-events-none absolute inset-y-0 end-0 rounded-e-[8px] bg-black/55"
-                            style={{
-                                width: `calc(100% - ${style.left} - ${style.width})`,
-                            }}
-                        />
-
-                        <div
-                            className="pointer-events-none absolute inset-y-0 border-(--primary-500) border-y-2"
-                            style={{ left: style.left, width: style.width }}
-                        />
-
-                        <TrimHandle
-                            side="start"
-                            offset={style.left}
-                            label={t('video_trim_handle_start')}
-                            value={range.start}
-                            max={duration}
-                            disabled={busy}
-                            onPointerDown={startDrag('start')}
-                            onNudge={delta => nudge('start', delta)}
-                            testId={subTestId(testId, 'prev')}
-                        />
-                        <TrimHandle
-                            side="end"
-                            offset={`calc(${style.left} + ${style.width})`}
-                            label={t('video_trim_handle_end')}
-                            value={range.end}
-                            max={duration}
-                            disabled={busy}
-                            onPointerDown={startDrag('end')}
-                            onNudge={delta => nudge('end', delta)}
-                            testId={subTestId(testId, 'next')}
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2">
-                        <span
-                            data-testid={subTestId(testId, 'label-data')}
-                            className="type-caption-meta text-(--text-subtitle)"
-                        >
-                            {t('video_trim_selected', {
-                                length: formatClock(rangeDuration(range)),
-                                total: formatClock(duration),
-                            })}
-                        </span>
-                        <Button
-                            variant="primary"
-                            size="medium"
-                            disabled={!canSave}
-                            onClick={() => void save()}
-                            data-testid={subTestId(testId, 'submit')}
-                        >
-                            {busy ? t('video_trim_working') : t('common_save')}
-                        </Button>
-                    </div>
-
-                    {failed ? (
-                        <p
-                            data-testid={subTestId(testId, 'error')}
-                            className="type-dense-default text-(--text-error)"
-                        >
-                            {t(failed === 'load' ? 'video_trim_failed_load' : 'video_trim_failed')}
-                        </p>
                     ) : null}
+
+                    <button
+                        type="button"
+                        aria-label={t(muted ? 'video_trim_unmute' : 'video_trim_mute')}
+                        aria-pressed={muted}
+                        onClick={() => setMuted(current => !current)}
+                        data-testid={subTestId(testId, 'reveal')}
+                        /* Fixed black: it sits on the reader's own footage, not on the page. */
+                        className="absolute end-2 bottom-2 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+                    >
+                        <Icon name={muted ? 'volume-off-slash' : 'volume'} size={16} />
+                    </button>
                 </div>
-            </DialogContent>
-        </Dialog>
+
+                {/*
+                 * The strip. `touch-none` because a horizontal drag on a 64px band is exactly
+                 * what a browser reads as a page scroll, and it steals the gesture before the
+                 * pointer handlers see it.
+                 */}
+                <div
+                    ref={stripRef}
+                    data-testid={subTestId(testId, 'list')}
+                    /*
+                     * ⚠ **Not `overflow-hidden`**, and the frames get their own clipping box
+                     * instead. A handle is `-translate-x-1/2`, so at 0% and at 100% half of it
+                     * sits outside this element — clipped here, the *start* handle was a 8px
+                     * sliver against the left edge and looked like a rendering fault rather
+                     * than a control. Found in a screenshot; nothing about it is a type error.
+                     */
+                    className="relative h-16 w-full touch-none rounded-[8px] bg-(--background-segment) select-none"
+                >
+                    <div className="pointer-events-none absolute inset-0 flex overflow-hidden rounded-[8px]">
+                        {frames.map(url => (
+                            /* biome-ignore lint/performance/noImgElement: a `blob:` frame has nothing for next/image to optimise and no loader that accepts it. */
+                            <img
+                                key={url}
+                                src={url}
+                                alt=""
+                                className="h-full min-w-0 flex-1 object-cover"
+                            />
+                        ))}
+                    </div>
+
+                    {/* Everything outside the selection, dimmed — the band is what is kept. */}
+                    {/* What the cut throws away, dimmed. Rounded to match the frames beneath. */}
+                    <div
+                        className="pointer-events-none absolute inset-y-0 start-0 rounded-s-[8px] bg-black/55"
+                        style={{ width: style.left }}
+                    />
+                    <div
+                        className="pointer-events-none absolute inset-y-0 end-0 rounded-e-[8px] bg-black/55"
+                        style={{
+                            width: `calc(100% - ${style.left} - ${style.width})`,
+                        }}
+                    />
+
+                    <div
+                        className="pointer-events-none absolute inset-y-0 border-(--primary-500) border-y-2"
+                        style={{ left: style.left, width: style.width }}
+                    />
+
+                    <TrimHandle
+                        side="start"
+                        offset={style.left}
+                        label={t('video_trim_handle_start')}
+                        value={range.start}
+                        max={duration}
+                        disabled={busy}
+                        onPointerDown={startDrag('start')}
+                        onNudge={delta => nudge('start', delta)}
+                        testId={subTestId(testId, 'prev')}
+                    />
+                    <TrimHandle
+                        side="end"
+                        offset={`calc(${style.left} + ${style.width})`}
+                        label={t('video_trim_handle_end')}
+                        value={range.end}
+                        max={duration}
+                        disabled={busy}
+                        onPointerDown={startDrag('end')}
+                        onNudge={delta => nudge('end', delta)}
+                        testId={subTestId(testId, 'next')}
+                    />
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                    <span
+                        data-testid={subTestId(testId, 'label-data')}
+                        className="type-caption-meta text-(--text-subtitle)"
+                    >
+                        {t('video_trim_selected', {
+                            length: formatClock(rangeDuration(range)),
+                            total: formatClock(duration),
+                        })}
+                    </span>
+                    <Button
+                        variant="primary"
+                        size="medium"
+                        disabled={!canSave}
+                        onClick={() => void save()}
+                        data-testid={subTestId(testId, 'submit')}
+                    >
+                        {busy ? t('video_trim_working') : t('common_save')}
+                    </Button>
+                </div>
+
+                {failed ? (
+                    <p
+                        data-testid={subTestId(testId, 'error')}
+                        className="type-dense-default text-(--text-error)"
+                    >
+                        {t(failed === 'load' ? 'video_trim_failed_load' : 'video_trim_failed')}
+                    </p>
+                ) : null}
+            </div>
+        </ResponsiveDialog>
     )
 }
 

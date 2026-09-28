@@ -1,9 +1,9 @@
 'use client'
 
 import { DialogScreenHeader } from '@shared/components/dialog-screen-header'
+import { ResponsiveDialog } from '@shared/components/responsive-dialog'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
-import { Dialog, DialogContent } from '@shared/ui/dialog'
 import type { ReactNode } from 'react'
 import type { PostDraft } from '../lib/post-draft'
 import { PostCollectionPicker } from './post-collection-picker'
@@ -160,51 +160,51 @@ function SettingsDialog({
     testId?: string
 }) {
     return (
-        <Dialog
+        <ResponsiveDialog
             open={open}
             onOpenChange={next => {
                 if (!next) onClose()
             }}
+            /* Opened over the composer — see `DialogContent`'s `nested` for what it buys. */
+            nested
+            /*
+             * `overflow-hidden` is **load-bearing**, and its absence is what broke this.
+             *
+             * `DialogContent` carries `overflow-y-auto` of its own (its own note explains the
+             * short-viewport bug that put it there). A call site that scrolls its own body has
+             * to turn that off, or there are two scrollers: the inner one never gets a bounded
+             * height, so `min-h-0 flex-1` resolves to the full content and the popup scrolls
+             * instead — taking the header and the sticky footer with it. A long collection list
+             * then pushes *Create new collection* off the bottom, which is exactly what it did.
+             * The pattern is written down in `shared/ui/dialog.tsx`; this missed it.
+             *
+             * It is the **dialog** shape's problem only: a sheet is already a bounded column, so
+             * `ResponsiveDialog` hands these classes to the dialog and nothing to the sheet.
+             */
+            className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
+            data-testid={testId}
         >
-            <DialogContent
-                /* Opened over the composer — see `DialogContent`'s `nested` for what it buys. */
-                nested
-                /*
-                 * `overflow-hidden` is **load-bearing**, and its absence is what broke this.
-                 *
-                 * `DialogContent` carries `overflow-y-auto` of its own (its own note explains the
-                 * short-viewport bug that put it there). A call site that scrolls its own body has
-                 * to turn that off, or there are two scrollers: the inner one never gets a bounded
-                 * height, so `min-h-0 flex-1` resolves to the full content and the popup scrolls
-                 * instead — taking the header and the sticky footer with it. A long collection list
-                 * then pushes *Create new collection* off the bottom, which is exactly what it did.
-                 * The pattern is written down in `shared/ui/dialog.tsx`; this missed it.
-                 */
-                className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
-                data-testid={testId}
-            >
-                {/*
-                 * A **back arrow**, not a cross — all four of legacy's composer dialogs draw one
-                 * (`M21.75 12…`, an arrow-left), and it is the truer verb: the composer is still on
-                 * screen behind this popup, so the press returns to the draft rather than closing
-                 * anything the reader was working on.
-                 *
-                 * The glyph is `angle-left` rather than legacy's long arrow because that is the
-                 * mark this band uses everywhere else (`DESIGN_SYSTEM.md` §7, and
-                 * `DialogScreenHeader` picks it from `onBack` alone). One chevron across the app
-                 * beats matching a legacy asset on one screen.
-                 *
-                 * This does not contradict the composer's own header keeping its cross: that one is
-                 * the way *out*, and turning it into a back arrow — which an earlier pass did —
-                 * takes the way out away.
-                 */}
-                <DialogScreenHeader
-                    title={title}
-                    onBack={onClose}
-                    testId={subTestId(testId, 'header')}
-                />
-                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">{children}</div>
-            </DialogContent>
-        </Dialog>
+            {/*
+             * A **back arrow**, not a cross — all four of legacy's composer dialogs draw one
+             * (`M21.75 12…`, an arrow-left), and it is the truer verb: the composer is still on
+             * screen behind this popup, so the press returns to the draft rather than closing
+             * anything the reader was working on.
+             *
+             * The glyph is `angle-left` rather than legacy's long arrow because that is the
+             * mark this band uses everywhere else (`DESIGN_SYSTEM.md` §7, and
+             * `DialogScreenHeader` picks it from `onBack` alone). One chevron across the app
+             * beats matching a legacy asset on one screen.
+             *
+             * This does not contradict the composer's own header keeping its cross: that one is
+             * the way *out*, and turning it into a back arrow — which an earlier pass did —
+             * takes the way out away.
+             */}
+            <DialogScreenHeader
+                title={title}
+                onBack={onClose}
+                testId={subTestId(testId, 'header')}
+            />
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">{children}</div>
+        </ResponsiveDialog>
     )
 }
