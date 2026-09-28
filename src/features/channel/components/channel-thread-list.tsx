@@ -1,6 +1,12 @@
 'use client'
 
-import { type Post, PostCard, PostMediaLightbox, usePostSlider } from '@features/post'
+import {
+    type Post,
+    PostCard,
+    PostMediaLightbox,
+    PostMediaTile,
+    usePostSlider,
+} from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
@@ -13,7 +19,6 @@ import { useChannelThreads } from '../hooks/use-channel-threads'
 import { useMyChannel } from '../providers/my-channel-provider'
 import { ChannelEmptyState } from './channel-empty-state'
 import { ChannelError } from './channel-error'
-import { ChannelMediaTile } from './channel-media-tile'
 
 /**
  * A channel's posts or media as an infinite list — the four states, and the sentinel.
@@ -132,8 +137,14 @@ export function ChannelThreadList({
             {kind === 'media' ? (
                 // Three across and gap-1, matching legacy's grid. 21 per page is seven full rows.
                 <div className="grid grid-cols-3 gap-1">
-                    {threads.map(thread => (
-                        <ChannelMediaTile key={thread.id} post={thread} />
+                    {threads.map((thread, index) => (
+                        <PostMediaTile
+                            key={thread.id}
+                            post={thread}
+                            onOpenMedia={target => slider.openAt(index, target)}
+                            onChanged={() => refetch()}
+                            testId="channel-media"
+                        />
                     ))}
                 </div>
             ) : (

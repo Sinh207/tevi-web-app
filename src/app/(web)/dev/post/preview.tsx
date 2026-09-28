@@ -63,6 +63,7 @@ import {
     PostComposerDialog,
     type PostDraft,
     PostMediaLightbox,
+    PostMediaTile,
     REPLY_DELETED,
     REPLY_EMPTY,
     REPLY_HTML_ONLY,
@@ -646,6 +647,22 @@ const REPLY_CASES: { title: string; note: string; reply: Reply }[] = [
 ]
 
 /** The reader, as the route would supply them. */
+/** One of each state the Media grid can draw, in the order the tab would plausibly list them. */
+const MEDIA_GRID: Post[] = [
+    POST_ONE_IMAGE,
+    POST_MANY_IMAGES,
+    POST_VIDEO,
+    POST_VIDEO_AND_IMAGES,
+    POST_LOCKED_PURCHASE,
+    POST_LOCKED_BOTH,
+    POST_LOCKED_MEMBERS,
+    POST_LOCKED_NO_COVER,
+    POST_PURCHASED,
+    POST_NSFW,
+    POST_IMAGE_NO_DIMENSIONS,
+    POST_TEXT,
+]
+
 const HARNESS_AUTHOR = {
     name: 'Alice Nguyen',
     slug: 'alice',
@@ -759,6 +776,22 @@ export function PostPreview() {
                         </div>
                     </div>
                 ))}
+            </section>
+
+            <section className="flex flex-col gap-2">
+                <div className="flex flex-col gap-0.5">
+                    <h2 className="type-title-t2-semibold text-(--text-title)">Media grid</h2>
+                    <p className="type-caption-meta text-(--text-placeholder)">
+                        A space&rsquo;s Media tab. An open tile opens the lightbox, a locked one the
+                        unlock flow, a sensitive one the post page. The Star badge marks any gated
+                        post, bought or not.
+                    </p>
+                </div>
+                <div className="grid max-w-[612px] grid-cols-3 gap-1">
+                    {MEDIA_GRID.map(post => (
+                        <PostMediaTile key={post.id} post={post} />
+                    ))}
+                </div>
             </section>
 
             <section className="flex flex-col gap-2">

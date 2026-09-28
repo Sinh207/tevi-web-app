@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizePost, type PostImage, postImageSchema } from '../api/types'
+import { normalizePost, type Post, type PostImage, postImageSchema } from '../api/types'
 import {
     detectAspectRatio,
     formatDuration,
@@ -8,6 +8,7 @@ import {
     imageAspectRatio,
     lockCoverAspectRatio,
     lockedSummary,
+    mediaTileSummary,
     postMediaKind,
     videoAspectRatio,
     videoFallbackSrc,
@@ -313,5 +314,71 @@ describe('videoSrc', () => {
         // the reader the post's text.
         expect(post).not.toBeNull()
         expect(videoSrc(post?.video)).toBe(null)
+    })
+})
+
+describe('mediaTileSummary', () => {
+    function post(overrides: Record<string, unknown>): Post {
+        const parsed = normalizePost({ id: 'p1', ...overrides })
+        if (!parsed) throw new Error('fixture did not parse')
+        return parsed
+    }
+
+    it('prefers the first image, then the poster, then the cover', () => {
+        const cover = { uri: 'https://cdn/cover.jpg' }
+        expect(
+            mediaTileSummary(
+                post({
+                    images: [{ uri: 'https://cdn/a.jpg', thumb: 'https://cdn/a-t.jpg' }],
+                    cover_image: cover,
+                }),
+            ).src,
+        ).toBe('https://cdn/a-t.jpg')
+        expect(
+            mediaTileSummary(
+                post({
+                    video: {
+                        playback: { hls: 'https://cdn/v.m3u8' },
+                        thumbnail: 'https://cdn/p.jpg',
+                    },
+                    cover_image: cover,
+                }),
+            ).src,
+        ).toBe('https://cdn/p.jpg')
+        expect(mediaTileSummary(post({ cover_image: cover })).src).toBe('https://cdn/cover.jpg')
+        expect(mediaTileSummary(post({})).src).toBeNull()
+    })
+
+    /**
+     * A locked row carries no media, only the counts — and those counts are what the tile sells
+     * with. Reading `images.length` alone would draw a locked four-photo post as a single photo.
+     */
+    it('falls back to the unlock detail on a locked row', () => {
+        const summary = mediaTileSummary(
+            post({
+                cover_image: { uri: 'https://cdn/cover.jpg', blur: 'yes' },
+                unlock_detail: { images_count: 4, video_duration_seconds: 80, text_length: 0 },
+            }),
+        )
+        expect(summary.images).toBe(4)
+        expect(summary.duration).toBe('01:20')
+        expect(summary.blurCover).toBe(true)
+        expect(summary.hasVideo).toBe(false)
+    })
+
+    it("never blurs a post's own media for the cover's sake", () => {
+        const summary = mediaTileSummary(
+            post({
+                images: [{ uri: 'https://cdn/a.jpg' }],
+                cover_image: { uri: 'https://cdn/cover.jpg', blur: 'yes' },
+            }),
+        )
+        expect(summary.blurCover).toBe(false)
+    })
+
+    it('omits a zero duration rather than printing 00:00', () => {
+        expect(
+            mediaTileSummary(post({ video: { playback: {}, duration_seconds: 0 } })).duration,
+        ).toBeNull()
     })
 })

@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 814,
+        "ids": 815,
         "surfaces": 28
     },
     "surfaces": {
@@ -4334,6 +4334,31 @@
             ],
             "source": "src/features/channel/components/mcn-partnership-view.tsx:423"
         },
+        "channel-media": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/membership/[[...tier]]",
+                "/[slug]/post/[code]",
+                "/bookmarks",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-thread-list.tsx:146"
+        },
         "channel-menu-follow": {
             "scope": "channel",
             "routes": [
@@ -5713,7 +5738,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:164"
+            "source": "src/features/channel/components/channel-thread-list.tsx:175"
         },
         "channel-top-bar-loading": {
             "scope": "channel",
@@ -13117,6 +13142,19 @@
                 "overlay",
                 "prev",
                 "slide"
+            ]
+        },
+        "src/features/post/components/post-media-tile.tsx": {
+            "accepts": [
+                "PostMediaTile"
+            ],
+            "parts": [
+                "count",
+                "label",
+                "overlay",
+                "panel",
+                "slide",
+                "suffix"
             ]
         },
         "src/features/post/components/post-menu.tsx": {
