@@ -2049,6 +2049,7 @@
     "post_slider_previous_post": "المنشور السابق",
     "post_slider_next_post": "المنشور التالي",
     "post_slider_more": "المزيد",
+    "post_slider_picture_count": "{{index}} من {{total}}",
     "post_media_open": "فتح الوسائط",
     "post_media_photos_one": "صورة واحدة",
     "post_media_photos_other": "{{count, number}} صورة",

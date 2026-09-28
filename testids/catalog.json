@@ -4476,7 +4476,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:140"
+            "source": "src/features/channel/components/channel-thread-list.tsx:157"
         },
         "channel-menu-follow": {
             "scope": "channel",
@@ -5912,7 +5912,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:169"
+            "source": "src/features/channel/components/channel-thread-list.tsx:185"
         },
         "channel-top-bar-loading": {
             "scope": "channel",
@@ -13845,6 +13845,7 @@
             ],
             "parts": [
                 "apply",
+                "clear",
                 "close",
                 "confirm",
                 "copy",

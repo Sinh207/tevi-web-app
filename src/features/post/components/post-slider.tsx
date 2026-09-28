@@ -21,6 +21,7 @@ import { usePostReaction } from '../hooks/use-post-reaction'
 import { hasReacted, isGated, postActionVisibility, replyCost } from '../lib/post-access'
 import { formatPostTimestamp, truncateSliderCaption } from '../lib/post-format'
 import { isLocalImageSrc, videoSrc } from '../lib/post-media'
+import { LockMediaIcon } from './legacy-icons'
 
 /**
  * The **post slider** — legacy's `ViewMediaSlide` + `PostSlider`, full screen, one post per screen.
@@ -138,26 +139,22 @@ export function PostSlider({
             aria-modal="true"
             aria-label={t('post_lightbox_title')}
             data-testid={testId}
-            className="fixed inset-0 z-50 bg-black"
+            className="fixed inset-0 z-50 flex bg-black"
         >
+            {/*
+             * Below `md` the close is a disc over the media, which is legacy's mobile branch. From
+             * `md` it moves into the control column beside it and takes that column's own styling —
+             * 48px on `#1e1e1e` with a grey glyph that whitens on hover, not a translucent disc.
+             */}
             <button
                 type="button"
                 onClick={onClose}
                 aria-label={t('common_close')}
                 data-testid={subTestId(testId, 'close')}
-                className="absolute end-4 top-4 z-20 flex size-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+                className="absolute end-3 top-3 z-30 flex size-10 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 md:hidden"
             >
                 <Icon name="xmark" size={24} />
             </button>
-
-            {posts.length > 1 ? (
-                <span
-                    data-testid={subTestId(testId, 'label-data')}
-                    className="type-caption-meta absolute start-4 top-4 z-20 rounded-full bg-black/50 px-3 py-1 text-white"
-                >
-                    {`${index + 1} / ${posts.length}`}
-                </span>
-            ) : null}
 
             <div
                 ref={scrollerRef}
@@ -168,7 +165,7 @@ export function PostSlider({
                  * viewer, and the scrollbar is hidden because a full-screen pager showing one is
                  * a scrollbar next to nothing to scroll past.
                  */
-                className="h-full snap-y snap-mandatory overflow-y-auto overscroll-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className="h-full min-w-0 flex-1 snap-y snap-mandatory overflow-y-auto overscroll-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
                 {posts.map((post, at) => (
                     <section
@@ -185,9 +182,6 @@ export function PostSlider({
                             <PostSliderSlide
                                 post={post}
                                 isPremiumReader={isPremiumReader}
-                                onNextPost={
-                                    at < posts.length - 1 ? () => onIndexChange(at + 1) : undefined
-                                }
                                 onShare={onShare ? () => onShare(post) : undefined}
                                 onComment={onComment ? () => onComment(post) : undefined}
                                 testId={testId}
@@ -197,14 +191,50 @@ export function PostSlider({
                 ))}
             </div>
 
-            {index > 0 ? (
-                <SliderChevron
-                    side="up"
-                    label={t('post_slider_previous_post')}
-                    onPress={() => onIndexChange(index - 1)}
-                    testId={subTestId(subTestId(testId, 'list'), 'prev')}
-                />
-            ) : null}
+            {/*
+             * ⚠ **Legacy's control column, and it is desktop-only.** `viewMediaSlide` renders the
+             * whole block inside its `matchUpMd` branch: on a phone the only way between posts is
+             * the scroll, which is the gesture the viewer is built around. Two 40px arrows in a
+             * fixed column would take a thumb's width of the media away from it for nothing.
+             *
+             * The pill is legacy's own — `rgba(255,255,255,0.1)`, radius 32, padding `8px 4px` —
+             * and the two arrows **stay put and dim** at the ends rather than disappearing, which
+             * is the opposite of the picture arrows inside a post. That asymmetry is legacy's and
+             * it reads: the column is furniture, so it keeps its shape; an arrow over a photograph
+             * is not, so it goes when it has nowhere to point.
+             */}
+            <div className="hidden shrink-0 flex-col items-center p-3 md:flex">
+                <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label={t('common_close')}
+                    data-testid={subTestId(testId, 'clear')}
+                    className="flex size-12 items-center justify-center rounded-[40px] bg-[#1e1e1e] text-[#A3A3A3] transition-colors hover:bg-black/70 hover:text-white"
+                >
+                    <Icon name="xmark" size={24} />
+                </button>
+
+                {posts.length > 1 ? (
+                    <div className="flex flex-1 items-center">
+                        <div className="flex flex-col rounded-[32px] bg-white/10 px-1 py-2">
+                            <PostNavButton
+                                direction="up"
+                                label={t('post_slider_previous_post')}
+                                disabled={index === 0}
+                                onPress={() => onIndexChange(index - 1)}
+                                testId={subTestId(subTestId(testId, 'list'), 'prev')}
+                            />
+                            <PostNavButton
+                                direction="down"
+                                label={t('post_slider_next_post')}
+                                disabled={index >= posts.length - 1}
+                                onPress={() => onIndexChange(index + 1)}
+                                testId={subTestId(subTestId(testId, 'list'), 'next')}
+                            />
+                        </div>
+                    </div>
+                ) : null}
+            </div>
         </div>,
         document.body,
     )
@@ -216,15 +246,12 @@ function PostSliderSlide({
     isPremiumReader,
     onShare,
     onComment,
-    onNextPost,
     testId,
 }: {
     post: Post
     isPremiumReader: boolean
     onShare?: () => void
     onComment?: () => void
-    /** Drawn on the info block's top edge — see there for why it cannot live on the container. */
-    onNextPost?: () => void
     testId: string
 }) {
     const { t } = useTranslation()
@@ -267,33 +294,60 @@ function PostSliderSlide({
             </div>
 
             {/* The pictures of **this** post, on the horizontal axis — posts are the vertical one. */}
+            {/*
+             * ⚠ **They disappear at the ends; they do not wrap.** Legacy's own rule — its disabled
+             * state is `display: none`, not a dimmed button — and it is the opposite of the post
+             * column's, which dims and stays. An arrow over a photograph is not furniture, so it
+             * goes when it has nowhere to point; `%` wrap-around was this file's invention and it
+             * makes the last picture look like the first.
+             *
+             * They are drawn **below `md` too**, which legacy is not — its wrapper is inside
+             * `matchUpMd`, and it can afford that because its gallery is a Swiper the reader
+             * flicks. This one is a picture and an index, so hiding the arrows on a phone would
+             * leave ten of the eleven unreachable. The inset is legacy's own `xs` value, which it
+             * wrote and then never rendered.
+             */}
             {images.length > 1 && !clip ? (
                 <>
-                    <SliderChevron
-                        side="start"
-                        label={t('common_previous')}
-                        onPress={() => setPicture(p => (p - 1 + images.length) % images.length)}
-                        testId={subTestId(testId, 'prev')}
-                    />
-                    <SliderChevron
-                        side="end"
-                        label={t('common_next')}
-                        onPress={() => setPicture(p => (p + 1) % images.length)}
-                        testId={subTestId(testId, 'next')}
-                    />
+                    {picture > 0 ? (
+                        <PictureNavButton
+                            side="start"
+                            label={t('common_previous')}
+                            onPress={() => setPicture(p => p - 1)}
+                            testId={subTestId(testId, 'prev')}
+                        />
+                    ) : null}
+                    {picture < images.length - 1 ? (
+                        <PictureNavButton
+                            side="end"
+                            label={t('common_next')}
+                            onPress={() => setPicture(p => p + 1)}
+                            testId={subTestId(testId, 'next')}
+                        />
+                    ) : null}
                 </>
             ) : null}
 
-            <PostSliderInfo
-                post={post}
-                onNextPost={onNextPost}
-                pictureLabel={
-                    images.length > 1 && !clip
-                        ? `${Math.min(picture, images.length - 1) + 1} / ${images.length}`
-                        : undefined
-                }
-                testId={testId}
-            />
+            {/*
+             * The counter, at the **top leading corner of the media** — legacy's pill:
+             * `rgba(0,0,0,0.5)`, radius 40, a 16px stacked-frames mark and `n of total`. It was an
+             * inline `1 / 11` in the identity row, which is a different statement: that line is
+             * about the post, and this is about where you are inside its pictures.
+             */}
+            {images.length > 1 && !clip ? (
+                <span
+                    data-testid={subTestId(testId, 'label-data')}
+                    className="type-caption-meta absolute start-2 top-2 z-10 flex items-center gap-1 rounded-[40px] bg-black/50 px-2 py-1 text-white md:start-3 md:top-3"
+                >
+                    <LockMediaIcon kind="images" size={16} />
+                    {t('post_slider_picture_count', {
+                        index: picture + 1,
+                        total: images.length,
+                    })}
+                </span>
+            ) : null}
+
+            <PostSliderInfo post={post} testId={testId} />
 
             <PostSliderRail
                 post={post}
@@ -313,24 +367,7 @@ function PostSliderSlide({
  * they are what make white text legible over an arbitrary photograph without a solid bar covering
  * the bottom of it.
  */
-function PostSliderInfo({
-    post,
-    pictureLabel,
-    onNextPost,
-    testId,
-}: {
-    post: Post
-    pictureLabel?: string
-    /**
-     * ⚠ The next-post chevron is drawn **here**, on this block's top edge, and not on the viewer's.
-     *
-     * Anchored to the viewport it sat at a fixed offset from the bottom and a two-line caption grew
-     * straight through it — seen in a screenshot. This block's height is whatever the caption makes
-     * it, so hanging the control off its top edge is the only placement that cannot collide.
-     */
-    onNextPost?: () => void
-    testId: string
-}) {
+function PostSliderInfo({ post, testId }: { post: Post; testId: string }) {
     const { t, currentLanguage } = useTranslation()
     const [expanded, setExpanded] = useState(false)
 
@@ -343,25 +380,12 @@ function PostSliderInfo({
     return (
         <div
             data-testid={subTestId(testId, 'footer')}
-            /* `relative`, so the next-post chevron below hangs off **this** block rather than the slide. */
             className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 p-3 pt-16 backdrop-blur-[1px] md:gap-4 md:p-4 md:pt-20 md:pe-24"
             style={{
                 background:
                     'linear-gradient(180deg, rgba(8, 9, 13, 0) 0%, rgba(8, 9, 13, 0.9) 80.37%)',
             }}
         >
-            {onNextPost ? (
-                <button
-                    type="button"
-                    onClick={onNextPost}
-                    aria-label={t('post_slider_next_post')}
-                    data-testid={subTestId(subTestId(testId, 'list'), 'next')}
-                    className="pointer-events-auto absolute -top-5 start-1/2 z-10 flex size-10 -translate-x-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 rtl:translate-x-1/2"
-                >
-                    <Icon name="angle-up" size={24} className="rotate-180" />
-                </button>
-            ) : null}
-
             <div className="pointer-events-auto flex items-center gap-2">
                 <AnimatedAvatar
                     size="medium"
@@ -407,9 +431,6 @@ function PostSliderInfo({
                                 isGated(post) ? 'post_audience_paid' : 'post_audience_everyone',
                             )}
                         />
-                        {pictureLabel ? (
-                            <span className="type-caption-meta">{pictureLabel}</span>
-                        ) : null}
                     </span>
                 </span>
             </div>
@@ -609,19 +630,23 @@ function RailButton({
     )
 }
 
-/** One chevron. `up`/`down` page posts, `start`/`end` page one post's pictures. */
-function SliderChevron({
+/**
+ * One picture arrow — 40px, `rgba(0,0,0,0.5)`, inset 12 on a phone and 50 from `md`.
+ *
+ * Legacy's numbers. The inset is large on a desktop because the media is letterboxed there and the
+ * arrow sits *over the black*, not over the photograph.
+ */
+function PictureNavButton({
     side,
     label,
     onPress,
     testId,
 }: {
-    side: 'start' | 'end' | 'up' | 'down'
+    side: 'start' | 'end'
     label: string
     onPress: () => void
     testId?: string
 }) {
-    const vertical = side === 'up' || side === 'down'
     return (
         <button
             type="button"
@@ -629,24 +654,44 @@ function SliderChevron({
             aria-label={label}
             data-testid={testId}
             className={cn(
-                'absolute z-20 flex size-10 items-center justify-center rounded-full',
-                'bg-white/10 text-white hover:bg-white/20',
-                vertical
-                    ? [
-                          'start-1/2 -translate-x-1/2 rtl:translate-x-1/2',
-                          side === 'up' ? 'top-16' : 'bottom-4',
-                      ]
-                    : ['top-1/2 -translate-y-1/2', side === 'start' ? 'start-4' : 'end-4'],
+                'absolute top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center',
+                'rounded-full bg-black/50 text-white transition-colors hover:bg-black/70',
+                side === 'start' ? 'start-3 md:start-[50px]' : 'end-3 md:end-[50px]',
             )}
         >
             <Icon
-                name={vertical ? 'angle-up' : 'angle-left'}
+                name="angle-left"
                 size={24}
-                className={cn(
-                    (side === 'down' || side === 'end') && 'rotate-180',
-                    !vertical && 'rtl:rotate-180',
-                )}
+                className={cn(side === 'end' && 'rotate-180', 'rtl:rotate-180')}
             />
+        </button>
+    )
+}
+
+/** One arrow in the post column's pill — it stays and dims at the ends. See the column's note. */
+function PostNavButton({
+    direction,
+    label,
+    disabled,
+    onPress,
+    testId,
+}: {
+    direction: 'up' | 'down'
+    label: string
+    disabled: boolean
+    onPress: () => void
+    testId?: string
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onPress}
+            disabled={disabled}
+            aria-label={label}
+            data-testid={testId}
+            className="flex size-10 items-center justify-center rounded-full text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+        >
+            <Icon name="angle-up" size={24} className={cn(direction === 'down' && 'rotate-180')} />
         </button>
     )
 }

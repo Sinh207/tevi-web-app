@@ -2009,6 +2009,7 @@
     "post_slider_previous_post": "Bài trước",
     "post_slider_next_post": "Bài sau",
     "post_slider_more": "thêm",
+    "post_slider_picture_count": "{{index}} / {{total}}",
     "post_media_open": "Mở nội dung đa phương tiện",
     "post_media_photos_one": "{{count, number}} ảnh",
     "post_media_photos_other": "{{count, number}} ảnh",

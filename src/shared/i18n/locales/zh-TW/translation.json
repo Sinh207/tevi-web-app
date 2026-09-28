@@ -2009,6 +2009,7 @@
     "post_slider_previous_post": "上一則貼文",
     "post_slider_next_post": "下一則貼文",
     "post_slider_more": "更多",
+    "post_slider_picture_count": "{{index}} / {{total}}",
     "post_media_open": "開啟媒體",
     "post_media_photos_one": "{{count, number}} 張相片",
     "post_media_photos_other": "{{count, number}} 張相片",

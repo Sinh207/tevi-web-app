@@ -2009,6 +2009,7 @@
     "post_slider_previous_post": "Nakaraang post",
     "post_slider_next_post": "Susunod na post",
     "post_slider_more": "higit pa",
+    "post_slider_picture_count": "{{index}} ng {{total}}",
     "post_media_open": "Buksan ang media",
     "post_media_photos_one": "{{count, number}} larawan",
     "post_media_photos_other": "{{count, number}} larawan",
