@@ -14,6 +14,7 @@ import {
     SegmentedControlItem,
     SegmentedControlItemLabel,
 } from '@shared/ui/segmented-control'
+import { useRouter } from 'next/navigation'
 import { type ComponentProps, type ReactNode, useEffect, useState } from 'react'
 import { CONVERSATION_FILTER, type Conversation, type ConversationFilter } from '../api/types'
 import { useChatActions } from '../hooks/use-chat-actions'
@@ -23,6 +24,8 @@ import { useConversationSearch } from '../hooks/use-conversation-search'
 import { useConversations } from '../hooks/use-conversations'
 import { useUnreadConversations } from '../hooks/use-unread-conversations'
 import { MESSAGE_ART } from '../lib/illustrations'
+import { MESSAGES_PATH } from '../routes'
+import { ChatRoom } from './chat-room'
 import { ConversationList } from './conversation-list'
 import { ConversationSkeleton } from './conversation-skeleton'
 
@@ -42,11 +45,16 @@ import { ConversationSkeleton } from './conversation-skeleton'
  * The two cards share one rounded outline — the list takes the start corners and the chat pane the
  * end ones, so the 2px gap between them reads as a split rather than as two floating cards.
  *
- * ## What is not here yet
+ * ## Two routes, one screen
  *
- * The conversation itself (`/@{slug}/messages`), which every row links to, and legacy's settings
- * sheet ("who can message me" and the share-your-inbox link), which needs `messaging_settings` on
- * the channel write first. See the feature's `index.ts`.
+ * `/messages` renders this with nothing selected; `/@{slug}/messages` with `selectedSlug`, and the
+ * pane beside the list becomes that conversation (`ChatRoom`). One component rather than two pages
+ * sharing a layout, because the list must **not remount** when the reader moves between
+ * conversations — its scroll position, search and folder are the reader's place in the inbox.
+ * Below `md` a selected conversation replaces the list instead of sitting beside it.
+ *
+ * Not here yet: legacy's settings sheet ("who can message me" and the share-your-inbox link), which
+ * needs `messaging_settings` on the channel write first.
  */
 const PANE = 'bg-(--background-surface)'
 
@@ -65,10 +73,13 @@ function useMinuteClock(): number {
     return now
 }
 
-export function MessagesView() {
+export function MessagesView({ selectedSlug }: { selectedSlug?: string } = {}) {
     const { t, currentLanguage } = useTranslation()
     const { isBootstrapping, isAuthenticated } = useAuth()
     const requireAuth = useRequireAuth()
+    const router = useRouter()
+    /** A conversation is open beside (or, on a phone, instead of) the list. */
+    const open = !!selectedSlug
 
     const [tab, setTab] = useState<ConversationFilter>(CONVERSATION_FILTER.all)
     const search = useConversationSearch()
@@ -88,6 +99,7 @@ export function MessagesView() {
         now,
         onOpen: markSeen,
         onDelete: setConfirming,
+        selectedSlug,
     }
 
     const errorState = (retry: () => void) => (
@@ -169,12 +181,20 @@ export function MessagesView() {
     )
 
     return (
-        <div className="mx-auto flex w-full flex-1 md:h-[var(--window-height)] md:max-w-[1504px] md:gap-0.5 md:p-3">
+        <div
+            className={cn(
+                'mx-auto flex w-full flex-1 md:h-[var(--window-height)] md:max-w-[1504px] md:gap-0.5 md:p-3',
+                /* A conversation is one window tall on a phone too: the thread scrolls inside it and
+                   the composer stays on the bottom edge, as in every chat app. */
+                open && 'h-[var(--window-height)]',
+            )}
+        >
             <section
                 aria-label={t('message_title')}
                 className={cn(
                     PANE,
                     'flex min-w-0 flex-1 flex-col md:w-[390px] md:flex-none md:overflow-y-auto md:overscroll-contain',
+                    open && 'hidden md:flex',
                     'md:rounded-s-[var(--radius-xl)] md:[scrollbar-width:thin]',
                 )}
             >
@@ -245,23 +265,35 @@ export function MessagesView() {
                 <div className="flex flex-1 flex-col pb-5">{body}</div>
             </section>
 
-            {/* The chat pane. Nothing is ever selected on `/messages` — opening a conversation is a
-                navigation to its own URL — so on this route it is always the empty state. */}
-            <section
-                aria-label={t('message_no_chat_title')}
-                className={cn(
-                    PANE,
-                    'hidden min-w-0 flex-1 flex-col items-center justify-center gap-1 px-6 text-center md:flex',
-                    'md:rounded-e-[var(--radius-xl)]',
-                )}
-            >
-                <h2 className="type-heading-h1-bold text-(--text-title)">
-                    {t('message_no_chat_title')}
-                </h2>
-                <p className="max-w-[400px] type-body-default text-(--text-body)">
-                    {t('message_no_chat_body')}
-                </p>
-            </section>
+            {open && selectedSlug ? (
+                <section
+                    aria-label={t('message_conversation_label')}
+                    className={cn(
+                        PANE,
+                        'flex min-w-0 flex-1 flex-col overflow-hidden md:rounded-e-[var(--radius-xl)]',
+                    )}
+                >
+                    {/* Keyed on the slug: moving to another conversation is a new room — its
+                        draft, reply and pending sends belong to the one being left. */}
+                    <ChatRoom key={selectedSlug.toLowerCase()} slug={selectedSlug} />
+                </section>
+            ) : (
+                <section
+                    aria-label={t('message_no_chat_title')}
+                    className={cn(
+                        PANE,
+                        'hidden min-w-0 flex-1 flex-col items-center justify-center gap-1 px-6 text-center md:flex',
+                        'md:rounded-e-[var(--radius-xl)]',
+                    )}
+                >
+                    <h2 className="type-heading-h1-bold text-(--text-title)">
+                        {t('message_no_chat_title')}
+                    </h2>
+                    <p className="max-w-[400px] type-body-default text-(--text-body)">
+                        {t('message_no_chat_body')}
+                    </p>
+                </section>
+            )}
 
             {/*
              * Delete is confirmed: the conversation goes from this account's list and its history
@@ -280,7 +312,18 @@ export function MessagesView() {
                 destructive
                 pending={deletingId !== null}
                 onConfirm={() => {
-                    if (confirming) remove(confirming)
+                    if (confirming) {
+                        remove(confirming)
+                        // Deleting the conversation that is open leaves nothing to show beside the list.
+                        const slug = confirming.recipient?.channel_slug
+                        if (
+                            slug &&
+                            selectedSlug &&
+                            slug.toLowerCase() === selectedSlug.toLowerCase()
+                        ) {
+                            router.push(MESSAGES_PATH)
+                        }
+                    }
                     // Closed on press: the mutation's toast reports the outcome.
                     setConfirming(null)
                 }}

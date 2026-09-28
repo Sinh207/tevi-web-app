@@ -6,7 +6,7 @@
  * author hoped.
  */
 
-import { normalizeConversations } from './api/types'
+import { normalizeConversations, normalizeMessages } from './api/types'
 import { toConversationView } from './lib/conversation-view'
 
 export { ConversationRow } from './components/conversation-row'
@@ -121,3 +121,100 @@ export function messageFixtures(now: number) {
         },
     ])
 }
+
+export { ChatHeader } from './components/chat-header'
+export { ChatWall } from './components/chat-walls'
+export { MessageComposer } from './components/message-composer'
+export { MessageThreadView } from './components/message-thread-view'
+
+/**
+ * A conversation's worth of messages: yesterday and today, a reply, photos, an edit, a link, a bot
+ * with buttons and a Premium gift. `me` is alias 1.
+ */
+export function threadFixtures(now: number) {
+    const minutes = (n: number) => now - n * 60_000
+    const them = {
+        id: 7,
+        alias: 7,
+        name: 'Ada Lovelace',
+        channel_slug: 'ada',
+        avatar: { thumb: AVATAR },
+    }
+    const me = { id: 1, alias: 1, name: 'You', channel_slug: 'me' }
+    return normalizeMessages([
+        {
+            id: 't1',
+            sender: them,
+            text: 'Hi! Thanks for the follow 🙌',
+            created_at: minutes(60 * 26),
+        },
+        {
+            id: 't2',
+            sender: me,
+            text: 'Loved the last live. When is the next one?',
+            created_at: minutes(60 * 25),
+            seen_by: { 7: true },
+        },
+        {
+            id: 't3',
+            sender: them,
+            text: 'Friday 8pm — details here: https://tevi.com/@ada/live/123.',
+            created_at: minutes(60 * 3),
+        },
+        {
+            id: 't4',
+            sender: me,
+            text: 'Perfect, see you then',
+            created_at: minutes(60 * 2),
+            reply_message: { id: 't3', sender: them, text: 'Friday 8pm — details here' },
+            seen_by: { 7: true },
+        },
+        {
+            id: 't5',
+            sender: them,
+            images: [
+                { url: AVATAR, w: 400, h: 400 },
+                { url: AVATAR, w: 400, h: 400 },
+            ],
+            created_at: minutes(40),
+        },
+        {
+            id: 't6',
+            sender: me,
+            text: 'Fixed the typo, sorry',
+            edited_at: minutes(10),
+            created_at: minutes(12),
+        },
+        {
+            id: 't7',
+            sender: them,
+            text: 'Pick one:',
+            created_at: minutes(5),
+            inline_menu: {
+                items: [
+                    [
+                        { label: 'Yes', action: 'CALLBACK_DATA', target: 'y' },
+                        { label: 'No', action: 'CALLBACK_DATA', target: 'n' },
+                    ],
+                    [{ label: 'Open site', action: 'OPEN_URL', target: 'https://tevi.com' }],
+                ],
+            },
+        },
+        { id: 't8', sender: them, text: 'tevi://TEVI_PREMIUM_GIFT?id=1', created_at: minutes(2) },
+    ])
+}
+
+/** The channel the dev preview's header and walls draw — parsed by nothing, shaped by hand. */
+export const DEV_CHANNEL = {
+    id: 'ch-1',
+    owner_id: '7',
+    slug: 'ada',
+    name: 'Ada Lovelace',
+    privacy: 'public',
+    images: { thumb: AVATAR, cover: null, avatar_video: null },
+    is_premium: true,
+    is_suspended: false,
+    verified_tick_badge: null,
+    is_followed: false,
+    follow_requested: false,
+} as const

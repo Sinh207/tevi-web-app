@@ -148,6 +148,16 @@ export { MySpaceRedirect } from './components/my-space-redirect'
 export { SpaceVisibilityOption } from './components/space-visibility-option'
 export { SpaceVisibilityView } from './components/space-visibility-view'
 /**
+ * Exported for **`features/message`**, whose conversation is addressed by the other side's space
+ * (`/@{slug}/messages`): it needs that space's owner id, its privacy and whether this account
+ * follows it — and the follow wall's button is this feature's Follow, not a second copy of it.
+ * Same cache, same key: following from the chat updates the space page and the other way round.
+ *
+ * `app/` still may not use either — for the reason the note at the foot of this file gives.
+ */
+export { useChannel } from './hooks/use-channel'
+export { useChannelActions } from './hooks/use-channel-actions'
+/**
  * The follower / member / post counts and the owner's `income_usd`, for a slug.
  *
  * Exported for **`features/monetization`**, whose hub is legacy's `useChannelStats(myChannel.slug)`
@@ -237,7 +247,7 @@ export { MyChannelProvider, useMyChannel } from './providers/my-channel-provider
 
 /**
  * Deliberately **not** exported, so `app/` cannot reach past the feature's own composition:
- * `channelApi`, `channelStatsApi`, `useChannel`, `useChannelOwnership`,
+ * `channelApi`, `channelStatsApi`, `useChannelOwnership`,
  * `channelVisibility`, `paramsFromNextUrl`, and every formatting helper. A component calling
  * `channelApi` directly is exactly what CLAUDE.md's "never call axios from components" forbids,
  * and exporting it is the invitation.

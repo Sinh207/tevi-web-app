@@ -3338,6 +3338,44 @@ Encoded in: `features/message/api/types.ts`, `features/message/api/message-api.t
 
 ---
 
+## B112 — **the conversation** (`messenger/v2/rpc/…` messages): the chat room is built on legacy's reads of six endpoints · **no schema for any of them**
+
+`/@{slug}/messages` opens the conversation with `start_conversation_with`, pages `get_messages`,
+and writes through `send_message`, `edit_message`, `delete_message`, `send_chat_action` and
+`set_message_callback_data`. Field names are legacy's (`useChatRoom.js`, `itemMessage/*`), parsed
+defensively in `features/message/api/types.ts`. What the client assumes:
+
+**1. `start_conversation_with` refuses with the same codes as `can_start_conversation_with`.** Legacy
+calls `can_start` first and then `start`, and reads `422 { code: 'C001' | 'C002' }` from both. This
+client calls `start` alone and reads the gate from its 422. Is `start`'s refusal guaranteed to carry
+the code? If not, the follow and member walls never show — the room errors instead.
+
+**2. `start_conversation_with` is safe to call on every visit.** It is the screen's read, so it runs
+on each open (and again after a follow). Does it only ever return the existing conversation for the
+same member, never create a second?
+
+**3. `get_messages` pages backwards.** Page one is the latest `limit`, and `next_url`'s query leads
+into the past. Within a page the order is not relied on — the client sorts by `created_at`. Confirm
+the direction; if `next_url` leads forward, older history never loads.
+
+**4. `send_message` and `edit_message` answer with the full message** (id, `created_at`, `sender`,
+`reply_message` for a reply). Legacy follows every send with `get_message/{id}`; this client uses the
+send's own response. If it is partial, a sent bubble lacks its time or its quote until the next read.
+
+**5. `delete_message`'s `both` is a query parameter** with an empty body, as legacy sends it. Is a
+"for everyone" delete delivered to the other side as `deleted_message` with `message_id`?
+
+**6. The frames name ids.** `new_message` / `update_message` carry `{ conversation_id, id }` and the
+client re-reads `get_message/{id}`; `seen_message` carries `{ conversation_id }` and the client
+re-reads the newest page for the ticks. Legacy writes the frames' own payloads instead. Is
+`get_message/{id}` readable by both members immediately after the frame?
+
+Encoded in: `features/message/api/message-api.ts` (`openConversation`, `getMessages`,
+`sendMessage`, `deleteMessage`), `features/message/hooks/use-thread.ts`,
+`features/message/lib/message-thread.ts`.
+
+---
+
 ## Closed
 
 Answered and acted on. Kept as one line so the `Bnn` references in the code still resolve; the

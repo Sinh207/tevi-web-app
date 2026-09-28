@@ -2,7 +2,7 @@
 
 import { useSocketEvent } from '@features/realtime'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CHAT_ACTION, type ChatAction, parseChatActionFrame } from '../api/types'
+import { CHAT_ACTION, type ChatAction, frameIds, parseChatActionFrame } from '../api/types'
 
 /**
  * How long an indicator outlives its last frame. The sender's client repeats `TYPING` while the
@@ -61,10 +61,7 @@ export function useChatActions(): ReadonlyMap<string, ChatAction> {
      * produced for the rest of the TTL.
      */
     useSocketEvent('new_message', payload => {
-        const conversationId =
-            payload && typeof payload === 'object' && 'conversation_id' in payload
-                ? String((payload as { conversation_id: unknown }).conversation_id ?? '')
-                : ''
+        const conversationId = frameIds(payload)?.conversationId
         if (!conversationId) return
         const pending = timers.current.get(conversationId)
         if (pending) clearTimeout(pending)

@@ -207,6 +207,8 @@ export const TESTID_COMPANIONS = [
     'data-ledger-id',
     'data-locale',
     'data-membership-id',
+    /** A direct message's id — every bubble in a conversation is `message-bubble`. */
+    'data-message-id',
     'data-metric-id',
     'data-option-key',
     'data-option-value',
@@ -223,6 +225,12 @@ export const TESTID_COMPANIONS = [
     'data-row-key',
     'data-tab-id',
     'data-transfer-id',
+    /**
+     * Which of a conversation's walls is showing (`follow`, `member`, `first`, `blocked-me`,
+     * `i-blocked`, `inactive`) — all of them are `message-wall`. The kind is *state*: following from
+     * the wall turns it into the conversation, so it cannot be in the id.
+     */
+    'data-wall-kind',
 ] as const
 
 export type TestIdCompanion = (typeof TESTID_COMPANIONS)[number]

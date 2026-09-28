@@ -1,8 +1,9 @@
 /**
- * Direct messages — `/messages`, the conversation list. Legacy's `containers/directMessage`.
+ * Direct messages — `/messages` and `/@{slug}/messages`. Legacy's `containers/directMessage`.
  *
  * ```
- * MessagesView        the screen: search, the All / Unread folders, the empty chat pane
+ * MessagesView        the screen: search, the All / Unread folders, and the pane beside them —
+ *                     empty on /messages, the conversation (ChatRoom) on /@{slug}/messages
  * ./routes            MESSAGES_PATH + conversationPath(slug) — imports nothing, for the shell
  * ```
  *
@@ -20,7 +21,10 @@
  *
  * ## Not built yet
  *
- * - **The conversation** at `conversationPath(slug)` (`/@{slug}/messages`) — every row links there.
+ * - **Sending photos** (legacy's attachment sheet + `upload_images/{id}/{n}`). Photos *received*
+ *   render and open in the post lightbox.
+ * - **Link cards**: legacy turns the first Tevi URL in a message into a post / space / live /
+ *   collection / membership card. Here the link is clickable text.
  * - **Message settings**: who may start a conversation (followers / members) and the shareable
  *   `/@{slug}/messages` link. Needs `messaging_settings` on `channelApi.updateMyChannel`.
  * - Legacy's **member badge** on a row (`is_my_subscriber`) — no DS mark for it exists yet.

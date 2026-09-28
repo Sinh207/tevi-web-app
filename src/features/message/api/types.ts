@@ -187,3 +187,136 @@ export function parseChatActionFrame(
     if (!parsed.success || !parsed.data.conversation_id) return null
     return { conversationId: parsed.data.conversation_id, action: parsed.data.action }
 }
+
+/* ============================== The conversation itself ============================== */
+
+/**
+ * A message as `v2/rpc/get_messages`, `get_message/{id}`, `send_message` and `edit_message` return
+ * it — legacy's field names, from `useChatRoom.js` and the `itemMessage` components. Open questions
+ * are **B112**.
+ */
+
+const optionalId = z
+    .union([z.string(), z.number()])
+    .transform(value => {
+        const text = String(value).trim()
+        return text === '' ? null : text
+    })
+    .nullish()
+    .transform(value => value ?? null)
+    .catch(null)
+
+const senderSchema = z.looseObject({
+    id,
+    alias: id,
+    name: nullableText,
+    /** Legacy reads both spellings — `channel_slug` on a message, `slug` on a reply's sender. */
+    channel_slug: nullableText,
+    slug: nullableText,
+    avatar: nullable(z.looseObject({ thumb: nullableText })),
+})
+
+/**
+ * A bot message's buttons: rows of `{ label, action, target }`. Three actions exist
+ * (`OPEN_URL`, `CALLBACK_DATA`, `SHOW_INFO_TOAST`); anything else renders nothing.
+ */
+const inlineItemSchema = z.looseObject({
+    label: nullableText,
+    action: nullableText,
+    target: nullableText,
+})
+
+const messageFields = {
+    id,
+    conversation_id: id,
+    text: nullableText,
+    html_text: nullableText,
+    markdown_text: nullableText,
+    images: z
+        .array(imageSchema)
+        .catch([])
+        .transform(images => images.filter(image => image.url)),
+    sender: nullable(senderSchema),
+    created_at: epochMs,
+    edited_at: epochMs,
+    seen_by: z
+        .record(z.string(), z.unknown())
+        .nullish()
+        .transform(value => value ?? {})
+        .catch({}),
+    reply_to_id: optionalId,
+}
+
+const replyMessageSchema = z.looseObject(messageFields)
+
+const chatMessageSchema = z.looseObject({
+    ...messageFields,
+    reply_message: nullable(replyMessageSchema),
+    inline_menu: nullable(
+        z.looseObject({
+            items: z
+                .array(
+                    z
+                        .array(inlineItemSchema)
+                        .catch([])
+                        .transform(row => row.filter(item => item.label)),
+                )
+                .catch([])
+                .transform(rows => rows.filter(row => row.length > 0)),
+        }),
+    ),
+})
+
+export type ChatMessage = z.infer<typeof chatMessageSchema>
+export type ReplyMessage = z.infer<typeof replyMessageSchema>
+export type InlineMenuItem = z.infer<typeof inlineItemSchema>
+
+/** One message, or `null` when the body is not one (no id). */
+export function parseMessage(value: unknown): ChatMessage | null {
+    const parsed = chatMessageSchema.safeParse(value)
+    return parsed.success && parsed.data.id ? parsed.data : null
+}
+
+export function normalizeMessages(value: unknown): ChatMessage[] {
+    if (!Array.isArray(value)) return []
+    const rows: ChatMessage[] = []
+    for (const raw of value) {
+        const message = parseMessage(raw)
+        if (message) rows.push(message)
+    }
+    return rows
+}
+
+/**
+ * Why `start_conversation_with` refused: **`C001`** the space only takes messages from followers,
+ * **`C002`** only from members. Legacy's `ERROR_CODE`.
+ */
+export const CONVERSATION_GATE = {
+    follow: 'C001',
+    member: 'C002',
+} as const
+export type ConversationGate = 'follow' | 'member'
+
+export function gateFromCode(code: string | undefined): ConversationGate | null {
+    if (code === CONVERSATION_GATE.follow) return 'follow'
+    if (code === CONVERSATION_GATE.member) return 'member'
+    return null
+}
+
+/** A frame that names a conversation and, sometimes, a message — every DM frame has this much. */
+export function frameIds(
+    value: unknown,
+): { conversationId: string; messageId: string | null } | null {
+    if (!value || typeof value !== 'object') return null
+    const frame = value as Record<string, unknown>
+    const conversationId = frame.conversation_id
+    if (typeof conversationId !== 'string' && typeof conversationId !== 'number') return null
+    const messageId = frame.message_id ?? frame.id
+    return {
+        conversationId: String(conversationId),
+        messageId:
+            typeof messageId === 'string' || typeof messageId === 'number'
+                ? String(messageId)
+                : null,
+    }
+}

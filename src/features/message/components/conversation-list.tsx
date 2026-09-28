@@ -33,6 +33,7 @@ export function ConversationList({
     now,
     onOpen,
     onDelete,
+    selectedSlug,
     testId,
 }: {
     conversations: Conversation[]
@@ -50,6 +51,8 @@ export function ConversationList({
     now: number
     onOpen: (conversation: Conversation) => void
     onDelete: (conversation: Conversation) => void
+    /** The conversation open beside the list — its row is marked current. */
+    selectedSlug?: string
     testId: string
 }) {
     const { t } = useTranslation()
@@ -72,21 +75,29 @@ export function ConversationList({
     return (
         <>
             <ul data-testid={testId} className="list-none">
-                {conversations.map((conversation, index) => (
-                    <ConversationRow
-                        key={conversation.id}
-                        testId="message-row"
-                        conversationId={conversation.id}
-                        view={toConversationView(conversation, now)}
-                        rule={index > 0}
-                        chatAction={chatActions.get(conversation.id)}
-                        busy={deletingId !== null}
-                        locale={locale}
-                        now={now}
-                        onOpen={() => onOpen(conversation)}
-                        onDelete={() => onDelete(conversation)}
-                    />
-                ))}
+                {conversations.map((conversation, index) => {
+                    const view = toConversationView(conversation, now)
+                    return (
+                        <ConversationRow
+                            key={conversation.id}
+                            testId="message-row"
+                            conversationId={conversation.id}
+                            view={view}
+                            active={
+                                !!selectedSlug &&
+                                !!view.slug &&
+                                view.slug.toLowerCase() === selectedSlug.toLowerCase()
+                            }
+                            rule={index > 0}
+                            chatAction={chatActions.get(conversation.id)}
+                            busy={deletingId !== null}
+                            locale={locale}
+                            now={now}
+                            onOpen={() => onOpen(conversation)}
+                            onDelete={() => onDelete(conversation)}
+                        />
+                    )
+                })}
             </ul>
 
             {/* Zero-height and outside the list, so it is neither a row nor a tab stop. */}
