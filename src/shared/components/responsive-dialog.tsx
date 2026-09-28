@@ -105,6 +105,7 @@ export function ResponsiveDialog({
                     <VirtualKeyboardProvider>
                         <SheetContent
                             side={side}
+                            nested={nested}
                             direction={htmlDir(currentLanguage ?? 'en')}
                             data-testid={props['data-testid']}
                         >
@@ -114,6 +115,7 @@ export function ResponsiveDialog({
                 ) : (
                     <SheetContent
                         side={side}
+                        nested={nested}
                         direction={htmlDir(currentLanguage ?? 'en')}
                         data-testid={props['data-testid']}
                     >

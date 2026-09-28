@@ -83,6 +83,8 @@ export function PostPreviewDialog({
             }}
             /* Opened over the composer — see `DialogContent`'s `nested` for what it buys. */
             nested
+            /* A sheet like the rest of the composer's popups; a long post meets the 90dvh cap. */
+            side="bottom"
             /* `overflow-hidden` because the body below scrolls itself — see the settings dialogs. */
             className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
             data-testid={testId}

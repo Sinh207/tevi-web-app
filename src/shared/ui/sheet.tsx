@@ -56,6 +56,7 @@ export function SheetContent({
     children,
     direction = 'ltr',
     side = 'end',
+    nested,
     ...props
 }: BaseDrawer.Popup.Props &
     TestIdProps & {
@@ -80,6 +81,16 @@ export function SheetContent({
          * margins.
          */
         side?: SheetSide
+        /**
+         * This sheet opens **over another popup**.
+         *
+         * Exactly what it means on `DialogContent`, and for the same measured reason: the backdrop
+         * still renders (it is the hit target an outside press needs) but paints nothing, because
+         * two `--overlay-default` scrims compound to about 0.94 and the popup behind all but
+         * disappears. On the composer that defeats the arrangement's whole point — the draft is
+         * meant to stay visible behind the settings opened over it.
+         */
+        nested?: boolean
     }) {
     const bottom = side === 'bottom'
     return (
@@ -93,7 +104,8 @@ export function SheetContent({
                 forceRender
                 data-testid={subTestId(props['data-testid'], 'overlay')}
                 className={cn(
-                    'fixed inset-0 z-50 bg-overlay-default',
+                    'fixed inset-0 z-50',
+                    nested ? 'bg-transparent' : 'bg-overlay-default',
                     'transition-opacity duration-200',
                     'data-[starting-style]:opacity-0 data-[ending-style]:opacity-0',
                 )}

@@ -168,6 +168,14 @@ function SettingsDialog({
             /* Opened over the composer — see `DialogContent`'s `nested` for what it buys. */
             nested
             /*
+             * Up from the bottom and only as tall as its contents, like the composer it opens
+             * over. These are "pick one thing" popups — a few rows, a short list — and a sheet
+             * that fills the screen to hold three switches is a screen pretending to be a sheet.
+             * The 90dvh cap in `SheetContent` is what a long list meets, and the body below
+             * already scrolls.
+             */
+            side="bottom"
+            /*
              * `overflow-hidden` is **load-bearing**, and its absence is what broke this.
              *
              * `DialogContent` carries `overflow-y-auto` of its own (its own note explains the

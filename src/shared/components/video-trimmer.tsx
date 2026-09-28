@@ -18,6 +18,7 @@ import { cn } from '@shared/lib/utils'
 import { captureVideoFrames, revokeFrames } from '@shared/lib/video-frames'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
+import type { SheetSide } from '@shared/ui/sheet'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DialogScreenHeader } from './dialog-screen-header'
 import { ResponsiveDialog } from './responsive-dialog'
@@ -83,6 +84,7 @@ export function VideoTrimmer({
     onCancel,
     onTrimmed,
     nested = false,
+    side = 'end',
     testId,
 }: {
     open: boolean
@@ -96,6 +98,11 @@ export function VideoTrimmer({
      * `DialogContent`'s own `nested` says what it changes.
      */
     nested?: boolean
+    /**
+     * Which edge it comes from below the breakpoint — `SheetContent`'s `side`. The post composer
+     * opens it as a bottom sheet with the rest of its popups; a standalone screen would not.
+     */
+    side?: SheetSide
     /**
      * The scope, **from the caller**. `shared/` never authors one (`scripts/check-testids.mjs`
      * rejects a literal here), and this component is reached from two different features — so a
@@ -282,6 +289,7 @@ export function VideoTrimmer({
                 if (!next && !busy) onCancel()
             }}
             nested={nested}
+            side={side}
             className="flex max-h-[90dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
             data-testid={testId}
         >

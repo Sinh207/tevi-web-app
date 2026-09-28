@@ -422,6 +422,7 @@ export function PostComposerDialog({
                     onCancel={() => setTrimOpen(false)}
                     onTrimmed={applyTrim}
                     nested
+                    side="bottom"
                     /*
                      * Its **own** scope, like the preview dialog's — `post-composer-…` is spoken
                      * for by the composer's own backdrop and its four settings popups, and the
