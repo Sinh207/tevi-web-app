@@ -1,7 +1,7 @@
 'use client'
 
 import { useMyChannel } from '@features/channel'
-import { type Post, PostCard } from '@features/post'
+import { type Post, PostCard, PostMediaLightbox, usePostSlider } from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
@@ -80,6 +80,23 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
      * rather than built inside the hook so the hook stays list-agnostic: `ChannelThreadList` wants
      * the same behaviour over rows that are posts rather than groups.
      */
+    /**
+     * The feed as one flat list of the posts actually **drawn**, for the media viewer.
+     *
+     * Not `groups.flatMap(g => g.posts)`: a collapsed group draws one card and hides three, and a
+     * viewer that paged into a post the reader cannot see on the page behind it would be showing
+     * them something they never chose. `visiblePosts` is the same function the rows use, so the two
+     * cannot disagree — and pressing *See more* re-flattens, which is correct rather than a bug.
+     */
+    const flatPosts = useMemo(
+        () => groups.flatMap(group => visiblePosts(group, expanded.has(groupKey(group)))),
+        [groups, expanded],
+    )
+    const slider = usePostSlider(flatPosts, {
+        onLoadMore: fetchNextPage,
+        hasMore: hasNextPage,
+    })
+
     const keys = useMemo(() => groups.map(groupKey), [groups])
     const { observe, heightFor } = useRenderWindow(keys)
 
@@ -147,6 +164,19 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
                                               : undefined
                                       }
                                       onShare={() => setSharing(post)}
+                                      /*
+                                       * The index is into the **flat** list, found by identity —
+                                       * a group's own position is not the viewer's, and a post
+                                       * appears once in either.
+                                       */
+                                      onOpenMedia={target =>
+                                          slider.openAt(
+                                              flatPosts.findIndex(
+                                                  candidate => candidate.id === post.id,
+                                              ),
+                                              target,
+                                          )
+                                      }
                                       onChanged={() => refetch()}
                                       onAuthorBlocked={hideChannel}
                                       testId={subTestId(testId, 'item')}
@@ -168,6 +198,21 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
              * `shareable_url` is ordinary for a few seconds after posting, and the sheet's own rows
              * already degrade to the URL they were given.
              */}
+            {slider.post && (
+                <PostMediaLightbox
+                    images={slider.post.images ?? []}
+                    video={slider.open?.target === 'video' ? slider.post.video : null}
+                    startIndex={typeof slider.open?.target === 'number' ? slider.open.target : 0}
+                    post={slider.post}
+                    isPremiumReader={isPremium}
+                    onShare={() => setSharing(slider.post)}
+                    onPrevPost={slider.prev}
+                    onNextPost={slider.next}
+                    positionLabel={slider.positionLabel}
+                    onClose={slider.close}
+                />
+            )}
+
             {sharing && (
                 <ShareDialog
                     open

@@ -2006,6 +2006,8 @@
     "post_nsfw_disable_filtering": "關閉過濾",
     "post_image_open": "開啟圖片",
     "post_lightbox_title": "貼文內容",
+    "post_slider_previous_post": "上一則貼文",
+    "post_slider_next_post": "下一則貼文",
     "post_video_play": "播放影片",
     "post_video_unsupported_title": "此瀏覽器無法播放這部影片",
     "post_video_unsupported_body": "請使用 Safari，或在 Tevi 應用程式中開啟貼文。",

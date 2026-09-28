@@ -74,10 +74,20 @@ export { PostComposerDialog } from './components/post-composer-dialog'
  * the card applies, and the gates are the whole reason the card is reused here.
  */
 export { PostDetailView } from './components/post-detail-view'
+/**
+ * The full-screen media viewer and the list state behind it.
+ *
+ * Exported together because neither is useful alone: the viewer pages between posts only when a
+ * list answers `onPrevPost` / `onNextPost`, and the hook exists to be that answer. A surface that
+ * renders `PostCard`s in a list wires both; a card on its own needs neither and keeps its own
+ * viewer over its own media.
+ */
+export { PostMediaLightbox } from './components/post-media-lightbox'
 export type { PostActions } from './hooks/use-post-actions'
 export { usePostActions } from './hooks/use-post-actions'
 export { usePostBookmark } from './hooks/use-post-bookmark'
 export { usePostReaction } from './hooks/use-post-reaction'
+export { usePostSlider } from './hooks/use-post-slider'
 export type { PostUnlockFlow } from './hooks/use-post-unlock'
 export { usePostUnlock } from './hooks/use-post-unlock'
 export {

@@ -11,7 +11,9 @@ import { Skeleton } from '@shared/ui/skeleton'
 import { useEffect, useMemo, useState } from 'react'
 import type { Post } from '../api/types'
 import { useBookmarks } from '../hooks/use-bookmarks'
+import { usePostSlider } from '../hooks/use-post-slider'
 import { PostCard } from './post-card'
+import { PostMediaLightbox } from './post-media-lightbox'
 
 /**
  * `/bookmarks` — every post the reader has saved.
@@ -68,6 +70,12 @@ export function BookmarkList({
     /* One share sheet for the whole list — see `channel-thread-list.tsx` for what one per card costs. */
     const [sharing, setSharing] = useState<Post | null>(null)
 
+    /*
+     * One viewer for the whole list, so it can page between **posts** — `usePostSlider` carries
+     * why the list owns that and the viewer does not. The same arrangement as the share sheet.
+     */
+    const slider = usePostSlider(posts, { onLoadMore: loadMore, hasMore: hasNextPage })
+
     const keys = useMemo(() => posts.map(post => post.id), [posts])
     const { observe, heightFor } = useRenderWindow(keys)
 
@@ -116,7 +124,7 @@ export function BookmarkList({
 
     return (
         <div data-testid={testId} className="flex min-w-0 flex-col gap-px">
-            {posts.map(post => {
+            {posts.map((post, index) => {
                 const height = heightFor(post.id)
                 return (
                     <div
@@ -136,6 +144,7 @@ export function BookmarkList({
                                 post={post}
                                 isPremiumReader={isPremiumReader}
                                 onShare={() => setSharing(post)}
+                                onOpenMedia={target => slider.openAt(index, target)}
                                 onChanged={refetch}
                                 onAuthorBlocked={refetch}
                                 testId={subTestId(testId, 'item')}
@@ -149,6 +158,21 @@ export function BookmarkList({
             <div ref={sentinelRef} aria-hidden="true" className="h-px" />
 
             {isFetchingNextPage ? <BookmarkSkeleton rows={1} testId={testId} /> : null}
+
+            {slider.post ? (
+                <PostMediaLightbox
+                    images={slider.post.images ?? []}
+                    video={slider.open?.target === 'video' ? slider.post.video : null}
+                    startIndex={typeof slider.open?.target === 'number' ? slider.open.target : 0}
+                    post={slider.post}
+                    isPremiumReader={isPremiumReader}
+                    onShare={() => setSharing(slider.post)}
+                    onPrevPost={slider.prev}
+                    onNextPost={slider.next}
+                    positionLabel={slider.positionLabel}
+                    onClose={slider.close}
+                />
+            ) : null}
 
             {sharing ? (
                 <ShareDialog

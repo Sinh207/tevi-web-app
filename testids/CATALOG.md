@@ -348,7 +348,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-suspended-guidelines` | — | `src/features/channel/components/channel-state-screens.tsx:117` |
 | `channel-tabs` | — | `src/features/channel/components/channel-tabs.tsx:86` |
 | `channel-tabs-loading` | — | `src/features/channel/components/channel-tabs-skeleton.tsx:35` |
-| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:157` |
+| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:164` |
 | `channel-top-bar-loading` | — | `src/features/channel/components/channel-top-bar-skeleton.tsx:43` |
 | `channel-unblock` | — | `src/features/channel/components/blocked-account-row.tsx:205` |
 | `channel-verified-badge` | — | `src/features/channel/components/channel-identity.tsx:94` |
@@ -1062,7 +1062,7 @@ name; you need it to know the element exists.
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
 | `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` `-remove` |
 | `PostLockPanel` | `src/features/post/components/post-lock-panel.tsx` | `-label` `-title` |
-| `PostMediaLightbox` | `src/features/post/components/post-media-lightbox.tsx` | `-close` `-label` `-next` `-overlay` `-prev` `-slide` |
+| `PostMediaLightbox` | `src/features/post/components/post-media-lightbox.tsx` | `-close` `-footer` `-header` `-label` `-label-data` `-list` `-next` `-overlay` `-prev` `-slide` |
 | `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-panel` `-remove` `-trigger` |
 | `PostNsfwGuard` | `src/features/post/components/post-nsfw-guard.tsx` | `-close` `-reveal` `-title` `-trigger` |
 | `PostPreviewDialog` | `src/features/post/components/post-preview-dialog.tsx` | `-description` `-header` `-item` `-overlay` `-panel` `-slide` |

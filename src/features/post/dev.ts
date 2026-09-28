@@ -45,6 +45,8 @@ export { ReplyAudienceNotice } from './components/reply-audience-notice'
 export { ReplyComposer } from './components/reply-composer'
 export { ReplyRow } from './components/reply-row'
 export { ReplyThread } from './components/reply-thread'
+/** The list half of the slider — the harness is the one place it can be pressed without a session. */
+export { usePostSlider } from './hooks/use-post-slider'
 export { emptyPostDraft, type PostDraft } from './lib/post-draft'
 export { postIntent } from './lib/post-intent'
 export { postHref } from './lib/post-link'

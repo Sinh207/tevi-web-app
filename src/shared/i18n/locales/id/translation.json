@@ -2006,6 +2006,8 @@
     "post_nsfw_disable_filtering": "Matikan penyaringan",
     "post_image_open": "Buka gambar",
     "post_lightbox_title": "Media postingan",
+    "post_slider_previous_post": "Postingan sebelumnya",
+    "post_slider_next_post": "Postingan berikutnya",
     "post_video_play": "Putar video",
     "post_video_unsupported_title": "Browser ini tidak dapat memutar video ini",
     "post_video_unsupported_body": "Coba Safari, atau buka postingan di aplikasi Tevi.",

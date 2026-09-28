@@ -62,6 +62,7 @@ import {
     PostCard,
     PostComposerDialog,
     type PostDraft,
+    PostMediaLightbox,
     REPLY_DELETED,
     REPLY_EMPTY,
     REPLY_HTML_ONLY,
@@ -76,6 +77,7 @@ import {
     type Reply,
     ReplyComposer,
     ReplyRow,
+    usePostSlider,
 } from '@features/post/dev'
 import { Button } from '@shared/ui/button'
 import { useState } from 'react'
@@ -776,6 +778,8 @@ export function PostPreview() {
                 </div>
             </section>
 
+            <PostSliderSection />
+
             {GROUPS.map(group => (
                 <section key={group.heading} className="flex flex-col gap-6">
                     <div className="flex flex-col gap-1 border-(--separator-default) border-b pb-2">
@@ -822,5 +826,56 @@ export function PostPreview() {
                 </section>
             ))}
         </div>
+    )
+}
+
+/**
+ * The full-screen **post slider**, which needs a list rather than a card to exercise.
+ *
+ * A card on its own opens its own media viewer and can page between that post's pictures; the
+ * slider is the other axis — between posts — and that only exists where something owns a list.
+ * Every real list is behind a session, so this is the one place it can be pressed without one.
+ *
+ * `hasMore` is false on purpose: the fixtures are all there is, and a `loadMore` that fetched
+ * nothing would make the end of the list look like a stall rather than the end.
+ */
+function PostSliderSection() {
+    /* Posts that actually carry media — the slider is opened by pressing a picture or a clip. */
+    const posts = [POST_ONE_IMAGE, POST_MANY_IMAGES, POST_VIDEO, POST_VIDEO_AND_IMAGES]
+    const slider = usePostSlider(posts, { hasMore: false })
+
+    return (
+        <section className="flex flex-col gap-2">
+            <div className="flex flex-col gap-0.5">
+                <h2 className="type-title-t2-semibold text-(--text-title)">Post slider</h2>
+                <p className="type-caption-meta text-(--text-placeholder)">
+                    Press any picture. The viewer draws the post's author and its actions over the
+                    media, pages between pictures with the side arrows and between posts with the
+                    ones above and below — or the arrow keys, which use the same two axes.
+                </p>
+            </div>
+            <div className="flex max-w-[612px] flex-col bg-(--background-surface)">
+                {posts.map((post, index) => (
+                    <PostCard
+                        key={post.id}
+                        post={post}
+                        onOpenMedia={target => slider.openAt(index, target)}
+                        testId={`post-slider-${post.id}`}
+                    />
+                ))}
+            </div>
+            {slider.post ? (
+                <PostMediaLightbox
+                    images={slider.post.images ?? []}
+                    video={slider.open?.target === 'video' ? slider.post.video : null}
+                    startIndex={typeof slider.open?.target === 'number' ? slider.open.target : 0}
+                    post={slider.post}
+                    onPrevPost={slider.prev}
+                    onNextPost={slider.next}
+                    positionLabel={slider.positionLabel}
+                    onClose={slider.close}
+                />
+            ) : null}
+        </section>
     )
 }
