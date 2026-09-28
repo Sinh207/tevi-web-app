@@ -2341,5 +2341,6 @@
     "message_room_self": "هذه مساحتك. شارك رابط الرسائل ليتمكن الآخرون من مراسلتك.",
     "message_confirm_delete_everyone_body": "ستُحذف هذه الرسالة لديكما معًا، ولا يمكن التراجع عن ذلك.",
     "message_conversation_label": "المحادثة",
-    "message_room_title": "الرسائل مع @{{slug}}"
+    "message_room_title": "الرسائل مع @{{slug}}",
+    "message_photo_viewer_title": "الصور"
 }

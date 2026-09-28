@@ -2269,5 +2269,6 @@
     "message_room_self": "Ini Space Anda. Bagikan tautan pesan agar orang bisa mengirimi Anda pesan.",
     "message_confirm_delete_everyone_body": "Pesan ini akan dihapus untuk kalian berdua. Tindakan ini tidak dapat dibatalkan.",
     "message_conversation_label": "Obrolan",
-    "message_room_title": "Pesan dengan @{{slug}}"
+    "message_room_title": "Pesan dengan @{{slug}}",
+    "message_photo_viewer_title": "Foto"
 }

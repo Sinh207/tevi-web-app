@@ -2269,5 +2269,6 @@
     "message_room_self": "This is your space. Share its messages link so people can write to you.",
     "message_confirm_delete_everyone_body": "This message will be removed for both of you. This cannot be undone.",
     "message_conversation_label": "Conversation",
-    "message_room_title": "Messages with @{{slug}}"
+    "message_room_title": "Messages with @{{slug}}",
+    "message_photo_viewer_title": "Photos"
 }

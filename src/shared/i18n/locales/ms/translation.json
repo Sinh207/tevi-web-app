@@ -2269,5 +2269,6 @@
     "message_room_self": "Ini Space anda. Kongsi pautan mesej supaya orang boleh menghantar mesej kepada anda.",
     "message_confirm_delete_everyone_body": "Mesej ini akan dipadam untuk kedua-dua pihak. Tindakan ini tidak boleh dibatalkan.",
     "message_conversation_label": "Perbualan",
-    "message_room_title": "Mesej dengan @{{slug}}"
+    "message_room_title": "Mesej dengan @{{slug}}",
+    "message_photo_viewer_title": "Foto"
 }

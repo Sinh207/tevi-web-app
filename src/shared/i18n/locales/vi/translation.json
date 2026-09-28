@@ -2269,5 +2269,6 @@
     "message_room_self": "Đây là Space của bạn. Hãy chia sẻ đường dẫn nhắn tin để mọi người có thể nhắn cho bạn.",
     "message_confirm_delete_everyone_body": "Tin nhắn sẽ bị xóa ở cả hai phía và không thể khôi phục.",
     "message_conversation_label": "Cuộc trò chuyện",
-    "message_room_title": "Tin nhắn với @{{slug}}"
+    "message_room_title": "Tin nhắn với @{{slug}}",
+    "message_photo_viewer_title": "Ảnh"
 }

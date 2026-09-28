@@ -2269,5 +2269,6 @@
     "message_room_self": "Ito ang iyong Space. Ibahagi ang link ng mga mensahe para makapagpadala sa iyo ang mga tao.",
     "message_confirm_delete_everyone_body": "Mabubura ang mensaheng ito para sa inyong dalawa. Hindi na ito maibabalik.",
     "message_conversation_label": "Pag-uusap",
-    "message_room_title": "Mga mensahe kay @{{slug}}"
+    "message_room_title": "Mga mensahe kay @{{slug}}",
+    "message_photo_viewer_title": "Mga larawan"
 }

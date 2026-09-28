@@ -1,7 +1,6 @@
 'use client'
 
 import type { Channel } from '@features/channel'
-import { type PostImage, PostMediaLightbox } from '@features/post'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
@@ -12,6 +11,7 @@ import type { ChatMessage, InlineMenuItem } from '../api/types'
 import { formatDayLabel, groupByDay, type PendingMessage } from '../lib/message-thread'
 import { ChannelIntro } from './chat-walls'
 import { MessageBubble } from './message-bubble'
+import { MessagePhotoViewer } from './message-photo-viewer'
 
 /** How far from the top the older page is asked for — legacy's `LOAD_MORE_THRESHOLD`. */
 const LOAD_OLDER_PX = 200
@@ -77,7 +77,7 @@ export function MessageThreadView({
     const scroller = useRef<HTMLDivElement>(null)
     const [awayFromBottom, setAwayFromBottom] = useState(false)
     const [unseen, setUnseen] = useState(0)
-    const [viewer, setViewer] = useState<{ images: PostImage[]; index: number } | null>(null)
+    const [viewer, setViewer] = useState<{ urls: string[]; index: number } | null>(null)
 
     const days = useMemo(() => groupByDay(messages), [messages])
     const now = Date.now()
@@ -120,15 +120,7 @@ export function MessageThreadView({
     const openImage = (message: ChatMessage, index: number) =>
         setViewer({
             index,
-            images: message.images.map(image => ({
-                uri: image.url,
-                thumb: image.url,
-                blur: null,
-                w: image.w || null,
-                h: image.h || null,
-                width: image.w || null,
-                height: image.h || null,
-            })),
+            urls: message.images.flatMap(image => (image.url ? [image.url] : [])),
         })
 
     return (
@@ -229,10 +221,8 @@ export function MessageThreadView({
             )}
 
             {viewer && (
-                <PostMediaLightbox
-                    testId="message-lightbox"
-                    images={viewer.images}
-                    video={null}
+                <MessagePhotoViewer
+                    urls={viewer.urls}
                     startIndex={viewer.index}
                     onClose={() => setViewer(null)}
                 />

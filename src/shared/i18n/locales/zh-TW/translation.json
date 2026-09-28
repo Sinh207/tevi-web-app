@@ -2269,5 +2269,6 @@
     "message_room_self": "這是你的空間。分享訊息連結，讓大家可以傳訊給你。",
     "message_confirm_delete_everyone_body": "此訊息將對雙方刪除，且無法復原。",
     "message_conversation_label": "對話",
-    "message_room_title": "與 @{{slug}} 的訊息"
+    "message_room_title": "與 @{{slug}} 的訊息",
+    "message_photo_viewer_title": "照片"
 }

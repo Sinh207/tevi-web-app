@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 865,
+        "ids": 868,
         "surfaces": 29
     },
     "surfaces": {
@@ -6915,7 +6915,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:262"
+            "source": "src/features/message/components/message-bubble.tsx:261"
         },
         "message-bubble-delete": {
             "scope": "message",
@@ -6923,7 +6923,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:285"
+            "source": "src/features/message/components/message-bubble.tsx:284"
         },
         "message-bubble-delete-all": {
             "scope": "message",
@@ -6931,7 +6931,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:295"
+            "source": "src/features/message/components/message-bubble.tsx:294"
         },
         "message-bubble-edit": {
             "scope": "message",
@@ -6939,7 +6939,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:278"
+            "source": "src/features/message/components/message-bubble.tsx:277"
         },
         "message-bubble-menu-reply": {
             "scope": "message",
@@ -6947,7 +6947,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:270"
+            "source": "src/features/message/components/message-bubble.tsx:269"
         },
         "message-bubble-menu-trigger": {
             "scope": "message",
@@ -6955,7 +6955,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:255"
+            "source": "src/features/message/components/message-bubble.tsx:254"
         },
         "message-bubble-option": {
             "scope": "message",
@@ -6966,7 +6966,7 @@
             "companions": [
                 "data-option-value"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:210"
+            "source": "src/features/message/components/message-bubble.tsx:209"
         },
         "message-bubble-remove": {
             "scope": "message",
@@ -6974,7 +6974,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:185"
+            "source": "src/features/message/components/message-bubble.tsx:184"
         },
         "message-bubble-reply": {
             "scope": "message",
@@ -6982,7 +6982,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:243"
+            "source": "src/features/message/components/message-bubble.tsx:242"
         },
         "message-bubble-retry": {
             "scope": "message",
@@ -6990,7 +6990,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:177"
+            "source": "src/features/message/components/message-bubble.tsx:176"
         },
         "message-composer-cancel": {
             "scope": "message",
@@ -7048,14 +7048,6 @@
             ],
             "source": "src/features/message/components/chat-walls.tsx:224"
         },
-        "message-lightbox": {
-            "scope": "message",
-            "routes": [
-                "/[slug]/messages",
-                "/messages"
-            ],
-            "source": "src/features/message/components/message-thread-view.tsx:233"
-        },
         "message-loading": {
             "scope": "message",
             "routes": [
@@ -7063,6 +7055,38 @@
                 "/messages"
             ],
             "source": "src/features/message/components/conversation-skeleton.tsx:19"
+        },
+        "message-photo-viewer": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-photo-viewer.tsx:52"
+        },
+        "message-photo-viewer-close": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-photo-viewer.tsx:103"
+        },
+        "message-photo-viewer-next": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-photo-viewer.tsx:83"
+        },
+        "message-photo-viewer-prev": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-photo-viewer.tsx:72"
         },
         "message-retry": {
             "scope": "message",
@@ -7233,7 +7257,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-thread-view.tsx:138"
+            "source": "src/features/message/components/message-thread-view.tsx:130"
         },
         "message-thread-error": {
             "scope": "message",
@@ -7249,7 +7273,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-thread-view.tsx:209"
+            "source": "src/features/message/components/message-thread-view.tsx:201"
         },
         "message-thread-loading": {
             "scope": "message",
