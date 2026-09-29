@@ -129,7 +129,7 @@ export function MessageThreadView({
                 ref={scroller}
                 data-testid="message-thread"
                 onScroll={onScroll}
-                className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto overscroll-contain bg-(--background) [scrollbar-width:thin]"
+                className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto overscroll-contain [scrollbar-width:thin]"
             >
                 <div className="mx-auto flex w-full max-w-[640px] flex-col gap-1 px-3 py-3">
                     {isFetchingOlder && (
@@ -146,7 +146,7 @@ export function MessageThreadView({
                             aria-label={formatDayLabel(day.day, locale, now)}
                             className="flex flex-col gap-1"
                         >
-                            <h3 className="sticky top-2 z-10 my-2 self-center rounded-(--radius-fill) bg-(--background-segment) px-3 py-0.5 type-caption-meta text-(--text-body)">
+                            <h3 className="sticky top-2 z-10 my-2 self-center rounded-(--radius-fill) bg-(--opacity-black-25) px-3 py-0.5 type-caption-meta text-(--white) backdrop-blur-[2.5px]">
                                 {formatDayLabel(day.day, locale, now)}
                             </h3>
                             {day.messages.map(message => {

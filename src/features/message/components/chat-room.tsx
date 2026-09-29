@@ -19,6 +19,7 @@ import { useRoom } from '../hooks/use-room'
 import { useThread } from '../hooks/use-thread'
 import { ONLINE_WINDOW_MS } from '../lib/conversation-view'
 import { isOwnMessage, messageText } from '../lib/message-thread'
+import { ROOM_GROUND } from '../lib/room-ground'
 import { ChatHeader } from './chat-header'
 import { ChannelIntro, ChatWall, type ChatWallKind } from './chat-walls'
 import { MessageComposer } from './message-composer'
@@ -137,7 +138,7 @@ export function ChatRoom({ slug }: { slug: string }) {
             {header}
             {/* A state (a wall, an error, signed out) can be taller than a short phone, so the middle
                 scrolls — the header above it never does. */}
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-(--background)">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <div className="flex min-h-full flex-col">{body}</div>
             </div>
         </RoomFrame>
@@ -224,11 +225,11 @@ export function ChatRoom({ slug }: { slug: string }) {
         <RoomFrame>
             {header}
             {conversation && thread.isLoading ? (
-                <div className="flex min-h-0 flex-1 flex-col bg-(--background)">
+                <div className="flex min-h-0 flex-1 flex-col">
                     <ThreadSkeleton />
                 </div>
             ) : conversation && thread.isError ? (
-                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-(--background)">
+                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                     <ChannelEmptyState
                         testId="message-thread-error"
                         className="flex-1"
@@ -311,7 +312,11 @@ export function ChatRoom({ slug }: { slug: string }) {
  */
 function RoomFrame({ children }: { children: ReactNode }) {
     return (
-        <div data-testid="message-room" className="flex h-full min-h-0 flex-1 flex-col">
+        <div
+            data-testid="message-room"
+            className="flex h-full min-h-0 flex-1 flex-col"
+            style={ROOM_GROUND}
+        >
             {children}
         </div>
     )

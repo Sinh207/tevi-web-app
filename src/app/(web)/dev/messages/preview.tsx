@@ -12,6 +12,7 @@ import {
     MessageComposer,
     MessageThreadView,
     messageFixtures,
+    ROOM_GROUND,
     threadFixtures,
     toConversationView,
 } from '@features/message/dev'
@@ -149,7 +150,10 @@ function ThreadPreview({ now, locale }: { now: number; locale: string }) {
     }
 
     return (
-        <div className="flex h-[640px] w-full max-w-[640px] flex-col overflow-hidden rounded-[var(--radius-xl)] bg-(--background-surface)">
+        <div
+            className="flex h-[640px] w-full max-w-[640px] flex-col overflow-hidden rounded-[var(--radius-xl)] bg-(--background-surface)"
+            style={ROOM_GROUND}
+        >
             <ChatHeader channel={DEV_CHANNEL as unknown as Channel} online chatAction="TYPING" />
             <MessageThreadView
                 channel={DEV_CHANNEL as unknown as Channel}

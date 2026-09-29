@@ -212,6 +212,12 @@
         var(--primary-600) 6.44%,
         var(--accents-indigo-active) 107.62%
     );
+
+    /* The ground under a conversation — legacy's chat background, not a Figma variable (the DS
+       draws nothing inside a conversation). Its stops are legacy's own and are not on the Primary
+       ramp, so they are literals, once, with a name — `--gradient-brand-sweep`'s rule. The doodle
+       pattern over it is art (`MESSAGE_ART.threadPattern`), not part of the token. */
+    --gradient-message-thread: linear-gradient(333deg, #a587ff 16.77%, #e2d8ff 83.23%);
 }
 
 /* Dark mode — only the tokens whose value differs from Light. */
@@ -305,6 +311,14 @@
     --elevation-xl: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 -8px 8px -4px rgba(0, 0, 0, 0.03);
     --elevation-2xl: 0 24px 48px -12px rgba(0, 0, 0, 0.18);
     --elevation-3xl: 0 32px 54px -12px rgba(0, 0, 0, 0.14);
+
+    /* Legacy has no dark chat. The same sweep in the Primary ramp's dark steps — a deep purple
+       rather than lavender at full brightness behind a dark UI. */
+    --gradient-message-thread: linear-gradient(
+        333deg,
+        var(--primary-300) 16.77%,
+        var(--primary-50) 83.23%
+    );
 }
 
 /* ==================================================================== *
@@ -674,6 +688,7 @@
         var(--primary-600) 6.44%,
         var(--accents-indigo-active) 107.62%
     );
+    --gradient-message-thread: linear-gradient(333deg, #a587ff 16.77%, #e2d8ff 83.23%);
     --foreground: var(--text-title);
     --card: var(--background-surface);
     --card-foreground: var(--text-title);

@@ -12,6 +12,7 @@ import { toConversationView } from './lib/conversation-view'
 export { ConversationRow } from './components/conversation-row'
 export { ConversationSkeleton } from './components/conversation-skeleton'
 export { MESSAGE_ART } from './lib/illustrations'
+export { ROOM_GROUND } from './lib/room-ground'
 export { toConversationView }
 
 /** A committed image — `pnpm art:audit` fails on a remote one anywhere in `src/`. */

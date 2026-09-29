@@ -10,7 +10,7 @@ import { MESSAGE_ART } from './illustrations'
 const ART = Object.entries(MESSAGE_ART)
 
 describe('direct-message art', () => {
-    it.each(ART)('%s is committed, and is an SVG', (_name, art) => {
+    it.each(ART)('%s is committed, in the format its path declares', (_name, art) => {
         const file = committedArt(art.src)
         expect(file.isDeclaredFormat).toBe(true)
         expect(file.bytes).toBeGreaterThan(512)

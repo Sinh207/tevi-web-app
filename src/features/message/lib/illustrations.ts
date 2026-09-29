@@ -11,4 +11,10 @@
 export const MESSAGE_ART = {
     empty: { src: '/illustrations/message/empty-conversation.svg', width: 92, height: 101 },
     noResults: { src: '/illustrations/message/no-results.svg', width: 82, height: 100 },
+    /**
+     * The doodle tile behind a conversation (`message-thread-pattern`) — white line art at ≤20%
+     * alpha, one of the three repeats legacy's `background-dm.png` ships side by side. Drawn over
+     * `--gradient-message-thread`, height-fitted and repeated sideways; see `ChatRoom`.
+     */
+    threadPattern: { src: '/illustrations/message/thread-pattern.webp', width: 425, height: 797 },
 } as const

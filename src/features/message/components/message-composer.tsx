@@ -14,6 +14,9 @@ const MAX_FIELD_PX = 4 * 24 + 16
 /**
  * The foot of a conversation: what is being replied to or edited, the field, and Send.
  *
+ * No ground of its own — it sits on the room's pattern, as legacy's footer does; the field and the
+ * reply banner carry their own fills.
+ *
  * Legacy's field sits in a grey tail-shaped box with an attachment button whose sheet this port does
  * not have yet (photos are the next step), so the paperclip is not drawn — a control that opens
  * nothing is worse than none.
@@ -74,7 +77,7 @@ export function MessageComposer({
     const context = editing ?? replyTo
 
     return (
-        <div className="flex flex-none flex-col gap-2 border-t border-solid border-(--separator-default) bg-(--background-surface) px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <div className="flex flex-none flex-col gap-2 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             {context && (
                 <div className="flex items-center gap-2 rounded-(--radius-md) border-s-2 border-solid border-(--text-link) bg-(--background-subtle) py-2 ps-3 pe-1">
                     <Icon

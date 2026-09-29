@@ -6998,7 +6998,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-composer.tsx:98"
+            "source": "src/features/message/components/message-composer.tsx:101"
         },
         "message-composer-input": {
             "scope": "message",
@@ -7006,7 +7006,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-composer.tsx:119"
+            "source": "src/features/message/components/message-composer.tsx:122"
         },
         "message-composer-submit": {
             "scope": "message",
@@ -7014,7 +7014,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-composer.tsx:148"
+            "source": "src/features/message/components/message-composer.tsx:151"
         },
         "message-delete-confirm": {
             "scope": "message",
@@ -7030,7 +7030,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:284"
+            "source": "src/features/message/components/chat-room.tsx:285"
         },
         "message-error": {
             "scope": "message",
@@ -7118,7 +7118,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:314"
+            "source": "src/features/message/components/chat-room.tsx:316"
         },
         "message-room-back": {
             "scope": "message",
@@ -7134,7 +7134,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:206"
+            "source": "src/features/message/components/chat-room.tsx:207"
         },
         "message-room-missing": {
             "scope": "message",
@@ -7142,7 +7142,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:173"
+            "source": "src/features/message/components/chat-room.tsx:174"
         },
         "message-room-sign-in": {
             "scope": "message",
@@ -7150,7 +7150,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:158"
+            "source": "src/features/message/components/chat-room.tsx:159"
         },
         "message-room-signed-out": {
             "scope": "message",
@@ -7158,7 +7158,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:151"
+            "source": "src/features/message/components/chat-room.tsx:152"
         },
         "message-room-space": {
             "scope": "message",
@@ -7281,7 +7281,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:233"
+            "source": "src/features/message/components/chat-room.tsx:234"
         },
         "message-thread-jump": {
             "scope": "message",
@@ -7297,7 +7297,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:331"
+            "source": "src/features/message/components/chat-room.tsx:336"
         },
         "message-wall": {
             "scope": "message",
