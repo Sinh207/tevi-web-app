@@ -260,25 +260,59 @@ function PostSliderSlide({
     const [picture, setPicture] = useState(0)
     const current = images[Math.min(picture, images.length - 1)]
     const src = current?.uri ?? current?.thumb ?? null
+    /* `null` when the backend sent no dimensions — then the clip keeps its intrinsic box. */
+    const clipRatio =
+        post.video?.width && post.video?.height ? post.video.width / post.video.height : null
 
     return (
-        <>
-            {/*
-             * `md:pe-20` leaves the rail its column from `md` up, where legacy puts it beside the
-             * media rather than over it. Below that the media is the full width and the rail floats.
-             */}
-            <div className="flex h-full w-full items-center justify-center md:pe-20">
+        /*
+         * ⚠ **A row, and the media area is a real `flex-1` column** — legacy's `post-slider-stack`.
+         *
+         * It was one full-width box with `md:pe-20` reserving space for the rail, which is not the
+         * same arrangement and looks wrong: the padding pushes the media's *centre* left by half of
+         * it, and the rail still floats over the media rather than beside it, so the reserved strip
+         * and the occupied strip are two different strips. With a real column the media centres in
+         * what is actually left, which is what legacy does and what the video made obvious.
+         *
+         * Everything that belongs **over the media** — the arrows, the counter, the foot gradient —
+         * goes inside the media area rather than on this root, so none of it runs under the rail.
+         */
+        <div className="relative flex h-full w-full">
+            <div className="relative flex h-full min-w-0 flex-1 items-center justify-center overflow-hidden">
                 {clip ? (
-                    /* biome-ignore lint/a11y/useMediaCaption: a post's clip carries no track. */
+                    /*
+                     * ⚠ **Sized by its own aspect ratio, not by `max-w`/`max-h`.**
+                     *
+                     * A `max-*` pair only ever shrinks, so a 300px clip stayed 300px in a 1300px
+                     * area — small, and with the controls bar the thing the eye reads as
+                     * off-centre. Legacy sizes the media box instead (`nsfwSizeProps`): the
+                     * aspect ratio, then `height: 100%` for a portrait and `width: 100%` for a
+                     * landscape, so it grows to the axis that binds and is letterboxed on the
+                     * other. `max-w/max-h-full` stay as the ceiling the ratio is clamped against.
+                     */
+                    // biome-ignore lint/a11y/useMediaCaption: a post's clip carries no track.
                     <video
                         src={clip}
                         controls
                         playsInline
                         preload="metadata"
                         data-testid={subTestId(testId, 'slide')}
-                        className="max-h-full max-w-full"
+                        className={cn(
+                            'max-h-full max-w-full',
+                            clipRatio === null
+                                ? ''
+                                : clipRatio < 1
+                                  ? 'h-full w-auto'
+                                  : 'h-auto w-full',
+                        )}
+                        style={clipRatio === null ? undefined : { aspectRatio: clipRatio }}
                     />
                 ) : src ? (
+                    /*
+                     * `object-contain` over the **whole** area, which is legacy's gallery branch —
+                     * it grows a small picture to the area and letterboxes it, where a `max-*`
+                     * pair would leave it at its intrinsic size in the middle of a black screen.
+                     */
                     <Image
                         key={picture}
                         src={src}
@@ -288,66 +322,66 @@ function PostSliderSlide({
                         sizes="100vw"
                         unoptimized={isLocalImageSrc(src)}
                         data-testid={subTestId(testId, 'slide')}
-                        className="max-h-full w-auto max-w-full object-contain"
+                        className="h-full w-full object-contain"
                     />
                 ) : null}
+
+                {/* The pictures of **this** post, on the horizontal axis — posts are the vertical one. */}
+                {/*
+                 * ⚠ **They disappear at the ends; they do not wrap.** Legacy's own rule — its disabled
+                 * state is `display: none`, not a dimmed button — and it is the opposite of the post
+                 * column's, which dims and stays. An arrow over a photograph is not furniture, so it
+                 * goes when it has nowhere to point; `%` wrap-around was this file's invention and it
+                 * makes the last picture look like the first.
+                 *
+                 * They are drawn **below `md` too**, which legacy is not — its wrapper is inside
+                 * `matchUpMd`, and it can afford that because its gallery is a Swiper the reader
+                 * flicks. This one is a picture and an index, so hiding the arrows on a phone would
+                 * leave ten of the eleven unreachable. The inset is legacy's own `xs` value, which it
+                 * wrote and then never rendered.
+                 */}
+                {images.length > 1 && !clip ? (
+                    <>
+                        {picture > 0 ? (
+                            <PictureNavButton
+                                side="start"
+                                label={t('common_previous')}
+                                onPress={() => setPicture(p => p - 1)}
+                                testId={subTestId(testId, 'prev')}
+                            />
+                        ) : null}
+                        {picture < images.length - 1 ? (
+                            <PictureNavButton
+                                side="end"
+                                label={t('common_next')}
+                                onPress={() => setPicture(p => p + 1)}
+                                testId={subTestId(testId, 'next')}
+                            />
+                        ) : null}
+                    </>
+                ) : null}
+
+                {/*
+                 * The counter, at the **top leading corner of the media** — legacy's pill:
+                 * `rgba(0,0,0,0.5)`, radius 40, a 16px stacked-frames mark and `n of total`. It was an
+                 * inline `1 / 11` in the identity row, which is a different statement: that line is
+                 * about the post, and this is about where you are inside its pictures.
+                 */}
+                {images.length > 1 && !clip ? (
+                    <span
+                        data-testid={subTestId(testId, 'label-data')}
+                        className="type-caption-meta absolute start-2 top-2 z-10 flex items-center gap-1 rounded-[40px] bg-black/50 px-2 py-1 text-white md:start-3 md:top-3"
+                    >
+                        <LockMediaIcon kind="images" size={16} />
+                        {t('post_slider_picture_count', {
+                            index: picture + 1,
+                            total: images.length,
+                        })}
+                    </span>
+                ) : null}
+
+                <PostSliderInfo post={post} testId={testId} />
             </div>
-
-            {/* The pictures of **this** post, on the horizontal axis — posts are the vertical one. */}
-            {/*
-             * ⚠ **They disappear at the ends; they do not wrap.** Legacy's own rule — its disabled
-             * state is `display: none`, not a dimmed button — and it is the opposite of the post
-             * column's, which dims and stays. An arrow over a photograph is not furniture, so it
-             * goes when it has nowhere to point; `%` wrap-around was this file's invention and it
-             * makes the last picture look like the first.
-             *
-             * They are drawn **below `md` too**, which legacy is not — its wrapper is inside
-             * `matchUpMd`, and it can afford that because its gallery is a Swiper the reader
-             * flicks. This one is a picture and an index, so hiding the arrows on a phone would
-             * leave ten of the eleven unreachable. The inset is legacy's own `xs` value, which it
-             * wrote and then never rendered.
-             */}
-            {images.length > 1 && !clip ? (
-                <>
-                    {picture > 0 ? (
-                        <PictureNavButton
-                            side="start"
-                            label={t('common_previous')}
-                            onPress={() => setPicture(p => p - 1)}
-                            testId={subTestId(testId, 'prev')}
-                        />
-                    ) : null}
-                    {picture < images.length - 1 ? (
-                        <PictureNavButton
-                            side="end"
-                            label={t('common_next')}
-                            onPress={() => setPicture(p => p + 1)}
-                            testId={subTestId(testId, 'next')}
-                        />
-                    ) : null}
-                </>
-            ) : null}
-
-            {/*
-             * The counter, at the **top leading corner of the media** — legacy's pill:
-             * `rgba(0,0,0,0.5)`, radius 40, a 16px stacked-frames mark and `n of total`. It was an
-             * inline `1 / 11` in the identity row, which is a different statement: that line is
-             * about the post, and this is about where you are inside its pictures.
-             */}
-            {images.length > 1 && !clip ? (
-                <span
-                    data-testid={subTestId(testId, 'label-data')}
-                    className="type-caption-meta absolute start-2 top-2 z-10 flex items-center gap-1 rounded-[40px] bg-black/50 px-2 py-1 text-white md:start-3 md:top-3"
-                >
-                    <LockMediaIcon kind="images" size={16} />
-                    {t('post_slider_picture_count', {
-                        index: picture + 1,
-                        total: images.length,
-                    })}
-                </span>
-            ) : null}
-
-            <PostSliderInfo post={post} testId={testId} />
 
             <PostSliderRail
                 post={post}
@@ -356,7 +390,7 @@ function PostSliderSlide({
                 onComment={onComment}
                 testId={testId}
             />
-        </>
+        </div>
     )
 }
 
@@ -380,7 +414,12 @@ function PostSliderInfo({ post, testId }: { post: Post; testId: string }) {
     return (
         <div
             data-testid={subTestId(testId, 'footer')}
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 p-3 pt-16 backdrop-blur-[1px] md:gap-4 md:p-4 md:pt-20 md:pe-24"
+            /*
+             * Legacy's own padding and gap — `10px`/`8px` below `md`, `16px`/`16px` above — and it
+             * is symmetric. The trailing strip it used to reserve was for a rail that now has its
+             * own column; below `md` the rail still floats, but its `py-10` lifts it clear.
+             */
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 p-2.5 pt-16 backdrop-blur-[1px] md:gap-4 md:p-4 md:pt-20"
             style={{
                 background:
                     'linear-gradient(180deg, rgba(8, 9, 13, 0) 0%, rgba(8, 9, 13, 0.9) 80.37%)',
@@ -518,7 +557,14 @@ function PostSliderRail({
     return (
         <div
             data-testid={subTestId(testId, 'group')}
-            className="absolute end-2 bottom-24 z-20 flex flex-col items-center gap-3 md:end-4 md:bottom-4"
+            /*
+             * One node, two arrangements, which is what keeps it one set of testids: below `md` it
+             * floats at the trailing edge over the media (legacy's `post-slider-actions-mobile`,
+             * `marginRight` 6/10 and `padding: 40px 0` — the padding is what lifts it off the
+             * caption), and from `md` it is `static`, so it joins the row as its own 64px column
+             * and stops covering the picture (`post-slider-actions-desktop`, `p-3`, bottom-aligned).
+             */
+            className="absolute end-0 bottom-0 z-20 me-1.5 flex flex-col items-center justify-center gap-2 py-10 sm:me-2.5 sm:gap-3 sm:py-[60px] md:static md:me-0 md:h-full md:justify-end md:p-3 md:py-3"
         >
             <RailButton
                 icon={hasReacted(post) ? 'star' : 'star'}
