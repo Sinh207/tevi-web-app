@@ -2,39 +2,33 @@
 
 import { useInView } from '@shared/hooks/use-in-view'
 import { useTranslation } from '@shared/i18n/use-translation'
-import { formatCompactCount } from '@shared/lib/format-count'
 import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
-import { Icon } from '@shared/ui/icon'
-import { Skeleton } from '@shared/ui/skeleton'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useCollections } from '../hooks/use-collections'
 import { COLLECTION_ART } from '../lib/illustrations'
-import { formatPostTimestamp } from '../lib/post-format'
 import { collectionHref } from '../routes'
+import { CollectionCard, CollectionCardSkeleton } from './collection-card'
 import { CollectionCreateDialog } from './collection-create'
 import { CollectionOwnerMenu } from './collection-owner-menu'
 
 /**
- * `/@{slug}/collections` — the creator's collections, as a list of names to open.
+ * `/@{slug}/collections` — the creator's collections, as legacy's `collectionList` draws them: one
+ * `CollectionCard` each, 12px apart with 12px around them below `md`, and 24px apart edge to edge
+ * from it (legacy: `gap: { xs: 12, md: 24 }`, `padding: { xs: 12, md: 0 }`).
  *
- * ## Rows, not cards, and **no** render window
+ * ## Cards on the page colour, not a painted screen
  *
- * A collection row is a name, a count and a chevron. `useRenderWindow` exists because a `PostCard`
- * is expensive to keep mounted — an avatar, a media block, a Lottie instance — and none of that is
- * true here: a hundred of these rows is less DOM than four cards. Windowing them would add a
- * measure-and-stand-down cycle to save nothing, which is the opposite of what the hook is for. The
- * **detail** screen, which draws real posts, does window.
+ * `docs/DESIGN_SYSTEM.md` §6's one exception: plain surface cards floating in their column, where
+ * the gaps between them *are* the separation — painting the screen would dissolve them. Legacy's
+ * page is `#f4f4f4` under white cards, which is exactly that.
  *
- * ## A row is a link and a menu, side by side
+ * ## No render window
  *
- * Legacy's `CollectionItem`: name, the date it was made and how many posts it holds, with the
- * owner's menu on the trailing edge. The menu is a **sibling** of the link rather than inside it, so
- * opening it is never also a navigation — legacy has to catch that with
- * `event.target.closest('[data-menu-container]')`. This screen is the owner's alone (the route checks
- * that), so every row carries the menu.
+ * A card is a name, a date, a count and a menu trigger — a hundred of them is less DOM than four
+ * `PostCard`s, which is what `useRenderWindow` exists for. The collection's own screen, which draws
+ * real posts, does window.
  *
  * ## It reads the same query the composer's picker does
  *
@@ -46,13 +40,13 @@ export function CollectionList({
     channelId,
     testId = 'post-collections',
 }: {
-    /** The space the URL is under — the rows link within it. */
+    /** The space the URL is under — the cards link within it. */
     slug: string
-    /** The owner's own channel — each row's *Add posts* searches it. */
+    /** The owner's own channel — each card's *Add posts* searches it. */
     channelId: string | null
     testId?: string
 }) {
-    const { t, currentLanguage } = useTranslation()
+    const { t } = useTranslation()
     const {
         collections,
         isLoading,
@@ -75,16 +69,14 @@ export function CollectionList({
 
     if (isLoading) {
         return (
-            <div data-testid={subTestId(testId, 'list')} aria-busy="true" className="flex flex-col">
-                {Array.from({ length: 5 }, (_, index) => (
-                    <div
-                        // biome-ignore lint/suspicious/noArrayIndexKey: placeholders have no identity but their position.
-                        key={index}
-                        className="flex flex-col gap-2 border-(--separator-default) border-b px-4 py-4"
-                    >
-                        <Skeleton h={18} className="w-1/2 rounded-(--radius-sm)" />
-                        <Skeleton h={12} className="w-20 rounded-(--radius-sm)" />
-                    </div>
+            <div
+                data-testid={subTestId(testId, 'list')}
+                aria-busy="true"
+                className="flex flex-col gap-px md:pt-2.5"
+            >
+                {Array.from({ length: 4 }, (_, index) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: placeholders have no identity but their position.
+                    <CollectionCardSkeleton key={index} />
                 ))}
             </div>
         )
@@ -92,20 +84,29 @@ export function CollectionList({
 
     if (isError) {
         return (
-            <CollectionNotice
-                title={t('collections_error')}
-                action={{ label: t('common_retry'), onPress: () => void refetch() }}
-                testId={testId}
-            />
+            <div
+                data-testid={subTestId(testId, 'message')}
+                className="flex flex-col items-center gap-3 bg-(--background-surface) px-4 py-[50px] text-center md:mt-2.5 md:rounded-(--radius-xl)"
+            >
+                <p className="type-body-strong text-(--text-title)">{t('collections_error')}</p>
+                <Button
+                    variant="secondary"
+                    size="medium"
+                    onClick={() => void refetch()}
+                    data-testid={subTestId(testId, 'retry')}
+                >
+                    {t('common_retry')}
+                </Button>
+            </div>
         )
     }
 
     if (isEmpty) {
-        /* Legacy's empty screen: its illustration, "Nothing Here Yet", a line, and the way to start. */
+        /* Legacy's empty card: 50px 16px on the surface, its illustration, a title, a line, a button. */
         return (
             <div
                 data-testid={subTestId(testId, 'empty')}
-                className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center"
+                className="flex flex-col items-center gap-2.5 bg-(--background-surface) px-4 py-[50px] text-center md:mt-2.5 md:rounded-(--radius-xl)"
             >
                 <Image
                     src={COLLECTION_ART.empty.src}
@@ -113,10 +114,10 @@ export function CollectionList({
                     width={COLLECTION_ART.empty.width}
                     height={COLLECTION_ART.empty.height}
                 />
-                <p className="type-title-t4-semibold text-(--text-title)">
+                <p className="type-body-strong text-(--text-title)">
                     {t('collection_empty_owner')}
                 </p>
-                <p className="type-dense-default max-w-[400px] text-(--text-subtitle)">
+                <p className="type-dense-default max-w-[400px] text-(--text-body)">
                     {t('collections_empty_body')}
                 </p>
                 <Button
@@ -138,132 +139,28 @@ export function CollectionList({
     }
 
     return (
-        <div data-testid={testId} className="flex flex-col">
-            {collections.map((collection, index) => (
-                /*
-                 * The hairline sits **between** rows for `PostCollectionPicker`'s reason: a rule
-                 * under the last one separates the list from nothing.
-                 */
-                <div
+        <div data-testid={testId} className="flex flex-col gap-3 p-3 md:gap-6 md:px-0 md:pt-2.5">
+            {collections.map(collection => (
+                <CollectionCard
                     key={collection.id}
-                    className={
-                        index === 0
-                            ? 'flex items-center gap-1 pe-2'
-                            : 'flex items-center gap-1 border-(--separator-default) border-t pe-2'
-                    }
-                >
-                    {/* A real `<Link>`, so a row is middle-clickable and openable in a new tab. */}
-                    <Link
-                        href={collectionHref(slug, collection.id)}
-                        data-option-value={collection.id}
-                        data-testid={subTestId(testId, 'row')}
-                        className="flex min-w-0 flex-1 items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-(--background-segment)"
-                    >
-                        <span className="flex min-w-0 flex-col gap-1">
-                            <span className="type-body-strong truncate text-(--text-title)">
-                                {collection.name}
-                            </span>
-                            <CollectionMeta
-                                createdAt={collection.created_at}
-                                postCount={collection.post_count}
-                                locale={currentLanguage}
-                                countLabel={t('post_collection_count', {
-                                    count: collection.post_count,
-                                    formatted: formatCompactCount(
-                                        collection.post_count,
-                                        currentLanguage,
-                                    ),
-                                })}
-                            />
-                        </span>
-                        <Icon
-                            name="angle-right"
-                            size={20}
-                            aria-hidden
-                            className="flex-none text-(--icon-secondary) rtl:-scale-x-100"
+                    collection={collection}
+                    href={collectionHref(slug, collection.id)}
+                    menu={
+                        <CollectionOwnerMenu
+                            collectionId={collection.id}
+                            name={collection.name ?? ''}
+                            channelId={channelId}
+                            testId={subTestId(testId, 'item')}
                         />
-                    </Link>
-                    <CollectionOwnerMenu
-                        collectionId={collection.id}
-                        name={collection.name ?? ''}
-                        channelId={channelId}
-                        testId={subTestId(testId, 'item')}
-                    />
-                </div>
+                    }
+                    testId={subTestId(testId, 'row')}
+                />
             ))}
 
+            {isFetchingNextPage ? <CollectionCardSkeleton /> : null}
+
             {/* Zero-height, so it never adds space to a list that has stopped growing. */}
-            <div ref={sentinelRef} aria-hidden="true" className="h-px" />
-        </div>
-    )
-}
-
-/**
- * The line under a row's name — legacy's date, then a dot and the post count when there is one.
- * An empty collection has no count line at all, as in the picker: "0 posts" is a statement nobody
- * needs.
- */
-function CollectionMeta({
-    createdAt,
-    postCount,
-    locale,
-    countLabel,
-}: {
-    createdAt: string | null
-    postCount: number
-    locale: string
-    countLabel: string
-}) {
-    const when = createdAt ? formatPostTimestamp(createdAt, locale) : ''
-    if (!when && postCount === 0) return null
-
-    return (
-        <span className="type-caption-meta flex items-center gap-1 text-(--text-subtitle)">
-            {when ? <time dateTime={createdAt ?? undefined}>{when}</time> : null}
-            {postCount > 0 ? (
-                <>
-                    {when ? (
-                        <span aria-hidden="true" className="size-1 rounded-full bg-current" />
-                    ) : null}
-                    {countLabel}
-                </>
-            ) : null}
-        </span>
-    )
-}
-
-/** The two states that are not a list. One component, so their geometry cannot drift apart. */
-function CollectionNotice({
-    title,
-    body,
-    action,
-    testId,
-}: {
-    title: string
-    body?: string
-    action?: { label: string; onPress: () => void }
-    testId?: string
-}) {
-    return (
-        <div
-            data-testid={subTestId(testId, 'message')}
-            className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-16 text-center"
-        >
-            <Icon name="history-rectangle-play" size={32} className="text-(--icon-disabled)" />
-            <p className="type-title-t4-semibold text-(--text-title)">{title}</p>
-            {body ? (
-                <p className="type-dense-default max-w-[400px] text-(--text-subtitle)">{body}</p>
-            ) : null}
-            {action ? (
-                <Button
-                    variant="secondary"
-                    size="medium"
-                    onClick={action.onPress}
-                    data-testid={subTestId(testId, 'retry')}
-                >
-                    {action.label}
-                </Button>
-            ) : null}
+            <div ref={sentinelRef} aria-hidden="true" className="-mt-3 h-px md:-mt-6" />
         </div>
     )
 }

@@ -14,7 +14,7 @@ import { useState } from 'react'
 import { useCollectionWrites } from '../hooks/use-collection-writes'
 import { openPostComposer } from '../store/composer-store'
 import { CollectionAddPostsDialog } from './collection-add-posts-dialog'
-import { CollectionNameDialog } from './collection-name-dialog'
+import { CollectionEditDialog } from './collection-edit-dialog'
 
 /**
  * The owner's four things to do with a collection — legacy's `CollectionItem` `BtnMenu`: *Edit*,
@@ -22,8 +22,9 @@ import { CollectionNameDialog } from './collection-name-dialog'
  *
  * ## One component for both places legacy draws it
  *
- * The same menu sits on each row of the list and at the top of the collection's own screen, so it
- * owns everything behind its items — the name dialog, the delete confirmation, *Add posts* — rather
+ * The same menu sits on each card of the list and on the card at the top of the collection's own
+ * screen, so it owns everything behind its items — *Edit collection* (the name and taking posts
+ * out), the delete confirmation, *Add posts* — rather
  * than asking two hosts to wire four dialogs each. The writes are `useCollectionWrites`, which
  * reaches the list's key from either place.
  *
@@ -53,12 +54,13 @@ export function CollectionOwnerMenu({
     const [editing, setEditing] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [adding, setAdding] = useState(false)
-    const { rename, isRenaming, remove, isRemoving } = useCollectionWrites(collectionId, {
-        onDeleted: () => {
-            setDeleting(false)
-            onDeleted?.()
-        },
-    })
+    const { rename, isRenaming, remove, isRemoving, removePosts, isRemovingPosts } =
+        useCollectionWrites(collectionId, {
+            onDeleted: () => {
+                setDeleting(false)
+                onDeleted?.()
+            },
+        })
 
     return (
         <>
@@ -106,15 +108,15 @@ export function CollectionOwnerMenu({
                 </ActionMenuContent>
             </ActionMenu>
 
-            <CollectionNameDialog
+            <CollectionEditDialog
                 open={editing}
                 onOpenChange={setEditing}
-                title={t('collection_edit')}
-                submitLabel={t('common_save')}
-                initialName={name}
-                pending={isRenaming}
-                onSubmit={next => {
-                    rename(next)
+                collectionId={collectionId}
+                name={name}
+                pending={isRenaming || isRemovingPosts}
+                onApply={change => {
+                    if (change.removePostIds.length > 0) removePosts(change.removePostIds)
+                    if (change.name) rename(change.name)
                     setEditing(false)
                 }}
                 testId={subTestId(testId, 'panel')}

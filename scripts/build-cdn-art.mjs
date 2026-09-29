@@ -241,6 +241,16 @@ const SOURCES = [
         box: { width: 225, height: 255 },
         scale: 2,
     },
+    /*
+     * An empty collection — legacy's `IMAGES_STATIC.post.isolation` (`noPost`), 100×100. A plain
+     * 9 KB vector, so `copy`. Not the DM's "no results" art: same name upstream, different file.
+     */
+    {
+        name: 'collection-no-posts',
+        out: 'collection/no-posts.svg',
+        url: `${CDN}/web/web-app/post/isolation.svg`,
+        mode: 'copy',
+    },
     {
         name: 'message-empty',
         out: 'message/empty-conversation.svg',

@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-874 ids across 29 surfaces.
+875 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -690,7 +690,7 @@ Routes: `/my-wallet`, `/my-wallet/payout-method`, `/my-wallet/payout-request`, `
 
 ## `navigation` — Shell — rail, top bar, tab bar, account drawer, end rail
 
-Routes: `/[slug]/collections`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/post/[code]`, `/bookmarks`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
+Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/post/[code]`, `/bookmarks`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
 
 Also present on every route it is mounted under — `src/app/(web)/(main)/layout.tsx`.
 
@@ -952,11 +952,12 @@ Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/po
 
 | testid | companions | source |
 |---|---|---|
-| `post-collection-add-posts` | — | `src/features/post/components/collection-detail.tsx:203` |
-| `post-collection-browse` | — | `src/features/post/components/collection-detail.tsx:220` |
-| `post-collection-create-post` | — | `src/features/post/components/collection-detail.tsx:195` |
-| `post-collection-menu` | — | `src/features/post/components/collection-detail.tsx:118` |
-| `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:36` |
+| `post-collection-add-posts` | — | `src/features/post/components/collection-detail.tsx:220` |
+| `post-collection-browse` | — | `src/features/post/components/collection-detail.tsx:237` |
+| `post-collection-create-post` | — | `src/features/post/components/collection-detail.tsx:212` |
+| `post-collection-menu` | — | `src/features/post/components/collection-detail.tsx:130` |
+| `post-collections-header` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:31` |
+| `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:46` |
 | `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:448` |
 
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone
@@ -1115,9 +1116,11 @@ name; you need it to know the element exists.
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
 | `BookmarkBarActions` | `src/features/post/components/bookmark-bar-actions.tsx` | `-clear` `-confirm` |
 | `BookmarkList` | `src/features/post/components/bookmark-list.tsx` | `-item` `-list` `-message` `-retry` |
-| `CollectionAddPostsDialog` | `src/features/post/components/collection-add-posts-dialog.tsx` | `-empty` `-header` `-list` `-option` `-retry` `-row` `-search` `-submit` `-tab` |
+| `CollectionAddPostsDialog`, `CollectionPostRow` | `src/features/post/components/collection-add-posts-dialog.tsx` | `-empty` `-header` `-list` `-option` `-retry` `-row` `-search` `-submit` `-tab` |
+| `CollectionCard`, `CollectionScreenHeader` | `src/features/post/components/collection-card.tsx` | `-prev` `-trigger` |
 | `CollectionCreateDialog`, `CollectionCreateButton` | `src/features/post/components/collection-create.tsx` | `-panel` `-trigger` |
-| `CollectionDetail` | `src/features/post/components/collection-detail.tsx` | `-header` `-item` `-list` `-message` `-prev` `-remove` `-retry` |
+| `CollectionDetail` | `src/features/post/components/collection-detail.tsx` | `-header` `-item` `-list` `-message` `-retry` `-title` |
+| `CollectionEditDialog` | `src/features/post/components/collection-edit-dialog.tsx` | `-count` `-empty` `-header` `-input` `-list` `-submit` |
 | `CollectionList` | `src/features/post/components/collection-list.tsx` | `-empty` `-item` `-list` `-message` `-panel` `-retry` `-row` `-start` |
 | `CollectionNameDialog` | `src/features/post/components/collection-name-dialog.tsx` | `-count` `-header` `-input` `-submit` |
 | `CollectionOwnerMenu` | `src/features/post/components/collection-owner-menu.tsx` | `-apply` `-confirm` `-option` `-panel` `-remove` `-start` `-trigger` |

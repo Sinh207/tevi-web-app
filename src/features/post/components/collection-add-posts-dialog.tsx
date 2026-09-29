@@ -168,7 +168,7 @@ function AddPostsBody({
                 className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3"
             >
                 {candidates.isLoading ? (
-                    <CandidateSkeleton rows={4} />
+                    <CollectionPostRowSkeleton rows={4} />
                 ) : candidates.isError ? (
                     <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
                         <p className="type-dense-default text-(--text-subtitle)">
@@ -196,17 +196,24 @@ function AddPostsBody({
                 ) : (
                     <>
                         {candidates.posts.map(post => (
-                            <CandidateRow
+                            <CollectionPostRow
                                 key={post.id}
                                 post={post}
                                 picked={picked.includes(post.id)}
+                                label={
+                                    picked.includes(post.id)
+                                        ? t('post_collection_remove')
+                                        : t('post_collection_add')
+                                }
                                 onToggle={() => toggle(post.id)}
                                 disabled={isAdding}
                                 testId={testId}
                             />
                         ))}
                         <div ref={sentinelRef} aria-hidden="true" className="h-px flex-none" />
-                        {candidates.isFetchingNextPage ? <CandidateSkeleton rows={1} /> : null}
+                        {candidates.isFetchingNextPage ? (
+                            <CollectionPostRowSkeleton rows={1} />
+                        ) : null}
                     </>
                 )}
             </div>
@@ -228,22 +235,26 @@ function AddPostsBody({
 }
 
 /**
- * One candidate — legacy's `PostCollection` row: a 100px square, the date and who can see it, the
+ * One post as *Add posts* and *Edit collection* list it — legacy's `PostCollection` row: a 100px square, the date and who can see it, the
  * text on one line, and a pill saying what media it carries.
  *
  * Who can see it is read the way legacy reads it, from `viewer` and `price` rather than from
  * `postGate`: the search service's rows are the post as its **owner** sees it, and those two fields
  * are the only statement of its audience the owner's copy is guaranteed to carry.
  */
-function CandidateRow({
+export function CollectionPostRow({
     post,
     picked,
+    label,
     onToggle,
     disabled,
     testId,
 }: {
     post: Post
+    /** Marked — for adding here, for taking out in *Edit collection*. Published as `aria-pressed`. */
     picked: boolean
+    /** What pressing does, which the two dialogs word oppositely (legacy's `type` add / edit). */
+    label: string
     onToggle: () => void
     disabled: boolean
     testId: string
@@ -343,13 +354,13 @@ function CandidateRow({
                 data-post-id={post.id}
                 className="flex-none"
             >
-                {picked ? t('post_collection_remove') : t('post_collection_add')}
+                {label}
             </Button>
         </div>
     )
 }
 
-function CandidateSkeleton({ rows }: { rows: number }) {
+export function CollectionPostRowSkeleton({ rows }: { rows: number }) {
     return (
         <>
             {Array.from({ length: rows }, (_, index) => (

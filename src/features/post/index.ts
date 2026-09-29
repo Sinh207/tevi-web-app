@@ -47,13 +47,14 @@ export {
 export { BookmarkBarActions } from './components/bookmark-bar-actions'
 export { BookmarkList } from './components/bookmark-list'
 /**
- * The two collection screens, and the `+` the list's bar carries (a server page composes the bar, so
- * the button is handed into its `actions` slot, as `/bookmarks` does).
+ * The two collection screens, legacy's bar they open with, and the `+` that bar carries for the owner
+ * (the route decides ownership — `features/post` cannot read the reader's own channel).
  *
  * The hooks behind them stay internal for the reason the barrel's header gives about the dialogs: a
  * consumer holding `useCollection` could render a *Delete collection* with no collection on screen,
  * or a list that pages a query nothing else is reading.
  */
+export { CollectionScreenHeader } from './components/collection-card'
 export { CollectionCreateButton } from './components/collection-create'
 export { CollectionDetail } from './components/collection-detail'
 export { CollectionList } from './components/collection-list'

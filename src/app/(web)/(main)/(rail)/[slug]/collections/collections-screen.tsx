@@ -1,6 +1,6 @@
 'use client'
 
-import { CollectionList } from '@features/post'
+import { CollectionCreateButton, CollectionList, CollectionScreenHeader } from '@features/post'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { useCollectionOwnership } from './use-collection-ownership'
 
@@ -24,22 +24,38 @@ export function CollectionsScreen({ slug }: { slug: string }) {
     const { t } = useTranslation()
     const { ownership, channelId } = useCollectionOwnership(slug)
 
+    const header = (
+        <CollectionScreenHeader
+            title={t('collections_header')}
+            actions={ownership === 'owner' ? <CollectionCreateButton /> : null}
+            testId="post-collections-header"
+        />
+    )
+
     /*
-     * Nothing while the reader's own channel is still loading — deciding then would flash "not
-     * yours" at the owner for the length of one request.
+     * The bar only while the reader's own channel is still loading — deciding then would flash
+     * "not yours" at the owner for the length of one request.
      */
-    if (ownership === 'unknown') return null
+    if (ownership === 'unknown') return header
 
     if (ownership !== 'owner') {
         return (
-            <p
-                data-testid="post-collections-message"
-                className="type-dense-default px-6 py-16 text-center text-(--text-subtitle)"
-            >
-                {t('collections_not_yours')}
-            </p>
+            <>
+                {header}
+                <p
+                    data-testid="post-collections-message"
+                    className="type-dense-default bg-(--background-surface) px-4 py-[50px] text-center text-(--text-subtitle) md:mt-2.5 md:rounded-(--radius-xl)"
+                >
+                    {t('collections_not_yours')}
+                </p>
+            </>
         )
     }
 
-    return <CollectionList slug={`@${slug}`} channelId={channelId} />
+    return (
+        <>
+            {header}
+            <CollectionList slug={`@${slug}`} channelId={channelId} />
+        </>
+    )
 }

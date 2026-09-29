@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 874,
+        "ids": 875,
         "surfaces": 29
     },
     "surfaces": {
@@ -212,7 +212,6 @@
             "label": "Shell — rail, top bar, tab bar, account drawer, end rail",
             "mountedBy": "src/app/(web)/(main)/layout.tsx",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -8734,7 +8733,6 @@
         "navigation-breadcrumb": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -8774,7 +8772,6 @@
         "navigation-breadcrumb-item": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -8814,7 +8811,6 @@
         "navigation-breadcrumb-link": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -8854,7 +8850,6 @@
         "navigation-end-rail": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -8894,7 +8889,6 @@
         "navigation-end-rail-get-app": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -8934,7 +8928,6 @@
         "navigation-end-rail-get-star": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -8974,7 +8967,6 @@
         "navigation-end-rail-premium": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9014,7 +9006,6 @@
         "navigation-end-rail-profile": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9054,7 +9045,6 @@
         "navigation-end-rail-sign-in": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9094,7 +9084,6 @@
         "navigation-get-app": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9134,7 +9123,6 @@
         "navigation-menu": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9174,7 +9162,6 @@
         "navigation-menu-allow-sensitive": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9214,7 +9201,6 @@
         "navigation-menu-appearance": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9254,7 +9240,6 @@
         "navigation-menu-auto-follow": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9294,7 +9279,6 @@
         "navigation-menu-back": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9334,7 +9318,6 @@
         "navigation-menu-clear-data": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9374,7 +9357,6 @@
         "navigation-menu-clear-data-confirm": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9414,7 +9396,6 @@
         "navigation-menu-copy-id": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9454,7 +9435,6 @@
         "navigation-menu-currency": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9494,7 +9474,6 @@
         "navigation-menu-currency-trigger": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9534,7 +9513,6 @@
         "navigation-menu-get-star": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9574,7 +9552,6 @@
         "navigation-menu-language": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9614,7 +9591,6 @@
         "navigation-menu-my-space": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9654,7 +9630,6 @@
         "navigation-menu-other-row": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9697,7 +9672,6 @@
         "navigation-menu-privacy-row": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9740,7 +9714,6 @@
         "navigation-menu-row": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9783,7 +9756,6 @@
         "navigation-menu-section": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9826,7 +9798,6 @@
         "navigation-menu-sign-in": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9866,7 +9837,6 @@
         "navigation-menu-sign-out-confirm": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9906,7 +9876,6 @@
         "navigation-menu-storage-row": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9949,7 +9918,6 @@
         "navigation-menu-withdraw": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -9989,7 +9957,6 @@
         "navigation-navbar": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10029,7 +9996,6 @@
         "navigation-navbar-chat": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10069,7 +10035,6 @@
         "navigation-navbar-create": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10109,7 +10074,6 @@
         "navigation-navbar-create-menu": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10149,7 +10113,6 @@
         "navigation-navbar-create-menu-item": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10192,7 +10155,6 @@
         "navigation-navbar-create-prompt": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10232,7 +10194,6 @@
         "navigation-navbar-following": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10272,7 +10233,6 @@
         "navigation-navbar-home": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10312,7 +10272,6 @@
         "navigation-navbar-language": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10352,7 +10311,6 @@
         "navigation-navbar-menu": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10392,7 +10350,6 @@
         "navigation-navbar-notifications": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10432,7 +10389,6 @@
         "navigation-navbar-profile": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10472,7 +10428,6 @@
         "navigation-navbar-search": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10512,7 +10467,6 @@
         "navigation-page-back": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10552,7 +10506,6 @@
         "navigation-tab-bar": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10592,7 +10545,6 @@
         "navigation-tab-bar-create": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10632,7 +10584,6 @@
         "navigation-tab-bar-create-dialog": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10672,7 +10623,6 @@
         "navigation-tab-bar-create-dialog-close": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10712,7 +10662,6 @@
         "navigation-tab-bar-create-list": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10752,7 +10701,6 @@
         "navigation-tab-bar-create-list-row": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10795,7 +10743,6 @@
         "navigation-tab-bar-create-prompt": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10835,7 +10782,6 @@
         "navigation-tab-bar-following": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10875,7 +10821,6 @@
         "navigation-tab-bar-home": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10915,7 +10860,6 @@
         "navigation-tab-bar-messages": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10955,7 +10899,6 @@
         "navigation-tab-bar-my-space": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -10995,7 +10938,6 @@
         "navigation-top-bar": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -11035,7 +10977,6 @@
         "navigation-top-bar-menu": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -11075,7 +11016,6 @@
         "navigation-top-bar-notifications": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -11115,7 +11055,6 @@
         "navigation-top-bar-premium": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -11155,7 +11094,6 @@
         "navigation-top-bar-search": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -11195,7 +11133,6 @@
         "navigation-top-bar-star-balance": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -11235,7 +11172,6 @@
         "navigation-top-bar-star-count": {
             "scope": "navigation",
             "routes": [
-                "/[slug]/collections",
                 "/[slug]/earnings-report",
                 "/[slug]/earnings-report/[dateTs]",
                 "/[slug]/post/[code]",
@@ -12881,7 +12817,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/collection-detail.tsx:203"
+            "source": "src/features/post/components/collection-detail.tsx:220"
         },
         "post-collection-browse": {
             "scope": "post",
@@ -12891,7 +12827,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/collection-detail.tsx:220"
+            "source": "src/features/post/components/collection-detail.tsx:237"
         },
         "post-collection-create-post": {
             "scope": "post",
@@ -12901,7 +12837,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/collection-detail.tsx:195"
+            "source": "src/features/post/components/collection-detail.tsx:212"
         },
         "post-collection-menu": {
             "scope": "post",
@@ -12911,7 +12847,17 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/collection-detail.tsx:118"
+            "source": "src/features/post/components/collection-detail.tsx:130"
+        },
+        "post-collections-header": {
+            "scope": "post",
+            "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/post/[code]",
+                "/bookmarks"
+            ],
+            "source": "src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:31"
         },
         "post-collections-message": {
             "scope": "post",
@@ -12921,7 +12867,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:36"
+            "source": "src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:46"
         },
         "post-trimmer": {
             "scope": "post",
@@ -13794,7 +13740,8 @@
         },
         "src/features/post/components/collection-add-posts-dialog.tsx": {
             "accepts": [
-                "CollectionAddPostsDialog"
+                "CollectionAddPostsDialog",
+                "CollectionPostRow"
             ],
             "parts": [
                 "empty",
@@ -13806,6 +13753,16 @@
                 "search",
                 "submit",
                 "tab"
+            ]
+        },
+        "src/features/post/components/collection-card.tsx": {
+            "accepts": [
+                "CollectionCard",
+                "CollectionScreenHeader"
+            ],
+            "parts": [
+                "prev",
+                "trigger"
             ]
         },
         "src/features/post/components/collection-create.tsx": {
@@ -13827,9 +13784,21 @@
                 "item",
                 "list",
                 "message",
-                "prev",
-                "remove",
-                "retry"
+                "retry",
+                "title"
+            ]
+        },
+        "src/features/post/components/collection-edit-dialog.tsx": {
+            "accepts": [
+                "CollectionEditDialog"
+            ],
+            "parts": [
+                "count",
+                "empty",
+                "header",
+                "input",
+                "list",
+                "submit"
             ]
         },
         "src/features/post/components/collection-list.tsx": {

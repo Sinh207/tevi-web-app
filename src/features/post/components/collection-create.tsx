@@ -2,10 +2,12 @@
 
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
+import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
 import { useState } from 'react'
 import { useCollections } from '../hooks/use-collections'
 import { COLLECTIONS_MAX } from '../lib/collection-page'
+import { DISC } from './collection-card'
 import { CollectionNameDialog } from './collection-name-dialog'
 
 /**
@@ -46,8 +48,8 @@ export function CollectionCreateDialog({
 }
 
 /**
- * The `+` in the collections screen's bar — legacy's `BtnAddCollection`, which the list header
- * draws only while `collections.length < 10`.
+ * The `+` in the collections screen's bar — legacy's `BtnAddCollection`: the same floating disc as
+ * the back control, drawn only while `collections.length < 10`.
  *
  * It reads the list's own query (`enabled: true` is the same key the list below is already
  * fetching, so this adds no request) and stands down at the limit. The host decides whether the
@@ -71,7 +73,7 @@ export function CollectionCreateButton({
                 aria-label={t('post_collection_create_new')}
                 onClick={() => setOpen(true)}
                 data-testid={subTestId(testId, 'trigger')}
-                className="flex size-10 items-center justify-center rounded-full text-(--icon-default) transition-colors hover:bg-(--background-segment)"
+                className={cn(DISC, 'size-10')}
             >
                 <Icon name="plus" size={20} />
             </button>

@@ -196,6 +196,7 @@ below is the figures at conversion time; for the current ones run
 | gift-code | `banner` + 2 `result.webp` | 3.9 MB (3 svg) | 71 KB | re-encode |
 | channel | `no-blocked-accounts.png`, `no-live-events.png` | 5.2 MB (2 svg) | 141 KB | re-encode |
 | post | `collection/empty.webp` | 2.5 MB (svg) | 23.6 KB | re-encode (the collections list's empty state) |
+| post | `collection/no-posts.svg` | 9.1 KB | 9.1 KB | copy (an empty collection) |
 | channel | `no-follow-requests.webp` | 69 KB (png) | 21 KB | re-encode (a real 2× png — committed for the cold-cache cost, not to rescue a format) |
 | channel | `add-home-screen.webp` | 17.6 KB (jpeg) | 2.3 KB | re-encode (**the only jpeg source** — `mimeOf` used to throw on one; box keeps the source's aspect because an overlay is positioned as a percentage of it) |
 | earnings / membership / star-transfer | `theo-search.svg` (one shared file) | 9 KB | 9 KB | copy |

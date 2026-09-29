@@ -35,6 +35,10 @@
  * pill the solid one reads as a blob where legacy reads as a lock.
  *
  * Deleting this one needs either an outline weight or a keyholed `lock` in the library.
+ *
+ * ### `CollectionListGlyph` — the sprite has a document, not a list
+ *
+ * See the glyph's own note. Deleting it needs a plain bulleted list in the library.
  */
 
 /**
@@ -167,3 +171,30 @@ export function StarCostGlyph({ size = 12 }: { size?: number }) {
         </svg>
     )
 }
+
+/**
+ * The bulleted list in a collection card's count pill — legacy's `CollectionItem`, 12px, white on
+ * the dark pill.
+ *
+ * The sprite's nearest is `document-list`, which is a **page** with lines on it: a document, where
+ * legacy's is three bullets and nothing around them — a list, which is what a collection is. Same
+ * reasoning as `LockMediaIcon`'s book. Deleting this needs a plain bulleted-list glyph in the
+ * library.
+ */
+export function CollectionListGlyph({ size = 12 }: { size?: number }) {
+    return (
+        <svg
+            width={size}
+            height={size}
+            viewBox="0 0 12 12"
+            fill="none"
+            aria-hidden="true"
+            focusable="false"
+        >
+            <path d={COLLECTION_LIST} fill="currentColor" />
+        </svg>
+    )
+}
+
+const COLLECTION_LIST =
+    'M1.74971 8.25029C2.16376 8.25029 2.49942 8.58595 2.49942 9C2.49942 9.41405 2.16376 9.74971 1.74971 9.74971C1.33566 9.74971 1 9.41405 1 9C1 8.58595 1.33566 8.25029 1.74971 8.25029ZM3.75017 8.5H10.5017C10.7779 8.5 11.0017 8.72386 11.0017 9C11.0017 9.25642 10.8087 9.46775 10.56 9.49664L10.5017 9.5H3.75017C3.47403 9.5 3.25017 9.27614 3.25017 9C3.25017 8.74358 3.44319 8.53225 3.69186 8.50336L3.75017 8.5H10.5017H3.75017ZM1.74971 5.25029C2.16376 5.25029 2.49942 5.58595 2.49942 6C2.49942 6.41405 2.16376 6.74971 1.74971 6.74971C1.33566 6.74971 1 6.41405 1 6C1 5.58595 1.33566 5.25029 1.74971 5.25029ZM3.75017 5.5H10.5017C10.7779 5.5 11.0017 5.72386 11.0017 6C11.0017 6.25642 10.8087 6.46775 10.56 6.49664L10.5017 6.5H3.75017C3.47403 6.5 3.25017 6.27614 3.25017 6C3.25017 5.74358 3.44319 5.53225 3.69186 5.50336L3.75017 5.5H10.5017H3.75017ZM1.74971 2.25391C2.16376 2.25391 2.49942 2.58956 2.49942 3.00361C2.49942 3.41767 2.16376 3.75332 1.74971 3.75332C1.33566 3.75332 1 3.41767 1 3.00361C1 2.58956 1.33566 2.25391 1.74971 2.25391ZM3.75017 2.50041H10.5017C10.7779 2.50041 11.0017 2.72427 11.0017 3.00041C11.0017 3.25683 10.8087 3.46817 10.56 3.49705L10.5017 3.50041H3.75017C3.47403 3.50041 3.25017 3.27655 3.25017 3.00041C3.25017 2.74399 3.44319 2.53266 3.69186 2.50378L3.75017 2.50041H10.5017H3.75017Z'

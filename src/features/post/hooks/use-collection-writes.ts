@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { postApi, postKeys } from '../api/post-api'
 
 /**
- * Renaming and deleting **one** collection — the owner's two writes on it, wherever it is drawn.
+ * Renaming, deleting and taking posts out of **one** collection — the owner's two writes on it, wherever it is drawn.
  *
  * Its own hook because two places offer them: the collection's own screen and each row of the
  * list (legacy's `CollectionItem` menu is the same four items on both). `useCollection` composes it
@@ -59,10 +59,30 @@ export function useCollectionWrites(
         meta: { showErrorToast: t('collection_delete_failed') },
     })
 
+    /**
+     * Take posts out — legacy's `deletePostsInCollection`, which *Edit collection* sends for every
+     * post marked on *Done*. The posts stay on their space (`removePostsFromCollection` says why that
+     * is safe to offer behind no confirmation).
+     */
+    const removePosts = useMutation({
+        mutationFn: (postIds: string[]) =>
+            postApi.removePostsFromCollection(collectionId, postIds, activeId),
+        onSuccess: () => {
+            toast.success(t('collection_post_removed'))
+            void queryClient.invalidateQueries({ queryKey: postsKey })
+            // The count on the card, and on the list's card one screen back, moved too.
+            void queryClient.invalidateQueries({ queryKey: detailKey })
+            void queryClient.invalidateQueries({ queryKey: listKey })
+        },
+        meta: { showErrorToast: t('collection_post_remove_failed') },
+    })
+
     return {
         rename: (name: string) => rename.mutate(name),
         isRenaming: rename.isPending,
         remove: () => remove.mutate(),
         isRemoving: remove.isPending,
+        removePosts: (postIds: string[]) => removePosts.mutate(postIds),
+        isRemovingPosts: removePosts.isPending,
     }
 }

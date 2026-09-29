@@ -1,11 +1,9 @@
 'use client'
 
 import { useAuth } from '@features/auth'
-import { useTranslation } from '@shared/i18n/use-translation'
 import type { PageCursor } from '@shared/lib/api/page-cursor'
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { infiniteQueryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { toast } from 'sonner'
 import type { PostCollection } from '../api/collection-types'
 import { postApi, postKeys } from '../api/post-api'
 import type { Post } from '../api/types'
@@ -39,7 +37,8 @@ export type CollectionOwnership = 'owner' | 'viewer' | 'unknown'
  * ## Renaming and deleting are `useCollectionWrites`'
  *
  * The list's rows offer the same two, so the mutations live there and this composes them — that
- * hook says why both reach the list's key. Unfiling a post is this screen's alone.
+ * hook says why both reach the list's key. Taking posts out is the *Edit collection* dialog's, as in
+ * legacy — not a control on each card.
  */
 export interface UseCollectionResult {
     collection: PostCollection | null
@@ -63,8 +62,6 @@ export interface UseCollectionResult {
     isRenaming: boolean
     remove: () => void
     isRemoving: boolean
-    /** Unfile one post. It stays on its space — see `removePostsFromCollection`. */
-    unfile: (postId: string) => void
 }
 
 export function useCollection(
@@ -81,8 +78,6 @@ export function useCollection(
     },
 ): UseCollectionResult {
     const { activeId, isAuthenticated } = useAuth()
-    const { t } = useTranslation()
-    const queryClient = useQueryClient()
 
     const isOwner = ownership === 'owner'
 
@@ -93,14 +88,6 @@ export function useCollection(
                 : postKeys.spaceCollection(slug, collectionId, activeId),
         [isOwner, slug, collectionId, activeId],
     )
-    const postsKey = useMemo(
-        () =>
-            isOwner
-                ? postKeys.collectionPosts(collectionId, activeId)
-                : postKeys.spaceCollectionPosts(slug, collectionId, activeId),
-        [isOwner, slug, collectionId, activeId],
-    )
-    const listKey = useMemo(() => postKeys.collections(activeId), [activeId])
 
     /*
      * A signed-in account only, on both halves — legacy's `initData` asks nothing without one, and
@@ -118,40 +105,13 @@ export function useCollection(
     })
 
     const posts = useInfiniteQuery({
-        queryKey: postsKey,
-        initialPageParam: COLLECTION_POSTS_FIRST_PAGE as PageCursor | null,
-        queryFn: ({ pageParam, signal }) => {
-            const params = pageParam ?? COLLECTION_POSTS_FIRST_PAGE
-            return isOwner
-                ? postApi.getCollectionPosts({ collectionId, params, accountId: activeId, signal })
-                : postApi.getSpaceCollectionPosts({
-                      slug,
-                      collectionId,
-                      params,
-                      accountId: activeId,
-                      signal,
-                  })
-        },
-        getNextPageParam: (last, _pages, lastParam) => nextCollectionPostsCursor(last, lastParam),
+        ...collectionPostsOptions({ collectionId, slug, isOwner, accountId: activeId }),
         enabled,
     })
 
     const rows = useMemo(() => posts.data?.pages.flatMap(page => page.results) ?? [], [posts.data])
 
     const writes = useCollectionWrites(collectionId, { onDeleted })
-
-    const unfileMutation = useMutation({
-        mutationFn: (postId: string) =>
-            postApi.removePostsFromCollection(collectionId, [postId], activeId),
-        onSuccess: () => {
-            toast.success(t('collection_post_removed'))
-            void queryClient.invalidateQueries({ queryKey: postsKey })
-            // The count on the row the reader came from moved too.
-            void queryClient.invalidateQueries({ queryKey: listKey })
-            void queryClient.invalidateQueries({ queryKey: detailKey })
-        },
-        meta: { showErrorToast: t('collection_post_remove_failed') },
-    })
 
     return {
         collection: detail.data ?? null,
@@ -182,6 +142,37 @@ export function useCollection(
         isRenaming: writes.isRenaming,
         remove: writes.remove,
         isRemoving: writes.isRemoving,
-        unfile: postId => unfileMutation.mutate(postId),
     }
+}
+
+/**
+ * The query behind a collection's posts — **one definition**, because two surfaces read it: the
+ * collection's screen and the owner's *Edit collection* dialog, which lists the same posts to take
+ * some out. The same key and the same `queryFn` mean one cache entry, so a removal the dialog makes
+ * is the screen's next render too.
+ */
+export function collectionPostsOptions({
+    collectionId,
+    slug,
+    isOwner,
+    accountId,
+}: {
+    collectionId: string
+    slug: string
+    isOwner: boolean
+    accountId: string | null
+}) {
+    return infiniteQueryOptions({
+        queryKey: isOwner
+            ? postKeys.collectionPosts(collectionId, accountId)
+            : postKeys.spaceCollectionPosts(slug, collectionId, accountId),
+        initialPageParam: COLLECTION_POSTS_FIRST_PAGE as PageCursor | null,
+        queryFn: ({ pageParam, signal }) => {
+            const params = pageParam ?? COLLECTION_POSTS_FIRST_PAGE
+            return isOwner
+                ? postApi.getCollectionPosts({ collectionId, params, accountId, signal })
+                : postApi.getSpaceCollectionPosts({ slug, collectionId, params, accountId, signal })
+        },
+        getNextPageParam: (last, _pages, lastParam) => nextCollectionPostsCursor(last, lastParam),
+    })
 }
