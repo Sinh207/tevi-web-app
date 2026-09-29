@@ -3,6 +3,7 @@ import { PageBackBar } from '@features/navigation'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { CollectionsBarActions } from './collections-bar-actions'
 import { CollectionsScreen } from './collections-screen'
 
 /**
@@ -49,7 +50,10 @@ export default async function CollectionsPage({ params }: PageProps) {
         <main className="mx-auto flex w-full max-w-[612px] flex-1 flex-col">
             {/* Opaque, or the list scrolls through the bar — `AppBar` paints no background. */}
             <div className="sticky top-0 z-20 bg-(--background)">
-                <PageBackBar title={t('collections_title')} />
+                <PageBackBar
+                    title={t('collections_title')}
+                    actions={<CollectionsBarActions slug={slug} />}
+                />
             </div>
             <CollectionsScreen slug={slug} />
         </main>

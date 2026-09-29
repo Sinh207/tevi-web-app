@@ -32,3 +32,10 @@ export function nextCollectionPostsCursor(
 ): PageCursor | undefined {
     return nextPagedCursor(page, current, COLLECTION_POSTS_PAGE_SIZE)
 }
+
+/**
+ * How many collections an account may have — legacy's `collections.length < 10`, which hides the
+ * create control on the list and in the composer's picker alike. Whether the backend enforces it
+ * too is not known; the client keeps the number both shipped screens keep.
+ */
+export const COLLECTIONS_MAX = 10

@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 870,
+        "ids": 874,
         "surfaces": 29
     },
     "surfaces": {
@@ -44,6 +44,8 @@
             "label": "Sign in, sign up, password — and the global sign-in dialog and splash",
             "mountedBy": "src/app/session-providers.tsx",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -597,6 +599,8 @@
         "auth-account-add": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -608,6 +612,8 @@
         "auth-account-remove": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -622,6 +628,8 @@
         "auth-account-row": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -636,6 +644,8 @@
         "auth-change-password-form": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -647,6 +657,8 @@
         "auth-change-password-submit": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -658,6 +670,8 @@
         "auth-dialog-privacy": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -669,6 +683,8 @@
         "auth-dialog-terms": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -680,6 +696,8 @@
         "auth-email-form": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -691,6 +709,8 @@
         "auth-email-form-email": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -702,6 +722,8 @@
         "auth-email-form-forgot": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -713,6 +735,8 @@
         "auth-email-form-password": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -724,6 +748,8 @@
         "auth-email-form-submit": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -735,6 +761,8 @@
         "auth-forgot-email": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -746,6 +774,8 @@
         "auth-forgot-form": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -757,6 +787,8 @@
         "auth-forgot-new-password": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -768,6 +800,8 @@
         "auth-forgot-resend": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -779,6 +813,8 @@
         "auth-forgot-submit": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -790,6 +826,8 @@
         "auth-login-close": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -801,6 +839,8 @@
         "auth-mode-switch": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -812,6 +852,8 @@
         "auth-password-confirm": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -823,6 +865,8 @@
         "auth-password-current": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -834,6 +878,8 @@
         "auth-password-done": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -845,6 +891,8 @@
         "auth-password-edit-email": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -856,6 +904,8 @@
         "auth-password-new": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -867,6 +917,8 @@
         "auth-password-resend": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -878,6 +930,8 @@
         "auth-password-retry": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -889,6 +943,8 @@
         "auth-password-setup-confirm": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -900,6 +956,8 @@
         "auth-password-setup-email": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -911,6 +969,8 @@
         "auth-password-setup-form": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -922,6 +982,8 @@
         "auth-password-setup-new": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -933,6 +995,8 @@
         "auth-password-setup-submit": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -944,6 +1008,8 @@
         "auth-password-sign-in": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -955,6 +1021,8 @@
         "auth-privacy": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -966,6 +1034,8 @@
         "auth-provider": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -980,6 +1050,8 @@
         "auth-qr-retry": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -991,6 +1063,8 @@
         "auth-splash": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1002,6 +1076,8 @@
         "auth-step-back": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1013,6 +1089,8 @@
         "auth-switcher-close": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1024,6 +1102,8 @@
         "auth-switcher-sign-out-confirm": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1035,6 +1115,8 @@
         "auth-terms": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1046,6 +1128,8 @@
         "auth-two-fa": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1057,6 +1141,8 @@
         "auth-two-fa-action-change": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1068,6 +1154,8 @@
         "auth-two-fa-action-disable": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1079,6 +1167,8 @@
         "auth-two-fa-action-recovery-email": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1090,6 +1180,8 @@
         "auth-two-fa-back": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1101,6 +1193,8 @@
         "auth-two-fa-change-error": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1112,6 +1206,8 @@
         "auth-two-fa-change-hint": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1123,6 +1219,8 @@
         "auth-two-fa-change-save": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1134,6 +1232,8 @@
         "auth-two-fa-change-skip": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1145,6 +1245,8 @@
         "auth-two-fa-code": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1156,6 +1258,8 @@
         "auth-two-fa-dialog": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1167,6 +1271,8 @@
         "auth-two-fa-disable": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1178,6 +1284,8 @@
         "auth-two-fa-error": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1189,6 +1297,8 @@
         "auth-two-fa-forgot": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1200,6 +1310,8 @@
         "auth-two-fa-gate-error": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1211,6 +1323,8 @@
         "auth-two-fa-gate-forgot": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1222,6 +1336,8 @@
         "auth-two-fa-gate-hint": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1233,6 +1349,8 @@
         "auth-two-fa-gate-hint-note": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1244,6 +1362,8 @@
         "auth-two-fa-gate-resend": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1255,6 +1375,8 @@
         "auth-two-fa-gate-save": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1266,6 +1388,8 @@
         "auth-two-fa-gate-skip": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1277,6 +1401,8 @@
         "auth-two-fa-header": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1288,6 +1414,8 @@
         "auth-two-fa-hint": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1299,6 +1427,8 @@
         "auth-two-fa-note": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1310,6 +1440,8 @@
         "auth-two-fa-recovery-code": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1321,6 +1453,8 @@
         "auth-two-fa-recovery-email": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1332,6 +1466,8 @@
         "auth-two-fa-recovery-email-error": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1343,6 +1479,8 @@
         "auth-two-fa-recovery-email-submit": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1354,6 +1492,8 @@
         "auth-two-fa-recovery-resend": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1365,6 +1505,8 @@
         "auth-two-fa-reenter": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1376,6 +1518,8 @@
         "auth-two-fa-resend": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1387,6 +1531,8 @@
         "auth-two-fa-reset-note": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1398,6 +1544,8 @@
         "auth-two-fa-save": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1409,6 +1557,8 @@
         "auth-two-fa-setup": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1420,6 +1570,8 @@
         "auth-two-fa-setup-continue": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1431,6 +1583,8 @@
         "auth-two-fa-setup-done": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1442,6 +1596,8 @@
         "auth-two-fa-setup-email": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1453,6 +1609,8 @@
         "auth-two-fa-setup-error": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1464,6 +1622,8 @@
         "auth-two-fa-setup-form": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1475,6 +1635,8 @@
         "auth-two-fa-setup-hint": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1486,6 +1648,8 @@
         "auth-two-fa-setup-resend": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1497,6 +1661,8 @@
         "auth-two-fa-setup-send": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1508,6 +1674,8 @@
         "auth-two-fa-setup-skip": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1519,6 +1687,8 @@
         "auth-two-fa-setup-start": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1530,6 +1700,8 @@
         "auth-two-fa-sign-in": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -1541,6 +1713,8 @@
         "auth-two-fa-skip": {
             "scope": "auth",
             "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
                 "/app/privacy-settings",
                 "/login",
                 "/settings/password",
@@ -4476,7 +4650,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:158"
+            "source": "src/features/channel/components/channel-thread-list.tsx:172"
         },
         "channel-menu-follow": {
             "scope": "channel",
@@ -5912,7 +6086,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:212"
+            "source": "src/features/channel/components/channel-thread-list.tsx:226"
         },
         "channel-top-bar-loading": {
             "scope": "channel",
@@ -12699,6 +12873,46 @@
             ],
             "source": "src/features/payout/components/payout-config-form.tsx:186"
         },
+        "post-collection-add-posts": {
+            "scope": "post",
+            "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/post/[code]",
+                "/bookmarks"
+            ],
+            "source": "src/features/post/components/collection-detail.tsx:203"
+        },
+        "post-collection-browse": {
+            "scope": "post",
+            "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/post/[code]",
+                "/bookmarks"
+            ],
+            "source": "src/features/post/components/collection-detail.tsx:220"
+        },
+        "post-collection-create-post": {
+            "scope": "post",
+            "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/post/[code]",
+                "/bookmarks"
+            ],
+            "source": "src/features/post/components/collection-detail.tsx:195"
+        },
+        "post-collection-menu": {
+            "scope": "post",
+            "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/post/[code]",
+                "/bookmarks"
+            ],
+            "source": "src/features/post/components/collection-detail.tsx:118"
+        },
         "post-collections-message": {
             "scope": "post",
             "routes": [
@@ -12707,7 +12921,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:32"
+            "source": "src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:36"
         },
         "post-trimmer": {
             "scope": "post",
@@ -12717,7 +12931,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/post-composer-dialog.tsx:430"
+            "source": "src/features/post/components/post-composer-dialog.tsx:448"
         },
         "premium-about": {
             "scope": "premium",
@@ -13578,25 +13792,44 @@
                 "retry"
             ]
         },
+        "src/features/post/components/collection-add-posts-dialog.tsx": {
+            "accepts": [
+                "CollectionAddPostsDialog"
+            ],
+            "parts": [
+                "empty",
+                "header",
+                "list",
+                "option",
+                "retry",
+                "row",
+                "search",
+                "submit",
+                "tab"
+            ]
+        },
+        "src/features/post/components/collection-create.tsx": {
+            "accepts": [
+                "CollectionCreateDialog",
+                "CollectionCreateButton"
+            ],
+            "parts": [
+                "panel",
+                "trigger"
+            ]
+        },
         "src/features/post/components/collection-detail.tsx": {
             "accepts": [
                 "CollectionDetail"
             ],
             "parts": [
-                "apply",
-                "clear",
-                "confirm",
                 "header",
-                "input",
                 "item",
                 "list",
                 "message",
-                "panel",
                 "prev",
                 "remove",
-                "retry",
-                "submit",
-                "title"
+                "retry"
             ]
         },
         "src/features/post/components/collection-list.tsx": {
@@ -13604,10 +13837,39 @@
                 "CollectionList"
             ],
             "parts": [
+                "empty",
+                "item",
                 "list",
                 "message",
+                "panel",
                 "retry",
-                "row"
+                "row",
+                "start"
+            ]
+        },
+        "src/features/post/components/collection-name-dialog.tsx": {
+            "accepts": [
+                "CollectionNameDialog"
+            ],
+            "parts": [
+                "count",
+                "header",
+                "input",
+                "submit"
+            ]
+        },
+        "src/features/post/components/collection-owner-menu.tsx": {
+            "accepts": [
+                "CollectionOwnerMenu"
+            ],
+            "parts": [
+                "apply",
+                "confirm",
+                "option",
+                "panel",
+                "remove",
+                "start",
+                "trigger"
             ]
         },
         "src/features/post/components/post-actions.tsx": {
@@ -13943,6 +14205,15 @@
                 "panel",
                 "retry",
                 "row"
+            ]
+        },
+        "src/features/post/components/space-collections-row.tsx": {
+            "accepts": [
+                "SpaceCollectionsRow"
+            ],
+            "parts": [
+                "item",
+                "trigger"
             ]
         },
         "src/features/search/components/creator-picker-view.tsx": {

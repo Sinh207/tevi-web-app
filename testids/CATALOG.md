@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-870 ids across 29 surfaces.
+874 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -64,7 +64,7 @@ Also present on every route it is mounted under — `src/app/error.tsx`.
 
 ## `auth` — Sign in, sign up, password — and the global sign-in dialog and splash
 
-Routes: `/app/privacy-settings`, `/login`, `/settings/password`, `/settings/two-step-verification`, `/signup`
+Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/app/privacy-settings`, `/login`, `/settings/password`, `/settings/two-step-verification`, `/signup`
 
 Also present on every route it is mounted under — `src/app/session-providers.tsx`.
 
@@ -294,7 +294,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-mcn-partnership-sign-in` | — | `src/features/channel/components/mcn-partnership-view.tsx:105` |
 | `channel-mcn-partnership-signed-out` | — | `src/features/channel/components/mcn-partnership-view.tsx:95` |
 | `channel-mcn-partnership-space` | — | `src/features/channel/components/mcn-partnership-view.tsx:423` |
-| `channel-media` | — | `src/features/channel/components/channel-thread-list.tsx:158` |
+| `channel-media` | — | `src/features/channel/components/channel-thread-list.tsx:172` |
 | `channel-menu-follow` | — | `src/features/channel/components/channel-viewer-menu.tsx:143` |
 | `channel-message` | — | `src/features/channel/components/channel-viewer-actions.tsx:293` |
 | `channel-my-space-no-channel` | — | `src/features/channel/components/my-space-redirect.tsx:157` |
@@ -349,7 +349,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-suspended-guidelines` | — | `src/features/channel/components/channel-state-screens.tsx:117` |
 | `channel-tabs` | — | `src/features/channel/components/channel-tabs.tsx:86` |
 | `channel-tabs-loading` | — | `src/features/channel/components/channel-tabs-skeleton.tsx:35` |
-| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:212` |
+| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:226` |
 | `channel-top-bar-loading` | — | `src/features/channel/components/channel-top-bar-skeleton.tsx:43` |
 | `channel-unblock` | — | `src/features/channel/components/blocked-account-row.tsx:205` |
 | `channel-verified-badge` | — | `src/features/channel/components/channel-identity.tsx:94` |
@@ -952,8 +952,12 @@ Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/po
 
 | testid | companions | source |
 |---|---|---|
-| `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:32` |
-| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:430` |
+| `post-collection-add-posts` | — | `src/features/post/components/collection-detail.tsx:203` |
+| `post-collection-browse` | — | `src/features/post/components/collection-detail.tsx:220` |
+| `post-collection-create-post` | — | `src/features/post/components/collection-detail.tsx:195` |
+| `post-collection-menu` | — | `src/features/post/components/collection-detail.tsx:118` |
+| `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:36` |
+| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:448` |
 
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone
 
@@ -1111,8 +1115,12 @@ name; you need it to know the element exists.
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
 | `BookmarkBarActions` | `src/features/post/components/bookmark-bar-actions.tsx` | `-clear` `-confirm` |
 | `BookmarkList` | `src/features/post/components/bookmark-list.tsx` | `-item` `-list` `-message` `-retry` |
-| `CollectionDetail` | `src/features/post/components/collection-detail.tsx` | `-apply` `-clear` `-confirm` `-header` `-input` `-item` `-list` `-message` `-panel` `-prev` `-remove` `-retry` `-submit` `-title` |
-| `CollectionList` | `src/features/post/components/collection-list.tsx` | `-list` `-message` `-retry` `-row` |
+| `CollectionAddPostsDialog` | `src/features/post/components/collection-add-posts-dialog.tsx` | `-empty` `-header` `-list` `-option` `-retry` `-row` `-search` `-submit` `-tab` |
+| `CollectionCreateDialog`, `CollectionCreateButton` | `src/features/post/components/collection-create.tsx` | `-panel` `-trigger` |
+| `CollectionDetail` | `src/features/post/components/collection-detail.tsx` | `-header` `-item` `-list` `-message` `-prev` `-remove` `-retry` |
+| `CollectionList` | `src/features/post/components/collection-list.tsx` | `-empty` `-item` `-list` `-message` `-panel` `-retry` `-row` `-start` |
+| `CollectionNameDialog` | `src/features/post/components/collection-name-dialog.tsx` | `-count` `-header` `-input` `-submit` |
+| `CollectionOwnerMenu` | `src/features/post/components/collection-owner-menu.tsx` | `-apply` `-confirm` `-option` `-panel` `-remove` `-start` `-trigger` |
 | `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
 | `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
@@ -1138,6 +1146,7 @@ name; you need it to know the element exists.
 | `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-item` `-list` `-remove` `-submit` `-trigger` |
 | `ReplyRow` | `src/features/post/components/reply-row.tsx` | `-description` `-header` `-label-data` `-message` `-next` `-overlay` `-panel` `-remove` `-reveal` `-slide` `-trigger` |
 | `ReplyThread` | `src/features/post/components/reply-thread.tsx` | `-item` `-next` `-panel` `-retry` `-row` |
+| `SpaceCollectionsRow` | `src/features/post/components/space-collections-row.tsx` | `-item` `-trigger` |
 | `CreatorPickerView` | `src/features/search/components/creator-picker-view.tsx` | `-field` `-item` `-retry` |
 | `ShareQrPanel` | `src/features/share/components/share-qr-panel.tsx` | `-copy` `-qr` `-submit` |
 | `ActionRows`, `ActionRowsSkeleton` | `src/shared/components/action-rows.tsx` | `-row` |

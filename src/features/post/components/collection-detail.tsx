@@ -1,21 +1,22 @@
 'use client'
 
 import { postShareContext, ShareDialog } from '@features/share'
-import { DialogScreenHeader } from '@shared/components/dialog-screen-header'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
-import { ConfirmDialog } from '@shared/ui/confirm-dialog'
-import { Dialog, DialogContent } from '@shared/ui/dialog'
 import { Icon } from '@shared/ui/icon'
 import { Skeleton } from '@shared/ui/skeleton'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import type { Post } from '../api/types'
-import { useCollection } from '../hooks/use-collection-posts'
+import { type CollectionOwnership, useCollection } from '../hooks/use-collection-posts'
 import { usePostSlider } from '../hooks/use-post-slider'
+import { openPostComposer } from '../store/composer-store'
+import { CollectionAddPostsDialog } from './collection-add-posts-dialog'
+import { CollectionOwnerMenu } from './collection-owner-menu'
 import { PostCard } from './post-card'
 import { PostSlider } from './post-slider'
 
@@ -41,15 +42,25 @@ import { PostSlider } from './post-slider'
  * space, and a button that read "delete" next to a post would be the wrong promise entirely.
  */
 export function CollectionDetail({
+    slug,
     collectionId,
-    isOwner = false,
+    ownership,
+    ownerChannelId = null,
     isPremiumReader = false,
     onDeleted,
     testId = 'post-collection',
 }: {
+    /** The space the URL is under, bare — a viewer reads the collection through it. */
+    slug: string
     collectionId: string
-    /** The reader owns this collection — renaming, deleting and unfiling are theirs alone. */
-    isOwner?: boolean
+    /**
+     * Whose collection this is, as far as the host knows. `owner` offers renaming, deleting and
+     * unfiling and reads the account-scoped endpoint; `viewer` reads through the space; `unknown`
+     * asks nothing yet. `useCollection` carries why the third state exists.
+     */
+    ownership: CollectionOwnership
+    /** The owner's own channel — *Add posts* searches it. Ignored unless `ownership` is `owner`. */
+    ownerChannelId?: string | null
     /** Premium readers are exempt from paid interaction — read by the host, not here. */
     isPremiumReader?: boolean
     /** The collection was deleted; the host navigates away. */
@@ -57,6 +68,7 @@ export function CollectionDetail({
     testId?: string
 }) {
     const { t } = useTranslation()
+    const isOwner = ownership === 'owner'
     const {
         posts,
         isLoading,
@@ -69,14 +81,12 @@ export function CollectionDetail({
         isFetchingNextPage,
         loadMore,
         collection,
-        rename,
-        isRenaming,
-        remove,
-        isRemoving,
         unfile,
-    } = useCollection(collectionId, { onDeleted })
+    } = useCollection(collectionId, { slug, ownership, onDeleted })
 
     const [sharing, setSharing] = useState<Post | null>(null)
+    /** *Add posts* from the empty state — the menu in the bar opens its own. */
+    const [adding, setAdding] = useState(false)
 
     /*
      * One viewer for the whole list, so it can page between **posts** — `usePostSlider` carries
@@ -98,12 +108,17 @@ export function CollectionDetail({
     const bar = (
         <CollectionBar
             title={collection?.name ?? t('collections_title')}
-            isOwner={isOwner}
-            currentName={collection?.name ?? ''}
-            onRename={rename}
-            isRenaming={isRenaming}
-            onDelete={remove}
-            isDeleting={isRemoving}
+            actions={
+                isOwner && collection ? (
+                    <CollectionOwnerMenu
+                        collectionId={collectionId}
+                        name={collection.name ?? ''}
+                        channelId={ownerChannelId}
+                        onDeleted={onDeleted}
+                        testId="post-collection-menu"
+                    />
+                ) : null
+            }
             testId={subTestId(testId, 'header')}
         />
     )
@@ -161,11 +176,53 @@ export function CollectionDetail({
         return (
             <>
                 {bar}
+                {/*
+                 * Legacy's two readings of one state: to the owner it is a prompt, to a visitor it
+                 * is a dead end, so the visitor is handed the way back to the space — where the
+                 * other collections are.
+                 */}
                 <CollectionNotice
-                    title={t('collection_empty')}
-                    body={isOwner ? t('collection_empty_body_owner') : undefined}
+                    title={t(isOwner ? 'collection_empty_owner' : 'collection_empty')}
+                    body={t('collection_empty_body')}
                     testId={testId}
-                />
+                >
+                    {isOwner ? (
+                        <div className="flex w-full max-w-[400px] flex-col gap-2">
+                            <Button
+                                variant="primary"
+                                size="medium"
+                                onClick={() => openPostComposer({ collectionIds: [collectionId] })}
+                                data-testid="post-collection-create-post"
+                            >
+                                {t('collection_create_post')}
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                size="medium"
+                                onClick={() => setAdding(true)}
+                                data-testid="post-collection-add-posts"
+                            >
+                                {t('collection_add_posts')}
+                            </Button>
+                            <CollectionAddPostsDialog
+                                open={adding}
+                                onOpenChange={setAdding}
+                                collectionId={collectionId}
+                                channelId={ownerChannelId}
+                            />
+                        </div>
+                    ) : (
+                        <Button
+                            variant="primary"
+                            size="medium"
+                            className="w-full max-w-[400px]"
+                            render={<Link href={`/@${slug}`} />}
+                            data-testid="post-collection-browse"
+                        >
+                            {t('collection_browse_others')}
+                        </Button>
+                    )}
+                </CollectionNotice>
             </>
         )
     }
@@ -281,16 +338,19 @@ function CollectionSkeleton({ rows = 3, testId }: { rows?: number; testId?: stri
     )
 }
 
-/** The three states that are not a list, sharing one shape so their geometry cannot drift. */
+/** The states that are not a list, sharing one shape so their geometry cannot drift. */
 function CollectionNotice({
     title,
     body,
     action,
+    children,
     testId,
 }: {
     title: string
     body?: string
     action?: { label: string; onPress: () => void }
+    /** Anything else the state offers — the empty state's own buttons. */
+    children?: ReactNode
     testId?: string
 }) {
     return (
@@ -313,12 +373,13 @@ function CollectionNotice({
                     {action.label}
                 </Button>
             ) : null}
+            {children}
         </div>
     )
 }
 
 /**
- * The screen's own app bar — back, the collection's name, and the owner's two writes.
+ * The screen's own app bar — back, the collection's name, and the owner's menu.
  *
  * ## Why this is not `PageBackBar`
  *
@@ -330,151 +391,42 @@ function CollectionNotice({
  *
  * ## Why the bar and not the route
  *
- * The title is the collection's **name**, which arrives from a query, and the two actions write to
- * the same query. A server-rendered bar would have to be handed all three through props that only a
+ * The title is the collection's **name**, which arrives from a query, and the menu beside it writes
+ * to the same query. A server-rendered bar would have to be handed all three through props that only a
  * client component could fill — so the bar is where the data already is, and `page.tsx` renders the
  * column around it.
  */
 function CollectionBar({
     title,
-    isOwner,
-    currentName,
-    onRename,
-    isRenaming,
-    onDelete,
-    isDeleting,
+    actions,
     testId,
 }: {
     title: string
-    isOwner: boolean
-    currentName: string
-    onRename: (name: string) => void
-    isRenaming: boolean
-    onDelete: () => void
-    isDeleting: boolean
+    /** The owner's menu, or nothing — a visitor gets the title and the way back. */
+    actions: ReactNode
     testId?: string
 }) {
     const { t } = useTranslation()
     const router = useRouter()
-    const [renaming, setRenaming] = useState(false)
-    const [deleting, setDeleting] = useState(false)
-    const [draft, setDraft] = useState('')
 
     return (
-        <>
-            <div className="sticky top-0 z-20 flex h-14 items-center gap-1 bg-(--background) px-2">
-                <button
-                    type="button"
-                    aria-label={t('common_back')}
-                    onClick={() => router.back()}
-                    data-testid={subTestId(testId, 'prev')}
-                    className="flex size-10 flex-none items-center justify-center rounded-full text-(--text-title) transition-colors hover:bg-(--background-segment)"
-                >
-                    <Icon name="angle-left" size={20} />
-                </button>
-
-                {/* `truncate` needs a bounded box, and `min-w-0` inside a flex row is that box. */}
-                <h1 className="type-title-t4-semibold min-w-0 flex-1 truncate text-(--text-title)">
-                    {title}
-                </h1>
-
-                {isOwner ? (
-                    <>
-                        <button
-                            type="button"
-                            aria-label={t('collection_rename')}
-                            disabled={isRenaming}
-                            onClick={() => {
-                                setDraft(currentName)
-                                setRenaming(true)
-                            }}
-                            data-testid={subTestId(testId, 'apply')}
-                            className="flex size-10 flex-none items-center justify-center rounded-full text-(--icon-default) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
-                        >
-                            <Icon name="pen-line" size={20} />
-                        </button>
-                        <button
-                            type="button"
-                            aria-label={t('collection_delete')}
-                            disabled={isDeleting}
-                            onClick={() => setDeleting(true)}
-                            data-testid={subTestId(testId, 'clear')}
-                            className="flex size-10 flex-none items-center justify-center rounded-full text-(--icon-default) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
-                        >
-                            <Icon name="trash" size={20} />
-                        </button>
-                    </>
-                ) : null}
-            </div>
-
-            <Dialog
-                open={renaming}
-                onOpenChange={next => {
-                    if (!next && !isRenaming) setRenaming(false)
-                }}
+        <div className="sticky top-0 z-20 flex h-14 items-center gap-1 bg-(--background) px-2">
+            <button
+                type="button"
+                aria-label={t('common_back')}
+                onClick={() => router.back()}
+                data-testid={subTestId(testId, 'prev')}
+                className="flex size-10 flex-none items-center justify-center rounded-full text-(--text-title) transition-colors hover:bg-(--background-segment)"
             >
-                <DialogContent
-                    className="flex w-full max-w-[420px] flex-col gap-0 p-0"
-                    data-testid={subTestId(testId, 'panel')}
-                >
-                    <DialogScreenHeader
-                        title={t('collection_rename')}
-                        onClose={() => setRenaming(false)}
-                        disabled={isRenaming}
-                        testId={subTestId(testId, 'title')}
-                    />
-                    <div className="flex flex-col gap-3 p-4">
-                        <input
-                            value={draft}
-                            autoFocus
-                            disabled={isRenaming}
-                            aria-label={t('post_collection_name_label')}
-                            placeholder={t('post_collection_name_placeholder')}
-                            data-testid={subTestId(testId, 'input')}
-                            onChange={event => setDraft(event.target.value)}
-                            onKeyDown={event => {
-                                if (event.key !== 'Enter' || !draft.trim()) return
-                                event.preventDefault()
-                                onRename(draft.trim())
-                                setRenaming(false)
-                            }}
-                            className="type-body-default rounded-(--radius-sm) border border-(--input-border) bg-transparent px-3 py-2 text-(--text-title) placeholder:text-(--text-placeholder)"
-                        />
-                        <div className="flex justify-end">
-                            <Button
-                                variant="primary"
-                                size="medium"
-                                disabled={
-                                    !draft.trim() || draft.trim() === currentName || isRenaming
-                                }
-                                onClick={() => {
-                                    onRename(draft.trim())
-                                    setRenaming(false)
-                                }}
-                                data-testid={subTestId(testId, 'submit')}
-                            >
-                                {t('common_save')}
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+                <Icon name="angle-left" size={20} />
+            </button>
 
-            <ConfirmDialog
-                open={deleting}
-                onOpenChange={setDeleting}
-                title={t('collection_delete_title')}
-                /* Says what is *not* lost, because that is the part a reader cannot check first. */
-                description={t('collection_delete_body')}
-                confirmLabel={t('collection_delete')}
-                onConfirm={() => {
-                    onDelete()
-                    setDeleting(false)
-                }}
-                pending={isDeleting}
-                destructive
-                testId={subTestId(testId, 'confirm')}
-            />
-        </>
+            {/* `truncate` needs a bounded box, and `min-w-0` inside a flex row is that box. */}
+            <h1 className="type-title-t4-semibold min-w-0 flex-1 truncate text-(--text-title)">
+                {title}
+            </h1>
+
+            {actions}
+        </div>
     )
 }

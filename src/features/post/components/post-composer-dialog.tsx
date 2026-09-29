@@ -29,6 +29,7 @@ import { buildPreviewPost } from '../lib/post-preview'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { isAttachableImage } from '../lib/reply-draft'
 import { captureVideoPoster, probeVideo, readVideoCodec } from '../lib/video-file'
+import { usePostComposerStore } from '../store/composer-store'
 import { PostComposerBody } from './post-composer-body'
 import { type ComposerDialog, PostComposerDialogs } from './post-composer-dialogs'
 import { PostPreviewDialog } from './post-preview-dialog'
@@ -124,6 +125,23 @@ export function PostComposerDialog({
     const [trimOpen, setTrimOpen] = useState(false)
 
     const [draft, setDraft] = useState<PostDraft>(emptyPostDraft)
+
+    /*
+     * An opener's preset, folded in **as the dialog opens** — a collection's *Create post* arrives
+     * with that collection picked (legacy's `PostForm collectionId`). Added to whatever the draft
+     * already holds rather than replacing it: a creator who closed a half-written post and reopened
+     * it from a collection meant that post to go there too. Read from the store imperatively
+     * because it is a one-off input, not state this dialog renders from.
+     */
+    useEffect(() => {
+        if (!open) return
+        const ids = usePostComposerStore.getState().preset.collectionIds ?? []
+        if (ids.length === 0) return
+        setDraft(current => ({
+            ...current,
+            collectionIds: [...new Set([...current.collectionIds, ...ids])],
+        }))
+    }, [open])
     /** A file the browser would not decode. Not a draft problem — the clip never got in. */
     const [videoError, setVideoError] = useState<string | null>(null)
 

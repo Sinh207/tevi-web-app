@@ -47,12 +47,14 @@ export {
 export { BookmarkBarActions } from './components/bookmark-bar-actions'
 export { BookmarkList } from './components/bookmark-list'
 /**
- * The two collection screens.
+ * The two collection screens, and the `+` the list's bar carries (a server page composes the bar, so
+ * the button is handed into its `actions` slot, as `/bookmarks` does).
  *
  * The hooks behind them stay internal for the reason the barrel's header gives about the dialogs: a
  * consumer holding `useCollection` could render a *Delete collection* with no collection on screen,
  * or a list that pages a query nothing else is reading.
  */
+export { CollectionCreateButton } from './components/collection-create'
 export { CollectionDetail } from './components/collection-detail'
 export { CollectionList } from './components/collection-list'
 export type { PostMiniAppApp } from './components/post-attachments'
@@ -89,6 +91,11 @@ export { PostMediaTile } from './components/post-media-tile'
  * (`PostMediaLightbox`, still internal).
  */
 export { PostSlider } from './components/post-slider'
+/**
+ * The collections row a space's Posts tab opens with. `features/channel` mounts it and hands it the
+ * ownership it already knows; which endpoint that means is this feature's business.
+ */
+export { SpaceCollectionsRow } from './components/space-collections-row'
 export type { PostActions } from './hooks/use-post-actions'
 export { usePostActions } from './hooks/use-post-actions'
 export { usePostBookmark } from './hooks/use-post-bookmark'

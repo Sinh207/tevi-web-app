@@ -1,6 +1,13 @@
 'use client'
 
-import { type Post, PostCard, PostMediaTile, PostSlider, usePostSlider } from '@features/post'
+import {
+    type Post,
+    PostCard,
+    PostMediaTile,
+    PostSlider,
+    SpaceCollectionsRow,
+    usePostSlider,
+} from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
@@ -132,6 +139,13 @@ export function ChannelThreadList({
 
     return (
         <div className="flex min-w-0 flex-col gap-3">
+            {/*
+             * Above the posts, and only once there are posts — legacy's `!hasNoData` on both the
+             * creator's and the visitor's tab. Inside the list's state machine for that reason: an
+             * empty space's "no posts yet" is the whole message, and a row of chips over it would
+             * be filing for a space with nothing filed.
+             */}
+            {kind === 'posts' ? <SpaceCollectionsRow slug={slug} isOwner={isOwner} /> : null}
             {kind === 'media' ? (
                 // Three across and gap-1, matching legacy's grid. 21 per page is seven full rows.
                 <div className="grid grid-cols-3 gap-1">

@@ -71,6 +71,8 @@ vi.mock('@features/share', () => ({ ShareDialog: () => null, postShareContext: (
 vi.mock('@features/post', () => ({
     PostCard: ({ testId }: { testId?: string }) => <article data-testid={testId}>post</article>,
     PostSlider: () => null,
+    // Its own queries and its own tests (`use-collection-posts.test.tsx`); nothing to assert here.
+    SpaceCollectionsRow: () => null,
     usePostSlider: () => ({ open: null, openAt: () => {}, goTo: () => {}, close: () => {} }),
     PostMediaTile: ({ post, testId }: { post: { id: string }; testId?: string }) => (
         <a data-testid={testId} data-card-id={post.id} href="#tile">

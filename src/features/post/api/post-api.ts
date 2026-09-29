@@ -23,7 +23,7 @@ import { normalizePost, normalizePosts, type Post } from './types'
  * Legacy's `PostModel` declares 32 methods across five groups. The ones still absent belong to
  * surfaces that do not exist yet and would be guesses here: the rest of **comments** (a reply's own
  * reactions, its deletion, and the nested `child-replies/` thread — the reply row draws none of
- * those yet), **collections** (13 — a screen nobody has ported), the bookmark **list** and
+ * those yet), the bookmark **list** and
  * `deleteAllBookmark` (a screen, not a card), and `updatePost`, which is the post composer's. Each lands with the surface that offers it, the way `report-api.ts` split out of
  * `channel-api.ts`. `post-report-api.ts` beside this file is that split happening again.
  *
@@ -66,7 +66,23 @@ const api = createApiModel({ apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN}/core` })
  */
 const billy = createApiModel({ apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN}/billy` })
 
+/**
+ * The search service — and only for one call here, *Add posts*' candidate list.
+ *
+ * `features/search` has its own model over the same service; this feature may not import that one
+ * (the screens that read this are this feature's), and one endpoint does not justify a shared
+ * module. Same origin as the rest, so the envelope is unwrapped and the device id is sent.
+ */
+const search = createApiModel({ apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN}/search` })
+
 const VERSION = 'v1'
+
+/**
+ * A space's collections, addressed by its slug — **bare**, no `@`, which is how the channel service
+ * spells it (`v3/channel/channels/{slug}/`). Stripped here so no caller has to remember.
+ */
+const spaceCollectionsPath = (slug: string, suffix = '') =>
+    `v3/channel/channels/${encodeURIComponent(slug.replace(/^@/, ''))}/post-collections/${suffix}`
 
 const postPath = (postId: string, suffix = '') =>
     `${VERSION}/posts/${encodeURIComponent(postId)}/${suffix}`
@@ -115,6 +131,50 @@ export const postKeys = {
     /** Every page of posts filed into one collection. */
     collectionPosts: (collectionId: string, accountId: string | null) =>
         [...POST_SCOPE, 'collection-posts', collectionId, accountId ?? 'anon'] as const,
+    /**
+     * The same three, read **through a space** — somebody else's collections.
+     *
+     * Separate keys from the owner's, not a flag on them: the owner's are what every write
+     * invalidates, and a reader's copy must never be the entry a rename lands in. The slug is in the
+     * key because the endpoint is addressed by it; the account is, because a post row carries this
+     * reader's unlock state (above).
+     */
+    /**
+     * *Add posts*' candidates for one collection — per filter and term, because each is a
+     * different list and the tabs keep their own pages, as legacy's four arrays do.
+     */
+    collectionCandidates: (
+        collectionId: string,
+        type: CollectionCandidateType,
+        q: string,
+        accountId: string | null,
+    ) =>
+        [
+            ...POST_SCOPE,
+            'collection-candidates',
+            collectionId,
+            type,
+            q,
+            accountId ?? 'anon',
+        ] as const,
+    spaceCollections: (slug: string, accountId: string | null) =>
+        [...POST_SCOPE, 'space-collections', slug.toLowerCase(), accountId ?? 'anon'] as const,
+    spaceCollection: (slug: string, collectionId: string, accountId: string | null) =>
+        [
+            ...POST_SCOPE,
+            'space-collection',
+            slug.toLowerCase(),
+            collectionId,
+            accountId ?? 'anon',
+        ] as const,
+    spaceCollectionPosts: (slug: string, collectionId: string, accountId: string | null) =>
+        [
+            ...POST_SCOPE,
+            'space-collection-posts',
+            slug.toLowerCase(),
+            collectionId,
+            accountId ?? 'anon',
+        ] as const,
 }
 
 /**
@@ -423,13 +483,11 @@ export const postApi = {
     /**
      * The collections this creator has, one page at a time.
      *
-     * ## Three of legacy's thirteen, and the other ten belong to a screen nobody has ported
+     * ## Collections are the one group ported whole
      *
-     * `PostModel` has list, read, create, rename, delete, add-posts, remove-posts and more. What the
-     * **composer** needs is three: see what exists, make a new one, and file the post once it is
-     * published. The rest are a collections screen — browsing one, reordering it, deleting it — and
-     * adding them here would be exported methods with no caller, which `post-report-api.ts` already
-     * argues against.
+     * The owner's half is `v1/posts/collections/…` below; a visitor's is the space-addressed
+     * `v3/channel/channels/{slug}/post-collections/…` further down. Legacy's `add-all-posts/` is the
+     * one endpoint left out — legacy declares it and never calls it.
      *
      * Page-numbered, not cursor-paginated, and legacy asks for ten at a time.
      */
@@ -503,6 +561,98 @@ export const postApi = {
         }
     },
 
+    /**
+     * A **space's** collections, as anybody may see them — legacy's `getCollectionChannel`.
+     *
+     * ## The other half of the collections contract, and it is on the channel service
+     *
+     * Everything above is `v1/posts/collections/…`, which is **account-scoped**: it answers with the
+     * bearer's own collections and takes no slug, so it cannot show a reader somebody else's. These
+     * three are how legacy does that — `v3/channel/channels/{slug}/post-collections/…`, addressed by
+     * the space. Same `/core` service, a different router, and the same row shape, so both halves
+     * parse with one schema.
+     *
+     * They live here rather than in `channel-api.ts` because the screens that read them are this
+     * feature's, and `features/post` may not import `features/channel` (the reverse edge exists).
+     *
+     * Legacy uses the owner's `v1` list on the owner's own space and this one for everybody else;
+     * `useSpaceCollections` keeps that split, because the `v1` list is the one the composer's picker
+     * and every write invalidate. Legacy asks for the first page only and so does this.
+     */
+    async getSpaceCollections({
+        slug,
+        accountId,
+        signal,
+    }: {
+        slug: string
+        accountId?: string | null
+        signal?: AbortSignal
+    }) {
+        const body = await api.get<{ results?: unknown; next?: string | null }>(
+            spaceCollectionsPath(slug),
+            { page: 1, page_size: COLLECTIONS_PAGE_SIZE },
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        return {
+            results: normalizeCollections(body?.results),
+            hasMore: Boolean(body?.next),
+        }
+    },
+
+    /**
+     * One collection, read **through its space** — legacy's `getCollectionChannelById`.
+     *
+     * Legacy reads the title this way for the owner too; here the owner keeps `getCollection`, so a
+     * rename invalidates the key the screen is actually drawn from.
+     */
+    async getSpaceCollection(
+        slug: string,
+        collectionId: string,
+        accountId?: string | null,
+        signal?: AbortSignal,
+    ): Promise<PostCollection | null> {
+        return normalizeCollection(
+            await api.get<unknown>(
+                spaceCollectionsPath(slug, `${encodeURIComponent(collectionId)}/`),
+                undefined,
+                { signal, ...(accountId ? { accountId } : {}) },
+            ),
+        )
+    },
+
+    /**
+     * One page of a collection's posts, read **through its space** — legacy's
+     * `getCollectionChannelPosts`.
+     *
+     * The same page-numbered shape as `getCollectionPosts`, so `lib/collection-page.ts` pages both.
+     * Legacy's signature also takes `created_at_gt/lt` and `media_type`; no caller of it ever
+     * passes them, so they are not modelled.
+     */
+    async getSpaceCollectionPosts({
+        slug,
+        collectionId,
+        params,
+        accountId,
+        signal,
+    }: {
+        slug: string
+        collectionId: string
+        params: PageCursor
+        accountId?: string | null
+        signal?: AbortSignal
+    }): Promise<CollectionPostPage> {
+        const body = await api.get<{ results?: unknown; count?: number; next?: string | null }>(
+            spaceCollectionsPath(slug, `${encodeURIComponent(collectionId)}/posts/`),
+            params,
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        return {
+            results: normalizePosts(body?.results),
+            count: typeof body?.count === 'number' ? body.count : 0,
+            next: body?.next,
+        }
+    },
+
     /** Rename one. `PATCH` with the one field, which is all legacy's `editCollection` sends. */
     async renameCollection(
         collectionId: string,
@@ -546,6 +696,77 @@ export const postApi = {
     ): Promise<void> {
         await api.del<unknown>(
             `${VERSION}/posts/collections/${collectionId}/remove-posts/`,
+            { post_ids: postIds },
+            accountId ? { accountId } : undefined,
+        )
+    },
+
+    /**
+     * The owner's posts that are **not** in a collection yet, filtered and searched — legacy's
+     * `SearchModel.getPostCandidates`, which is what *Add posts* lists.
+     *
+     * ## On the search service, addressed by the channel
+     *
+     * `search/v2/{channel_id}/posts/`, with `ignore_collection_id` doing the "not already in it" —
+     * so the list never offers a post the collection holds, and the client has nothing to diff. The
+     * channel is the owner's own; nothing else is ever asked for.
+     *
+     * `type` is `IMAGE` / `VIDEO` / `TEXT_ONLY`, and **absent** for *All* — legacy sends nothing
+     * rather than `ALL`. `q` is omitted when empty (`createApiModel` strips it). Page-numbered, ten
+     * at a time, which is the shape `lib/collection-page.ts` already pages.
+     *
+     * Legacy also has `v1/posts/{id}/collection-candidates/` — the mirror image (collections for one
+     * post), which is the composer's edit mode and not this.
+     */
+    async getCollectionCandidates({
+        channelId,
+        collectionId,
+        type,
+        q,
+        params,
+        accountId,
+        signal,
+    }: {
+        channelId: string
+        collectionId: string
+        type: CollectionCandidateType
+        q: string
+        params: PageCursor
+        accountId?: string | null
+        signal?: AbortSignal
+    }): Promise<CollectionPostPage> {
+        const body = await search.get<{ results?: unknown; count?: number; next?: string | null }>(
+            `v2/${encodeURIComponent(channelId)}/posts/`,
+            {
+                ...params,
+                ignore_collection_id: collectionId,
+                ...(type === 'ALL' ? {} : { type }),
+                q,
+            },
+            { signal, ...(accountId ? { accountId } : {}) },
+        )
+        return {
+            results: normalizePosts(body?.results),
+            count: typeof body?.count === 'number' ? body.count : 0,
+            next: body?.next,
+        }
+    },
+
+    /**
+     * File several posts into one collection — legacy's `addPostsToCollection`.
+     *
+     * The mirror image of `addPostToCollections` below: addressed by the **collection**, with the
+     * posts in `post_ids`. *Add posts* has one collection and several posts, so this is the
+     * direction that takes one request. Not retried — a replay would be a second write the backend
+     * may or may not treat as a no-op.
+     */
+    async addPostsToCollection(
+        collectionId: string,
+        postIds: string[],
+        accountId?: string | null,
+    ): Promise<void> {
+        await api.post<unknown>(
+            `${VERSION}/posts/collections/${encodeURIComponent(collectionId)}/add-posts/`,
             { post_ids: postIds },
             accountId ? { accountId } : undefined,
         )
@@ -799,6 +1020,10 @@ export const REPLIES_PAGE_SIZE = 10
 
 /** Legacy's own page size for the collection picker. */
 export const COLLECTIONS_PAGE_SIZE = 10
+
+/** *Add posts*' four filters, as the search service spells them — `ALL` is never sent. */
+export const COLLECTION_CANDIDATE_TYPES = ['ALL', 'IMAGE', 'VIDEO', 'TEXT_ONLY'] as const
+export type CollectionCandidateType = (typeof COLLECTION_CANDIDATE_TYPES)[number]
 
 /**
  * What a new reply hangs off.
