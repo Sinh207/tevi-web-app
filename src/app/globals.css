@@ -218,6 +218,15 @@
        ramp, so they are literals, once, with a name — `--gradient-brand-sweep`'s rule. The doodle
        pattern over it is art (`MESSAGE_ART.threadPattern`), not part of the token. */
     --gradient-message-thread: linear-gradient(333deg, #a587ff 16.77%, #e2d8ff 83.23%);
+
+    /* A message's fill — legacy's own (`itemMessage/constants`: SENDER_BG, RECEIVER_BG) and its
+       reply quote's (`itemMessage/reply`), not Figma variables: the DS draws nothing inside a
+       conversation, and its `--background-message` pair is the live chat's dark overlay, not this.
+       Literals, once, with a name. */
+    --background-bubble-own: #fdffdd;
+    --background-bubble-other: #fafafa;
+    --background-bubble-quote-own: #e8f8d1;
+    --background-bubble-quote-other: #ebf3ff;
 }
 
 /* Dark mode — only the tokens whose value differs from Light. */
@@ -319,6 +328,13 @@
         var(--primary-300) 16.77%,
         var(--primary-50) 83.23%
     );
+
+    /* Legacy has no dark chat either. The same hues, dark: the reader's own a warm olive, the other
+       side the surface, the quotes a deep green and a deep blue — each still reads as its side. */
+    --background-bubble-own: #2a2b1b;
+    --background-bubble-other: var(--zinc-100);
+    --background-bubble-quote-own: #1c2e17;
+    --background-bubble-quote-other: #0f2038;
 }
 
 /* ==================================================================== *
@@ -689,6 +705,10 @@
         var(--accents-indigo-active) 107.62%
     );
     --gradient-message-thread: linear-gradient(333deg, #a587ff 16.77%, #e2d8ff 83.23%);
+    --background-bubble-own: #fdffdd;
+    --background-bubble-other: #fafafa;
+    --background-bubble-quote-own: #e8f8d1;
+    --background-bubble-quote-other: #ebf3ff;
     --foreground: var(--text-title);
     --card: var(--background-surface);
     --card-foreground: var(--text-title);

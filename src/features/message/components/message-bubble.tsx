@@ -24,7 +24,8 @@ import { formatMessageTime, isPremiumGift, messageText, splitLinks } from '../li
  * The DS draws no chat bubble (the Figma library has the conversation *list* and nothing inside a
  * conversation), so the geometry is legacy's — 80% max width, 12px radius, 8px padding, time at the
  * foot — on this app's surfaces: the other side's message is `--background-surface` on the
- * thread's `--background`, the reader's own takes `--accents-indigo-bg-active`. Legacy's
+ * thread's ground takes legacy's own fills — `--background-bubble-own` (`#FDFFDD`) and
+ * `--background-bubble-other` (`#FAFAFA`), named in `globals.css` with a dark pair legacy never had. Legacy's
  * `#FDFFDD` / `#fafafa` on a purple photograph have no dark mode at all.
  *
  * ## What is rendered, and what is not yet
@@ -59,6 +60,7 @@ export function MessageBubble({
         ChatMessage,
         'id' | 'text' | 'markdown_text' | 'images' | 'created_at' | 'edited_at' | 'seen_by'
     > & {
+        sender?: ChatMessage['sender']
         reply_message?: ReplyMessage | null
         inline_menu?: ChatMessage['inline_menu']
     }
@@ -97,12 +99,17 @@ export function MessageBubble({
                 <div
                     className={cn(
                         'relative flex min-w-0 flex-col overflow-hidden rounded-(--radius-lg)',
-                        own ? 'bg-(--accents-indigo-bg-active)' : 'bg-(--background-surface)',
+                        // Legacy's fills: pale yellow for the reader's own, near-white for theirs.
+                        own ? 'bg-(--background-bubble-own)' : 'bg-(--background-bubble-other)',
                         status === 'failed' && 'ring-1 ring-(--text-error)',
                     )}
                 >
                     {message.reply_message && (
-                        <ReplyQuote reply={message.reply_message} own={own} />
+                        <ReplyQuote
+                            reply={message.reply_message}
+                            own={own}
+                            self={sameSender(message.reply_message.sender, message.sender)}
+                        />
                     )}
 
                     {message.images.length > 0 && (
@@ -380,35 +387,56 @@ function DeliveryMark({ status, seen }: { status: 'sent' | 'sending' | 'failed';
     )
 }
 
-/** The quoted message above a reply — whose it was and its first line (or "Photo"). */
-function ReplyQuote({ reply, own }: { reply: ReplyMessage; own: boolean }) {
+/** Whether two senders are one account — by alias where both have one, else by space slug. */
+function sameSender(a: ReplyMessage['sender'] | undefined, b: ChatMessage['sender'] | undefined) {
+    if (!a || !b) return false
+    if (a.alias && b.alias) return a.alias === b.alias
+    const slugA = a.channel_slug ?? a.slug
+    const slugB = b.channel_slug ?? b.slug
+    return !!slugA && slugA === slugB
+}
+
+/**
+ * The quoted message above a reply — legacy's `itemMessage/reply`: tinted by the side it sits on
+ * (green on the reader's own, blue on theirs, a 2px rule in the same colour at the start edge), the
+ * quoted photo or else its sender's avatar at 44px, then whose it was — "Myself" when a message
+ * quotes its own sender — and its first line, or "Photo".
+ */
+function ReplyQuote({ reply, own, self }: { reply: ReplyMessage; own: boolean; self: boolean }) {
     const { t } = useTranslation()
     const quoted = messageText(reply)
-    const thumb = reply.images[0]?.url ?? null
+    const thumb = reply.images[0]?.url ?? reply.sender?.avatar?.thumb ?? null
     return (
         <div
             className={cn(
-                'mx-2 mt-2 flex min-w-[160px] items-center gap-2 rounded-(--radius-md) p-2',
+                'mx-2 mt-2 flex min-w-[155px] items-start gap-2 rounded-(--radius-lg) p-2',
                 'border-s-2 border-solid',
                 own
-                    ? 'border-(--text-link) bg-(--background-surface)'
-                    : 'border-(--text-link) bg-(--background-subtle)',
+                    ? 'border-(--text-success) bg-(--background-bubble-quote-own)'
+                    : 'border-(--text-link) bg-(--background-bubble-quote-other)',
             )}
         >
             {thumb && (
                 <Image
                     src={thumb}
                     alt=""
-                    width={36}
-                    height={36}
-                    className="size-9 flex-none rounded-(--radius-sm) object-cover"
+                    width={44}
+                    height={44}
+                    className="size-11 flex-none rounded-[4px] object-cover"
                 />
             )}
-            <span className="flex min-w-0 flex-col">
-                <span className="truncate type-caption-label-strong text-(--text-link)">
-                    {reply.sender?.name ?? t('message_inactive_user')}
+            <span className="flex min-w-0 flex-col gap-1">
+                <span
+                    className={cn(
+                        'truncate type-dense-emphasis',
+                        own ? 'text-(--text-success)' : 'text-(--text-link)',
+                    )}
+                >
+                    {self
+                        ? t('message_reply_myself')
+                        : (reply.sender?.name ?? t('message_inactive_user'))}
                 </span>
-                <span className="truncate type-caption-meta text-(--text-body)">
+                <span className="w-[200px] max-w-full truncate type-dense-default text-(--text-title)">
                     {quoted ?? t('message_preview_photo')}
                 </span>
             </span>

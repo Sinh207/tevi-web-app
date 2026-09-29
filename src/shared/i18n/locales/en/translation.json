@@ -2271,5 +2271,6 @@
     "message_confirm_delete_everyone_body": "This message will be removed for both of you. This cannot be undone.",
     "message_conversation_label": "Conversation",
     "message_room_title": "Messages with @{{slug}}",
-    "message_photo_viewer_title": "Photos"
+    "message_photo_viewer_title": "Photos",
+    "message_reply_myself": "Myself"
 }

@@ -2271,5 +2271,6 @@
     "message_confirm_delete_everyone_body": "Mabubura ang mensaheng ito para sa inyong dalawa. Hindi na ito maibabalik.",
     "message_conversation_label": "Pag-uusap",
     "message_room_title": "Mga mensahe kay @{{slug}}",
-    "message_photo_viewer_title": "Mga larawan"
+    "message_photo_viewer_title": "Mga larawan",
+    "message_reply_myself": "Aking sarili"
 }

@@ -6907,7 +6907,7 @@
             "companions": [
                 "data-message-id"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:89"
+            "source": "src/features/message/components/message-bubble.tsx:91"
         },
         "message-bubble-copy": {
             "scope": "message",
@@ -6915,7 +6915,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:280"
+            "source": "src/features/message/components/message-bubble.tsx:287"
         },
         "message-bubble-delete": {
             "scope": "message",
@@ -6923,7 +6923,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:318"
+            "source": "src/features/message/components/message-bubble.tsx:325"
         },
         "message-bubble-delete-all": {
             "scope": "message",
@@ -6931,7 +6931,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:333"
+            "source": "src/features/message/components/message-bubble.tsx:340"
         },
         "message-bubble-edit": {
             "scope": "message",
@@ -6939,7 +6939,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:307"
+            "source": "src/features/message/components/message-bubble.tsx:314"
         },
         "message-bubble-menu-reply": {
             "scope": "message",
@@ -6947,7 +6947,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:292"
+            "source": "src/features/message/components/message-bubble.tsx:299"
         },
         "message-bubble-menu-trigger": {
             "scope": "message",
@@ -6955,7 +6955,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:267"
+            "source": "src/features/message/components/message-bubble.tsx:274"
         },
         "message-bubble-option": {
             "scope": "message",
@@ -6966,7 +6966,7 @@
             "companions": [
                 "data-option-value"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:216"
+            "source": "src/features/message/components/message-bubble.tsx:223"
         },
         "message-bubble-remove": {
             "scope": "message",
@@ -6974,7 +6974,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:189"
+            "source": "src/features/message/components/message-bubble.tsx:196"
         },
         "message-bubble-reply": {
             "scope": "message",
@@ -6982,7 +6982,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:251"
+            "source": "src/features/message/components/message-bubble.tsx:258"
         },
         "message-bubble-retry": {
             "scope": "message",
@@ -6990,7 +6990,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-bubble.tsx:181"
+            "source": "src/features/message/components/message-bubble.tsx:188"
         },
         "message-composer-cancel": {
             "scope": "message",

@@ -2271,5 +2271,6 @@
     "message_confirm_delete_everyone_body": "Tin nhắn sẽ bị xóa ở cả hai phía và không thể khôi phục.",
     "message_conversation_label": "Cuộc trò chuyện",
     "message_room_title": "Tin nhắn với @{{slug}}",
-    "message_photo_viewer_title": "Ảnh"
+    "message_photo_viewer_title": "Ảnh",
+    "message_reply_myself": "Chính bạn"
 }
