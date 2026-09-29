@@ -3,7 +3,6 @@
 import { useRequireStars } from '@features/balance'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
-import { StarMark } from '@shared/components/star-mark'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatCompactCount } from '@shared/lib/format-count'
@@ -613,7 +612,6 @@ function PostSliderRail({
                 tone="star"
                 label={t('post_action_react')}
                 count={formatCompactCount(reaction.count, currentLanguage)}
-                price={cost}
                 active={reaction.reacted}
                 /*
                  * Paying is gated, **un**-reacting is not: legacy raises its not-enough-Stars
@@ -632,10 +630,16 @@ function PostSliderRail({
                 <RailButton
                     icon="comment"
                     label={t('post_action_comment')}
-                    /* The tally under the glyph, the price on it — see `RailButton`. */
                     count={formatCompactCount(post.reply_count, currentLanguage)}
-                    price={cost}
-                    onPress={cost !== null && onComment ? requireStars(cost, onComment) : onComment}
+                    /*
+                     * **Not gated on Star**, which is what both native clients do: iOS's
+                     * `onReplyPressed` opens the composer outright and Android's
+                     * `checkToReplyInFullScreen` checks *membership* only. Opening a composer is
+                     * not spending — the charge is taken on submit, where the button already
+                     * prices it. Gating here refused the reader a box they might only have wanted
+                     * to read the rules in.
+                     */
+                    onPress={onComment}
                     testId={subTestId(testId, 'confirm')}
                 />
             ) : null}
@@ -671,23 +675,23 @@ function PostSliderRail({
  * that does not use it — the rail sits over a photograph, and legacy's answer to legibility there
  * is the foot gradient, not a scrim per button.
  *
- * ## A price is a **badge**, not the number under the glyph
+ * ## No price on the glyph — both native clients retired it
  *
- * The number under a glyph is the tally — reactions, replies. When a post charges for the
- * interaction legacy adds a separate chip at the icon's top-trailing corner (`top: -6, right: -10`,
- * 16px tall, `#0061FF` under a 1px white border, a 12px star and the figure at 10/600) and leaves
- * the tally alone. This used to *replace* the tally with the price, so a paid post showed no reply
- * count anywhere and the figure it did show read as one — the two numbers mean opposite things
- * (what is there / what it will cost) and one slot cannot carry both.
+ * iOS hard-codes `likePIView.isHidden = true` / `replyPIView.isHidden = true` with the real
+ * predicate commented out beside it, and Android does the same in the viewer, the feed card *and*
+ * the reply row, with the reason written down: *"Paid-interaction price chips on react/comment
+ * actions are retired: the creator tier badge next to the name conveys the cost instead."*
  *
- * `> 1` is legacy's own threshold, not `> 0`: a one-Star interaction is not worth a badge.
+ * Legacy web still draws the chip, so porting it looked right and was not. The price is still
+ * stated — on the **submit** button of the reply composer, which is where Android keeps its one
+ * surviving chip and where this app already put it (`post_reply_submit_priced`). Badge the commit,
+ * not the action.
  */
 function RailButton({
     icon,
     filled,
     label,
     count,
-    price,
     tone,
     active,
     onPress,
@@ -697,8 +701,6 @@ function RailButton({
     filled?: boolean
     label: string
     count?: string
-    /** Stars this interaction costs, badged on the glyph. `null` where it is free. */
-    price?: number | null
     /** `star` paints the active glyph legacy's `#FFE600` — the reacted star, and only that. */
     tone?: 'star'
     active?: boolean
@@ -732,16 +734,6 @@ function RailButton({
                 ) : (
                     <Icon name={icon} size={24} />
                 )}
-                {price !== null && price !== undefined && price > 1 ? (
-                    <span
-                        aria-hidden="true"
-                        className="-top-1.5 -end-2.5 absolute z-10 flex h-4 items-center gap-px rounded-full border border-white bg-[#0061FF] px-0.5 text-white"
-                    >
-                        <StarMark size={12} />
-                        {/* 10/500 — the sprite's nearest to legacy's 10/600; there is no 10/600. */}
-                        <span className="type-micro-overline px-0.5">{price}</span>
-                    </span>
-                ) : null}
             </span>
             {count ? <span className="type-dense-emphasis">{count}</span> : null}
         </button>
