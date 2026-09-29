@@ -10,6 +10,21 @@ import type { PostCollection } from '../api/collection-types'
 import { postApi, postKeys } from '../api/post-api'
 import type { Post } from '../api/types'
 import { COLLECTION_POSTS_FIRST_PAGE, nextCollectionPostsCursor } from '../lib/collection-page'
+import { useCollectionWrites } from './use-collection-writes'
+
+/**
+ * Who is looking at a collection, which decides **which endpoint** reads it.
+ *
+ * - `owner` — `v1/posts/collections/{id}/…`, the account-scoped half every write invalidates.
+ * - `viewer` — `v3/channel/channels/{slug}/post-collections/{id}/…`, the half addressed by the
+ *   space, which is the only one that can answer for an account that is not the bearer's.
+ * - `unknown` — the reader's own channel has not loaded yet, so neither is asked. Guessing `viewer`
+ *   would send the owner a request for their own collection through the public door and then a
+ *   second one through theirs, with the screen redrawing between the two.
+ *
+ * Legacy makes the same split (`useCollectionDetail`: `isMyChannel ? PostModel… : ChannelModel…`).
+ */
+export type CollectionOwnership = 'owner' | 'viewer' | 'unknown'
 
 /**
  * One collection: its own row, its posts, and the three things an owner can do to it.
@@ -21,12 +36,10 @@ import { COLLECTION_POSTS_FIRST_PAGE, nextCollectionPostsCursor } from '../lib/c
  * which is the state a reader most needs a title for, since there is nothing else on the screen to
  * say where they are. A collection is also linkable, so a reader can arrive with neither in cache.
  *
- * ## Renaming and deleting invalidate the **list**, not just this screen
+ * ## Renaming and deleting are `useCollectionWrites`'
  *
- * `postKeys.collections` is what the composer's picker reads. A rename that refreshed only this
- * page would leave the picker offering the old name until something else happened to refetch it,
- * and a delete would leave it offering a collection that is gone — which the picker would then file
- * a post into.
+ * The list's rows offer the same two, so the mutations live there and this composes them — that
+ * hook says why both reach the list's key. Unfiling a post is this screen's alone.
  */
 export interface UseCollectionResult {
     collection: PostCollection | null
@@ -56,76 +69,76 @@ export interface UseCollectionResult {
 
 export function useCollection(
     collectionId: string,
-    { onDeleted }: { onDeleted?: () => void } = {},
+    {
+        slug,
+        ownership,
+        onDeleted,
+    }: {
+        /** The space the URL is under — the viewer half is addressed by it. */
+        slug: string
+        ownership: CollectionOwnership
+        onDeleted?: () => void
+    },
 ): UseCollectionResult {
     const { activeId, isAuthenticated } = useAuth()
     const { t } = useTranslation()
     const queryClient = useQueryClient()
 
+    const isOwner = ownership === 'owner'
+
     const detailKey = useMemo(
-        () => postKeys.collection(collectionId, activeId),
-        [collectionId, activeId],
+        () =>
+            isOwner
+                ? postKeys.collection(collectionId, activeId)
+                : postKeys.spaceCollection(slug, collectionId, activeId),
+        [isOwner, slug, collectionId, activeId],
     )
     const postsKey = useMemo(
-        () => postKeys.collectionPosts(collectionId, activeId),
-        [collectionId, activeId],
+        () =>
+            isOwner
+                ? postKeys.collectionPosts(collectionId, activeId)
+                : postKeys.spaceCollectionPosts(slug, collectionId, activeId),
+        [isOwner, slug, collectionId, activeId],
     )
     const listKey = useMemo(() => postKeys.collections(activeId), [activeId])
 
+    /*
+     * A signed-in account only, on both halves — legacy's `initData` asks nothing without one, and
+     * every row carries the reader's unlock state, which an anonymous session has none of.
+     */
+    const enabled = isAuthenticated && Boolean(collectionId) && ownership !== 'unknown'
+
     const detail = useQuery({
         queryKey: detailKey,
-        queryFn: ({ signal }) => postApi.getCollection(collectionId, activeId, signal),
-        enabled: isAuthenticated && Boolean(collectionId),
+        queryFn: ({ signal }) =>
+            isOwner
+                ? postApi.getCollection(collectionId, activeId, signal)
+                : postApi.getSpaceCollection(slug, collectionId, activeId, signal),
+        enabled,
     })
 
     const posts = useInfiniteQuery({
         queryKey: postsKey,
         initialPageParam: COLLECTION_POSTS_FIRST_PAGE as PageCursor | null,
-        queryFn: ({ pageParam, signal }) =>
-            postApi.getCollectionPosts({
-                collectionId,
-                params: pageParam ?? COLLECTION_POSTS_FIRST_PAGE,
-                accountId: activeId,
-                signal,
-            }),
+        queryFn: ({ pageParam, signal }) => {
+            const params = pageParam ?? COLLECTION_POSTS_FIRST_PAGE
+            return isOwner
+                ? postApi.getCollectionPosts({ collectionId, params, accountId: activeId, signal })
+                : postApi.getSpaceCollectionPosts({
+                      slug,
+                      collectionId,
+                      params,
+                      accountId: activeId,
+                      signal,
+                  })
+        },
         getNextPageParam: (last, _pages, lastParam) => nextCollectionPostsCursor(last, lastParam),
-        enabled: isAuthenticated && Boolean(collectionId),
+        enabled,
     })
 
     const rows = useMemo(() => posts.data?.pages.flatMap(page => page.results) ?? [], [posts.data])
 
-    /** Everything this screen writes touches the picker's list too. */
-    const invalidateAll = () => {
-        void queryClient.invalidateQueries({ queryKey: listKey })
-        void queryClient.invalidateQueries({ queryKey: detailKey })
-        void queryClient.invalidateQueries({ queryKey: postsKey })
-    }
-
-    const renameMutation = useMutation({
-        mutationFn: (name: string) => postApi.renameCollection(collectionId, name, activeId),
-        onSuccess: () => {
-            toast.success(t('collection_renamed'))
-            invalidateAll()
-        },
-        meta: { showErrorToast: t('collection_rename_failed') },
-    })
-
-    const removeMutation = useMutation({
-        mutationFn: () => postApi.deleteCollection(collectionId, activeId),
-        onSuccess: () => {
-            toast.success(t('collection_deleted'))
-            /*
-             * The detail query is **removed**, not invalidated: the collection is gone, so a
-             * refetch would be a request for a 404 on the way out of a screen that is already
-             * navigating away.
-             */
-            queryClient.removeQueries({ queryKey: detailKey })
-            queryClient.removeQueries({ queryKey: postsKey })
-            void queryClient.invalidateQueries({ queryKey: listKey })
-            onDeleted?.()
-        },
-        meta: { showErrorToast: t('collection_delete_failed') },
-    })
+    const writes = useCollectionWrites(collectionId, { onDeleted })
 
     const unfileMutation = useMutation({
         mutationFn: (postId: string) =>
@@ -144,7 +157,9 @@ export function useCollection(
         collection: detail.data ?? null,
         posts: rows,
         total: posts.data?.pages[0]?.count ?? 0,
-        isLoading: detail.isLoading || posts.isLoading,
+        /* `unknown` is loading too — no request yet, but no answer either. */
+        isLoading:
+            (isAuthenticated && ownership === 'unknown') || detail.isLoading || posts.isLoading,
         isError: posts.isError,
         isEmpty: !posts.isLoading && !posts.isError && rows.length === 0,
         /*
@@ -163,10 +178,10 @@ export function useCollection(
             if (posts.hasNextPage && !posts.isFetchingNextPage) void posts.fetchNextPage()
         },
 
-        rename: name => renameMutation.mutate(name),
-        isRenaming: renameMutation.isPending,
-        remove: () => removeMutation.mutate(),
-        isRemoving: removeMutation.isPending,
+        rename: writes.rename,
+        isRenaming: writes.isRenaming,
+        remove: writes.remove,
+        isRemoving: writes.isRemoving,
         unfile: postId => unfileMutation.mutate(postId),
     }
 }

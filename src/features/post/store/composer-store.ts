@@ -19,18 +19,31 @@ import { create } from 'zustand'
  *
  * It is UI state, so Zustand is correct per `CLAUDE.md`'s first rule: nothing here is server data.
  */
+/**
+ * What the opener already knows about the post — today, only which collections it goes in.
+ *
+ * A collection's *Create post* opens the composer with that collection picked, which is legacy's
+ * `PostForm collectionId`. The composer reads this **once, as it opens**, into its own draft; it is
+ * not a second copy of the draft, and it is cleared by the next plain `open()`.
+ */
+export interface PostComposerPreset {
+    collectionIds?: string[]
+}
+
 interface PostComposerState {
     isOpen: boolean
-    open: () => void
+    preset: PostComposerPreset
+    open: (preset?: PostComposerPreset) => void
     close: () => void
     setOpen: (open: boolean) => void
 }
 
 export const usePostComposerStore = create<PostComposerState>(set => ({
     isOpen: false,
-    open: () => set({ isOpen: true }),
+    preset: {},
+    open: (preset = {}) => set({ isOpen: true, preset }),
     close: () => set({ isOpen: false }),
-    setOpen: (isOpen: boolean) => set({ isOpen }),
+    setOpen: (isOpen: boolean) => set(isOpen ? { isOpen } : { isOpen, preset: {} }),
 }))
 
 /**
@@ -40,6 +53,6 @@ export const usePostComposerStore = create<PostComposerState>(set => ({
  * is a callback with no hook context of its own. Reading the store imperatively is what lets that
  * row stay a value rather than becoming a component.
  */
-export function openPostComposer() {
-    usePostComposerStore.getState().open()
+export function openPostComposer(preset?: PostComposerPreset) {
+    usePostComposerStore.getState().open(preset)
 }

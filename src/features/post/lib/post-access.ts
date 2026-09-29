@@ -283,3 +283,26 @@ export function postMenuVisibility(
         block: Boolean(post.channel?.owner_id),
     }
 }
+
+/**
+ * Who a post is for, **as its owner's list states it** — legacy's three readings of `viewer` ×
+ * `price` in *Add posts* (`PostCollection`): members-and-a-price is a Star price, members-only is
+ * *Member*, everyone-and-free is *Free*.
+ *
+ * Deliberately not `postGate`, which reads `product_id` / `required_packages`: the search service's
+ * candidate rows are only guaranteed to carry these two. The fourth combination (everyone, with a
+ * price) gets no label, as in legacy.
+ */
+export type CandidateAudience =
+    | { kind: 'free' }
+    | { kind: 'member' }
+    | { kind: 'price'; amount: number }
+
+export function candidateAudience(post: Pick<Post, 'viewer' | 'price'>): CandidateAudience | null {
+    const price = Number(post.price) || 0
+    if (post.viewer === 'STARGAZERS') {
+        return price > 0 ? { kind: 'price', amount: price } : { kind: 'member' }
+    }
+    if (post.viewer === 'EVERYONE' && price === 0) return { kind: 'free' }
+    return null
+}

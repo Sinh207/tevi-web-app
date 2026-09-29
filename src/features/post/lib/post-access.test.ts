@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { normalizePost, type Post } from '../api/types'
 import {
+    candidateAudience,
     canReply,
     hasReacted,
     isGated,
@@ -349,5 +350,28 @@ describe('postMenuVisibility', () => {
             })
             expect(Object.values(shows).every(value => value === false)).toBe(true)
         }
+    })
+})
+
+describe('candidateAudience', () => {
+    it('reads a members-only post with a price as its Star price', () => {
+        expect(candidateAudience({ viewer: 'STARGAZERS', price: 50 })).toEqual({
+            kind: 'price',
+            amount: 50,
+        })
+    })
+
+    it('reads a members-only post with no price as Member', () => {
+        expect(candidateAudience({ viewer: 'STARGAZERS', price: null })).toEqual({ kind: 'member' })
+        expect(candidateAudience({ viewer: 'STARGAZERS', price: 0 })).toEqual({ kind: 'member' })
+    })
+
+    it('reads a public free post as Free', () => {
+        expect(candidateAudience({ viewer: 'EVERYONE', price: null })).toEqual({ kind: 'free' })
+    })
+
+    it('labels nothing it cannot read, as legacy does', () => {
+        expect(candidateAudience({ viewer: 'EVERYONE', price: 10 })).toBeNull()
+        expect(candidateAudience({ viewer: null, price: null })).toBeNull()
     })
 })

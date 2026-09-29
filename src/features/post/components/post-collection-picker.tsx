@@ -8,6 +8,7 @@ import { Icon } from '@shared/ui/icon'
 import { Skeleton } from '@shared/ui/skeleton'
 import { useState } from 'react'
 import { useCollections } from '../hooks/use-collections'
+import { COLLECTIONS_MAX } from '../lib/collection-page'
 
 /**
  * *Select collection* — which of the creator's collections a new post is filed into.
@@ -43,6 +44,8 @@ export function PostCollectionPicker({
     const [name, setName] = useState('')
 
     const collections = useCollections({ enabled: true })
+    /* A full first page with more behind it is past the limit too. */
+    const atLimit = collections.hasMore || collections.collections.length >= COLLECTIONS_MAX
 
     function toggle(id: string) {
         onChange(selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id])
@@ -215,7 +218,7 @@ export function PostCollectionPicker({
                     {/*
                      * Said plainly rather than paged over: the picker asks for one page, and a
                      * creator with more collections would otherwise scroll a list that never grows.
-                     * It becomes an infinite query when a collections screen exists to justify one.
+                     * The collections screen pages the rest.
                      */}
                     {collections.hasMore ? (
                         <p className="type-caption-meta py-2 text-(--text-placeholder)">
@@ -236,15 +239,10 @@ export function PostCollectionPicker({
              * `--background-segment` for the same reason: reaching into the Primary ramp for a
              * `--primary-50` tint would pick a *dark* fill in dark mode, since that ramp inverts.
              *
-             * ⚠ **Always drawn**, where legacy hides it past ten (`collections.length < 10`).
-             *
-             * That condition was ported and it is wrong *here*: legacy has a collections screen of
-             * its own, so a creator at the limit can still make one somewhere else. This app has no
-             * such screen yet — the composer is the only place a collection can be created at all —
-             * so hiding the button is not a limit, it is a dead end. A creator with ten collections
-             * simply could never make an eleventh.
-             *
-             * Port it back the day that screen exists, and not before.
+             * Hidden at ten, as legacy hides it (`collections.length < 10`). That condition was
+             * left out while the composer was the only place a collection could be made — hiding
+             * the button then was a dead end, not a limit. The collections screen can make one now,
+             * and it stops at the same number (`COLLECTIONS_MAX`).
              */}
             {/*
              * **Sticky**, because legacy puts this in `DialogActions` — a footer outside the
@@ -256,18 +254,20 @@ export function PostCollectionPicker({
              * `--background-subtle`, which is what `DialogContent` paints — `--background-surface`
              * is a shade lighter and the footer read as a separate slab floating over the list.
              */}
-            <div className="sticky bottom-0 flex justify-end border-(--separator-default) border-t bg-(--background-subtle) pt-3">
-                <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => setCreating(true)}
-                    data-testid={subTestId(testId, 'trigger')}
-                    className="type-dense-emphasis flex h-10 items-center gap-1 rounded-[40px] border-[1.5px] border-(--text-brand) bg-(--background-surface) px-4 text-(--text-brand) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
-                >
-                    <Icon name="plus" size={20} className="flex-none" />
-                    {t('post_collection_create_new')}
-                </button>
-            </div>
+            {atLimit ? null : (
+                <div className="sticky bottom-0 flex justify-end border-(--separator-default) border-t bg-(--background-subtle) pt-3">
+                    <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setCreating(true)}
+                        data-testid={subTestId(testId, 'trigger')}
+                        className="type-dense-emphasis flex h-10 items-center gap-1 rounded-[40px] border-[1.5px] border-(--text-brand) bg-(--background-surface) px-4 text-(--text-brand) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+                    >
+                        <Icon name="plus" size={20} className="flex-none" />
+                        {t('post_collection_create_new')}
+                    </button>
+                </div>
+            )}
         </div>
     )
 }

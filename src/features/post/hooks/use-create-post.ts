@@ -122,7 +122,7 @@ export function useCreatePost({ onCreated }: { onCreated?: (post: Post | null) =
              *
              * Its failure is swallowed on purpose. The post is published; it is simply not filed,
              * and surfacing that as "couldn't publish your post" would be false. The author can file
-             * it from the collection itself, once that screen exists. **B110**.
+             * it afterwards from the collection's own *Add posts*. **B110**.
              */
             if (post?.id && draft.collectionIds.length > 0) {
                 try {

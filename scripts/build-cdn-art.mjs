@@ -230,6 +230,17 @@ const SOURCES = [
      * Unread folder) and "No results found" (a search). Both are real vectors of 8–9 KB with no
      * embedded raster, so `copy`, for the reason the row above gives.
      */
+    /*
+     * The collections list's empty state — legacy's `IMAGES_STATIC.collection.imgCollection`, drawn
+     * at 225×255. A 2.5 MB SVG wrapping a raster, so it is encoded rather than copied.
+     */
+    {
+        name: 'collection-empty',
+        out: 'collection/empty.webp',
+        url: `${CDN}/web/web-app/collection/img-collection-nothing.svg`,
+        box: { width: 225, height: 255 },
+        scale: 2,
+    },
     {
         name: 'message-empty',
         out: 'message/empty-conversation.svg',

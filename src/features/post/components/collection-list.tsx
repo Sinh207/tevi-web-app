@@ -7,10 +7,15 @@ import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Skeleton } from '@shared/ui/skeleton'
+import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useCollections } from '../hooks/use-collections'
+import { COLLECTION_ART } from '../lib/illustrations'
+import { formatPostTimestamp } from '../lib/post-format'
 import { collectionHref } from '../routes'
+import { CollectionCreateDialog } from './collection-create'
+import { CollectionOwnerMenu } from './collection-owner-menu'
 
 /**
  * `/@{slug}/collections` — the creator's collections, as a list of names to open.
@@ -23,6 +28,14 @@ import { collectionHref } from '../routes'
  * measure-and-stand-down cycle to save nothing, which is the opposite of what the hook is for. The
  * **detail** screen, which draws real posts, does window.
  *
+ * ## A row is a link and a menu, side by side
+ *
+ * Legacy's `CollectionItem`: name, the date it was made and how many posts it holds, with the
+ * owner's menu on the trailing edge. The menu is a **sibling** of the link rather than inside it, so
+ * opening it is never also a navigation — legacy has to catch that with
+ * `event.target.closest('[data-menu-container]')`. This screen is the owner's alone (the route checks
+ * that), so every row carries the menu.
+ *
  * ## It reads the same query the composer's picker does
  *
  * One key, one cache entry. A collection created in the composer appears here without this screen
@@ -30,10 +43,13 @@ import { collectionHref } from '../routes'
  */
 export function CollectionList({
     slug,
+    channelId,
     testId = 'post-collections',
 }: {
     /** The space the URL is under — the rows link within it. */
     slug: string
+    /** The owner's own channel — each row's *Add posts* searches it. */
+    channelId: string | null
     testId?: string
 }) {
     const { t, currentLanguage } = useTranslation()
@@ -47,6 +63,7 @@ export function CollectionList({
         isFetchingNextPage,
         loadMore,
     } = useCollections({ enabled: true })
+    const [creating, setCreating] = useState(false)
 
     const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({
         enabled: hasMore && !isFetchingNextPage,
@@ -84,12 +101,39 @@ export function CollectionList({
     }
 
     if (isEmpty) {
+        /* Legacy's empty screen: its illustration, "Nothing Here Yet", a line, and the way to start. */
         return (
-            <CollectionNotice
-                title={t('collections_empty')}
-                body={t('collections_empty_body')}
-                testId={testId}
-            />
+            <div
+                data-testid={subTestId(testId, 'empty')}
+                className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center"
+            >
+                <Image
+                    src={COLLECTION_ART.empty.src}
+                    alt=""
+                    width={COLLECTION_ART.empty.width}
+                    height={COLLECTION_ART.empty.height}
+                />
+                <p className="type-title-t4-semibold text-(--text-title)">
+                    {t('collection_empty_owner')}
+                </p>
+                <p className="type-dense-default max-w-[400px] text-(--text-subtitle)">
+                    {t('collections_empty_body')}
+                </p>
+                <Button
+                    variant="primary"
+                    size="medium"
+                    className="w-full max-w-[400px]"
+                    onClick={() => setCreating(true)}
+                    data-testid={subTestId(testId, 'start')}
+                >
+                    {t('post_collection_create_new')}
+                </Button>
+                <CollectionCreateDialog
+                    open={creating}
+                    onOpenChange={setCreating}
+                    testId={subTestId(testId, 'panel')}
+                />
+            </div>
         )
     }
 
@@ -97,54 +141,94 @@ export function CollectionList({
         <div data-testid={testId} className="flex flex-col">
             {collections.map((collection, index) => (
                 /*
-                 * A real `<Link>`, so a row is middle-clickable and openable in a new tab. The
-                 * hairline sits **between** rows for `PostCollectionPicker`'s reason: a rule under
-                 * the last one separates the list from nothing.
+                 * The hairline sits **between** rows for `PostCollectionPicker`'s reason: a rule
+                 * under the last one separates the list from nothing.
                  */
-                <Link
+                <div
                     key={collection.id}
-                    href={collectionHref(slug, collection.id)}
-                    data-option-value={collection.id}
-                    data-testid={subTestId(testId, 'row')}
                     className={
                         index === 0
-                            ? 'flex items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-(--background-segment)'
-                            : 'flex items-center justify-between gap-3 border-(--separator-default) border-t px-4 py-4 transition-colors hover:bg-(--background-segment)'
+                            ? 'flex items-center gap-1 pe-2'
+                            : 'flex items-center gap-1 border-(--separator-default) border-t pe-2'
                     }
                 >
-                    <span className="flex min-w-0 flex-col gap-1">
-                        <span className="type-body-strong truncate text-(--text-title)">
-                            {collection.name}
-                        </span>
-                        {/* Legacy's leading dot, and no line at all for a collection holding nothing. */}
-                        {collection.post_count > 0 ? (
-                            <span className="type-caption-meta flex items-center gap-1 text-(--text-subtitle)">
-                                <span
-                                    aria-hidden="true"
-                                    className="size-1 rounded-full bg-current"
-                                />
-                                {t('post_collection_count', {
+                    {/* A real `<Link>`, so a row is middle-clickable and openable in a new tab. */}
+                    <Link
+                        href={collectionHref(slug, collection.id)}
+                        data-option-value={collection.id}
+                        data-testid={subTestId(testId, 'row')}
+                        className="flex min-w-0 flex-1 items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-(--background-segment)"
+                    >
+                        <span className="flex min-w-0 flex-col gap-1">
+                            <span className="type-body-strong truncate text-(--text-title)">
+                                {collection.name}
+                            </span>
+                            <CollectionMeta
+                                createdAt={collection.created_at}
+                                postCount={collection.post_count}
+                                locale={currentLanguage}
+                                countLabel={t('post_collection_count', {
                                     count: collection.post_count,
                                     formatted: formatCompactCount(
                                         collection.post_count,
                                         currentLanguage,
                                     ),
                                 })}
-                            </span>
-                        ) : null}
-                    </span>
-                    <Icon
-                        name="angle-right"
-                        size={20}
-                        aria-hidden
-                        className="flex-none text-(--icon-secondary)"
+                            />
+                        </span>
+                        <Icon
+                            name="angle-right"
+                            size={20}
+                            aria-hidden
+                            className="flex-none text-(--icon-secondary) rtl:-scale-x-100"
+                        />
+                    </Link>
+                    <CollectionOwnerMenu
+                        collectionId={collection.id}
+                        name={collection.name ?? ''}
+                        channelId={channelId}
+                        testId={subTestId(testId, 'item')}
                     />
-                </Link>
+                </div>
             ))}
 
             {/* Zero-height, so it never adds space to a list that has stopped growing. */}
             <div ref={sentinelRef} aria-hidden="true" className="h-px" />
         </div>
+    )
+}
+
+/**
+ * The line under a row's name — legacy's date, then a dot and the post count when there is one.
+ * An empty collection has no count line at all, as in the picker: "0 posts" is a statement nobody
+ * needs.
+ */
+function CollectionMeta({
+    createdAt,
+    postCount,
+    locale,
+    countLabel,
+}: {
+    createdAt: string | null
+    postCount: number
+    locale: string
+    countLabel: string
+}) {
+    const when = createdAt ? formatPostTimestamp(createdAt, locale) : ''
+    if (!when && postCount === 0) return null
+
+    return (
+        <span className="type-caption-meta flex items-center gap-1 text-(--text-subtitle)">
+            {when ? <time dateTime={createdAt ?? undefined}>{when}</time> : null}
+            {postCount > 0 ? (
+                <>
+                    {when ? (
+                        <span aria-hidden="true" className="size-1 rounded-full bg-current" />
+                    ) : null}
+                    {countLabel}
+                </>
+            ) : null}
+        </span>
     )
 }
 
