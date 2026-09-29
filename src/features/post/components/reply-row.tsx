@@ -24,7 +24,7 @@ import { useDeleteReply } from '../hooks/use-delete-reply'
 import { useReplyReaction } from '../hooks/use-reply-reaction'
 import { formatPostTimestamp } from '../lib/post-format'
 import { replyMenuVisibility, replyReactionCost } from '../lib/reply-access'
-import { COUNT_CLASS, REACTED_FRAME, REACTION_ART, StarCostChip } from './post-actions'
+import { COUNT_CLASS, REACTED_FRAME, REACTION_ART } from './post-actions'
 import { PostImageGallery } from './post-image-gallery'
 import { PostMediaLightbox } from './post-media-lightbox'
 
@@ -412,7 +412,6 @@ function ReplyActions({
                         animate={pressed}
                         className="size-8"
                     />
-                    {cost !== null && cost > 1 ? <StarCostChip cost={cost} on="action" /> : null}
                 </button>
                 <span className={COUNT_CLASS} title={formatExactCount(count, locale)}>
                     {formatCompactCount(count, locale)}

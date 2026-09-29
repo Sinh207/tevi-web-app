@@ -4,8 +4,10 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
+import Image from 'next/image'
 import { type KeyboardEvent, useEffect, useLayoutEffect, useRef } from 'react'
 import type { UseComposerResult } from '../hooks/use-composer'
+import { DISC } from '../lib/disc'
 import { messageText } from '../lib/message-thread'
 
 /** Four lines of `type-body-default` (16 × 1.5) plus the field's padding — legacy's `maxRows: 4`. */
@@ -17,9 +19,9 @@ const MAX_FIELD_PX = 4 * 24 + 16
  * No ground of its own — it sits on the room's pattern, as legacy's footer does; the field and the
  * reply banner carry their own fills.
  *
- * Legacy's field sits in a grey tail-shaped box with an attachment button whose sheet this port does
- * not have yet (photos are the next step), so the paperclip is not drawn — a control that opens
- * nothing is worse than none.
+ * Legacy's grey tail-shaped box and white Send disc, as drawn. Its attachment button is not drawn:
+ * the sheet it opens is not built yet (photos are the next step), and a control that opens nothing
+ * is worse than none — nor is there a paperclip in the icon library to draw it with.
  *
  * ## Enter sends — except while an IME is composing
  *
@@ -77,89 +79,103 @@ export function MessageComposer({
     const context = editing ?? replyTo
 
     return (
-        <div className="flex flex-none flex-col gap-2 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-            {context && (
-                <div className="flex items-center gap-2 rounded-(--radius-md) border-s-2 border-solid border-(--text-link) bg-(--background-subtle) py-2 ps-3 pe-1">
-                    <Icon
-                        name={editing ? 'pen-line' : 'reply'}
-                        size={20}
-                        className="flex-none text-(--text-link)"
-                    />
-                    <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate type-caption-label-strong text-(--text-link)">
-                            {editing
-                                ? t('message_editing')
-                                : t('message_replying_to', {
-                                      name: context.sender?.name ?? t('message_inactive_user'),
-                                  })}
+        <div className="flex flex-none items-end gap-2 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-3">
+            {/*
+             * Legacy's box (`footerChat`): one `#F4F4F4` block holding the reply / edit card and the
+             * field, square at the bottom-end corner where a curved tail joins it — a speech bubble
+             * pointing at Send. The tail is the same concave triangle legacy clips, mirrored under
+             * `rtl` so it still points at Send.
+             */}
+            <div
+                className={cn(
+                    'relative flex min-w-0 flex-1 flex-col gap-2 bg-(--background-subtle) px-2',
+                    'rounded-ss-(--radius-lg) rounded-se-(--radius-lg) rounded-es-(--radius-lg) rounded-ee-none',
+                    "after:absolute after:-end-4 after:bottom-0 after:size-4 after:bg-(--background-subtle) after:content-['']",
+                    "after:[clip-path:path('M16,18_Q0,15_0,-1_L0,16_Z')] rtl:after:-scale-x-100",
+                    overLimit && 'ring-1 ring-(--text-error)',
+                )}
+            >
+                {context && (
+                    <div className="mt-2 flex items-center gap-1 rounded-(--radius-lg) border-s-2 border-solid border-(--text-link) bg-(--background-surface) p-2">
+                        {context.images[0]?.url && !editing && (
+                            <Image
+                                src={context.images[0].url}
+                                alt=""
+                                width={44}
+                                height={44}
+                                className="size-11 flex-none rounded-(--radius-md) object-cover"
+                            />
+                        )}
+                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                            <span className="truncate type-dense-default text-(--text-link)">
+                                {editing
+                                    ? t('message_editing')
+                                    : t('message_replying_to', {
+                                          name: context.sender?.name ?? t('message_inactive_user'),
+                                      })}
+                            </span>
+                            <span className="truncate type-dense-default text-(--text-body)">
+                                {messageText(context) ?? t('message_preview_photo')}
+                            </span>
                         </span>
-                        <span className="truncate type-caption-meta text-(--text-body)">
-                            {messageText(context) ?? t('message_preview_photo')}
-                        </span>
-                    </span>
-                    <Button
-                        data-testid="message-composer-cancel"
-                        variant="ghost"
-                        size="small"
-                        iconOnly
-                        aria-label={t(editing ? 'message_cancel_edit' : 'message_cancel_reply')}
-                        onClick={cancel}
-                    >
-                        <Icon name="xmark" size={20} className="size-5" />
-                    </Button>
-                </div>
-            )}
-
-            <div className="flex items-end gap-2">
-                <div
-                    className={cn(
-                        'flex min-w-0 flex-1 flex-col rounded-[20px] bg-(--background-segment) px-4 py-2',
-                        overLimit && 'ring-1 ring-(--text-error)',
-                    )}
-                >
-                    <textarea
-                        ref={field}
-                        data-testid="message-composer-input"
-                        rows={1}
-                        value={text}
-                        onChange={event => setText(event.target.value)}
-                        onKeyDown={onKeyDown}
-                        placeholder={t('message_composer_placeholder')}
-                        aria-label={t('message_composer_placeholder')}
-                        aria-invalid={overLimit || undefined}
-                        aria-describedby={overLimit ? 'message-composer-limit' : undefined}
-                        className="block max-h-[112px] w-full resize-none overflow-y-auto bg-transparent type-body-default text-(--text-title) outline-none [field-sizing:content] placeholder:text-(--text-placeholder)"
-                    />
-                    {/* The counter appears in the last 10% and past the limit — never as clutter
-                        on a two-word message. */}
-                    {length > limit * 0.9 && (
-                        <span
-                            id="message-composer-limit"
-                            role={overLimit ? 'alert' : undefined}
-                            className={cn(
-                                'self-end type-caption-meta',
-                                overLimit ? 'text-(--text-error)' : 'text-(--text-placeholder)',
-                            )}
+                        {/* Legacy's 30px grey disc with an × (`replyMess`, `editMess`). */}
+                        <Button
+                            data-testid="message-composer-cancel"
+                            variant="ghost"
+                            size="small"
+                            iconOnly
+                            aria-label={t(editing ? 'message_cancel_edit' : 'message_cancel_reply')}
+                            onClick={cancel}
+                            className="size-[30px] flex-none rounded-(--radius-fill) bg-(--background-subtle) text-(--icon-default) hover:not-disabled:bg-(--background-segment)"
                         >
-                            {overLimit
-                                ? t('message_limit_exceeded', { limit })
-                                : `${length}/${limit}`}
-                        </span>
-                    )}
-                </div>
-                <Button
-                    data-testid="message-composer-submit"
-                    variant="primary"
-                    size="large"
-                    iconOnly
-                    disabled={!canSend}
-                    aria-label={t(editing ? 'message_save_edit' : 'message_send')}
-                    onClick={submit}
-                    className="flex-none rounded-(--radius-fill)"
-                >
-                    <Icon name={editing ? 'check' : 'send'} size={20} />
-                </Button>
+                            <Icon name="xmark" size={24} className="size-6" />
+                        </Button>
+                    </div>
+                )}
+
+                <textarea
+                    ref={field}
+                    data-testid="message-composer-input"
+                    rows={1}
+                    value={text}
+                    onChange={event => setText(event.target.value)}
+                    onKeyDown={onKeyDown}
+                    placeholder={t('message_composer_placeholder')}
+                    aria-label={t('message_composer_placeholder')}
+                    aria-invalid={overLimit || undefined}
+                    aria-describedby={overLimit ? 'message-composer-limit' : undefined}
+                    className="block max-h-[112px] w-full resize-none overflow-y-auto bg-transparent py-2 ps-1 type-body-default text-(--text-title) outline-none [field-sizing:content] placeholder:text-(--text-placeholder)"
+                />
+                {/* The counter appears in the last 10% and past the limit — never as clutter
+                    on a two-word message. */}
+                {length > limit * 0.9 && (
+                    <span
+                        id="message-composer-limit"
+                        role={overLimit ? 'alert' : undefined}
+                        className={cn(
+                            '-mt-2 self-end pb-1 type-caption-meta',
+                            overLimit ? 'text-(--text-error)' : 'text-(--text-placeholder)',
+                        )}
+                    >
+                        {overLimit ? t('message_limit_exceeded', { limit }) : `${length}/${limit}`}
+                    </span>
+                )}
             </div>
+
+            {/* Legacy's Send: a 40px white disc with a dark filled plane, the same for an edit.
+                `ms-4` clears the box's tail. */}
+            <Button
+                data-testid="message-composer-submit"
+                variant="ghost"
+                size="large"
+                iconOnly
+                disabled={!canSend}
+                aria-label={t(editing ? 'message_save_edit' : 'message_send')}
+                onClick={submit}
+                className={cn(DISC, 'ms-3 size-10 flex-none shadow-none')}
+            >
+                <Icon name="send" weight="filled" size={24} className="size-6 rtl:-scale-x-100" />
+            </Button>
         </div>
     )
 }

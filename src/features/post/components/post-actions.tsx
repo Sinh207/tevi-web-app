@@ -1,6 +1,5 @@
 'use client'
 
-import { useRequireStars } from '@features/balance'
 import { LottieAnimation } from '@shared/components/lottie-animation'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatCompactCount, formatExactCount } from '@shared/lib/format-count'
@@ -15,7 +14,7 @@ import { usePostBookmark } from '../hooks/use-post-bookmark'
 import { usePostReaction } from '../hooks/use-post-reaction'
 import { postActionVisibility, replyCost } from '../lib/post-access'
 import { mayReply, replyAudience, replyAudienceNotice } from '../lib/who-can-reply'
-import { BookmarkIcon, StarCostGlyph } from './legacy-icons'
+import { BookmarkIcon } from './legacy-icons'
 
 /**
  * The row under a post — legacy's six controls, in legacy's two groups.
@@ -33,23 +32,36 @@ import { BookmarkIcon, StarCostGlyph } from './legacy-icons'
  *
  * ## Commenting can cost Star, and the charge is **not** made here
  *
- * The chip prices it and the press navigates; the Star is taken by the reply form on the page it
- * lands on, which is where legacy takes it too (`handleOpenComment` → `ConfirmPaidComment` → the
- * form). Charging on the way *to* a page the reader might not use would bill them for arriving.
- * What this row does do is refuse to navigate when the reader cannot afford the reply — the same
- * `useRequireStars` gate reacting uses, so the offer to top up appears here rather than three
- * screens later.
+ * The press navigates; the Star is taken by the reply form on the page it lands on, which is where
+ * legacy takes it too (`handleOpenComment` → `ConfirmPaidComment` → the form). Charging on the way
+ * *to* a page the reader might not use would bill them for arriving.
+ *
+ * It no longer **refuses to navigate** when the reader cannot afford the reply, either. Neither
+ * native client gates that press: iOS's `onReplyPressed` opens the composer outright, and Android's
+ * `checkToReplyInFullScreen` checks *membership*, never balance. Opening a composer is not
+ * spending, and the refusal also withheld the *Who can reply?* rules from a reader who may only
+ * have wanted to read them. The top-up offer arrives on submit instead.
+ *
+ * **Reacting keeps its gate.** That press does spend, and Android checks the balance in exactly
+ * that place (`onClickBlink`: `balanceModeTVS >= cost`) before calling `purchaseLikeAction`.
  *
  * A reader the creator has restricted to paying members gets something different again:
  * `onUnlockReplies` — `postIntent`'s fourth branch, which opens the membership page. The post is
  * readable, the replies are not, and there is a way in.
  *
- * ## The Star cost badge is the thing not to drop
+ * ## The Star cost badge was dropped, after checking the other two clients
  *
- * A channel with paid interaction on charges Star **to react and to comment**, and legacy prints the
- * price as a small blue chip on the corner of each of those two icons. Leaving it off does not make
- * the surface simpler, it makes it dishonest: the reader finds out what a tap costs by being charged
- * for it. It renders only above a cost of 1, which is legacy's own threshold.
+ * It used to read here that leaving the chip off "makes the surface dishonest". The argument was
+ * sound; the conclusion was wrong, because it reasoned from legacy web alone. **iOS and Android
+ * have both retired it** — iOS hard-codes `likePIView.isHidden = true` with the real predicate
+ * commented out beside it, and Android does the same in the feed card, the media viewer *and* the
+ * reply row, with the reason written down: *"Paid-interaction price chips on react/comment actions
+ * are retired: the creator tier badge next to the name conveys the cost instead."*
+ *
+ * The reader is still told, and told later: the reply composer prices its **submit** button
+ * (`post_reply_submit_priced`), which is Android's one surviving chip and the moment the Star is
+ * actually spent. Badge the commit, not the action. `StarCostChip` and its offsets went with this
+ * decision; git has them if the product changes its mind.
  *
  * ## Counts are always drawn, including zero
  *
@@ -85,7 +97,6 @@ export function PostActions({
     testId?: string
 }) {
     const { t, currentLanguage } = useTranslation()
-    const requireStars = useRequireStars()
     const cost = replyCost(post, { isPremiumReader })
     /**
      * Quote is **off unless the console turns it on**, which is legacy's own gate
@@ -112,21 +123,15 @@ export function PostActions({
      * the `'unlock'` audience takes that route; the rest navigate to the post, where the *Who can
      * reply?* panel names the rule (`lib/who-can-reply.ts`).
      *
-     * A cost of `null` means free, and `requireStars(0, …)` is not used there: it would still wrap
-     * the press in a sign-in gate, and **reading** the replies under a post is not something a guest
-     * has to sign in for. Legacy gates the comment *box*, never the navigation.
+     * No Star gate on either branch: **reading** the replies under a post is not something a guest
+     * has to sign in for, and it is not something a reader has to afford. Legacy gates the comment
+     * *box*, never the navigation, and both native clients gate neither.
      */
     // `mayReply`, so a reader who already follows a followers-only space is not sent to a paywall
     // or bounced to the detail page — see its note in `lib/who-can-reply.ts`.
     const barred = !mayReply(post)
     const audienceAction = replyAudienceNotice(replyAudience(post))?.action ?? 'none'
-    const commentPress = barred
-        ? audienceAction === 'unlock'
-            ? onUnlockReplies
-            : onComment
-        : cost !== null && onComment
-          ? requireStars(cost, onComment)
-          : onComment
+    const commentPress = barred && audienceAction === 'unlock' ? onUnlockReplies : onComment
 
     return (
         <div
@@ -144,7 +149,6 @@ export function PostActions({
                     <ActionButton
                         icon="comment"
                         label={t('post_action_comment')}
-                        cost={cost}
                         count={post.reply_count}
                         locale={currentLanguage}
                         onPress={commentPress}
@@ -187,7 +191,6 @@ function ActionButton({
     filledIcon,
     label,
     count,
-    cost,
     locale,
     filled = false,
     pressed,
@@ -210,7 +213,6 @@ function ActionButton({
     filledIcon?: TeviIconNameFilled
     label: string
     count?: number
-    cost?: number | null
     locale?: string
     filled?: boolean
     /** Published as `aria-pressed` — a toggle's state belongs in ARIA, never in the testid. */
@@ -242,9 +244,6 @@ function ActionButton({
                 ) : (
                     <Icon name={icon} size={24} />
                 )}
-                {typeof cost === 'number' && cost > 1 ? (
-                    <StarCostChip cost={cost} on="action" />
-                ) : null}
             </button>
             {typeof count === 'number' && locale ? (
                 <span className={COUNT_CLASS} title={formatExactCount(count, locale)}>
@@ -327,7 +326,6 @@ function ReactButton({
                     animate={pressed}
                     className="size-10"
                 />
-                {cost !== null && cost > 1 ? <StarCostChip cost={cost} on="react" /> : null}
             </button>
             <span className={COUNT_CLASS} title={formatExactCount(count, locale)}>
                 {formatCompactCount(count, locale)}
@@ -399,58 +397,3 @@ function BookmarkButton({ post, testId }: { post: Post; testId?: string }) {
  */
 export const COUNT_CLASS =
     'type-dense-emphasis min-w-[2ch] ps-1 text-start tabular-nums text-(--text-body)'
-
-/**
- * The Star price on a paid-interaction channel — a 16px chip pinned to the glyph's top corner.
- *
- * ## It is a star **and** a number, not a number
- *
- * Legacy's chip carries a 12px white star before the figure (`icon` on its MUI `Chip`). Without it
- * the chip reads as a notification count — "5 somethings" — rather than as a price, which is the
- * one thing it exists to say. That was the miss here.
- *
- * ## The white hairline is structural, the fill is not legacy's colour
- *
- * The border separates the chip from whatever icon is underneath rather than from the page, which
- * is why it is fixed white at both themes. The fill is `--button-accent-bg`, **not** legacy's
- * `#0061FF`: this app's brand ramp is `--primary-500` (`#501bc0`), so legacy's blue would be the
- * only blue in a purple product — and a raw hex has no dark mode and is barred outright. Same trade
- * as everywhere else in this port: geometry from legacy, palette from the design system.
- *
- * `type-micro-overline` is the DS's only 10px step, which is legacy's size; its weight is medium
- * against legacy's 600, and that is the DS's ramp rather than something to override by hand.
- */
-export function StarCostChip({ cost, on }: { cost: number; on: 'react' | 'action' }) {
-    return (
-        <span
-            aria-hidden="true"
-            className={cn(
-                'type-micro-overline pointer-events-none absolute flex h-4 items-center gap-0.5 rounded-full border border-white bg-(--button-accent-bg) px-1 text-(--button-accent-text)',
-                CHIP_OFFSET[on],
-            )}
-        >
-            <StarCostGlyph />
-            {cost}
-        </span>
-    )
-}
-
-/**
- * Where the chip sits, and **the two buttons do not agree** — legacy's own numbers.
- *
- * | | target | `top` | `right` |
- * |---|---|---|---|
- * | react | 40px | `-2` | `-4` |
- * | comment | 32px | `-6` | `-10` |
- *
- * The smaller target pushes its chip further out, because the chip is a fixed 16px tall whichever
- * glyph it is pinned to: at 32px it would otherwise sit **on** the icon rather than on its corner.
- * Using the react offsets for both — which is what this did — left the comment chip 6px inside its
- * own button, reading as a badge stuck to the left of the glyph instead of above its corner.
- *
- * Logical `-end-*`, so the corner follows the writing direction.
- */
-const CHIP_OFFSET = {
-    react: '-top-0.5 -end-1',
-    action: '-top-1.5 -end-2.5',
-} as const

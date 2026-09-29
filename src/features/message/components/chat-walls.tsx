@@ -8,6 +8,7 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
+import { Icon } from '@shared/ui/icon'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
@@ -28,6 +29,9 @@ import type { ReactNode } from 'react'
  * Stripe frame inside the chat). `/@{slug}/membership` is the one checkout every other entry point
  * uses, and `useRoom` re-asks on return, so coming back after paying opens the conversation.
  */
+/** Legacy's wall button: full width, 36px on a phone and 40 wider, 8px corners, 14/500. */
+const WALL_BUTTON = 'h-9 w-full rounded-lg sm:h-10'
+
 export type ChatWallKind = 'follow' | 'member' | 'first' | 'blocked-me' | 'i-blocked' | 'inactive'
 
 export function ChatWall({
@@ -55,8 +59,9 @@ export function ChatWall({
                         channel?.slug ? (
                             <Button
                                 data-testid="message-wall-member-join"
-                                variant="primary"
-                                size="large"
+                                variant="accent"
+                                size="medium"
+                                className={WALL_BUTTON}
                                 render={
                                     <Link
                                         href={channelActionPath(channel.slug, 'become_a_member')}
@@ -78,8 +83,9 @@ export function ChatWall({
                     action={
                         <Button
                             data-testid="message-wall-first-wave"
-                            variant="primary"
-                            size="large"
+                            variant="accent"
+                            size="medium"
+                            className={WALL_BUTTON}
                             onClick={onWave}
                         >
                             {t('message_wall_first_action')}
@@ -133,8 +139,9 @@ function FollowWall({ channel }: { channel: Channel }) {
                 action={
                     <Button
                         data-testid="message-wall-follow-submit"
-                        variant="primary"
-                        size="large"
+                        variant="accent"
+                        size="medium"
+                        className={WALL_BUTTON}
                         disabled={follow.isPending}
                         aria-busy={follow.isPending || undefined}
                         onClick={follow.run}
@@ -159,8 +166,9 @@ function FollowWall({ channel }: { channel: Channel }) {
                 requested ? (
                     <Button
                         data-testid="message-wall-request-cancel"
-                        variant="secondary"
-                        size="large"
+                        variant="ghost"
+                        size="medium"
+                        className={cn(WALL_BUTTON, 'bg-(--background-subtle) text-(--text-title)')}
                         disabled={unfollow.isPending}
                         aria-busy={unfollow.isPending || undefined}
                         onClick={unfollow.run}
@@ -170,8 +178,9 @@ function FollowWall({ channel }: { channel: Channel }) {
                 ) : (
                     <Button
                         data-testid="message-wall-request-submit"
-                        variant="primary"
-                        size="large"
+                        variant="accent"
+                        size="medium"
+                        className={WALL_BUTTON}
                         disabled={follow.isPending}
                         aria-busy={follow.isPending || undefined}
                         onClick={follow.run}
@@ -196,18 +205,32 @@ function Panel({
     kind: ChatWallKind
 }) {
     return (
-        <section
-            data-testid="message-wall"
-            data-wall-kind={kind}
-            className={cn(
-                'mx-auto flex w-full max-w-[400px] flex-col items-center gap-1 px-4 py-6 text-center',
-                RISE,
-            )}
-        >
-            <h2 className="type-title-t2-semibold text-(--text-title)">{title}</h2>
-            <p className="type-dense-default text-(--text-body)">{body}</p>
-            {action && <div className="mt-3">{action}</div>}
-        </section>
+        <div className={cn('flex w-full justify-center p-3', RISE)}>
+            {/*
+             * Legacy's card: white, 390 at most, 12px inside, 16px corners where there is a button
+             * (`followChannel`, `becomeAMember`, `getStared`) and 12 where there is not (`meBlock`,
+             * `recipientBlock`, `inactiveRecipient`). Type steps down below `sm`, as legacy's does
+             * below 600.
+             */}
+            <section
+                data-testid="message-wall"
+                data-wall-kind={kind}
+                className={cn(
+                    'flex w-full max-w-[390px] flex-col items-center gap-2.5 bg-(--background-surface) p-3 text-center',
+                    action ? 'rounded-(--radius-xl)' : 'rounded-(--radius-lg)',
+                )}
+            >
+                <span className="flex flex-col items-center">
+                    <h2 className="type-subheading-strong text-(--text-title) sm:type-title-t1-bold">
+                        {title}
+                    </h2>
+                    <p className="type-caption-meta text-(--text-body) sm:type-dense-default">
+                        {body}
+                    </p>
+                </span>
+                {action}
+            </section>
+        </div>
     )
 }
 
@@ -240,8 +263,10 @@ export function ChannelIntro({ channel }: { channel: Channel }) {
             {active && channel.slug && (
                 <Link
                     href={toChannelPath(channel.slug)}
-                    className="type-link-dense text-(--text-link) no-underline hover:underline"
+                    className="flex items-center gap-0.5 type-link-dense text-(--text-link) no-underline hover:underline"
                 >
+                    {/* Legacy's link mark before the address (`channelInfo`). */}
+                    <Icon name="link-simple" size={16} className="size-4 flex-none" />
                     <bdi>tevi.com/@{channel.slug}</bdi>
                 </Link>
             )}
