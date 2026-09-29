@@ -257,8 +257,20 @@ function PostSliderSlide({
     const images = post.images ?? []
     const clip = videoSrc(post.video)
     const [picture, setPicture] = useState(0)
-    const current = images[Math.min(picture, images.length - 1)]
-    const src = current?.uri ?? current?.thumb ?? null
+    const stripRef = useRef<HTMLDivElement>(null)
+    /*
+     * Step by **scrolling the strip**, not by setting state: the strip is the source of truth for
+     * which picture is showing, so an arrow that moved state would put the two out of step the
+     * moment a finger moved the strip as well. `scrollIntoView` also gets RTL right on its own,
+     * where arithmetic on `scrollLeft` does not — the sign of it differs between engines.
+     */
+    const goToPicture = (at: number) => {
+        stripRef.current?.children[at]?.scrollIntoView({
+            behavior: 'smooth',
+            inline: 'start',
+            block: 'nearest',
+        })
+    }
     /* `null` when the backend sent no dimensions — then the clip keeps its intrinsic box. */
     const clipRatio =
         post.video?.width && post.video?.height ? post.video.width / post.video.height : null
@@ -326,23 +338,67 @@ function PostSliderSlide({
                             style={clipRatio === null ? undefined : { aspectRatio: clipRatio }}
                         />
                     </div>
-                ) : src ? (
+                ) : images.length > 0 ? (
                     /*
-                     * `object-contain` over the **whole** area, which is legacy's gallery branch —
-                     * it grows a small picture to the area and letterboxes it, where a `max-*`
-                     * pair would leave it at its intrinsic size in the middle of a black screen.
+                     * ⚠ **A swipeable strip, not one picture swapped in place.**
+                     *
+                     * All three references page pictures by *dragging*: legacy is a Swiper with
+                     * `allowTouchMove` at every width, Android a `ViewPager2`, iOS a paging scroll
+                     * view. None of them can be stepped any other way on a phone — legacy draws its
+                     * arrows inside `matchUpMd` and the two native clients draw none at all.
+                     *
+                     * This rendered `images[picture]` alone, so there was nothing to drag and the
+                     * arrows had to stay on a phone to keep the other ten pictures reachable. That
+                     * is the divergence the arrows were a workaround for; with a real strip it goes,
+                     * and the arrows go back to being the desktop affordance they are everywhere
+                     * else.
+                     *
+                     * Native scroll-snap rather than Embla, deliberately: the **vertical** pager in
+                     * this same component is native scroll-snap reading its index off `scrollTop`,
+                     * and two engines in one viewer is two sets of momentum and two ideas of where
+                     * the reader is. `docs/DESIGN_SYSTEM.md` §10 routes real slide semantics through
+                     * `card-carousel.tsx`, and that is for cards in a row — this is the second axis
+                     * of a pager whose first axis is already built this way.
                      */
-                    <Image
-                        key={picture}
-                        src={src}
-                        alt={t('post_image_alt')}
-                        width={current?.width ?? current?.w ?? 1600}
-                        height={current?.height ?? current?.h ?? 1600}
-                        sizes="100vw"
-                        unoptimized={isLocalImageSrc(src)}
-                        data-testid={subTestId(testId, 'slide')}
-                        className="h-full w-full object-contain"
-                    />
+                    <div
+                        ref={stripRef}
+                        onScroll={event => {
+                            const el = event.currentTarget
+                            const width = el.clientWidth
+                            if (width === 0) return
+                            const at = Math.round(Math.abs(el.scrollLeft) / width)
+                            setPicture(current =>
+                                current === at ? current : Math.min(at, images.length - 1),
+                            )
+                        }}
+                        className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                        {images.map((image, at) => {
+                            const src = image?.uri ?? image?.thumb ?? null
+                            return src ? (
+                                <Image
+                                    key={src}
+                                    src={src}
+                                    alt={t('post_image_alt')}
+                                    width={image?.width ?? image?.w ?? 1600}
+                                    height={image?.height ?? image?.h ?? 1600}
+                                    sizes="100vw"
+                                    unoptimized={isLocalImageSrc(src)}
+                                    data-media-index={at}
+                                    data-testid={subTestId(testId, 'slide')}
+                                    /*
+                                     * `object-contain` over a full-width slide, which is legacy's
+                                     * own (`objectFit: 'contain'` inside a 100%×100% container):
+                                     * it grows a small picture to the area and letterboxes it,
+                                     * where a `max-*` pair would leave it at its intrinsic size in
+                                     * the middle of a black screen. `shrink-0` is what stops flex
+                                     * from squeezing eleven slides into one viewport.
+                                     */
+                                    className="h-full w-full shrink-0 snap-start snap-always object-contain"
+                                />
+                            ) : null
+                        })}
+                    </div>
                 ) : null}
 
                 {/* The pictures of **this** post, on the horizontal axis — posts are the vertical one. */}
@@ -353,11 +409,10 @@ function PostSliderSlide({
                  * goes when it has nowhere to point; `%` wrap-around was this file's invention and it
                  * makes the last picture look like the first.
                  *
-                 * They are drawn **below `md` too**, which legacy is not — its wrapper is inside
-                 * `matchUpMd`, and it can afford that because its gallery is a Swiper the reader
-                 * flicks. This one is a picture and an index, so hiding the arrows on a phone would
-                 * leave ten of the eleven unreachable. The inset is legacy's own `xs` value, which it
-                 * wrote and then never rendered.
+                 * They are **desktop-only**, which is every reference: legacy's wrapper sits inside
+                 * `matchUpMd`, Android's viewer layout has no arrow at all and iOS none either — a
+                 * phone drags. They used to be drawn at every width because this pager could not be
+                 * dragged; the strip above fixed that cause, so the workaround goes with it.
                  */}
                 {images.length > 1 && !clip ? (
                     <>
@@ -365,7 +420,7 @@ function PostSliderSlide({
                             <PictureNavButton
                                 side="start"
                                 label={t('common_previous')}
-                                onPress={() => setPicture(p => p - 1)}
+                                onPress={() => goToPicture(picture - 1)}
                                 testId={subTestId(testId, 'prev')}
                             />
                         ) : null}
@@ -373,7 +428,7 @@ function PostSliderSlide({
                             <PictureNavButton
                                 side="end"
                                 label={t('common_next')}
-                                onPress={() => setPicture(p => p + 1)}
+                                onPress={() => goToPicture(picture + 1)}
                                 testId={subTestId(testId, 'next')}
                             />
                         ) : null}
@@ -741,10 +796,11 @@ function RailButton({
 }
 
 /**
- * One picture arrow — 40px, `rgba(0,0,0,0.5)`, inset 12 on a phone and 50 from `md`.
+ * One picture arrow — 40px, `rgba(0,0,0,0.5)`, hover `0.7`, inset 50 from the media's edge.
  *
- * Legacy's numbers. The inset is large on a desktop because the media is letterboxed there and the
- * arrow sits *over the black*, not over the photograph.
+ * Legacy's numbers, and **only from `md`**: below that every client drags instead. The inset is
+ * large because the media is letterboxed on a wide window and the arrow sits *over the black*
+ * rather than over the photograph.
  */
 function PictureNavButton({
     side,
@@ -766,13 +822,22 @@ function PictureNavButton({
             className={cn(
                 'absolute top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center',
                 'rounded-full bg-black/50 text-white transition-colors hover:bg-black/70',
-                side === 'start' ? 'start-3 md:start-[50px]' : 'end-3 md:end-[50px]',
+                /* Desktop only — see the note at the call site. Legacy's 50px inset. */
+                'hidden md:flex',
+                side === 'start' ? 'md:start-[50px]' : 'md:end-[50px]',
             )}
         >
+            {/*
+             * ⚠ The glyph is **picked, not rotated**. This was `angle-left` with
+             * `cn(side === 'end' && 'rotate-180', 'rtl:rotate-180')`, and those two utilities set
+             * the same property: under `dir="rtl"` the end arrow took `rotate: 180deg` from both
+             * and stayed at 180, so in Arabic *next* pointed backwards. `-scale-x` mirrors instead
+             * — it composes with nothing, and it is what a logical `start`/`end` pair needs.
+             */}
             <Icon
-                name="angle-left"
+                name={side === 'start' ? 'angle-left' : 'angle-right'}
                 size={24}
-                className={cn(side === 'end' && 'rotate-180', 'rtl:rotate-180')}
+                className="rtl:-scale-x-100"
             />
         </button>
     )
