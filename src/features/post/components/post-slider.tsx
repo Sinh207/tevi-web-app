@@ -18,7 +18,7 @@ import { createPortal } from 'react-dom'
 import type { Post } from '../api/types'
 import { usePostBookmark } from '../hooks/use-post-bookmark'
 import { usePostReaction } from '../hooks/use-post-reaction'
-import { hasReacted, isGated, postActionVisibility, replyCost } from '../lib/post-access'
+import { isGated, postActionVisibility, replyCost } from '../lib/post-access'
 import { formatPostTimestamp, truncateSliderCaption } from '../lib/post-format'
 import { isLocalImageSrc, videoSrc } from '../lib/post-media'
 import { LockMediaIcon } from './legacy-icons'
@@ -574,7 +574,11 @@ function PostSliderRail({
     const bookmark = usePostBookmark(post)
     const requireStars = useRequireStars()
     /**
-     * What a comment costs on this post, and the reader's Premium exemption applied.
+     * What an **interaction** costs on this post, and the reader's Premium exemption applied.
+     *
+     * Reply-flavoured in name and not in fact: it resolves `paid_interaction_cost`, which is the
+     * one figure legacy badges on *both* the react and the comment button
+     * (`paidInteractionStarCost`). A post that charges, charges for either.
      *
      * The same `replyCost` the card's row reads, and it is why `isPremiumReader` is threaded this
      * far: a paid-interaction post must say what pressing *Comment* will charge, and a Premium
@@ -604,29 +608,33 @@ function PostSliderRail({
             className="absolute end-0 bottom-0 z-20 me-1.5 flex flex-col items-center justify-center gap-2 py-10 sm:me-2.5 sm:gap-3 sm:py-[60px] md:static md:me-0 md:h-full md:justify-end md:p-3 md:py-3"
         >
             <RailButton
-                icon={hasReacted(post) ? 'star' : 'star'}
-                filled={hasReacted(post)}
+                icon="star"
+                filled={reaction.reacted}
+                tone="star"
                 label={t('post_action_react')}
                 count={formatCompactCount(reaction.count, currentLanguage)}
+                price={cost}
                 active={reaction.reacted}
-                onPress={reaction.toggle}
+                /*
+                 * Paying is gated, **un**-reacting is not: legacy raises its not-enough-Stars
+                 * dialog only on the way in (`if (isReaction) delete; else if (isNotEnoughStars)
+                 * …`), and charging a reader to take a reaction back would be the wrong way round.
+                 * Without this the press just failed on a post the reader could not afford.
+                 */
+                onPress={
+                    cost !== null && !reaction.reacted
+                        ? requireStars(cost, reaction.toggle)
+                        : reaction.toggle
+                }
                 testId={subTestId(testId, 'apply')}
             />
             {visibility.comment ? (
                 <RailButton
                     icon="comment"
                     label={t('post_action_comment')}
-                    /*
-                     * The **price** where there is one, the tally where there is not. A rail has
-                     * room for one number under a glyph, and "this will cost you 5" is the one a
-                     * reader has to see before they press, not after.
-                     */
-                    count={
-                        cost !== null
-                            ? formatCompactCount(cost, currentLanguage)
-                            : formatCompactCount(post.reply_count, currentLanguage)
-                    }
-                    costly={cost !== null}
+                    /* The tally under the glyph, the price on it — see `RailButton`. */
+                    count={formatCompactCount(post.reply_count, currentLanguage)}
+                    price={cost}
                     onPress={cost !== null && onComment ? requireStars(cost, onComment) : onComment}
                     testId={subTestId(testId, 'confirm')}
                 />
@@ -651,12 +659,36 @@ function PostSliderRail({
     )
 }
 
+/**
+ * One rail button — legacy's `btnSlider`, which is **not** the card's action button.
+ *
+ * ## No disc, 32px, and the count is 14/500
+ *
+ * Every one of legacy's seven slider buttons is the same `IconButton`: `padding: 4px`, `32×32`,
+ * **no background at all**, a white glyph, and where there is a number it is a `Typography` at
+ * `fontSize: 14, fontWeight: 500, color: #FFFFFF` under it. This drew a 40px `bg-black/40`
+ * backdrop-blurred disc with a 12px count, which is the card's vocabulary carried onto a surface
+ * that does not use it — the rail sits over a photograph, and legacy's answer to legibility there
+ * is the foot gradient, not a scrim per button.
+ *
+ * ## A price is a **badge**, not the number under the glyph
+ *
+ * The number under a glyph is the tally — reactions, replies. When a post charges for the
+ * interaction legacy adds a separate chip at the icon's top-trailing corner (`top: -6, right: -10`,
+ * 16px tall, `#0061FF` under a 1px white border, a 12px star and the figure at 10/600) and leaves
+ * the tally alone. This used to *replace* the tally with the price, so a paid post showed no reply
+ * count anywhere and the figure it did show read as one — the two numbers mean opposite things
+ * (what is there / what it will cost) and one slot cannot carry both.
+ *
+ * `> 1` is legacy's own threshold, not `> 0`: a one-Star interaction is not worth a badge.
+ */
 function RailButton({
     icon,
     filled,
     label,
     count,
-    costly,
+    price,
+    tone,
     active,
     onPress,
     testId,
@@ -665,8 +697,10 @@ function RailButton({
     filled?: boolean
     label: string
     count?: string
-    /** The number under the glyph is a **price**, so it carries the Star mark rather than reading as a tally. */
-    costly?: boolean
+    /** Stars this interaction costs, badged on the glyph. `null` where it is free. */
+    price?: number | null
+    /** `star` paints the active glyph legacy's `#FFE600` — the reacted star, and only that. */
+    tone?: 'star'
     active?: boolean
     onPress?: () => void
     testId?: string
@@ -679,9 +713,9 @@ function RailButton({
             aria-label={label}
             aria-pressed={active}
             data-testid={testId}
-            className="flex flex-col items-center gap-0.5 text-white"
+            className="flex flex-col items-center gap-1 text-white"
         >
-            <span className="flex size-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-[2px]">
+            <span className="relative flex size-8 items-center justify-center p-1">
                 {/*
                  * Two elements rather than a `weight` that may be `undefined`: the sprite types
                  * weights **per glyph**, so `weight="filled"` narrows `name` to the filled union
@@ -693,22 +727,23 @@ function RailButton({
                         name={icon as TeviIconNameFilled}
                         weight="filled"
                         size={24}
-                        className={active ? 'text-(--text-brand)' : undefined}
+                        className={active && tone === 'star' ? 'text-[#FFE600]' : undefined}
                     />
                 ) : (
-                    <Icon
-                        name={icon}
-                        size={24}
-                        className={active ? 'text-(--text-brand)' : undefined}
-                    />
+                    <Icon name={icon} size={24} />
                 )}
+                {price !== null && price !== undefined && price > 1 ? (
+                    <span
+                        aria-hidden="true"
+                        className="-top-1.5 -end-2.5 absolute z-10 flex h-4 items-center gap-px rounded-full border border-white bg-[#0061FF] px-0.5 text-white"
+                    >
+                        <StarMark size={12} />
+                        {/* 10/500 — the sprite's nearest to legacy's 10/600; there is no 10/600. */}
+                        <span className="type-micro-overline px-0.5">{price}</span>
+                    </span>
+                ) : null}
             </span>
-            {count ? (
-                <span className="type-caption-meta flex items-center gap-0.5">
-                    {costly ? <StarMark size={12} /> : null}
-                    {count}
-                </span>
-            ) : null}
+            {count ? <span className="type-dense-emphasis">{count}</span> : null}
         </button>
     )
 }
