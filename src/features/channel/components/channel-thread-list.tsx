@@ -10,6 +10,7 @@ import { Skeleton } from '@shared/ui/skeleton'
 import { useEffect, useMemo, useState } from 'react'
 import type { ThreadKind } from '../api/channel-api'
 import { useChannelThreads } from '../hooks/use-channel-threads'
+import { CHANNEL_PADDING_BLEED } from '../lib/container'
 import { useMyChannel } from '../providers/my-channel-provider'
 import { ChannelEmptyState } from './channel-empty-state'
 import { ChannelError } from './channel-error'
@@ -174,8 +175,18 @@ export function ChannelThreadList({
                  * because here there is nothing behind it: the tab panel is `--background-surface`,
                  * so card and page were the same colour and two posts ran together with no visible
                  * boundary at all — which is what this fixes.
+                 *
+                 * And it is `CHANNEL_PADDING_BLEED`-wide, because the strip has to reach both edges
+                 * to read as a separator rather than as a notch. `PostCard` brings its own
+                 * `px-3 md:px-6`, so cancelling the panel's sides also stops the content being
+                 * indented twice — see that constant.
                  */
-                <div className="flex min-w-0 flex-col gap-px bg-(--background)">
+                <div
+                    className={cn(
+                        'flex min-w-0 flex-col gap-px bg-(--background)',
+                        CHANNEL_PADDING_BLEED,
+                    )}
+                >
                     {/*
                      * Windowed, for the reason `useRenderWindow` states: a space with a long
                      * history is the same unbounded list home is, and a `PostCard` is the same

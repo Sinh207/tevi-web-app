@@ -169,5 +169,12 @@ describe('ChannelThreadList — posts', () => {
         expect(strip?.className).toContain('gap-px')
         // ⚠ The strip paints the page colour itself — there is nothing behind it that would.
         expect(strip?.className).toContain('bg-(--background)')
+        /*
+         * ⚠ And it reaches both edges. The panel around it is `CHANNEL_PADDING`, and a separator
+         * that stops short of the edges reads as a notch in one card rather than as the boundary
+         * between two — which is the second half of the same bug, and just as invisible in markup.
+         */
+        expect(strip?.className).toContain('-mx-3')
+        expect(strip?.className).toContain('md:-mx-6')
     })
 })
