@@ -278,35 +278,55 @@ function PostSliderSlide({
          * goes inside the media area rather than on this root, so none of it runs under the rail.
          */
         <div className="relative flex h-full w-full">
-            <div className="relative flex h-full min-w-0 flex-1 items-center justify-center overflow-hidden">
+            {/*
+             * ⚠ **A clip stacks; a picture overlays.** The foot is `absolute` over a picture, which
+             * is what legacy does for everything — but legacy's video has **no native controls**:
+             * it draws its own progress bar inside the gradient, so nothing of the player's is
+             * under it. This one hands the browser `controls`, and that bar lands in the bottom
+             * ~40px of the video — exactly where a 0.9-opacity gradient and a `backdrop-blur` are
+             * painted, so the reader gets a dimmed, half-legible player.
+             *
+             * Raising the video over the foot is not the repair: the video is opaque and fills the
+             * area, so it would hide the caption instead. Until the custom bar is ported, a clip
+             * puts the foot **in flow** under the media — the player keeps its own bar intact and
+             * the caption keeps its own band, and neither is over the other.
+             */}
+            <div
+                className={cn(
+                    'relative flex h-full min-w-0 flex-1 overflow-hidden',
+                    clip ? 'flex-col' : 'items-center justify-center',
+                )}
+            >
                 {clip ? (
-                    /*
-                     * ⚠ **Sized by its own aspect ratio, not by `max-w`/`max-h`.**
-                     *
-                     * A `max-*` pair only ever shrinks, so a 300px clip stayed 300px in a 1300px
-                     * area — small, and with the controls bar the thing the eye reads as
-                     * off-centre. Legacy sizes the media box instead (`nsfwSizeProps`): the
-                     * aspect ratio, then `height: 100%` for a portrait and `width: 100%` for a
-                     * landscape, so it grows to the axis that binds and is letterboxed on the
-                     * other. `max-w/max-h-full` stay as the ceiling the ratio is clamped against.
-                     */
-                    // biome-ignore lint/a11y/useMediaCaption: a post's clip carries no track.
-                    <video
-                        src={clip}
-                        controls
-                        playsInline
-                        preload="metadata"
-                        data-testid={subTestId(testId, 'slide')}
-                        className={cn(
-                            'max-h-full max-w-full',
-                            clipRatio === null
-                                ? ''
-                                : clipRatio < 1
-                                  ? 'h-full w-auto'
-                                  : 'h-auto w-full',
-                        )}
-                        style={clipRatio === null ? undefined : { aspectRatio: clipRatio }}
-                    />
+                    <div className="flex min-h-0 flex-1 items-center justify-center">
+                        {/*
+                         * ⚠ **Sized by its own aspect ratio, not by `max-w`/`max-h`.**
+                         *
+                         * A `max-*` pair only ever shrinks, so a 300px clip stayed 300px in a 1300px
+                         * area — small, and with the controls bar the thing the eye reads as
+                         * off-centre. Legacy sizes the media box instead (`nsfwSizeProps`): the
+                         * aspect ratio, then `height: 100%` for a portrait and `width: 100%` for a
+                         * landscape, so it grows to the axis that binds and is letterboxed on the
+                         * other. `max-w/max-h-full` stay as the ceiling the ratio is clamped against.
+                         */}
+                        {/* biome-ignore lint/a11y/useMediaCaption: a post's clip carries no track. */}
+                        <video
+                            src={clip}
+                            controls
+                            playsInline
+                            preload="metadata"
+                            data-testid={subTestId(testId, 'slide')}
+                            className={cn(
+                                'max-h-full max-w-full',
+                                clipRatio === null
+                                    ? ''
+                                    : clipRatio < 1
+                                      ? 'h-full w-auto'
+                                      : 'h-auto w-full',
+                            )}
+                            style={clipRatio === null ? undefined : { aspectRatio: clipRatio }}
+                        />
+                    </div>
                 ) : src ? (
                     /*
                      * `object-contain` over the **whole** area, which is legacy's gallery branch —
@@ -380,7 +400,7 @@ function PostSliderSlide({
                     </span>
                 ) : null}
 
-                <PostSliderInfo post={post} testId={testId} />
+                <PostSliderInfo post={post} inFlow={Boolean(clip)} testId={testId} />
             </div>
 
             <PostSliderRail
@@ -401,7 +421,16 @@ function PostSliderSlide({
  * they are what make white text legible over an arbitrary photograph without a solid bar covering
  * the bottom of it.
  */
-function PostSliderInfo({ post, testId }: { post: Post; testId: string }) {
+function PostSliderInfo({
+    post,
+    inFlow,
+    testId,
+}: {
+    post: Post
+    /** Sits **under** the media rather than over it — see the media area's note. Clips only. */
+    inFlow: boolean
+    testId: string
+}) {
     const { t, currentLanguage } = useTranslation()
     const [expanded, setExpanded] = useState(false)
 
@@ -419,7 +448,15 @@ function PostSliderInfo({ post, testId }: { post: Post; testId: string }) {
              * is symmetric. The trailing strip it used to reserve was for a rail that now has its
              * own column; below `md` the rail still floats, but its `py-10` lifts it clear.
              */
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 p-2.5 pt-16 backdrop-blur-[1px] md:gap-4 md:p-4 md:pt-20"
+            className={cn(
+                'pointer-events-none z-10 flex flex-col gap-2 p-2.5 backdrop-blur-[1px] md:gap-4 md:p-4',
+                /*
+                 * The tall top padding is the gradient's own fade — it needs the height to fade
+                 * *through*. In flow that height would be dead space above the caption, so it
+                 * goes, and the block is only as tall as what is in it.
+                 */
+                inFlow ? 'flex-none' : 'absolute inset-x-0 bottom-0 pt-16 md:pt-20',
+            )}
             style={{
                 background:
                     'linear-gradient(180deg, rgba(8, 9, 13, 0) 0%, rgba(8, 9, 13, 0.9) 80.37%)',
