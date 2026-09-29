@@ -874,7 +874,14 @@ export function PostPreview() {
  */
 function PostSliderSection() {
     /* Posts that actually carry media — the slider is opened by pressing a picture or a clip. */
-    const posts = [POST_ONE_IMAGE, POST_MANY_IMAGES, POST_VIDEO, POST_VIDEO_AND_IMAGES]
+    const posts = [
+        POST_ONE_IMAGE,
+        POST_MANY_IMAGES,
+        POST_VIDEO,
+        POST_VIDEO_AND_IMAGES,
+        // The rail's cost chip — the one part of it that needs a charging space to be visible.
+        POST_PAID_INTERACTION,
+    ]
     const slider = usePostSlider(posts)
 
     return (

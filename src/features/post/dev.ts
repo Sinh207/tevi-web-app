@@ -285,6 +285,12 @@ export const POST_PAID_INTERACTION = makePostFixture({
     channel: { ...POST_FIXTURE_CHANNEL, paid_interaction_enabled: true, paid_interaction_cost: 5 },
     reaction_count: 92,
     reply_count: 14,
+    /*
+     * With media, so the **slider's** rail can be pressed too — the cost chip sits on the react and
+     * comment glyphs there as well as on the card's row, and the rail is the harder of the two to
+     * get right (it is the only place the price and the tally are drawn at once).
+     */
+    images: [{ uri: '/illustrations/monetization/donation.webp', width: 900, height: 1600 }],
 })
 
 /**
