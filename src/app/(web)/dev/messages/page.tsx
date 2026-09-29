@@ -13,8 +13,9 @@ export const metadata: Metadata = {
  *
  * The real list is unreachable without an account that has conversations in every state the DS
  * draws — muted, pinned, blocked, unread — so this renders the shipped `ConversationRow` over
- * fixtures that go through the shipped parser. `MessagesView` itself is not previewed: it owns
- * queries, and a copy that did not would be a second implementation of the screen.
+ * fixtures that go through the shipped parser. `MessagesShell` and `ChatRoom` themselves are not
+ * previewed: they own queries, and copies that did not would be second implementations of the
+ * screen.
  */
 export default function MessagesDevPage() {
     if (process.env.NODE_ENV === 'production') notFound()

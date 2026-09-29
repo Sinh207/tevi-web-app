@@ -2,8 +2,9 @@
  * Direct messages — `/messages` and `/@{slug}/messages`. Legacy's `containers/directMessage`.
  *
  * ```
- * MessagesView        the screen: search, the All / Unread folders, and the pane beside them —
- *                     empty on /messages, the conversation (ChatRoom) on /@{slug}/messages
+ * MessagesShell       the (dm) layout's frame: the conversation list, and a pane for the page
+ * NoChatSelected      /messages' page — the empty room pane
+ * ChatRoom            /@{slug}/messages' page — one conversation
  * ./routes            MESSAGES_PATH + conversationPath(slug) — imports nothing, for the shell
  * ```
  *
@@ -40,5 +41,6 @@
  */
 
 export { messageKeys } from './api/message-api'
-export { MessagesView } from './components/messages-view'
+export { ChatRoom } from './components/chat-room'
+export { MessagesShell, NoChatSelected } from './components/messages-shell'
 export { conversationPath, MESSAGES_PATH } from './routes'

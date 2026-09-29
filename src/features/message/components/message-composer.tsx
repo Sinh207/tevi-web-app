@@ -74,7 +74,7 @@ export function MessageComposer({
     const context = editing ?? replyTo
 
     return (
-        <div className="flex flex-col gap-2 border-t border-solid border-(--separator-default) bg-(--background-surface) px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <div className="flex flex-none flex-col gap-2 border-t border-solid border-(--separator-default) bg-(--background-surface) px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             {context && (
                 <div className="flex items-center gap-2 rounded-(--radius-md) border-s-2 border-solid border-(--text-link) bg-(--background-subtle) py-2 ps-3 pe-1">
                     <Icon

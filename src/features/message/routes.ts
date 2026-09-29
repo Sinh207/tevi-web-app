@@ -30,3 +30,17 @@ export function conversationPath(slug: string): string {
 export function isMessagesPath(pathname: string): boolean {
     return pathname === MESSAGES_PATH || /^\/(?:@|%40)[^/]+\/messages\/?$/.test(pathname)
 }
+
+/**
+ * The slug of the conversation a pathname opens, or `null` on `/messages` (and anywhere else).
+ * Decoded, without its `@` — the same spelling `conversationPath` takes.
+ */
+export function slugFromMessagesPath(pathname: string): string | null {
+    const match = /^\/(?:@|%40)([^/]+)\/messages\/?$/.exec(pathname)
+    if (!match) return null
+    try {
+        return decodeURIComponent(match[1])
+    } catch {
+        return null
+    }
+}

@@ -135,7 +135,11 @@ export function ChatRoom({ slug }: { slug: string }) {
     const shell = (body: ReactNode) => (
         <RoomFrame>
             {header}
-            <div className="flex min-h-0 flex-1 flex-col bg-(--background)">{body}</div>
+            {/* A state (a wall, an error, signed out) can be taller than a short phone, so the middle
+                scrolls — the header above it never does. */}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-(--background)">
+                <div className="flex min-h-full flex-col">{body}</div>
+            </div>
         </RoomFrame>
     )
 
@@ -224,7 +228,7 @@ export function ChatRoom({ slug }: { slug: string }) {
                     <ThreadSkeleton />
                 </div>
             ) : conversation && thread.isError ? (
-                <div className="flex flex-1 flex-col bg-(--background)">
+                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-(--background)">
                     <ChannelEmptyState
                         testId="message-thread-error"
                         className="flex-1"
@@ -299,10 +303,15 @@ export function ChatRoom({ slug }: { slug: string }) {
     )
 }
 
-/** The room's outer box — one element, whichever state it is in. */
+/**
+ * The room's outer box — one element, whichever state it is in. Three rows: the header and the
+ * composer take their own height (`flex-none`), the thread takes the rest and is the only thing that
+ * scrolls (`MessageThreadView`'s scroller). `min-h-0` is what stops the thread's content from
+ * growing this box past the pane instead.
+ */
 function RoomFrame({ children }: { children: ReactNode }) {
     return (
-        <div data-testid="message-room" className="flex min-h-0 flex-1 flex-col">
+        <div data-testid="message-room" className="flex h-full min-h-0 flex-1 flex-col">
             {children}
         </div>
     )

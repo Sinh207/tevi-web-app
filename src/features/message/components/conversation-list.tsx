@@ -34,6 +34,7 @@ export function ConversationList({
     onOpen,
     onDelete,
     selectedSlug,
+    scrollRoot = null,
     testId,
 }: {
     conversations: Conversation[]
@@ -53,6 +54,8 @@ export function ConversationList({
     onDelete: (conversation: Conversation) => void
     /** The conversation open beside the list — its row is marked current. */
     selectedSlug?: string
+    /** The pane that scrolls the rows — the sentinel's lead time is measured inside it. */
+    scrollRoot?: Element | null
     testId: string
 }) {
     const { t } = useTranslation()
@@ -62,6 +65,7 @@ export function ConversationList({
      * without it `inView` stays true for the whole request and re-fires the moment it lands.
      */
     const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({
+        root: scrollRoot,
         enabled: hasNextPage && !isFetchingNextPage && !!loadMore,
     })
     useEffect(() => {

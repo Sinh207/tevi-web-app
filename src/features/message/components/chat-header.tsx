@@ -112,7 +112,7 @@ export function ChatHeader({
     )
 
     return (
-        <header className="sticky top-0 z-20 flex h-16 flex-none items-center gap-2 border-b border-solid border-(--separator-default) bg-(--background-surface) px-2 md:px-4">
+        <header className="flex h-16 flex-none items-center gap-2 border-b border-solid border-(--separator-default) bg-(--background-surface) px-2 md:px-4">
             <Button
                 data-testid="message-room-back"
                 variant="ghost"

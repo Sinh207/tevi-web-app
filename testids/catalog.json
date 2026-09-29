@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 868,
+        "ids": 870,
         "surfaces": 29
     },
     "surfaces": {
@@ -7022,7 +7022,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/messages-view.tsx:304"
+            "source": "src/features/message/components/messages-shell.tsx:345"
         },
         "message-delete-message-confirm": {
             "scope": "message",
@@ -7030,7 +7030,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:280"
+            "source": "src/features/message/components/chat-room.tsx:284"
         },
         "message-error": {
             "scope": "message",
@@ -7038,7 +7038,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/messages-view.tsx:107"
+            "source": "src/features/message/components/messages-shell.tsx:181"
         },
         "message-intro": {
             "scope": "message",
@@ -7048,6 +7048,14 @@
             ],
             "source": "src/features/message/components/chat-walls.tsx:224"
         },
+        "message-list-scroller": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/messages-shell.tsx:333"
+        },
         "message-loading": {
             "scope": "message",
             "routes": [
@@ -7055,6 +7063,14 @@
                 "/messages"
             ],
             "source": "src/features/message/components/conversation-skeleton.tsx:19"
+        },
+        "message-no-chat": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/messages-shell.tsx:110"
         },
         "message-photo-viewer": {
             "scope": "message",
@@ -7094,7 +7110,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/messages-view.tsx:115"
+            "source": "src/features/message/components/messages-shell.tsx:189"
         },
         "message-room": {
             "scope": "message",
@@ -7102,7 +7118,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:305"
+            "source": "src/features/message/components/chat-room.tsx:314"
         },
         "message-room-back": {
             "scope": "message",
@@ -7118,7 +7134,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:202"
+            "source": "src/features/message/components/chat-room.tsx:206"
         },
         "message-room-missing": {
             "scope": "message",
@@ -7126,7 +7142,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:169"
+            "source": "src/features/message/components/chat-room.tsx:173"
         },
         "message-room-sign-in": {
             "scope": "message",
@@ -7134,7 +7150,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:154"
+            "source": "src/features/message/components/chat-room.tsx:158"
         },
         "message-room-signed-out": {
             "scope": "message",
@@ -7142,7 +7158,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:147"
+            "source": "src/features/message/components/chat-room.tsx:151"
         },
         "message-room-space": {
             "scope": "message",
@@ -7158,7 +7174,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-list.tsx:83"
+            "source": "src/features/message/components/conversation-list.tsx:87"
         },
         "message-row-link": {
             "scope": "message",
@@ -7206,7 +7222,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/messages-view.tsx:159"
+            "source": "src/features/message/components/messages-shell.tsx:233"
         },
         "message-search-input": {
             "scope": "message",
@@ -7214,7 +7230,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/messages-view.tsx:211"
+            "source": "src/features/message/components/messages-shell.tsx:275"
         },
         "message-search-list": {
             "scope": "message",
@@ -7222,7 +7238,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/messages-view.tsx:151"
+            "source": "src/features/message/components/messages-shell.tsx:225"
         },
         "message-sign-in": {
             "scope": "message",
@@ -7230,7 +7246,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/messages-view.tsx:139"
+            "source": "src/features/message/components/messages-shell.tsx:213"
         },
         "message-signed-out": {
             "scope": "message",
@@ -7238,7 +7254,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/messages-view.tsx:130"
+            "source": "src/features/message/components/messages-shell.tsx:204"
         },
         "message-tab": {
             "scope": "message",
@@ -7249,7 +7265,7 @@
             "companions": [
                 "data-tab-id"
             ],
-            "source": "src/features/message/components/messages-view.tsx:228"
+            "source": "src/features/message/components/messages-shell.tsx:292"
         },
         "message-thread": {
             "scope": "message",
@@ -7265,7 +7281,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:229"
+            "source": "src/features/message/components/chat-room.tsx:233"
         },
         "message-thread-jump": {
             "scope": "message",
@@ -7281,7 +7297,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:322"
+            "source": "src/features/message/components/chat-room.tsx:331"
         },
         "message-wall": {
             "scope": "message",

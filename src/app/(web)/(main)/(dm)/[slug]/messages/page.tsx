@@ -1,5 +1,5 @@
 import { parseChannelSlug } from '@features/channel'
-import { MessagesView } from '@features/message'
+import { ChatRoom } from '@features/message'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -9,13 +9,9 @@ import { notFound } from 'next/navigation'
  * (`pages/[channelSlug]/messages`), unchanged: it is the link legacy's settings sheet hands out as
  * "link to your message", so it is already in people's bios.
  *
- * ## Why this `[slug]` is not the one under `(rail)`
- *
- * The space page's `[slug]` lives in `(rail)`, whose layout pins the end rail beside a 612 column —
- * it would land on this screen's chat pane — and whose `loading.tsx` is the *space's* skeleton,
- * which would flash on every conversation. So this route is a sibling in `(main)`, as `/messages`
- * is. Both groups resolve `[slug]` to the same segment name, so the router sees one dynamic segment
- * with two children, not two conflicting ones.
+ * The list beside it is the layout's (`(dm)/layout.tsx`); this page is the room pane. Not the
+ * space page's `(rail)/[slug]`, whose `loading.tsx` is the *space's* skeleton and would flash on
+ * every conversation.
  *
  * `[slug]` matches every single-segment path, so `/wp-admin/messages` reaches here too:
  * `parseChannelSlug` rejects anything that is not `@slug` without a request.
@@ -41,9 +37,7 @@ export default async function ConversationPage({ params }: PageProps) {
     const { slug: raw } = await params
     const slug = parseChannelSlug(raw)
     if (!slug) notFound()
-    return (
-        <main className="flex flex-1 flex-col">
-            <MessagesView selectedSlug={slug} />
-        </main>
-    )
+    /* Keyed on the slug: another conversation is a new room — the draft, the reply and the pending
+       sends belong to the one being left. */
+    return <ChatRoom key={slug.toLowerCase()} slug={slug} />
 }

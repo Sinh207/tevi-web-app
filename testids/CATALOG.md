@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-868 ids across 29 surfaces.
+870 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -493,39 +493,41 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-composer-cancel` | — | `src/features/message/components/message-composer.tsx:98` |
 | `message-composer-input` | — | `src/features/message/components/message-composer.tsx:119` |
 | `message-composer-submit` | — | `src/features/message/components/message-composer.tsx:148` |
-| `message-delete-confirm` | — | `src/features/message/components/messages-view.tsx:304` |
-| `message-delete-message-confirm` | — | `src/features/message/components/chat-room.tsx:280` |
-| `message-error` | — | `src/features/message/components/messages-view.tsx:107` |
+| `message-delete-confirm` | — | `src/features/message/components/messages-shell.tsx:345` |
+| `message-delete-message-confirm` | — | `src/features/message/components/chat-room.tsx:284` |
+| `message-error` | — | `src/features/message/components/messages-shell.tsx:181` |
 | `message-intro` | — | `src/features/message/components/chat-walls.tsx:224` |
+| `message-list-scroller` | — | `src/features/message/components/messages-shell.tsx:333` |
 | `message-loading` | — | `src/features/message/components/conversation-skeleton.tsx:19` |
+| `message-no-chat` | — | `src/features/message/components/messages-shell.tsx:110` |
 | `message-photo-viewer` | — | `src/features/message/components/message-photo-viewer.tsx:52` |
 | `message-photo-viewer-close` | — | `src/features/message/components/message-photo-viewer.tsx:103` |
 | `message-photo-viewer-next` | — | `src/features/message/components/message-photo-viewer.tsx:83` |
 | `message-photo-viewer-prev` | — | `src/features/message/components/message-photo-viewer.tsx:72` |
-| `message-retry` | — | `src/features/message/components/messages-view.tsx:115` |
-| `message-room` | — | `src/features/message/components/chat-room.tsx:305` |
+| `message-retry` | — | `src/features/message/components/messages-shell.tsx:189` |
+| `message-room` | — | `src/features/message/components/chat-room.tsx:314` |
 | `message-room-back` | — | `src/features/message/components/chat-header.tsx:117` |
-| `message-room-error` | — | `src/features/message/components/chat-room.tsx:202` |
-| `message-room-missing` | — | `src/features/message/components/chat-room.tsx:169` |
-| `message-room-sign-in` | — | `src/features/message/components/chat-room.tsx:154` |
-| `message-room-signed-out` | — | `src/features/message/components/chat-room.tsx:147` |
+| `message-room-error` | — | `src/features/message/components/chat-room.tsx:206` |
+| `message-room-missing` | — | `src/features/message/components/chat-room.tsx:173` |
+| `message-room-sign-in` | — | `src/features/message/components/chat-room.tsx:158` |
+| `message-room-signed-out` | — | `src/features/message/components/chat-room.tsx:151` |
 | `message-room-space` | — | `src/features/message/components/chat-header.tsx:129` |
-| `message-row` | — | `src/features/message/components/conversation-list.tsx:83` |
+| `message-row` | — | `src/features/message/components/conversation-list.tsx:87` |
 | `message-row-link` | — | `src/features/message/components/conversation-row.tsx:202` |
 | `message-row-menu-delete` | — | `src/features/message/components/conversation-row-menu.tsx:64` |
 | `message-row-menu-space` | — | `src/features/message/components/conversation-row-menu.tsx:56` |
 | `message-row-menu-trigger` | — | `src/features/message/components/conversation-row-menu.tsx:45` |
 | `message-row-online` | — | `src/features/message/components/conversation-row.tsx:187` |
-| `message-search-empty` | — | `src/features/message/components/messages-view.tsx:159` |
-| `message-search-input` | — | `src/features/message/components/messages-view.tsx:211` |
-| `message-search-list` | — | `src/features/message/components/messages-view.tsx:151` |
-| `message-sign-in` | — | `src/features/message/components/messages-view.tsx:139` |
-| `message-signed-out` | — | `src/features/message/components/messages-view.tsx:130` |
-| `message-tab` | `data-tab-id` | `src/features/message/components/messages-view.tsx:228` |
+| `message-search-empty` | — | `src/features/message/components/messages-shell.tsx:233` |
+| `message-search-input` | — | `src/features/message/components/messages-shell.tsx:275` |
+| `message-search-list` | — | `src/features/message/components/messages-shell.tsx:225` |
+| `message-sign-in` | — | `src/features/message/components/messages-shell.tsx:213` |
+| `message-signed-out` | — | `src/features/message/components/messages-shell.tsx:204` |
+| `message-tab` | `data-tab-id` | `src/features/message/components/messages-shell.tsx:292` |
 | `message-thread` | — | `src/features/message/components/message-thread-view.tsx:130` |
-| `message-thread-error` | — | `src/features/message/components/chat-room.tsx:229` |
+| `message-thread-error` | — | `src/features/message/components/chat-room.tsx:233` |
 | `message-thread-jump` | — | `src/features/message/components/message-thread-view.tsx:201` |
-| `message-thread-loading` | — | `src/features/message/components/chat-room.tsx:322` |
+| `message-thread-loading` | — | `src/features/message/components/chat-room.tsx:331` |
 | `message-wall` | — | `src/features/message/components/chat-walls.tsx:200` |
 | `message-wall-first-wave` | — | `src/features/message/components/chat-walls.tsx:80` |
 | `message-wall-follow-submit` | — | `src/features/message/components/chat-walls.tsx:135` |

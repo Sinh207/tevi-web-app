@@ -40,6 +40,13 @@ export interface UseInViewOptions {
      * whose callback will do nothing.
      */
     enabled?: boolean
+    /**
+     * The scroll container that clips the element, when it is not the page. `rootMargin` is
+     * measured against the root, so a sentinel inside a pane that scrolls on its own (the
+     * conversation list) gets no lead time against the *viewport* — it is clipped by the pane
+     * until it is already on screen. `null` / omitted is the viewport, as before.
+     */
+    root?: Element | null
 }
 
 /**
@@ -55,6 +62,7 @@ export function useInView<T extends Element = HTMLDivElement>({
     threshold = 0,
     once = false,
     enabled = true,
+    root = null,
 }: UseInViewOptions = {}): [RefCallback<T>, boolean] {
     const [inView, setInView] = useState(false)
     const [node, setNode] = useState<T | null>(null)
@@ -87,11 +95,11 @@ export function useInView<T extends Element = HTMLDivElement>({
                 setInView(isIntersecting)
                 if (isIntersecting && once) observer.disconnect()
             },
-            { rootMargin, threshold },
+            { root, rootMargin, threshold },
         )
         observer.observe(node)
         return () => observer.disconnect()
-    }, [enabled, node, once, rootMargin, threshold])
+    }, [enabled, node, once, root, rootMargin, threshold])
 
     return [ref, inView]
 }
