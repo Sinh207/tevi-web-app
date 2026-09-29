@@ -16,3 +16,20 @@ export const ROOM_GROUND: CSSProperties = {
     backgroundRepeat: 'repeat-x, no-repeat',
     backgroundPosition: 'center, center',
 }
+
+/**
+ * The room's scrollbar, over that ground — legacy's (`messageList`): thin, no track, a translucent
+ * thumb (`--scrollbar-message-thread`) that darkens a step while the pointer is over the thread.
+ *
+ * Two mechanisms because two engines: `scrollbar-width` / `scrollbar-color` for Chrome and Firefox
+ * (Chrome then ignores the `::-webkit-` rules), the pseudo-elements for Safari, which has not
+ * shipped the standard pair. The standard one cannot style a hovered *thumb*, so the step is on the
+ * scroller's hover instead — the pointer is over the thread whenever it is over its scrollbar.
+ */
+export const THREAD_SCROLLBAR = [
+    '[scrollbar-width:thin] [scrollbar-color:var(--scrollbar-message-thread)_transparent]',
+    'hover:[scrollbar-color:var(--scrollbar-message-thread-hover)_transparent]',
+    '[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent',
+    '[&::-webkit-scrollbar-thumb]:rounded-(--radius-fill) [&::-webkit-scrollbar-thumb]:bg-(--scrollbar-message-thread)',
+    '[&::-webkit-scrollbar-thumb:hover]:bg-(--scrollbar-message-thread-hover)',
+].join(' ')

@@ -10,6 +10,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import type { ChatMessage, InlineMenuItem } from '../api/types'
 import { DISC } from '../lib/disc'
 import { formatDayLabel, groupByDay, type PendingMessage } from '../lib/message-thread'
+import { THREAD_SCROLLBAR } from '../lib/room-ground'
 import { ChannelIntro } from './chat-walls'
 import { MessageBubble } from './message-bubble'
 import { MessagePhotoViewer } from './message-photo-viewer'
@@ -130,7 +131,10 @@ export function MessageThreadView({
                 ref={scroller}
                 data-testid="message-thread"
                 onScroll={onScroll}
-                className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto overscroll-contain [scrollbar-width:thin]"
+                className={cn(
+                    'flex min-h-0 flex-1 flex-col-reverse overflow-y-auto overscroll-contain',
+                    THREAD_SCROLLBAR,
+                )}
             >
                 <div className="mx-auto flex w-full max-w-[640px] flex-col gap-1 px-3 py-3">
                     {isFetchingOlder && (

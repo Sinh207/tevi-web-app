@@ -19,7 +19,7 @@ import { useRoom } from '../hooks/use-room'
 import { useThread } from '../hooks/use-thread'
 import { ONLINE_WINDOW_MS } from '../lib/conversation-view'
 import { isOwnMessage, messageText } from '../lib/message-thread'
-import { ROOM_GROUND } from '../lib/room-ground'
+import { ROOM_GROUND, THREAD_SCROLLBAR } from '../lib/room-ground'
 import { ChatHeader } from './chat-header'
 import { ChannelIntro, ChatWall, type ChatWallKind } from './chat-walls'
 import { MessageComposer } from './message-composer'
@@ -138,7 +138,12 @@ export function ChatRoom({ slug }: { slug: string }) {
             {header}
             {/* A state (a wall, an error, signed out) can be taller than a short phone, so the middle
                 scrolls — the header above it never does. */}
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div
+                className={cn(
+                    'min-h-0 flex-1 overflow-y-auto overscroll-contain',
+                    THREAD_SCROLLBAR,
+                )}
+            >
                 <div className="flex min-h-full flex-col">{body}</div>
             </div>
         </RoomFrame>
@@ -229,7 +234,9 @@ export function ChatRoom({ slug }: { slug: string }) {
                     <ThreadSkeleton />
                 </div>
             ) : conversation && thread.isError ? (
-                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                <div
+                    className={cn('flex min-h-0 flex-1 flex-col overflow-y-auto', THREAD_SCROLLBAR)}
+                >
                     <ChannelEmptyState
                         testId="message-thread-error"
                         className="flex-1"

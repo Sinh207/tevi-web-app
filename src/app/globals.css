@@ -227,6 +227,10 @@
     --background-bubble-other: #fafafa;
     --background-bubble-quote-own: #e8f8d1;
     --background-bubble-quote-other: #ebf3ff;
+    /* The conversation's scrollbar thumb — legacy's `rgba(0,0,0,.2)` over its lavender ground
+       (`messageList`), a translucent dark that takes the ground's colour rather than a grey bar. */
+    --scrollbar-message-thread: rgba(0, 0, 0, 0.2);
+    --scrollbar-message-thread-hover: rgba(0, 0, 0, 0.3);
 }
 
 /* Dark mode — only the tokens whose value differs from Light. */
@@ -335,6 +339,9 @@
     --background-bubble-other: var(--zinc-100);
     --background-bubble-quote-own: #1c2e17;
     --background-bubble-quote-other: #0f2038;
+    /* A dark thumb disappears on the deep purple; the same translucency, light. */
+    --scrollbar-message-thread: rgba(255, 255, 255, 0.2);
+    --scrollbar-message-thread-hover: rgba(255, 255, 255, 0.3);
 }
 
 /* ==================================================================== *
@@ -709,6 +716,8 @@
     --background-bubble-other: #fafafa;
     --background-bubble-quote-own: #e8f8d1;
     --background-bubble-quote-other: #ebf3ff;
+    --scrollbar-message-thread: rgba(0, 0, 0, 0.2);
+    --scrollbar-message-thread-hover: rgba(0, 0, 0, 0.3);
     --foreground: var(--text-title);
     --card: var(--background-surface);
     --card-foreground: var(--text-title);
