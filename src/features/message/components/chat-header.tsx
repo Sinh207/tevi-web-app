@@ -11,6 +11,7 @@ import { Icon } from '@shared/ui/icon'
 import { Loader } from '@shared/ui/loader'
 import Link from 'next/link'
 import { CHAT_ACTION, type ChatAction } from '../api/types'
+import { DISC } from '../lib/disc'
 import { MESSAGES_PATH } from '../routes'
 
 /**
@@ -57,7 +58,7 @@ export function ChatHeader({
     const identity = (
         <>
             <AnimatedAvatar
-                size="medium"
+                size="large"
                 thumb={active ? channel?.images.thumb : null}
                 avatarVideo={active ? channel?.images.avatar_video : null}
                 isPremium={active && (channel?.is_premium ?? false)}
@@ -102,7 +103,14 @@ export function ChatHeader({
                             <span className="truncate">{activity}</span>
                         </>
                     ) : online ? (
-                        t('message_online')
+                        <>
+                            {/* Legacy's 4px dot before the word. */}
+                            <span
+                                aria-hidden="true"
+                                className="size-1 flex-none rounded-(--radius-fill) bg-(--accents-success-active)"
+                            />
+                            {t('message_online')}
+                        </>
                     ) : slug ? (
                         <bdi className="truncate">@{slug}</bdi>
                     ) : null}
@@ -112,28 +120,29 @@ export function ChatHeader({
     )
 
     return (
-        <header className="flex h-16 flex-none items-center gap-2 border-b border-solid border-(--separator-default) bg-(--background-surface) px-2 md:px-4">
+        <header className="flex h-16 flex-none items-center gap-1 border-b border-solid border-(--separator-default) bg-(--background-surface) px-3">
+            {/* Legacy's back control: a 30px white disc with a shadow, phones only. */}
             <Button
                 data-testid="message-room-back"
                 variant="ghost"
-                size="medium"
+                size="small"
                 iconOnly
                 aria-label={t('message_back_to_chats')}
                 render={<Link href={MESSAGES_PATH} />}
-                className="md:hidden"
+                className={cn(DISC, 'size-[30px] flex-none md:hidden')}
             >
-                <Icon name="angle-left" size={24} className="size-6" />
+                <Icon name="angle-left" size={24} className="size-6 rtl:-scale-x-100" />
             </Button>
             {slug ? (
                 <Link
                     data-testid="message-room-space"
                     href={toChannelPath(slug)}
-                    className="flex min-w-0 flex-1 items-center gap-3 rounded-(--radius-md) no-underline outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
+                    className="flex min-w-0 flex-1 items-center gap-1 rounded-(--radius-md) no-underline outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
                 >
                     {identity}
                 </Link>
             ) : (
-                <div className="flex min-w-0 flex-1 items-center gap-3">{identity}</div>
+                <div className="flex min-w-0 flex-1 items-center gap-1">{identity}</div>
             )}
         </header>
     )

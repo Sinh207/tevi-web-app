@@ -8,6 +8,7 @@ import { Icon } from '@shared/ui/icon'
 import { Loader } from '@shared/ui/loader'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatMessage, InlineMenuItem } from '../api/types'
+import { DISC } from '../lib/disc'
 import { formatDayLabel, groupByDay, type PendingMessage } from '../lib/message-thread'
 import { ChannelIntro } from './chat-walls'
 import { MessageBubble } from './message-bubble'
@@ -197,16 +198,17 @@ export function MessageThreadView({
             {awayFromBottom && (
                 <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-end px-4">
                     <span className="pointer-events-auto relative">
+                        {/* Legacy's `btnJumpToLatest`: a 40px white disc, a dark chevron. */}
                         <Button
                             data-testid="message-thread-jump"
-                            variant="secondary"
-                            size="medium"
+                            variant="ghost"
+                            size="large"
                             iconOnly
                             aria-label={t('message_jump_to_latest')}
                             onClick={jump}
-                            className={cn('rounded-(--radius-fill) shadow-md')}
+                            className={cn(DISC, 'size-10')}
                         >
-                            <Icon name="angle-down" size={20} className="size-5" />
+                            <Icon name="angle-down" size={24} className="size-6" />
                         </Button>
                         {unseen > 0 && (
                             <span

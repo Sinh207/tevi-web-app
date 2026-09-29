@@ -41,6 +41,11 @@
   Regular **and** filled, matching the weights `heart` itself carries, with the bare id aliased onto
   `--regular` — which is what the library's own `heart` does (`bell-slash` and `comment-slash` alias
   onto `--filled`, so the alias target is per-glyph and copied from the partner, not assumed).
+
+  user — the Space detail row of a conversation's menu (`conversation-row-menu.tsx`). Legacy draws
+  an outline head-and-shoulders there (`menuItemSpaceDetail`); the library's only single-person
+  glyph is `user-simple-alt`, which is filled only and a different silhouette. Both weights, bare
+  aliased to regular, which is the outline legacy draws.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none">
 <symbol id="envelope" viewBox="0 0 24 24" fill="none"><use href="#envelope--filled"></use></symbol>
@@ -50,4 +55,7 @@
 <symbol id="heart-slash" viewBox="0 0 24 24" fill="none"><use href="#heart-slash--regular"></use></symbol>
 <symbol id="heart-slash--regular" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.53 1.47a.75.75 0 0 0-1.06 1.06L3.21 4.272C1.954 5.618 1.25 7.49 1.25 9.474c0 3.827 2.31 6.896 4.688 9.02s4.966 3.431 5.825 3.718a.75.75 0 0 0 .474 0c.817-.273 3.206-1.472 5.49-3.425l3.743 3.743a.75.75 0 1 0 1.06-1.06l-4.24-4.24-.005-.006L4.822 3.761l-.012-.012zm1.743 3.864c-.954 1.043-1.523 2.52-1.523 4.14 0 3.2 1.94 5.893 4.187 7.901 2.027 1.81 4.189 2.959 5.063 3.323.818-.34 2.76-1.366 4.662-2.975z" fill="currentColor"></path><path d="M7.163 3.8q.353-.05.73-.05c1.713 0 2.847.92 3.534 1.734a.75.75 0 0 0 1.146 0c.687-.814 1.821-1.734 3.534-1.734 3.02 0 5.143 2.564 5.143 5.724 0 2.164-.884 4.094-2.162 5.749a.75.75 0 1 0 1.187.917c1.413-1.83 2.475-4.075 2.475-6.666 0-3.788-2.608-7.224-6.643-7.224-1.867 0-3.213.82-4.107 1.66-.894-.84-2.24-1.66-4.107-1.66q-.48 0-.94.065a.75.75 0 1 0 .21 1.486" fill="currentColor"></path></symbol>
 <symbol id="heart-slash--filled" viewBox="0 0 24 24" fill="none"><path d="M2.53 1.47a.75.75 0 0 0-1.06 1.06L3.388 4.45C2.182 5.744 1.5 7.55 1.5 9.474c0 3.722 2.249 6.729 4.604 8.833 2.357 2.105 4.915 3.393 5.738 3.667a.5.5 0 0 0 .316 0c.782-.26 3.134-1.437 5.391-3.364l3.92 3.92a.75.75 0 1 0 1.061-1.06zM6.988 2.563q.441-.063.905-.063c1.908 0 3.249.893 4.107 1.76.858-.867 2.199-1.76 4.107-1.76 3.866 0 6.393 3.29 6.393 6.974 0 2.52-1.032 4.713-2.423 6.513a.5.5 0 0 1-.75.048L6.705 3.41a.5.5 0 0 1 .284-.848" fill="currentColor"></path></symbol>
+<symbol id="user" viewBox="0 0 24 24" fill="none"><use href="#user--regular"></use></symbol>
+<symbol id="user--regular" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25a5.25 5.25 0 1 0 0 10.5 5.25 5.25 0 0 0 0-10.5M8.25 7.5a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0" fill="currentColor"></path><path d="M4.742 21.106C5.176 18.073 8.265 15.75 12 15.75s6.824 2.323 7.258 5.356a.75.75 0 0 0 1.484-.212c-.566-3.967-4.475-6.644-8.742-6.644-4.266 0-8.176 2.677-8.742 6.644a.75.75 0 0 0 1.484.212" fill="currentColor"></path></symbol>
+<symbol id="user--filled" viewBox="0 0 24 24" fill="none"><path d="M12 2.25a5.25 5.25 0 1 0 0 10.5 5.25 5.25 0 0 0 0-10.5M12 14.25c-4.265 0-8.176 2.677-8.742 6.644A.75.75 0 0 0 4 21.75h16a.75.75 0 0 0 .742-.856c-.566-3.967-4.475-6.644-8.741-6.644" fill="currentColor"></path><path d="M12 14.25c-4.265 0-8.176 2.677-8.742 6.644A.75.75 0 0 0 4 21.75h16a.75.75 0 0 0 .742-.856c-.566-3.967-4.475-6.644-8.741-6.644" fill="currentColor"></path><path d="M12 2.25a5.25 5.25 0 1 0 0 10.5 5.25 5.25 0 0 0 0-10.5" fill="currentColor"></path></symbol>
 </svg>

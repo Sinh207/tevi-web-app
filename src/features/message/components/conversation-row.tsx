@@ -218,15 +218,13 @@ export function ConversationRow({
                         <div className="flex flex-none flex-col items-end justify-between">
                             <span className="flex items-center gap-1">
                                 {view.sentByMe && (
+                                    /* Legacy's `icon-check` / `icon-check-double`: both green,
+                                       the seen one the slanted double tick. */
                                     <Icon
-                                        name={view.seen ? 'check-double' : 'check'}
+                                        name={view.seen ? 'check-all' : 'check'}
                                         size={16}
                                         title={t(view.seen ? 'message_seen' : 'message_sent')}
-                                        className={
-                                            view.seen
-                                                ? 'text-(--text-link)'
-                                                : 'text-(--text-placeholder)'
-                                        }
+                                        className="text-(--text-success)"
                                     />
                                 )}
                                 {time && (
@@ -287,14 +285,12 @@ export function ConversationRow({
                     'group-hover:opacity-100 focus-within:opacity-100 has-[[data-popup-open]]:opacity-100',
                 )}
             >
-                <span className="flex rounded-(--radius-fill) bg-(--background-surface) shadow-xs">
-                    <ConversationRowMenu
-                        name={name}
-                        slug={view.slug}
-                        disabled={busy}
-                        onDelete={onDelete}
-                    />
-                </span>
+                <ConversationRowMenu
+                    name={name}
+                    slug={view.slug}
+                    disabled={busy}
+                    onDelete={onDelete}
+                />
             </div>
         </li>
     )

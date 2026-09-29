@@ -15,6 +15,7 @@ import { Loader } from '@shared/ui/loader'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
 import type { ChatMessage, InlineMenuItem, ReplyMessage } from '../api/types'
+import { DISC } from '../lib/disc'
 import { formatMessageTime, isPremiumGift, messageText, splitLinks } from '../lib/message-thread'
 
 /**
@@ -159,9 +160,13 @@ export function MessageBubble({
                             }
                             className={cn(
                                 'type-caption-meta',
+                                /* Legacy's colours: the reader's own time is green like its ticks,
+                                   the other side's grey, a failed one red. */
                                 status === 'failed'
                                     ? 'text-(--text-error)'
-                                    : 'text-(--text-placeholder)',
+                                    : own
+                                      ? 'text-(--text-success)'
+                                      : 'text-(--text-placeholder)',
                             )}
                         >
                             {time}
@@ -204,14 +209,16 @@ export function MessageBubble({
                                 }}
                             >
                                 {row.map(item => (
+                                    /* Legacy's bot button: a dark translucent pill over the
+                                       conversation's ground, white 14/600, 40px, 12px radius. */
                                     <Button
                                         key={`${item.label}-${item.target}`}
                                         data-testid="message-bubble-option"
                                         data-option-value={item.action ?? undefined}
-                                        variant="secondary"
+                                        variant="ghost"
                                         size="medium"
                                         onClick={() => onInline?.(item)}
-                                        className="min-w-0"
+                                        className="h-10 min-w-0 rounded-(--radius-lg) bg-(--opacity-black-25) px-6 type-dense-strong text-(--white) shadow-md backdrop-blur-[16px] hover:not-disabled:bg-(--opacity-black-50)"
                                     >
                                         <span className="truncate">{item.label}</span>
                                     </Button>
@@ -237,31 +244,47 @@ export function MessageBubble({
                         '[@media(hover:none)]:opacity-100',
                     )}
                 >
+                    {/* Legacy's two discs (`replyButton`, `menuButton`): 36px on a phone, 40 wider,
+                        Reply's glyph grey and More's dark. */}
                     {onReply && (
                         <Button
                             data-testid="message-bubble-reply"
                             variant="ghost"
-                            size="small"
+                            size="medium"
                             iconOnly
                             aria-label={t('message_reply')}
                             onClick={onReply}
+                            className={cn(
+                                DISC,
+                                'size-9 text-(--icon-secondary) hover:text-(--icon-secondary) sm:size-10',
+                            )}
                         >
-                            <Icon name="reply" size={20} className="size-5" />
+                            <Icon name="reply" weight="filled" size={24} className="size-6" />
                         </Button>
                     )}
                     <ActionMenu>
                         <ActionMenuTrigger
                             data-testid="message-bubble-menu-trigger"
                             aria-label={t('message_actions')}
+                            className={cn(DISC, 'size-9 sm:size-10')}
                         >
-                            <Icon name="more-horizontal" size={20} className="size-5" />
+                            <Icon name="more-horizontal" size={24} className="size-6" />
                         </ActionMenuTrigger>
-                        <ActionMenuContent align={own ? 'end' : 'start'}>
+                        {/*
+                         * Legacy's rows, in its order and with its marks: Copy and Reply in the link
+                         * blue, the deletes red — 24px, trailing. Delete is offered on the reader's own
+                         * messages only (legacy's `onDelete={isSender ? … : undefined}`).
+                         */}
+                        <ActionMenuContent align={own ? 'end' : 'start'} className="w-[250px]">
                             {text && onCopy && (
                                 <ActionMenuItem data-testid="message-bubble-copy" onClick={onCopy}>
-                                    {/* Label only: the sprite has no copy glyph (checked — no `copy`,
-                                        `clone` or `clipboard`), and none is drawn by hand. */}
                                     {t('message_copy')}
+                                    <Icon
+                                        name="pages"
+                                        weight="filled"
+                                        size={24}
+                                        className="size-6 flex-none text-(--text-link)"
+                                    />
                                 </ActionMenuItem>
                             )}
                             {onReply && (
@@ -270,23 +293,39 @@ export function MessageBubble({
                                     onClick={onReply}
                                 >
                                     {t('message_reply')}
-                                    <Icon name="reply" size={20} className="flex-none" />
+                                    <Icon
+                                        name="reply"
+                                        weight="filled"
+                                        size={24}
+                                        className="size-6 flex-none text-(--text-link)"
+                                    />
                                 </ActionMenuItem>
                             )}
                             {own && text && !gift && onEdit && (
+                                /* Not in legacy's menu (its edit state has no entry point); kept, in
+                                   Copy and Reply's colour so it reads as one of them. */
                                 <ActionMenuItem data-testid="message-bubble-edit" onClick={onEdit}>
                                     {t('message_edit')}
-                                    <Icon name="pen-line" size={20} className="flex-none" />
+                                    <Icon
+                                        name="pen-line"
+                                        size={24}
+                                        className="size-6 flex-none text-(--text-link)"
+                                    />
                                 </ActionMenuItem>
                             )}
-                            {onDelete && (
+                            {own && onDelete && (
                                 <ActionMenuItem
                                     data-testid="message-bubble-delete"
                                     tone="destructive"
                                     onClick={() => onDelete(false)}
                                 >
                                     {t('message_delete_for_me')}
-                                    <Icon name="trash" size={20} className="flex-none" />
+                                    <Icon
+                                        name="trash"
+                                        weight="filled"
+                                        size={24}
+                                        className="size-6 flex-none"
+                                    />
                                 </ActionMenuItem>
                             )}
                             {own && onDelete && (
@@ -296,7 +335,12 @@ export function MessageBubble({
                                     onClick={() => onDelete(true)}
                                 >
                                     {t('message_delete_for_everyone')}
-                                    <Icon name="trash" size={20} className="flex-none" />
+                                    <Icon
+                                        name="trash"
+                                        weight="filled"
+                                        size={24}
+                                        className="size-6 flex-none"
+                                    />
                                 </ActionMenuItem>
                             )}
                         </ActionMenuContent>
@@ -307,14 +351,19 @@ export function MessageBubble({
     )
 }
 
-/** Sending → a loader; failed → a warning; sent → one tick, seen → two. Own messages only. */
+/**
+ * Sending → a loader; failed → a warning; sent → one tick, seen → two. Own messages only.
+ *
+ * Legacy's marks (`layout/icons`): both ticks **green**, seen being the slanted double tick
+ * (`check-all`, not `check-double`'s stacked pair), and a failure a red exclamation in a circle.
+ */
 function DeliveryMark({ status, seen }: { status: 'sent' | 'sending' | 'failed'; seen: boolean }) {
     const { t } = useTranslation()
     if (status === 'sending') return <Loader className="size-4" label={t('message_sending')} />
     if (status === 'failed') {
         return (
             <Icon
-                name="exclamation-diamond"
+                name="exclamation-circle"
                 size={16}
                 title={t('message_failed')}
                 className="text-(--text-error)"
@@ -323,10 +372,10 @@ function DeliveryMark({ status, seen }: { status: 'sent' | 'sending' | 'failed';
     }
     return (
         <Icon
-            name={seen ? 'check-double' : 'check'}
+            name={seen ? 'check-all' : 'check'}
             size={16}
             title={t(seen ? 'message_seen' : 'message_sent')}
-            className={seen ? 'text-(--text-link)' : 'text-(--text-placeholder)'}
+            className="text-(--text-success)"
         />
     )
 }
