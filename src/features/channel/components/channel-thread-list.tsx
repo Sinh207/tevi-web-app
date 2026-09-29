@@ -162,32 +162,49 @@ export function ChannelThreadList({
                 </div>
             ) : (
                 /*
-                 * Windowed, for the reason `useRenderWindow` states: a space with a long history
-                 * is the same unbounded list home is, and a `PostCard` is the same expensive row.
+                 * ## One hairline between posts, and it is a gap rather than a border
+                 *
+                 * Home's arrangement and legacy's own (`gap: '1px'` over `#f4f4f4`): the rows are
+                 * `--background-surface`, the strip behind them is the page colour, and the page
+                 * colour showing through the 1px gap *is* the line. `PostCard` draws no frame of
+                 * its own, so a border here would be the only edge in the stack and would need
+                 * suppressing on the last row; a gap needs no such exception.
+                 *
+                 * The strip paints `--background` itself rather than relying on what is behind it,
+                 * because here there is nothing behind it: the tab panel is `--background-surface`,
+                 * so card and page were the same colour and two posts ran together with no visible
+                 * boundary at all — which is what this fixes.
                  */
-                threads.map((thread, index) => {
-                    const height = heightFor(thread.id)
-                    return (
-                        <div
-                            key={thread.id}
-                            ref={observe}
-                            {...windowKeyProps(thread.id)}
-                            className="min-w-0"
-                            style={height === null ? undefined : { height }}
-                        >
-                            {height === null ? (
-                                <PostCard
-                                    post={thread}
-                                    isPremiumReader={isPremium}
-                                    onShare={() => setSharing(thread)}
-                                    onOpenMedia={target => slider.openAt(index, target)}
-                                    onChanged={() => refetch()}
-                                    testId="channel-thread"
-                                />
-                            ) : null}
-                        </div>
-                    )
-                })
+                <div className="flex min-w-0 flex-col gap-px bg-(--background)">
+                    {/*
+                     * Windowed, for the reason `useRenderWindow` states: a space with a long
+                     * history is the same unbounded list home is, and a `PostCard` is the same
+                     * expensive row.
+                     */}
+                    {threads.map((thread, index) => {
+                        const height = heightFor(thread.id)
+                        return (
+                            <div
+                                key={thread.id}
+                                ref={observe}
+                                {...windowKeyProps(thread.id)}
+                                className="min-w-0 bg-(--background-surface)"
+                                style={height === null ? undefined : { height }}
+                            >
+                                {height === null ? (
+                                    <PostCard
+                                        post={thread}
+                                        isPremiumReader={isPremium}
+                                        onShare={() => setSharing(thread)}
+                                        onOpenMedia={target => slider.openAt(index, target)}
+                                        onChanged={() => refetch()}
+                                        testId="channel-thread"
+                                    />
+                                ) : null}
+                            </div>
+                        )
+                    })}
+                </div>
             )}
 
             {/* Zero-height, so it never adds space to a list that has stopped growing. */}

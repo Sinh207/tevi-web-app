@@ -69,7 +69,7 @@ vi.mock('../providers/my-channel-provider', () => ({ useMyChannel: () => ({ isPr
 vi.mock('@shared/hooks/use-in-view', () => ({ useInView: () => [() => {}, false] }))
 vi.mock('@features/share', () => ({ ShareDialog: () => null, postShareContext: () => null }))
 vi.mock('@features/post', () => ({
-    PostCard: () => null,
+    PostCard: ({ testId }: { testId?: string }) => <article data-testid={testId}>post</article>,
     PostSlider: () => null,
     usePostSlider: () => ({ open: null, openAt: () => {}, goTo: () => {}, close: () => {} }),
     PostMediaTile: ({ post, testId }: { post: { id: string }; testId?: string }) => (
@@ -142,5 +142,32 @@ describe('ChannelThreadList — media', () => {
 
         // The grid is still ninety cells long; it is the tiles that went.
         expect(cells()).toBe(TOTAL)
+    })
+})
+
+/**
+ * The line between two posts, which is a **gap over a different colour** rather than a border —
+ * home's arrangement and legacy's own (`gap: '1px'` over `#f4f4f4`).
+ *
+ * It is worth a test because its failure mode is invisible in the markup: get either half wrong and
+ * the list still renders, still scrolls, still passes every other assertion — two posts simply run
+ * together with no boundary, which is the bug this pins. That is exactly what shipped: the tab panel
+ * paints `--background-surface`, so rows with no colour of their own were the same colour as what
+ * was behind them.
+ */
+describe('ChannelThreadList — posts', () => {
+    it('separates rows with a page-coloured strip showing through a 1px gap', () => {
+        threads.current = [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }]
+        render(<ChannelThreadList slug="ada" kind="posts" isOwner={false} />)
+
+        const rows = [...document.querySelectorAll('[data-window-key]')]
+        expect(rows).toHaveLength(3)
+        // Each row is opaque, so the strip only shows where the rows are not.
+        for (const row of rows) expect(row.className).toContain('bg-(--background-surface)')
+
+        const strip = rows[0]?.parentElement
+        expect(strip?.className).toContain('gap-px')
+        // ⚠ The strip paints the page colour itself — there is nothing behind it that would.
+        expect(strip?.className).toContain('bg-(--background)')
     })
 })
