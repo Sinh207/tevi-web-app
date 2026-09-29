@@ -173,11 +173,32 @@ export function threadFixtures(now: number) {
         {
             id: 't5',
             sender: them,
+            images: [{ url: AVATAR, w: 400, h: 400 }],
+            text: 'The stage for Friday — what do you think of the new set?',
+            created_at: minutes(45),
+        },
+        {
+            id: 't5b',
+            sender: them,
             images: [
+                { url: AVATAR, w: 400, h: 400 },
+                { url: AVATAR, w: 400, h: 400 },
+                { url: AVATAR, w: 400, h: 400 },
+            ],
+            created_at: minutes(44),
+        },
+        {
+            id: 't5c',
+            sender: me,
+            images: [
+                { url: AVATAR, w: 400, h: 400 },
+                { url: AVATAR, w: 400, h: 400 },
+                { url: AVATAR, w: 400, h: 400 },
                 { url: AVATAR, w: 400, h: 400 },
                 { url: AVATAR, w: 400, h: 400 },
             ],
             created_at: minutes(40),
+            seen_by: { 7: true },
         },
         {
             id: 't6',

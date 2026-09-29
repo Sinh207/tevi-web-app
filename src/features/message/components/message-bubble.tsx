@@ -17,6 +17,7 @@ import type { ReactNode } from 'react'
 import type { ChatMessage, InlineMenuItem, ReplyMessage } from '../api/types'
 import { DISC } from '../lib/disc'
 import { formatMessageTime, isPremiumGift, messageText, splitLinks } from '../lib/message-thread'
+import { PHOTO_SIZE, type PhotoTile, photoLayout } from '../lib/photo-layout'
 
 /**
  * One message — legacy's `itemMessage/common/layout` with its text, image and reply parts.
@@ -112,46 +113,35 @@ export function MessageBubble({
                         />
                     )}
 
-                    {message.images.length > 0 && (
-                        <div
-                            className={cn(
-                                'grid gap-0.5',
-                                message.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1',
-                            )}
-                        >
-                            {message.images.slice(0, 4).map((image, index) =>
-                                image.url ? (
-                                    <button
-                                        // biome-ignore lint/suspicious/noArrayIndexKey: two photos may share a URL, and a message's photos never reorder — the position is their identity.
-                                        key={`${index}-${image.url}`}
-                                        type="button"
-                                        onClick={() => onOpenImage?.(index)}
-                                        aria-label={t('message_open_photo')}
-                                        className="relative block aspect-square w-full max-w-[280px] min-w-[120px] overflow-hidden outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus-ring)"
-                                    >
-                                        <Image
-                                            src={image.url}
-                                            alt=""
-                                            fill
-                                            sizes="280px"
-                                            className="object-cover"
-                                        />
-                                    </button>
-                                ) : null,
-                            )}
-                        </div>
-                    )}
-
+                    {/*
+                     * Legacy's order inside an image message: the caption **above** the photos, as
+                     * wide as they are — `w-0 min-w-full` lets the photos set the width and the text
+                     * wrap to it instead of stretching the bubble.
+                     */}
                     {gift ? (
                         <p className="flex items-center gap-2 px-2 pt-2 type-dense-strong text-(--text-title)">
                             <Icon name="premium" weight="filled" size={20} />
                             {t('message_premium_gift')}
                         </p>
                     ) : text ? (
-                        <p className="px-2 pt-2 type-dense-default whitespace-pre-wrap break-words text-(--text-title) [overflow-wrap:anywhere]">
+                        <p
+                            className={cn(
+                                'px-2 pt-2 type-dense-default whitespace-pre-wrap break-words text-(--text-title) [overflow-wrap:anywhere]',
+                                message.images.length > 0 && 'w-0 min-w-full',
+                            )}
+                        >
                             <LinkedText text={text} />
                         </p>
                     ) : null}
+
+                    {message.images.length > 0 && (
+                        <MessagePhotos
+                            urls={message.images.flatMap(image => (image.url ? [image.url] : []))}
+                            label={t('message_open_photo')}
+                            onOpen={index => onOpenImage?.(index)}
+                            spaced={!!text || !!message.reply_message}
+                        />
+                    )}
 
                     <div className="flex items-center justify-end gap-1 px-2 pt-1 pb-2">
                         {message.edited_at && (
@@ -384,6 +374,67 @@ function DeliveryMark({ status, seen }: { status: 'sent' | 'sending' | 'failed';
             title={t(seen ? 'message_seen' : 'message_sent')}
             className="text-(--text-success)"
         />
+    )
+}
+
+/** A tile's box, per `photoLayout`'s sizes — responsive tiles step up at `sm`, as legacy's do. */
+const TILE_CLASS: Record<PhotoTile, string> = {
+    large: 'size-[144px]',
+    small: 'size-[95px]',
+    responsive: 'size-[95px] sm:size-[144px]',
+}
+
+/**
+ * A message's photos — legacy's `itemMessage/image`, tile for tile: a 290 × 323 portrait for one,
+ * square 144 / 95px tiles 1px apart for more (`photoLayout`). The portrait keeps its proportions
+ * rather than its width on a phone too narrow for it — legacy's fixed 290 is wider than the bubble
+ * there and gets cropped.
+ */
+function MessagePhotos({
+    urls,
+    label,
+    onOpen,
+    spaced,
+}: {
+    urls: string[]
+    label: string
+    onOpen: (index: number) => void
+    /** Something sits above the photos (a caption or a quote) — legacy's 4px gap. */
+    spaced: boolean
+}) {
+    const layout = photoLayout(urls.length)
+    const tile = (index: number, className: string, width: number) => (
+        <button
+            // biome-ignore lint/suspicious/noArrayIndexKey: two photos may share a URL, and a message's photos never reorder — the position is their identity.
+            key={`${index}-${urls[index]}`}
+            type="button"
+            onClick={() => onOpen(index)}
+            aria-label={label}
+            className={cn(
+                'relative block flex-none overflow-hidden outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus-ring)',
+                className,
+            )}
+        >
+            <Image src={urls[index]} alt="" fill sizes={`${width}px`} className="object-cover" />
+        </button>
+    )
+
+    return (
+        <div className={cn('flex flex-col gap-px', spaced && 'mt-1')}>
+            {layout.kind === 'single'
+                ? tile(0, 'aspect-[290/323] w-[290px] max-w-full', PHOTO_SIZE.singleWidth)
+                : layout.rows.map(row => (
+                      <div key={row.indices.join('-')} className="flex gap-px">
+                          {row.indices.map(index =>
+                              tile(
+                                  index,
+                                  TILE_CLASS[row.tile],
+                                  row.tile === 'small' ? PHOTO_SIZE.small : PHOTO_SIZE.large,
+                              ),
+                          )}
+                      </div>
+                  ))}
+        </div>
     )
 }
 
