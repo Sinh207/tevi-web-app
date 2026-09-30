@@ -15,6 +15,7 @@ import { usePostUnlock } from '../hooks/use-post-unlock'
 import { isNsfw, postDisplay } from '../lib/post-access'
 import { postHref } from '../lib/post-link'
 import { formatDuration, POST_COLUMN_SIZES, videoSrc } from '../lib/post-media'
+import { openReplyDialog } from '../store/reply-store'
 import { PostActions } from './post-actions'
 import {
     PostAffiliateCard,
@@ -247,7 +248,26 @@ export function PostCard({
                         post={post}
                         isPremiumReader={isPremiumReader}
                         onShare={onShare}
-                        onComment={href ? () => router.push(href) : undefined}
+                        /*
+                         * ⚠ *Comment* **opens the reply popup**; it does not navigate.
+                         *
+                         * All three clients do this — legacy's `handleOpenComment` raises
+                         * `CommentForm`, Android calls `DialogManager.showReplyPostDialog`, iOS
+                         * runs `prepareReply`. Sending the reader to the post's page instead loses
+                         * their place in a feed to do something the feed can do in place.
+                         *
+                         * `disableDetail` is the exception and it is the same flag legacy splits
+                         * on: on the post's **own page** the inline `ReplyComposer` is already on
+                         * screen, and a popup over it would be the same box twice.
+                         *
+                         * ⚠ Gated on that flag and **not on `href`**, which is what it read while
+                         * the press was a navigation. `postHref` is `null` for a post the backend
+                         * sent no `shareable_url` for, and such a post can still be replied to — on
+                         * the `/dev/post` harness, where no fixture carries one, every *Comment*
+                         * button was disabled. A deleted post needs no clause here: the whole
+                         * action row is withheld for one, a few lines up.
+                         */
+                        onComment={disableDetail ? undefined : () => openReplyDialog(post)}
                         onUnlockReplies={unlock.press}
                         testId={testId}
                     />

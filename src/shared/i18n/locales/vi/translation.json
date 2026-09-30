@@ -2046,6 +2046,7 @@
     "home_lives_empty_body": "Khi một space bạn theo dõi lên sóng, nó sẽ hiện ở đây.",
     "home_feed_error_title": "Không tải được bảng tin",
     "home_feed_error_body": "Có lỗi từ phía chúng tôi. Vui lòng thử lại sau giây lát.",
+    "post_reply_title": "Phản hồi",
     "post_reply_placeholder": "Viết phản hồi…",
     "post_reply_submit": "Phản hồi",
     "post_reply_submit_priced": "Phản hồi {{amount}}",

@@ -93,6 +93,12 @@ export { PostMediaTile } from './components/post-media-tile'
  */
 export { PostSlider } from './components/post-slider'
 /**
+ * The reply popup, exported for the **same reason** the composer above is: a host in `app/` has to
+ * mount it once, because it draws the reader's own channel and `useMyChannel` is a feature this one
+ * may not import. Every `PostCard` opens it through `openReplyDialog`, which needs no host.
+ */
+export { ReplyDialog } from './components/reply-dialog'
+/**
  * The collections row a space's Posts tab opens with. `features/channel` mounts it and hands it the
  * ownership it already knows; which endpoint that means is this feature's business.
  */
@@ -165,3 +171,4 @@ export type { ReplyComposerAuthor } from './lib/reply-author'
 /** The host reads the Premium benefit table; this turns it into the two ceilings that matter. */
 export { type BenefitDetailRow, uploadLimitsFromBenefits } from './lib/upload-limits'
 export { openPostComposer, usePostComposerStore } from './store/composer-store'
+export { openReplyDialog, useReplyDialogStore } from './store/reply-store'

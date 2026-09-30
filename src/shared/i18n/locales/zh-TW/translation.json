@@ -2046,6 +2046,7 @@
     "home_lives_empty_body": "你追蹤的專區開播時會出現在這裡。",
     "home_feed_error_title": "無法載入你的動態",
     "home_feed_error_body": "我們這邊出了點問題，請稍後再試。",
+    "post_reply_title": "回覆",
     "post_reply_placeholder": "寫下回覆…",
     "post_reply_submit": "回覆",
     "post_reply_submit_priced": "回覆 {{amount}}",

@@ -2046,6 +2046,7 @@
     "home_lives_empty_body": "你关注的空间开播时会出现在这里。",
     "home_feed_error_title": "无法加载你的信息流",
     "home_feed_error_body": "我们这边出了点问题，请稍后再试。",
+    "post_reply_title": "回复",
     "post_reply_placeholder": "写下回复…",
     "post_reply_submit": "回复",
     "post_reply_submit_priced": "回复 {{amount}}",

@@ -8,6 +8,7 @@ import { PaymentProvider } from '@features/payment'
 import { PermissionProvider } from '@features/permission'
 import { RealtimeProvider } from '@features/realtime'
 import { PostComposerHost } from './post-composer-host'
+import { ReplyDialogHost } from './reply-dialog-host'
 
 /**
  * Everything that depends on there being a session (outer → inner):
@@ -142,6 +143,7 @@ export function SessionProviders({
                                     either. Inside `MyChannelProvider` because it draws the
                                     author's own avatar. */}
                                 <PostComposerHost />
+                                <ReplyDialogHost />
                             </MyChannelProvider>
                         </PaymentProvider>
                     </BalanceProvider>

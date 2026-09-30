@@ -479,22 +479,22 @@ Routes: `/[slug]/messages`, `/messages`
 
 | testid | companions | source |
 |---|---|---|
-| `message-bubble` | `data-message-id` | `src/features/message/components/message-bubble.tsx:91` |
-| `message-bubble-copy` | — | `src/features/message/components/message-bubble.tsx:287` |
-| `message-bubble-delete` | — | `src/features/message/components/message-bubble.tsx:325` |
-| `message-bubble-delete-all` | — | `src/features/message/components/message-bubble.tsx:340` |
-| `message-bubble-edit` | — | `src/features/message/components/message-bubble.tsx:314` |
-| `message-bubble-menu-reply` | — | `src/features/message/components/message-bubble.tsx:299` |
-| `message-bubble-menu-trigger` | — | `src/features/message/components/message-bubble.tsx:274` |
-| `message-bubble-option` | `data-option-value` | `src/features/message/components/message-bubble.tsx:223` |
-| `message-bubble-remove` | — | `src/features/message/components/message-bubble.tsx:196` |
-| `message-bubble-reply` | — | `src/features/message/components/message-bubble.tsx:258` |
-| `message-bubble-retry` | — | `src/features/message/components/message-bubble.tsx:188` |
+| `message-bubble` | `data-message-id` | `src/features/message/components/message-bubble.tsx:92` |
+| `message-bubble-copy` | — | `src/features/message/components/message-bubble.tsx:277` |
+| `message-bubble-delete` | — | `src/features/message/components/message-bubble.tsx:315` |
+| `message-bubble-delete-all` | — | `src/features/message/components/message-bubble.tsx:330` |
+| `message-bubble-edit` | — | `src/features/message/components/message-bubble.tsx:304` |
+| `message-bubble-menu-reply` | — | `src/features/message/components/message-bubble.tsx:289` |
+| `message-bubble-menu-trigger` | — | `src/features/message/components/message-bubble.tsx:264` |
+| `message-bubble-option` | `data-option-value` | `src/features/message/components/message-bubble.tsx:213` |
+| `message-bubble-remove` | — | `src/features/message/components/message-bubble.tsx:186` |
+| `message-bubble-reply` | — | `src/features/message/components/message-bubble.tsx:248` |
+| `message-bubble-retry` | — | `src/features/message/components/message-bubble.tsx:178` |
 | `message-composer-cancel` | — | `src/features/message/components/message-composer.tsx:123` |
 | `message-composer-input` | — | `src/features/message/components/message-composer.tsx:138` |
 | `message-composer-submit` | — | `src/features/message/components/message-composer.tsx:168` |
 | `message-delete-confirm` | — | `src/features/message/components/messages-shell.tsx:345` |
-| `message-delete-message-confirm` | — | `src/features/message/components/chat-room.tsx:285` |
+| `message-delete-message-confirm` | — | `src/features/message/components/chat-room.tsx:292` |
 | `message-error` | — | `src/features/message/components/messages-shell.tsx:181` |
 | `message-intro` | — | `src/features/message/components/chat-walls.tsx:247` |
 | `message-list-scroller` | — | `src/features/message/components/messages-shell.tsx:333` |
@@ -505,12 +505,12 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-photo-viewer-next` | — | `src/features/message/components/message-photo-viewer.tsx:83` |
 | `message-photo-viewer-prev` | — | `src/features/message/components/message-photo-viewer.tsx:72` |
 | `message-retry` | — | `src/features/message/components/messages-shell.tsx:189` |
-| `message-room` | — | `src/features/message/components/chat-room.tsx:316` |
+| `message-room` | — | `src/features/message/components/chat-room.tsx:323` |
 | `message-room-back` | — | `src/features/message/components/chat-header.tsx:126` |
-| `message-room-error` | — | `src/features/message/components/chat-room.tsx:207` |
-| `message-room-missing` | — | `src/features/message/components/chat-room.tsx:174` |
-| `message-room-sign-in` | — | `src/features/message/components/chat-room.tsx:159` |
-| `message-room-signed-out` | — | `src/features/message/components/chat-room.tsx:152` |
+| `message-room-error` | — | `src/features/message/components/chat-room.tsx:212` |
+| `message-room-missing` | — | `src/features/message/components/chat-room.tsx:179` |
+| `message-room-sign-in` | — | `src/features/message/components/chat-room.tsx:164` |
+| `message-room-signed-out` | — | `src/features/message/components/chat-room.tsx:157` |
 | `message-room-space` | — | `src/features/message/components/chat-header.tsx:138` |
 | `message-row` | — | `src/features/message/components/conversation-list.tsx:87` |
 | `message-row-link` | — | `src/features/message/components/conversation-row.tsx:202` |
@@ -524,10 +524,10 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-sign-in` | — | `src/features/message/components/messages-shell.tsx:213` |
 | `message-signed-out` | — | `src/features/message/components/messages-shell.tsx:204` |
 | `message-tab` | `data-tab-id` | `src/features/message/components/messages-shell.tsx:292` |
-| `message-thread` | — | `src/features/message/components/message-thread-view.tsx:131` |
-| `message-thread-error` | — | `src/features/message/components/chat-room.tsx:234` |
-| `message-thread-jump` | — | `src/features/message/components/message-thread-view.tsx:203` |
-| `message-thread-loading` | — | `src/features/message/components/chat-room.tsx:336` |
+| `message-thread` | — | `src/features/message/components/message-thread-view.tsx:132` |
+| `message-thread-error` | — | `src/features/message/components/chat-room.tsx:241` |
+| `message-thread-jump` | — | `src/features/message/components/message-thread-view.tsx:207` |
+| `message-thread-loading` | — | `src/features/message/components/chat-room.tsx:343` |
 | `message-wall` | — | `src/features/message/components/chat-walls.tsx:216` |
 | `message-wall-first-wave` | — | `src/features/message/components/chat-walls.tsx:85` |
 | `message-wall-follow-submit` | — | `src/features/message/components/chat-walls.tsx:141` |
@@ -1147,6 +1147,7 @@ name; you need it to know the element exists.
 | `PostUnlockDialogs` | `src/features/post/components/post-unlock-dialogs.tsx` | `-cancel` `-confirm` `-description` `-next` `-option` `-title` |
 | `ReplyAudienceNotice` | `src/features/post/components/reply-audience-notice.tsx` | `-description` `-panel` `-title` `-trigger` |
 | `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-item` `-list` `-remove` `-submit` `-trigger` |
+| `ReplyDialog` | `src/features/post/components/reply-dialog.tsx` | `-description` `-item` `-panel` |
 | `ReplyRow` | `src/features/post/components/reply-row.tsx` | `-description` `-header` `-label-data` `-message` `-next` `-overlay` `-panel` `-remove` `-reveal` `-slide` `-trigger` |
 | `ReplyThread` | `src/features/post/components/reply-thread.tsx` | `-item` `-next` `-panel` `-retry` `-row` |
 | `SpaceCollectionsRow` | `src/features/post/components/space-collections-row.tsx` | `-item` `-trigger` |
