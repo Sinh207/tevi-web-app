@@ -8,7 +8,7 @@ import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Skeleton } from '@shared/ui/skeleton'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Post } from '../api/types'
 import { usePostDetail } from '../hooks/use-post-detail'
 import { usePostReplies } from '../hooks/use-post-replies'
@@ -81,6 +81,24 @@ export function PostDetailView({
     const { post, isLoading, isError, refetch, isMissing } = usePostDetail(identifier, serverPost)
 
     const replies = usePostReplies(post && !post.deleted ? post.id : null)
+
+    /**
+     * A write landed anywhere in the thread — refetch **both** rendered queries.
+     *
+     * ⚠ The two are not interchangeable and this used to be two different callbacks. Posting a
+     * reply refetched the post *and* the list; **deleting** one refetched only the list, so the row
+     * went and the `reply_count` printed on the card above it did not move. The write hooks do
+     * invalidate `postKeys.all`, but invalidation only marks a query stale — these are the two
+     * copies already on screen, and the reader is looking at the number while it is wrong.
+     *
+     * One callback rather than two call sites that each remember: they drifted once already, and
+     * nothing fails when they do. The list's own *Retry* button is deliberately not this — a failed
+     * page of replies is not a reason to re-ask for the post.
+     */
+    const threadChanged = useCallback(() => {
+        void refetch()
+        void replies.refetch()
+    }, [refetch, replies.refetch])
 
     /** One sheet for the page, holding whichever post or reply raised it — the feed's arrangement. */
     const [sharing, setSharing] = useState<Post | null>(null)
@@ -165,16 +183,7 @@ export function PostDetailView({
                 post={post}
                 author={author}
                 isPremiumReader={isPremiumReader}
-                /*
-                 * Both, and neither is redundant: the list gains a row and the post's `reply_count`
-                 * — drawn by the card above — goes up. The hook has already invalidated this
-                 * feature's keys; these are the two queries whose *rendered* copies must not be
-                 * left waiting for a stale time to expire.
-                 */
-                onReplied={() => {
-                    void refetch()
-                    void replies.refetch()
-                }}
+                onReplied={threadChanged}
                 testId={subTestId(testId, 'panel')}
             />
 
@@ -183,6 +192,7 @@ export function PostDetailView({
                 post={post}
                 author={author}
                 isPremiumReader={isPremiumReader}
+                onChanged={threadChanged}
                 observe={observe}
                 heightFor={heightFor}
                 sentinelRef={sentinelRef}
@@ -210,6 +220,7 @@ function RepliesSection({
     post,
     author,
     isPremiumReader,
+    onChanged,
     observe,
     heightFor,
     sentinelRef,
@@ -220,6 +231,12 @@ function RepliesSection({
     post: Post
     author: ReplyComposerAuthor | null
     isPremiumReader: boolean
+    /**
+     * A write landed in the thread. Handed **down** rather than refetching `replies` here, because
+     * the post has to be refetched with it and this component does not hold that query — see
+     * `threadChanged`, which is the one place that knows both.
+     */
+    onChanged: () => void
     observe: ReturnType<typeof useRenderWindow>['observe']
     heightFor: ReturnType<typeof useRenderWindow>['heightFor']
     sentinelRef: ReturnType<typeof useInView<HTMLDivElement>>[0]
@@ -305,7 +322,7 @@ function RepliesSection({
                                         reply={reply}
                                         author={author}
                                         isPremiumReader={isPremiumReader}
-                                        onChanged={() => replies.refetch()}
+                                        onChanged={onChanged}
                                         testId={subTestId(testId, 'row')}
                                     />
                                 ) : null}
