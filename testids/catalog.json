@@ -13994,7 +13994,8 @@
                 "PostHeader"
             ],
             "parts": [
-                "header"
+                "header",
+                "label"
             ]
         },
         "src/features/post/components/post-image-gallery.tsx": {

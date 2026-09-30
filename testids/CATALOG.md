@@ -1136,7 +1136,7 @@ name; you need it to know the element exists.
 | `PostComposerDialogs` | `src/features/post/components/post-composer-dialogs.tsx` | `-group` `-header` `-list` `-row` `-tab` |
 | `PostComposerVideo` | `src/features/post/components/post-composer-video.tsx` | `-apply` `-clear` `-field` `-item` `-remove` `-reveal` `-slide` `-trigger` |
 | `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
-| `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` |
+| `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` `-label` |
 | `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` `-remove` |
 | `PostLockPanel` | `src/features/post/components/post-lock-panel.tsx` | `-label` `-title` |
 | `PostMediaLightbox` | `src/features/post/components/post-media-lightbox.tsx` | `-close` `-label` `-next` `-overlay` `-prev` `-slide` |

@@ -15,6 +15,36 @@ import { formatPostTimestamp } from '../lib/post-format'
 import { PostMenu } from './post-menu'
 
 /**
+ * *Purchased* — legacy's `PurchasedBadge`, which is a **tinted pill with a double-check**, not a word.
+ *
+ * It shipped here as a bare `type-caption-meta` span: grey, 12px, no mark and no fill, sitting in a
+ * row of grey meta text where it read as another piece of the sentence rather than as a state the
+ * reader had paid for. Legacy's is a `Chip size='small'` — 24px tall, pill, a 12px tick and a 10/500
+ * label, all on a 10%-green fill.
+ *
+ * Geometry is legacy's; the palette is the design system's. Legacy hard-codes `#2FC062` on
+ * `rgba(52,199,89,0.10)`; `--text-success` and `--accents-success-bg-active` are the same intent in
+ * tokens that have a dark mode, which a raw hex does not — and `CLAUDE.md` bars one outright.
+ *
+ * `check-double` is the sprite's own glyph for legacy's two-tick drawing. **16, not legacy's 12**:
+ * `IconSize` is a union of the DS's six steps and 12 is not one of them, so a hand-picked 12 is a
+ * type error rather than a blurry glyph — the same trade the audience icon two lines below records.
+ */
+function PurchasedTag({ testId }: { testId?: string }) {
+    const { t } = useTranslation()
+    return (
+        <span
+            data-testid={subTestId(testId, 'label')}
+            className="inline-flex h-6 flex-none items-center gap-0.5 rounded-full bg-(--accents-success-bg-active) px-2 text-(--text-success)"
+        >
+            <Icon name="check-double" size={16} />
+            {/* 10/500 — the DS's only 10px step, and legacy's size and weight. */}
+            <span className="type-micro-overline">{t('post_purchased')}</span>
+        </span>
+    )
+}
+
+/**
  * Who posted it, when, and to whom — legacy's `PostHeader`, ported.
  *
  * ## The subheader is a sentence made of five optional pieces
@@ -128,9 +158,7 @@ export function PostHeader({
                         size={16}
                         title={t(gated ? 'post_audience_paid' : 'post_audience_everyone')}
                     />
-                    {isPurchased(post) ? (
-                        <span className="type-caption-meta">{t('post_purchased')}</span>
-                    ) : null}
+                    {isPurchased(post) ? <PurchasedTag testId={testId} /> : null}
                 </span>
             </span>
         </>
