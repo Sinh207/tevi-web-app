@@ -346,10 +346,30 @@ function shouldNavigate(event: React.MouseEvent<HTMLElement>): boolean {
 export function PostMediaBlock({
     post,
     onOpenMedia,
+    interactive = true,
     testId,
 }: {
     post: Post
     onOpenMedia?: (target: number | 'video') => void
+    /**
+     * `false` ⇒ the media is a **picture of itself**: nothing to press, and no viewer of its own.
+     *
+     * ⚠ The reply popup needs this and the reason is a measured bug. `PostMediaLightbox` is a
+     * `z-50` full-screen layer, and so is the dialog — so opening the clip from inside the popup
+     * put the scrim *over* the popup while the player drew *inside* it, clipped by the dialog's
+     * `overflow-hidden`: a dimmed sheet with a half-visible video in the middle of it and two close
+     * buttons. Two modals at the same z index do not stack, they interleave.
+     *
+     * A quote in a composer is a reference, not a gallery, so the repair is to withhold the press
+     * rather than to renumber a layer. Same rule `PostHeader` states for its `actions` and
+     * `PostImageGallery` for its `onOpen`: a surface that cannot act on a post does not grow
+     * controls that do nothing.
+     *
+     * Legacy's `commentForm` does better than a still — its quote plays the clip **inline**
+     * (`VideoMedia`), with no viewer involved. That is the follow-up; this is the half that stops
+     * the popup being broken.
+     */
+    interactive?: boolean
     testId: string
 }) {
     /** Which image the lightbox opened on, or `null` when it is closed. `'video'` opens the clip. */
@@ -367,14 +387,22 @@ export function PostMediaBlock({
             {images.length > 0 ? (
                 <PostImageGallery
                     images={images}
-                    onOpen={index => (onOpenMedia ? onOpenMedia(index) : setOpened(index))}
+                    onOpen={
+                        interactive
+                            ? index => (onOpenMedia ? onOpenMedia(index) : setOpened(index))
+                            : undefined
+                    }
                     testId={subTestId(testId, 'item')}
                 />
             ) : null}
             {videoSrc(video) ? (
                 <PostVideoTile
                     post={post}
-                    onOpen={() => (onOpenMedia ? onOpenMedia('video') : setOpened('video'))}
+                    onOpen={
+                        interactive
+                            ? () => (onOpenMedia ? onOpenMedia('video') : setOpened('video'))
+                            : undefined
+                    }
                     testId={subTestId(testId, 'slide')}
                 />
             ) : null}
@@ -391,8 +419,8 @@ export function PostMediaBlock({
                 <div className="min-w-0">{media}</div>
             )}
 
-            {/* Only when nobody above wants the press — see `onOpenMedia`. */}
-            {!onOpenMedia && opened !== null ? (
+            {/* Only when nobody above wants the press — see `onOpenMedia` and `interactive`. */}
+            {interactive && !onOpenMedia && opened !== null ? (
                 <PostMediaLightbox
                     images={images}
                     video={opened === 'video' ? (video ?? null) : null}
@@ -421,18 +449,25 @@ function PostVideoTile({
     testId,
 }: {
     post: Post
-    onOpen: () => void
+    /**
+     * Absent ⇒ the tile is a **picture**, not a control: a `<div>` with no press and no play
+     * affordance. `PostMediaBlock`'s `interactive` is the caller that needs it, and its doc has the
+     * measured reason. A button that looks pressable and is not is the one thing worse than a
+     * still.
+     */
+    onOpen?: () => void
     testId?: string
 }) {
     const { t } = useTranslation()
     const poster = post.video?.thumbnail ?? post.cover_image?.uri ?? null
     const duration = formatDuration(post.video?.duration_seconds ?? null)
+    const Tag = onOpen ? 'button' : 'div'
 
     return (
-        <button
-            type="button"
+        <Tag
+            type={onOpen ? 'button' : undefined}
             onClick={onOpen}
-            aria-label={t('post_video_play')}
+            aria-label={onOpen ? t('post_video_play') : undefined}
             data-testid={testId}
             className="relative w-full overflow-hidden rounded-[8px] bg-(--background-segment)"
             style={{ aspectRatio: '16 / 9' }}
@@ -446,16 +481,18 @@ function PostVideoTile({
                     className="object-cover"
                 />
             ) : null}
-            <span className="absolute inset-0 flex items-center justify-center">
-                <span className="flex size-12 items-center justify-center rounded-full bg-black/50 text-white">
-                    <Icon name="play" size={24} weight="filled" />
+            {onOpen ? (
+                <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex size-12 items-center justify-center rounded-full bg-black/50 text-white">
+                        <Icon name="play" size={24} weight="filled" />
+                    </span>
                 </span>
-            </span>
+            ) : null}
             {duration ? (
                 <span className="type-caption-meta absolute bottom-2 end-2 rounded-[4px] bg-black/60 px-1.5 py-0.5 text-white">
                     {duration}
                 </span>
             ) : null}
-        </button>
+        </Tag>
     )
 }
