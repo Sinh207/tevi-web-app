@@ -147,11 +147,15 @@ function ReplyDialogBody({
                 ) : null}
 
                 {/*
-                 * No `onOpenMedia`: the block then keeps its own lightbox, which is the right one
-                 * here — a viewer that paged to the *next post* from inside a reply box would take
-                 * the reader away from a draft they are in the middle of.
+                 * ⚠ `interactive={false}` — see its doc. The quote is a reference, and a media
+                 * viewer opened from inside this dialog is a second `z-50` layer that interleaves
+                 * with it rather than covering it.
                  */}
-                <PostMediaBlock post={post} testId={subTestId(testId, 'item') ?? testId} />
+                <PostMediaBlock
+                    post={post}
+                    interactive={false}
+                    testId={subTestId(testId, 'item') ?? testId}
+                />
 
                 <ReplyComposer
                     post={post}
