@@ -148,34 +148,71 @@ function ReplyDialogBody({
                  */}
                 <PostHeader post={post} testId={subTestId(testId, 'item')} />
 
-                {post.text ? (
-                    <p
-                        data-testid={subTestId(testId, 'description')}
-                        className="type-dense-default whitespace-pre-wrap break-words text-(--text-title)"
-                    >
-                        {post.text}
-                    </p>
-                ) : null}
-
                 {/*
-                 * The same split `PostCard` makes, and it has to be made here too: a locked post's
-                 * media is **not** drawn, because there is none to draw — what stands in its place
-                 * is the paywall. Rendering `PostMediaBlock` unconditionally showed a paid post as
-                 * a name, a date and a gap.
+                 * ⚠ **The thread line**, and it is why the body is indented rather than flush.
                  *
-                 * ⚠ Both branches are inert. `onPress` omitted makes the panel a picture rather
-                 * than a dead button — its own prop doc calls for exactly that, and it is the same
-                 * rule as `interactive={false}` beside it.
+                 * Legacy's `PostComment` puts the quoted post's content in a grid whose left column
+                 * holds a vertical divider running under the avatar, and the reply box below
+                 * repeats it — that pair of lines is what makes the popup read as *this post, then
+                 * your answer to it* instead of two unrelated blocks. Only the box had one here, so
+                 * it started from nothing.
+                 *
+                 * `w-10` is `AnimatedAvatar size="medium"`, and `gap-2` is `PostHeader`'s own gap,
+                 * so the line lands under the centre of the avatar above it without a grid. Both
+                 * numbers are read off that header; if it changes, this has to follow.
                  */}
-                {postDisplay(post) === 'locked' ? (
-                    <PostLockPanel post={post} testId={subTestId(testId, 'panel')} />
-                ) : (
-                    <PostMediaBlock
-                        post={post}
-                        interactive={false}
-                        testId={subTestId(testId, 'item') ?? testId}
-                    />
-                )}
+                <div className="flex min-w-0 gap-2">
+                    {/*
+                     * ⚠ `flex-col`, and it is not cosmetic. The line is `w-px flex-1`, and in a
+                     * **row** `flex-1` sets `flex-basis: 0` and grows along the main axis — so the
+                     * hairline stretched to the column's full 40px and painted a grey block where
+                     * a 1px rule belongs. The column has to run downwards for `flex-1` to mean
+                     * height.
+                     */}
+                    <span aria-hidden="true" className="flex w-10 flex-none flex-col items-center">
+                        <span className="w-px flex-1 bg-(--separator-default)" />
+                    </span>
+
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        {post.text ? (
+                            <p
+                                data-testid={subTestId(testId, 'description')}
+                                /*
+                                 * ⚠ Legacy ramps this 12 → 14 (`Content`: `fontSize: { xs: 12,
+                                 * md: 14 }`) and this **cannot** today: the `.type-*` classes are
+                                 * declared in `@layer components`, which Tailwind v4 does not
+                                 * register as utilities, so `md:type-dense-default` compiles to
+                                 * nothing and the base class wins at every width. Measured, not
+                                 * assumed — and the 19 existing `md:type-*` in this repo are dead
+                                 * the same way. Flat 14 until those are declared with `@utility`.
+                                 */
+                                className="type-dense-default whitespace-pre-wrap break-words text-(--text-title)"
+                            >
+                                {post.text}
+                            </p>
+                        ) : null}
+
+                        {/*
+                         * The same split `PostCard` makes, and it has to be made here too: a locked
+                         * post's media is **not** drawn, because there is none to draw — what
+                         * stands in its place is the paywall. Rendering `PostMediaBlock`
+                         * unconditionally showed a paid post as a name, a date and a gap.
+                         *
+                         * ⚠ Both branches are inert. `onPress` omitted makes the panel a picture
+                         * rather than a dead button — its own prop doc calls for exactly that, and
+                         * it is the same rule as `interactive={false}` beside it.
+                         */}
+                        {postDisplay(post) === 'locked' ? (
+                            <PostLockPanel post={post} testId={subTestId(testId, 'panel')} />
+                        ) : (
+                            <PostMediaBlock
+                                post={post}
+                                interactive={false}
+                                testId={subTestId(testId, 'item') ?? testId}
+                            />
+                        )}
+                    </div>
+                </div>
 
                 <ReplyComposer
                     post={post}
