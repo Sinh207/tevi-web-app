@@ -7,6 +7,7 @@ import { subTestId } from '@shared/lib/test-id'
 import type { Post } from '../api/types'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { useReplyDialogStore } from '../store/reply-store'
+import { PostMediaBlock } from './post-card'
 import { PostHeader } from './post-header'
 import { ReplyComposer } from './reply-composer'
 
@@ -41,11 +42,8 @@ import { ReplyComposer } from './reply-composer'
  * the press, the *Who can reply?* panel when the post is closed to this reader, the Star price on
  * the submit button, the image rules and the three refusals a draft can carry.
  *
- * **Media is not drawn in the quote**, where legacy's `PostComment` renders the gallery and the
- * player. On a card the reader has just pressed, the picture is a scroll away underneath; in a panel
- * whose job is a text box and a keyboard it costs the box its room. The words are what a reply is
- * about. If that turns out to be wrong it is `PostMediaBlock` away — it is a deliberate omission,
- * not a missing piece.
+ * The quote carries the post's **media** as well as its words, which is legacy's `PostComment`: a
+ * photo post quoted as a name and a date is a reply to nothing the reader can see.
  */
 export function ReplyDialog({
     author,
@@ -148,10 +146,18 @@ function ReplyDialogBody({
                     </p>
                 ) : null}
 
+                {/*
+                 * No `onOpenMedia`: the block then keeps its own lightbox, which is the right one
+                 * here — a viewer that paged to the *next post* from inside a reply box would take
+                 * the reader away from a draft they are in the middle of.
+                 */}
+                <PostMediaBlock post={post} testId={subTestId(testId, 'item') ?? testId} />
+
                 <ReplyComposer
                     post={post}
                     author={author}
                     isPremiumReader={isPremiumReader}
+                    layout="modal"
                     /*
                      * The keyboard is the point of the panel below `sm`, and on a card the reader
                      * pressed *Comment* to type. `ReplyComposer` opens to its full shape when

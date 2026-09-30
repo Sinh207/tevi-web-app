@@ -338,7 +338,12 @@ function shouldNavigate(event: React.MouseEvent<HTMLElement>): boolean {
  * post tells the reader nothing about why it is there. `PostNsfwGuard` carries the two-cover rule
  * and the account setting it reads.
  */
-function PostMediaBlock({
+/**
+ * A post's pictures or its clip. **Exported** for the reply popup, which quotes the post being
+ * replied to and has to draw what it was: legacy's `commentForm` renders the gallery and the player
+ * inside its quote, and a photo post quoted as a name and a date is a reply to nothing visible.
+ */
+export function PostMediaBlock({
     post,
     onOpenMedia,
     testId,

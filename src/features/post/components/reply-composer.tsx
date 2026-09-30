@@ -8,6 +8,7 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { formatStarAmount } from '@shared/lib/money'
 import { useWebConfig } from '@shared/lib/remote-config'
 import { subTestId } from '@shared/lib/test-id'
+import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { useEffect, useId, useRef, useState } from 'react'
@@ -75,6 +76,7 @@ export function ReplyComposer({
     replyTo = null,
     author = null,
     isPremiumReader = false,
+    layout = 'inline',
     autoFocus = false,
     onReplied,
     testId,
@@ -101,6 +103,22 @@ export function ReplyComposer({
     /** Premium readers are exempt from paid interaction — `features/premium`'s fact, not the post's. */
     isPremiumReader?: boolean
     /** Opened on purpose — an answer box the reader has just asked for should already be focused. */
+    /**
+     * Which of legacy's two composers this is.
+     *
+     * - `inline` — the bar under a post on its own page (`CommentPostDetail`). It carries its own
+     *   surface, the screen's `mt-px` hairline and the page gutter, and it stays one row until it
+     *   is touched.
+     * - `modal` — the body of the reply **popup** (`commentForm`), which is a different
+     *   arrangement and not a restyle: one flat sheet with the dialog supplying the padding, the
+     *   reader's identity always on show, and a thread line running from the quoted post down the
+     *   left of the box.
+     *
+     * The header of this file has always said the two exist ("the inline bar rather than the modal
+     * its feed uses"); this is the modal arriving, sharing every rule — the sign-in gate, the
+     * *Who can reply?* panel, the Star price, the image limits — rather than a second copy of them.
+     */
+    layout?: 'inline' | 'modal'
     autoFocus?: boolean
     /** The reply landed; the screen refetches the list and the count. */
     onReplied?: () => void
@@ -188,10 +206,16 @@ export function ReplyComposer({
      * blocks survives either branch. It carries its own padding because the tinted block is inset
      * from the page gutter — legacy insets it the same way.
      */
+    const modal = layout === 'modal'
+
     if (!mayReply(post)) {
         if (!showsReplyAudienceNotice(post)) return null
         return (
-            <div className="mt-px bg-(--background-surface) px-3 py-3 md:px-6 md:py-4">
+            <div
+                className={cn(
+                    modal ? 'py-2' : 'mt-px bg-(--background-surface) px-3 py-3 md:px-6 md:py-4',
+                )}
+            >
                 <ReplyAudienceNotice post={post} testId={testId} />
             </div>
         )
@@ -232,7 +256,12 @@ export function ReplyComposer({
               ? t('post_reply_image_limit', { count: REPLY_IMAGE_MAX })
               : null
 
-    const expanded = focused || draft.text.trim().length > 0 || draft.images.length > 0
+    /*
+     * In the popup the box is the whole point of the screen, so it opens already open: legacy's
+     * modal draws the identity row and the picture button unconditionally, where its inline bar
+     * gates both on being touched. `expanded` is therefore true from the first paint there.
+     */
+    const expanded = modal || focused || draft.text.trim().length > 0 || draft.images.length > 0
 
     const submitButton = (
         <Button
@@ -265,25 +294,51 @@ export function ReplyComposer({
              * cannot add it from outside — this component renders nothing when replies are closed,
              * and a wrapper would leave a 1px strip behind.
              */
-            className="mt-px flex min-w-0 flex-col bg-(--background-surface) px-3 py-3 md:px-6"
+            className={cn(
+                'flex min-w-0 flex-col',
+                /*
+                 * ⚠ The popup is **one sheet**, so the box brings no surface of its own. With it,
+                 * the quoted post sat on the dialog's fill and the box on `--background-surface`,
+                 * and the two read as two stacked panels — legacy's modal is flat white from the
+                 * title band to the footer. The gutter is the dialog's there too.
+                 */
+                modal ? 'py-1' : 'mt-px bg-(--background-surface) px-3 py-3 md:px-6',
+            )}
         >
             {/* `items-start`, so the avatar stays level with the first line as the box grows. */}
             <div className="flex min-w-0 items-start gap-2">
-                {author ? (
-                    <AnimatedAvatar
-                        size="medium"
-                        thumb={author.thumb}
-                        avatarVideo={author.avatarVideo}
-                        isPremium={author.isPremium}
-                        alt=""
-                        initials={
-                            author.name?.trim()
-                                ? author.name.trim().slice(0, 2).toUpperCase()
-                                : undefined
-                        }
-                        className="flex-none"
-                    />
-                ) : null}
+                {/*
+                 * The avatar column, and in the popup it carries legacy's **thread line**: a
+                 * hairline running the height of the box under the avatar, which is what joins the
+                 * quoted post above to the reply being written. `commentForm` draws it in a 1.5/12
+                 * grid column with a three-dot glyph at the foot; this is the same line at the
+                 * width the avatar already occupies, so the two blocks align without a grid.
+                 */}
+                <div
+                    className={cn('flex flex-none flex-col items-center', modal && 'self-stretch')}
+                >
+                    {author ? (
+                        <AnimatedAvatar
+                            size="medium"
+                            thumb={author.thumb}
+                            avatarVideo={author.avatarVideo}
+                            isPremium={author.isPremium}
+                            alt=""
+                            initials={
+                                author.name?.trim()
+                                    ? author.name.trim().slice(0, 2).toUpperCase()
+                                    : undefined
+                            }
+                            className="flex-none"
+                        />
+                    ) : null}
+                    {modal ? (
+                        <span
+                            aria-hidden="true"
+                            className="mt-1 w-px flex-1 bg-(--separator-default)"
+                        />
+                    ) : null}
+                </div>
 
                 <div className="flex min-w-0 flex-1 flex-col">
                     {/*
