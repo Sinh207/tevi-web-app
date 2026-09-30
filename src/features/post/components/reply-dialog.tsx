@@ -5,10 +5,12 @@ import { ResponsiveDialog } from '@shared/components/responsive-dialog'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import type { Post } from '../api/types'
+import { postDisplay } from '../lib/post-access'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
 import { useReplyDialogStore } from '../store/reply-store'
 import { PostMediaBlock } from './post-card'
 import { PostHeader } from './post-header'
+import { PostLockPanel } from './post-lock-panel'
 import { ReplyComposer } from './reply-composer'
 
 /**
@@ -43,7 +45,16 @@ import { ReplyComposer } from './reply-composer'
  * the submit button, the image rules and the three refusals a draft can carry.
  *
  * The quote carries the post's **media** as well as its words, which is legacy's `PostComment`: a
- * photo post quoted as a name and a date is a reply to nothing the reader can see.
+ * photo post quoted as a name and a date is a reply to nothing the reader can see. A post the
+ * reader has not paid for shows its **paywall** in the same slot, for the same reason and on
+ * legacy's own arrangement (`PostComment` renders `<LockPost>` beside the gallery) — quoting a
+ * locked post as a bare name and date says nothing about why there is nothing to see.
+ *
+ * Everything in the quote is a **picture**: no menu, no media viewer, no *Unlock* button. See
+ * `PostMediaBlock`'s `interactive` for the measured reason — a second `z-50` layer opened from
+ * inside this dialog interleaves with it rather than covering it. Unlocking is still offered where
+ * it belongs: `ReplyAudienceNotice`, which `ReplyComposer` renders in place of the box when the
+ * post cannot be replied to, carries its own `usePostUnlock` **and** mounts its dialogs.
  */
 export function ReplyDialog({
     author,
@@ -147,15 +158,24 @@ function ReplyDialogBody({
                 ) : null}
 
                 {/*
-                 * ⚠ `interactive={false}` — see its doc. The quote is a reference, and a media
-                 * viewer opened from inside this dialog is a second `z-50` layer that interleaves
-                 * with it rather than covering it.
+                 * The same split `PostCard` makes, and it has to be made here too: a locked post's
+                 * media is **not** drawn, because there is none to draw — what stands in its place
+                 * is the paywall. Rendering `PostMediaBlock` unconditionally showed a paid post as
+                 * a name, a date and a gap.
+                 *
+                 * ⚠ Both branches are inert. `onPress` omitted makes the panel a picture rather
+                 * than a dead button — its own prop doc calls for exactly that, and it is the same
+                 * rule as `interactive={false}` beside it.
                  */}
-                <PostMediaBlock
-                    post={post}
-                    interactive={false}
-                    testId={subTestId(testId, 'item') ?? testId}
-                />
+                {postDisplay(post) === 'locked' ? (
+                    <PostLockPanel post={post} testId={subTestId(testId, 'panel')} />
+                ) : (
+                    <PostMediaBlock
+                        post={post}
+                        interactive={false}
+                        testId={subTestId(testId, 'item') ?? testId}
+                    />
+                )}
 
                 <ReplyComposer
                     post={post}
@@ -176,7 +196,7 @@ function ReplyDialogBody({
                      * count on the card behind it is what says so.
                      */
                     onReplied={onClose}
-                    testId={subTestId(testId, 'panel')}
+                    testId={subTestId(testId, 'footer')}
                 />
             </div>
         </ResponsiveDialog>

@@ -14177,6 +14177,7 @@
             ],
             "parts": [
                 "description",
+                "footer",
                 "item",
                 "panel"
             ]
