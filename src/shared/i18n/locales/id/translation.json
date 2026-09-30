@@ -2342,5 +2342,9 @@
     "message_gift_plan_month_one": "{{count}} bulan",
     "message_gift_plan_year_one": "{{count}} tahun",
     "message_embed_followers_one": "{{value}} pengikut",
-    "message_embed_members_one": "{{value}} anggota"
+    "message_embed_members_one": "{{value}} anggota",
+    "message_popup_open_full": "Buka di Pesan",
+    "message_popup_open": "Buka obrolan",
+    "message_popup_close": "Perkecil obrolan",
+    "message_popup_see_all": "Lihat semua di Obrolan"
 }

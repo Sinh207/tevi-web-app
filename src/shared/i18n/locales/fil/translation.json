@@ -2342,5 +2342,9 @@
     "message_embed_followers_one": "{{value}} follower",
     "message_embed_followers_other": "{{value}} na follower",
     "message_embed_members_one": "{{value}} miyembro",
-    "message_embed_members_other": "{{value}} na miyembro"
+    "message_embed_members_other": "{{value}} na miyembro",
+    "message_popup_open_full": "Buksan sa Messages",
+    "message_popup_open": "Buksan ang mga chat",
+    "message_popup_close": "I-minimize ang mga chat",
+    "message_popup_see_all": "Tingnan lahat sa Chats"
 }

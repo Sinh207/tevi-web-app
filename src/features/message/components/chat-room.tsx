@@ -47,7 +47,17 @@ import { MessageThreadView } from './message-thread-view'
  * *recipient* has since been deactivated shows both the thread and the composer, and the send fails.
  * Here `wallFor` is the whole decision and the composer is drawn only when it returns nothing.
  */
-export function ChatRoom({ slug }: { slug: string }) {
+export function ChatRoom({
+    slug,
+    onBack,
+    headerExtra,
+}: {
+    slug: string
+    /** The floating window: back is its list, not `/messages`. */
+    onBack?: () => void
+    /** The window's own controls (open in full, collapse), after the room's menu. */
+    headerExtra?: ReactNode
+}) {
     const { t, currentLanguage } = useTranslation()
     const { isAuthenticated, isBootstrapping, activeId } = useAuth()
     const requireAuth = useRequireAuth()
@@ -99,11 +109,12 @@ export function ChatRoom({ slug }: { slug: string }) {
             await messageApi.deleteConversation(conversation.id, activeId)
             await refreshList()
             toast.success(t('message_conversation_deleted'), { id: 'message-action' })
-            router.push(MESSAGES_PATH)
+            if (onBack) onBack()
+            else router.push(MESSAGES_PATH)
         } catch {
             toast.error(t('message_error_delete'), { id: 'message-action' })
         }
-    }, [activeId, conversation, refreshList, router, t])
+    }, [activeId, conversation, onBack, refreshList, router, t])
 
     const [confirming, setConfirming] = useState<{ message: ChatMessage; both: boolean } | null>(
         null,
@@ -232,15 +243,19 @@ export function ChatRoom({ slug }: { slug: string }) {
             slug={slug}
             online={online}
             chatAction={conversation ? chatActions.get(conversation.id) : undefined}
+            onBack={onBack}
             actions={
-                channel && conversation && recipient?.active && !channel.is_suspended ? (
-                    <ChatRoomMenu
-                        channel={channel}
-                        conversation={conversation}
-                        name={channel.name ?? `@${channel.slug}`}
-                        onDelete={() => setConfirmingDelete(true)}
-                    />
-                ) : null
+                <>
+                    {channel && conversation && recipient?.active && !channel.is_suspended && (
+                        <ChatRoomMenu
+                            channel={channel}
+                            conversation={conversation}
+                            name={channel.name ?? `@${channel.slug}`}
+                            onDelete={() => setConfirmingDelete(true)}
+                        />
+                    )}
+                    {headerExtra}
+                </>
             }
         />
     )

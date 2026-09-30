@@ -88,6 +88,7 @@ export function ConversationRow({
     locale,
     now,
     onOpen,
+    onSelect,
     onDelete,
     testId,
     conversationId,
@@ -105,6 +106,11 @@ export function ConversationRow({
     /** One clock for the whole list, so two rows cannot disagree about "now". */
     now: number
     onOpen: () => void
+    /**
+     * Open the conversation **here** rather than on its route — the floating window's list. The row
+     * keeps its `href`, so a middle-click or ⌘-click still opens the full screen in a new tab.
+     */
+    onSelect?: (slug: string) => void
     onDelete: () => void
     testId?: string
     conversationId: string
@@ -203,7 +209,19 @@ export function ConversationRow({
                                     data-testid="message-row-link"
                                     href={conversationPath(view.slug)}
                                     aria-label={label}
-                                    onClick={onOpen}
+                                    onClick={event => {
+                                        onOpen()
+                                        if (!onSelect || !view.slug) return
+                                        const modified =
+                                            event.metaKey ||
+                                            event.ctrlKey ||
+                                            event.shiftKey ||
+                                            event.altKey ||
+                                            event.button !== 0
+                                        if (modified) return
+                                        event.preventDefault()
+                                        onSelect(view.slug)
+                                    }}
                                     className={pressClass}
                                 >
                                     {text}

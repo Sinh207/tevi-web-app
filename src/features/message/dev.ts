@@ -9,6 +9,8 @@
 import { normalizeConversations, normalizeMessages } from './api/types'
 import { toConversationView } from './lib/conversation-view'
 
+/** The floating window, drawn in the corner of the harness — signed out it shows its guest state. */
+export { ChatPopupWindow } from './components/chat-popup-window'
 export { ConversationRow } from './components/conversation-row'
 export { ConversationSkeleton } from './components/conversation-skeleton'
 export { MESSAGE_ART } from './lib/illustrations'

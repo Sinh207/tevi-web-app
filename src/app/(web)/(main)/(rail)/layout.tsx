@@ -1,3 +1,4 @@
+import { ChatPopup } from '@features/message'
 import { AppEndRail } from '@features/navigation'
 
 /**
@@ -26,12 +27,16 @@ import { AppEndRail } from '@features/navigation'
  *
  * The rail renders after `children` and is `position: fixed`, so it takes no part in flow and this
  * layout adds no wrapper. The URLs are untouched: `(rail)` is a route group.
+ *
+ * **The floating chat window lives here too**, for the same reason in reverse: legacy hides it on the
+ * Messages screens and the static pages — exactly the routes outside this group.
  */
 export default function RailLayout({ children }: { children: React.ReactNode }) {
     return (
         <>
             {children}
             <AppEndRail />
+            <ChatPopup />
         </>
     )
 }

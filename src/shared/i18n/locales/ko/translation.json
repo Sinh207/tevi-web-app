@@ -2342,5 +2342,9 @@
     "message_gift_plan_month_one": "{{count}}개월",
     "message_gift_plan_year_one": "{{count}}년",
     "message_embed_followers_one": "팔로워 {{value}}명",
-    "message_embed_members_one": "멤버 {{value}}명"
+    "message_embed_members_one": "멤버 {{value}}명",
+    "message_popup_open_full": "메시지에서 열기",
+    "message_popup_open": "채팅 열기",
+    "message_popup_close": "채팅 최소화",
+    "message_popup_see_all": "채팅에서 모두 보기"
 }

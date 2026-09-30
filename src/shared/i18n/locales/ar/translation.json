@@ -2430,5 +2430,9 @@
     "message_embed_members_two": "عضوان",
     "message_embed_members_few": "{{value}} أعضاء",
     "message_embed_members_many": "{{value}} عضوًا",
-    "message_embed_members_other": "{{value}} عضو"
+    "message_embed_members_other": "{{value}} عضو",
+    "message_popup_open_full": "فتح في الرسائل",
+    "message_popup_open": "فتح الدردشات",
+    "message_popup_close": "تصغير الدردشات",
+    "message_popup_see_all": "عرض الكل في الدردشات"
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMediaQuery } from './use-media-query'
 
 /**
  * The width legacy calls `matchUpSm` — below it, a popup is a screen rather than a card.
@@ -26,15 +26,5 @@ export const COMPACT_MAX_WIDTH = 612
  * `min-[1292px]:` and uses its hook only to gate *work*.
  */
 export function useCompactViewport(): boolean {
-    const [compact, setCompact] = useState(false)
-
-    useEffect(() => {
-        const mq = window.matchMedia(`(max-width: ${COMPACT_MAX_WIDTH - 1}px)`)
-        const update = () => setCompact(mq.matches)
-        update()
-        mq.addEventListener('change', update)
-        return () => mq.removeEventListener('change', update)
-    }, [])
-
-    return compact
+    return useMediaQuery(`(max-width: ${COMPACT_MAX_WIDTH - 1}px)`)
 }

@@ -2342,5 +2342,9 @@
     "message_gift_plan_month_one": "{{count}} tháng",
     "message_gift_plan_year_one": "{{count}} năm",
     "message_embed_followers_one": "{{value}} người theo dõi",
-    "message_embed_members_one": "{{value}} thành viên"
+    "message_embed_members_one": "{{value}} thành viên",
+    "message_popup_open_full": "Mở trang Chat",
+    "message_popup_open": "Mở cuộc trò chuyện",
+    "message_popup_close": "Thu nhỏ cuộc trò chuyện",
+    "message_popup_see_all": "Xem tất cả trong Chat"
 }

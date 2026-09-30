@@ -2342,5 +2342,9 @@
     "message_embed_followers_one": "{{value}} follower",
     "message_embed_followers_other": "{{value}} followers",
     "message_embed_members_one": "{{value}} member",
-    "message_embed_members_other": "{{value}} members"
+    "message_embed_members_other": "{{value}} members",
+    "message_popup_open_full": "Open in Messages",
+    "message_popup_open": "Open chats",
+    "message_popup_close": "Minimise chats",
+    "message_popup_see_all": "See all in Chats"
 }

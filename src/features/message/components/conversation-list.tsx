@@ -32,6 +32,7 @@ export function ConversationList({
     locale,
     now,
     onOpen,
+    onSelect,
     onDelete,
     selectedSlug,
     scrollRoot = null,
@@ -51,6 +52,8 @@ export function ConversationList({
     locale: string
     now: number
     onOpen: (conversation: Conversation) => void
+    /** Open a row in place instead of navigating — see `ConversationRow`. */
+    onSelect?: (slug: string) => void
     onDelete: (conversation: Conversation) => void
     /** The conversation open beside the list — its row is marked current. */
     selectedSlug?: string
@@ -98,6 +101,7 @@ export function ConversationList({
                             locale={locale}
                             now={now}
                             onOpen={() => onOpen(conversation)}
+                            onSelect={onSelect}
                             onDelete={() => onDelete(conversation)}
                         />
                     )

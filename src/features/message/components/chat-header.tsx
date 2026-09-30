@@ -33,6 +33,7 @@ export function ChatHeader({
     online,
     chatAction,
     actions,
+    onBack,
 }: {
     channel: Channel | null
     /** The slug from the URL — what the bar says while the space is unknown (loading, missing). */
@@ -41,6 +42,11 @@ export function ChatHeader({
     chatAction?: ChatAction
     /** The conversation's menu — drawn once there is a conversation to act on. */
     actions?: ReactNode
+    /**
+     * Back goes **here** instead of to `/messages` — the floating window, where back is its own list
+     * and is shown at every width (legacy's `handleOpenChat(false)`).
+     */
+    onBack?: () => void
 }) {
     const { t } = useTranslation()
     /* Only a space the service *says* is suspended is anonymised. One this client has not loaded —
@@ -132,8 +138,9 @@ export function ChatHeader({
                 size="small"
                 iconOnly
                 aria-label={t('message_back_to_chats')}
-                render={<Link href={MESSAGES_PATH} />}
-                className={cn(DISC, 'size-[30px] flex-none md:hidden')}
+                render={onBack ? undefined : <Link href={MESSAGES_PATH} />}
+                onClick={onBack}
+                className={cn(DISC, 'size-[30px] flex-none', !onBack && 'md:hidden')}
             >
                 <Icon name="angle-left" size={24} className="size-6 rtl:-scale-x-100" />
             </Button>

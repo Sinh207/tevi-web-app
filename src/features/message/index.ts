@@ -5,6 +5,8 @@
  * MessagesShell       the (dm) layout's frame: the conversation list, and a pane for the page
  * NoChatSelected      /messages' page — the empty room pane
  * ChatRoom            /@{slug}/messages' page — one conversation
+ * ChatPopup           the floating window on every (rail) page, from md up
+ * useOpenConversation a space's "Send message": opens the window, or the route on a phone
  * ./routes            MESSAGES_PATH + conversationPath(slug) — imports nothing, for the shell
  * ```
  *
@@ -18,14 +20,13 @@
  *   `useConversationSearch`), keyed per account, invalidated by the socket (`useConversationLive`)
  *   rather than spliced by it.
  * - "Typing…" is the one piece of socket state, and it is local to the screen (`useChatActions`).
- * - Nothing is mounted on pages that do not show a conversation. The popup is not ported.
+ * - The floating window is mounted by the `(rail)` layout only, loads its body only from `md` and
+ *   for an account, and mounts its list only once it is first opened (`ChatPopupWindow`).
  *
  * ## Not built yet
  *
- * - **Sending photos** (legacy's attachment sheet + `upload_images/{id}/{n}`). Photos *received*
- *   render and open in the post lightbox.
- * - **Link cards**: legacy turns the first Tevi URL in a message into a post / space / live /
- *   collection / membership card. Here the link is clickable text.
+ * - **Collection, event and external link cards**: space, mini-app, post and gift cards are drawn
+ *   (`message-link.ts`); the rest stay links — an external preview needs a server-side fetcher.
  * - **Message settings**: who may start a conversation (followers / members) and the shareable
  *   `/@{slug}/messages` link. Needs `messaging_settings` on `channelApi.updateMyChannel`.
  * - Legacy's **member badge** on a row (`is_my_subscriber`) — no DS mark for it exists yet.
@@ -41,6 +42,8 @@
  */
 
 export { messageKeys } from './api/message-api'
+export { ChatPopup } from './components/chat-popup'
 export { ChatRoom } from './components/chat-room'
 export { MessagesShell, NoChatSelected } from './components/messages-shell'
+export { useOpenConversation } from './hooks/use-open-conversation'
 export { conversationPath, MESSAGES_PATH } from './routes'

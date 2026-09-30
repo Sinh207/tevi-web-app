@@ -4,6 +4,7 @@ import type { Channel } from '@features/channel'
 import { ChannelEmptyState } from '@features/channel'
 import {
     ChatHeader,
+    ChatPopupWindow,
     ChatWall,
     ConversationRow,
     ConversationSkeleton,
@@ -53,6 +54,8 @@ export function MessagesPreview() {
                     </ul>
                 </div>
             </section>
+
+            <ChatPopupWindow />
 
             <section className="flex flex-col gap-2">
                 <h2 className="type-subheading-strong text-(--text-title)">Conversation</h2>

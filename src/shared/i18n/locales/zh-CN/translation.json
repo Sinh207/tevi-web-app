@@ -2342,5 +2342,9 @@
     "message_gift_plan_month_one": "{{count}} 个月",
     "message_gift_plan_year_one": "{{count}} 年",
     "message_embed_followers_one": "{{value}} 位关注者",
-    "message_embed_members_one": "{{value}} 位会员"
+    "message_embed_members_one": "{{value}} 位会员",
+    "message_popup_open_full": "在消息中打开",
+    "message_popup_open": "打开聊天",
+    "message_popup_close": "最小化聊天",
+    "message_popup_see_all": "在聊天中查看全部"
 }
