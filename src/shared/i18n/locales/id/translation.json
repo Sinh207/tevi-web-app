@@ -2047,6 +2047,7 @@
     "home_feed_error_title": "Tidak dapat memuat feed kamu",
     "home_feed_error_body": "Terjadi kesalahan di sisi kami. Coba lagi sebentar.",
     "post_reply_title": "Balas",
+    "post_reply_show_all": "Tampilkan seluruh postingan",
     "post_reply_placeholder": "Tulis balasan…",
     "post_reply_submit": "Balas",
     "post_reply_submit_priced": "Balas {{amount}}",

@@ -55,6 +55,7 @@ import {
     POST_REPLY_NO_LINKS,
     POST_TEXT,
     POST_THUMB_ONLY_IMAGE,
+    POST_VERY_LONG,
     POST_VIDEO,
     POST_VIDEO_AND_IMAGES,
     POST_VIDEO_BARE,
@@ -263,6 +264,11 @@ const GROUPS: Group[] = [
                 title: 'Long text',
                 note: 'No clamp — a feed shows whole posts, which is legacy’s behaviour.',
                 post: POST_LONG_TEXT,
+            },
+            {
+                title: 'Very long, with a picture',
+                note: 'The feed still shows it whole. Press Comment: the popup clamps it at 200 and offers Show all — the one place a post is cut.',
+                post: POST_VERY_LONG,
             },
             {
                 title: 'One image, dimensions known',

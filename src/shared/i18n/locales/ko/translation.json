@@ -2047,6 +2047,7 @@
     "home_feed_error_title": "피드를 불러오지 못했습니다",
     "home_feed_error_body": "문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
     "post_reply_title": "답글",
+    "post_reply_show_all": "게시물 전체 보기",
     "post_reply_placeholder": "답글을 입력하세요…",
     "post_reply_submit": "답글",
     "post_reply_submit_priced": "답글 {{amount}}",

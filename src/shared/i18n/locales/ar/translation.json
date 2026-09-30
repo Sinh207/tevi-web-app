@@ -2095,6 +2095,7 @@
     "home_feed_error_title": "تعذّر تحميل موجزك",
     "home_feed_error_body": "حدث خطأ من جانبنا. حاول مرة أخرى بعد قليل.",
     "post_reply_title": "رد",
+    "post_reply_show_all": "عرض المنشور كاملاً",
     "post_reply_placeholder": "اكتب ردًا…",
     "post_reply_submit": "رد",
     "post_reply_submit_priced": "رد {{amount}}",
