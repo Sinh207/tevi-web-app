@@ -2047,6 +2047,7 @@
     "home_feed_error_title": "Couldn't load your feed",
     "home_feed_error_body": "Something went wrong on our side. Try again in a moment.",
     "post_reply_title": "Reply",
+    "post_reply_show_all": "Show all of this post",
     "post_reply_placeholder": "Write a reply…",
     "post_reply_submit": "Reply",
     "post_reply_submit_priced": "Reply {{amount}}",

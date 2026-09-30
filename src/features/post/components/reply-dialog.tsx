@@ -5,6 +5,8 @@ import { ResponsiveDialog } from '@shared/components/responsive-dialog'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import { Icon } from '@shared/ui/icon'
+import type { ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Post } from '../api/types'
 import { postDisplay } from '../lib/post-access'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
@@ -186,7 +188,7 @@ function ReplyDialogBody({
                         />
                     </span>
 
-                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                    <CollapsibleQuote testId={testId}>
                         {post.text ? (
                             <p
                                 data-testid={subTestId(testId, 'description')}
@@ -224,7 +226,7 @@ function ReplyDialogBody({
                                 testId={subTestId(testId, 'item') ?? testId}
                             />
                         )}
-                    </div>
+                    </CollapsibleQuote>
                 </div>
 
                 <ReplyComposer
@@ -250,5 +252,86 @@ function ReplyDialogBody({
                 />
             </div>
         </ResponsiveDialog>
+    )
+}
+
+/**
+ * Legacy's height ceiling on the quoted post, so a long one does not push the reply box off screen.
+ *
+ * Two numbers and they are **not** the same, which is legacy's own arrangement (`PostContentWrapper`)
+ * and worth keeping: a post is only clamped once it is taller than `THRESHOLD`, and what it is
+ * clamped **to** is `COLLAPSED`. So a post of 300px is shown whole rather than cut to 200 — the
+ * cut only pays for itself when there is a lot to hide. One number for both would clip almost every
+ * post with a picture in it.
+ */
+const QUOTE_THRESHOLD = 400
+const QUOTE_COLLAPSED = 200
+
+/**
+ * The quoted post, clamped when it is long, with a control that opens it.
+ *
+ * ## Measured, not guessed from the text
+ *
+ * The decision is `scrollHeight`, taken after render — a post is tall because of its **pictures** as
+ * often as its words, and a character count cannot see a gallery. `ResizeObserver` rather than
+ * legacy's `setTimeout(…, 100)` plus a resize listener: an image that decodes late changes the
+ * height after that timer has fired, and legacy then shows an unclamped wall of post. The observer
+ * fires on exactly that.
+ *
+ * ## The fade is a token, not white
+ *
+ * Legacy's overlay is a hard-coded white gradient, which in dark mode is a white smear across the
+ * bottom of the post. This fades to `--background-subtle`, the fill both the dialog card and the
+ * sheet actually paint, so it disappears into whichever one is behind it.
+ */
+function CollapsibleQuote({ children, testId }: { children: ReactNode; testId: string }) {
+    const { t } = useTranslation()
+    const ref = useRef<HTMLDivElement>(null)
+    const [expanded, setExpanded] = useState(false)
+    const [long, setLong] = useState(false)
+
+    useEffect(() => {
+        const node = ref.current
+        if (!node) return
+        const measure = () => setLong(node.scrollHeight > QUOTE_THRESHOLD)
+        measure()
+        const observer = new ResizeObserver(measure)
+        observer.observe(node)
+        return () => observer.disconnect()
+    }, [])
+
+    const clamped = long && !expanded
+
+    return (
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <div
+                ref={ref}
+                className="relative flex min-w-0 flex-col gap-2"
+                style={clamped ? { maxHeight: QUOTE_COLLAPSED, overflow: 'hidden' } : undefined}
+            >
+                {children}
+                {clamped ? (
+                    <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-b from-transparent to-(--background-subtle)"
+                    />
+                ) : null}
+            </div>
+
+            {long ? (
+                <div className="flex justify-center">
+                    <button
+                        type="button"
+                        onClick={() => setExpanded(current => !current)}
+                        aria-expanded={expanded}
+                        aria-label={t(expanded ? 'common_show_less' : 'post_reply_show_all')}
+                        data-testid={subTestId(testId, 'apply')}
+                        className="flex size-8 items-center justify-center rounded-full border border-(--separator-default) bg-(--background-surface) text-(--icon-default) shadow-xs transition-colors hover:bg-(--background-segment)"
+                    >
+                        <Icon name={expanded ? 'angle-up' : 'angle-down'} size={16} />
+                    </button>
+                </div>
+            ) : null}
+        </div>
     )
 }

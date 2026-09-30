@@ -118,6 +118,28 @@ export const POST_LONG_TEXT = makePostFixture({
     reply_count: 0,
 })
 
+/**
+ * Tall enough to trip the **reply popup's** clamp, which `POST_LONG_TEXT` is not.
+ *
+ * That one is six paragraphs and measures ~250px in the popup's column — under the 400px threshold
+ * legacy sets, so it is shown whole and the *Show all* control never appears. A fixture that cannot
+ * reach a threshold cannot demonstrate it, and the clamp was unverifiable until this existed.
+ *
+ * Fourteen paragraphs **and** a picture, because the two are the case that matters: a post is tall
+ * from its media as often as from its words, and the measurement has to see both.
+ */
+export const POST_VERY_LONG = makePostFixture({
+    id: 'very-long',
+    text: Array.from(
+        { length: 14 },
+        (_, i) =>
+            `Paragraph ${i + 1}: long enough that the reply popup clamps this post and offers to open it.`,
+    ).join('\n'),
+    images: [{ uri: '/illustrations/monetization/donation.webp', width: 1600, height: 900 }],
+    reaction_count: 3,
+    reply_count: 1,
+})
+
 /** One image, with dimensions — so the card reserves the right box before it loads. */
 export const POST_ONE_IMAGE = makePostFixture({
     id: 'one-image',

@@ -2047,6 +2047,7 @@
     "home_feed_error_title": "无法加载你的信息流",
     "home_feed_error_body": "我们这边出了点问题，请稍后再试。",
     "post_reply_title": "回复",
+    "post_reply_show_all": "显示全部内容",
     "post_reply_placeholder": "写下回复…",
     "post_reply_submit": "回复",
     "post_reply_submit_priced": "回复 {{amount}}",

@@ -14321,6 +14321,7 @@
                 "ReplyDialog"
             ],
             "parts": [
+                "apply",
                 "description",
                 "footer",
                 "item",
