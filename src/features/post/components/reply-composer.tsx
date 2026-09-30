@@ -333,10 +333,24 @@ export function ReplyComposer({
                         />
                     ) : null}
                     {modal ? (
-                        <span
-                            aria-hidden="true"
-                            className="mt-1 w-px flex-1 bg-(--separator-default)"
-                        />
+                        <>
+                            <span
+                                aria-hidden="true"
+                                className="mt-1 w-px flex-1 bg-(--separator-default)"
+                            />
+                            {/*
+                             * ⚠ The three dots at the **foot** of the line, which legacy draws in both
+                             * of its thread columns (`PostComment` and the form beside it): a 24px
+                             * vertical ellipsis in the same `#E0E0E0` as the rule above it. They are
+                             * what makes the line read as *the thread carries on* rather than as a
+                             * bracket that stops. Without them it ends in mid-air.
+                             */}
+                            <Icon
+                                name="more-vertical"
+                                size={24}
+                                className="flex-none text-(--separator-default)"
+                            />
+                        </>
                     ) : null}
                 </div>
 

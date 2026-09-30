@@ -4,6 +4,7 @@ import { DialogScreenHeader } from '@shared/components/dialog-screen-header'
 import { ResponsiveDialog } from '@shared/components/responsive-dialog'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
+import { Icon } from '@shared/ui/icon'
 import type { Post } from '../api/types'
 import { postDisplay } from '../lib/post-access'
 import type { ReplyComposerAuthor } from '../lib/reply-author'
@@ -171,6 +172,18 @@ function ReplyDialogBody({
                      */}
                     <span aria-hidden="true" className="flex w-10 flex-none flex-col items-center">
                         <span className="w-px flex-1 bg-(--separator-default)" />
+                        {/*
+                         * ⚠ The three dots at the **foot** of the line, which legacy draws in both
+                         * of its thread columns (`PostComment` and the form beside it): a 24px
+                         * vertical ellipsis in the same `#E0E0E0` as the rule above it. They are
+                         * what makes the line read as *the thread carries on* rather than as a
+                         * bracket that stops. Without them it ends in mid-air.
+                         */}
+                        <Icon
+                            name="more-vertical"
+                            size={24}
+                            className="flex-none text-(--separator-default)"
+                        />
                     </span>
 
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
