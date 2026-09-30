@@ -3385,9 +3385,27 @@ client re-reads `get_message/{id}`; `seen_message` carries `{ conversation_id }`
 re-reads the newest page for the ticks. Legacy writes the frames' own payloads instead. Is
 `get_message/{id}` readable by both members immediately after the frame?
 
+**7. A photo message is `send_message` then `upload_images/{id}/{n}/`.** `send_message` with
+`msg_type: 'IMAGE'` and `number_of_media: N` creates the message; each photo is then a multipart
+`POST` with field **`image`**, `n` the 0-based index doubling as the dedup number. All three clients
+agree on that; they disagree on the trailing slash (the apps send it, legacy does not) — this client
+sends it. What does the other side see between the two steps: an `IMAGE` message with no photos,
+or nothing until the last upload? And does `n` really dedupe, i.e. is a retried upload a replace?
+
+**8. Mute is `update_conversation_config/{id}` with `{ muted }`.** Android's body, the one a shipped
+client sends. Legacy's (never rendered) menu wraps it — `{ config: { muted } }`. If the service
+reads the wrapper, the toggle answers 200 and changes nothing.
+
+**9. `stats.last_read_message_id`** is where iOS anchors "Unread messages"; without it the divider
+falls back to `stats.unread_messages`. **`attachments[]`** (iOS) carries the Premium gift as
+`{ type: 'TEVI_PREMIUM_GIFT', preview_data: { product_name } }`, while Android and legacy read the
+same gift out of a `tevi://TEVI_PREMIUM_GIFT?product_name=…` text — both are read. **`recipient.is_bot`**
+hides the attach button, as on iOS.
+
 Encoded in: `features/message/api/message-api.ts` (`openConversation`, `getMessages`,
-`sendMessage`, `deleteMessage`), `features/message/hooks/use-thread.ts`,
-`features/message/lib/message-thread.ts`.
+`sendMessage`, `uploadPhoto`, `setMuted`, `deleteMessage`), `features/message/hooks/use-thread.ts`,
+`features/message/hooks/use-composer.ts`, `features/message/lib/message-thread.ts`,
+`features/message/lib/message-link.ts`.
 
 ---
 

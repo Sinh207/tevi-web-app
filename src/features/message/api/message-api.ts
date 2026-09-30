@@ -90,6 +90,14 @@ export function forgetConversationCache(accountId: string | null) {
     return invalidateETagCache(accountId ?? ANON_SCOPE, `${api.apiBase}/${RECENT_PATH}`)
 }
 
+/** A name the service can read the type from — a canvas-encoded photo arrives as a nameless blob. */
+function photoFileName(photo: Blob, index: number): string {
+    if (photo instanceof File && photo.name) return photo.name
+    const extension =
+        photo.type === 'image/png' ? 'png' : photo.type === 'image/webp' ? 'webp' : 'jpg'
+    return `photo-${index}.${extension}`
+}
+
 function scoped(accountId?: string | null, signal?: AbortSignal) {
     return { signal, ...(accountId ? { accountId } : {}) }
 }
@@ -187,12 +195,6 @@ export const messageApi = {
     },
 
     /**
-     * Delete a conversation — **for this account only**. The wire word is *flush*, and
-     * `both_members=false` is what keeps the other side's copy: legacy sends it as a query
-     * parameter with an empty body (its `post(uri, params, data)` puts the object in `params`), so
-     * this does too.
-     */
-    /**
      * Open (or create) the direct conversation with a space's owner.
      *
      * One request where legacy makes two: it asks `can_start_conversation_with` first and then
@@ -256,18 +258,24 @@ export const messageApi = {
     },
 
     /**
-     * Send a text message. `parser: 'PLAIN'` is legacy's, and the reason nothing a reader types is
-     * ever parsed as markup by the service.
+     * Send a message. `parser: 'PLAIN'` is legacy's, and the reason nothing a reader types is ever
+     * parsed as markup by the service.
+     *
+     * A photo message is **two steps**, on all three clients: this call creates an `IMAGE` message
+     * that announces how many photos are coming (`number_of_media`), and each photo is then
+     * uploaded against the id it returns (`uploadPhoto`). The caption is this message's text.
      */
     async sendMessage({
         conversationId,
         text,
         replyToId,
+        photoCount = 0,
         accountId,
     }: {
         conversationId: string
         text: string
         replyToId?: string | null
+        photoCount?: number
         accountId?: string | null
     }): Promise<ChatMessage | null> {
         const body = await api.post<unknown>(
@@ -275,13 +283,48 @@ export const messageApi = {
             {
                 conversation_id: conversationId,
                 input_text: text,
-                msg_type: 'TEXT',
+                msg_type: photoCount > 0 ? 'IMAGE' : 'TEXT',
                 parser: 'PLAIN',
                 ...(replyToId ? { reply_to_id: replyToId } : {}),
+                ...(photoCount > 0 ? { number_of_media: photoCount } : {}),
             },
             scoped(accountId),
         )
         return parseMessage(body)
+    },
+
+    /**
+     * One photo of an `IMAGE` message, multipart field `image`. `index` is the photo's 0-based
+     * position and doubles as the service's dedup number, so a retried upload replaces rather
+     * than adds. The trailing slash is the apps' (legacy omits it).
+     *
+     * `multipart/form-data` is named for the reason `transfer-api.ts` gives: `apiClient`'s JSON
+     * default would otherwise serialise the `FormData` to `{}` and the photo would silently vanish.
+     */
+    uploadPhoto(
+        messageId: string,
+        index: number,
+        photo: Blob,
+        { accountId, signal }: { accountId?: string | null; signal?: AbortSignal } = {},
+    ) {
+        const form = new FormData()
+        form.append('image', photo, photoFileName(photo, index))
+        return api.post(`v2/rpc/upload_images/${encodeURIComponent(messageId)}/${index}/`, form, {
+            ...scoped(accountId, signal),
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
+    },
+
+    /**
+     * Mute or unmute a conversation for this account. Android's body (`{ muted }`), which is the
+     * one a shipped client sends — legacy's never-rendered menu wraps it in `{ config }` (**B112**).
+     */
+    setMuted(conversationId: string, muted: boolean, accountId?: string | null) {
+        return api.post(
+            `v2/rpc/update_conversation_config/${encodeURIComponent(conversationId)}`,
+            { muted },
+            scoped(accountId),
+        )
     },
 
     async editMessage(messageId: string, text: string, accountId?: string | null) {
@@ -326,6 +369,12 @@ export const messageApi = {
         )
     },
 
+    /**
+     * Delete a conversation — **for this account only**. The wire word is *flush*, and
+     * `both_members=false` is what keeps the other side's copy: legacy sends it as a query
+     * parameter with an empty body (its `post(uri, params, data)` puts the object in `params`), so
+     * this does too.
+     */
     deleteConversation(conversationId: string, accountId?: string | null) {
         return api.post(
             `v2/rpc/flush_conversation/${encodeURIComponent(conversationId)}/`,

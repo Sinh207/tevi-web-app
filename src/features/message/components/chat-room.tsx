@@ -2,6 +2,7 @@
 
 import { useAuth, useRequireAuth } from '@features/auth'
 import { ChannelEmptyState, useChannel, useMyChannel } from '@features/channel'
+import { OpenMiniAppButton } from '@features/mini-app'
 import { NsfwGatePanel, useNsfwGate } from '@features/nsfw'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { safeExternalUrl } from '@shared/lib/safe-url'
@@ -25,11 +26,13 @@ import { useComposer, WAVE } from '../hooks/use-composer'
 import { useRoom } from '../hooks/use-room'
 import { useThread } from '../hooks/use-thread'
 import { ONLINE_WINDOW_MS } from '../lib/conversation-view'
-import { isOwnMessage, messageText } from '../lib/message-thread'
+import { firstUnreadId, isOwnMessage, messageText } from '../lib/message-thread'
 import { ROOM_GROUND, THREAD_SCROLLBAR } from '../lib/room-ground'
 import { MESSAGES_PATH } from '../routes'
 import { ChatHeader } from './chat-header'
+import { ChatRoomMenu } from './chat-room-menu'
 import { ChannelIntro, ChatWall, type ChatWallKind } from './chat-walls'
+import { ConnectionBanner } from './connection-banner'
 import { MessageComposer } from './message-composer'
 import { MessageThreadView } from './message-thread-view'
 
@@ -177,6 +180,24 @@ export function ChatRoom({ slug }: { slug: string }) {
         [activeId, composer.sendText, t, thread.put],
     )
 
+    /*
+     * Where "Unread messages" goes — decided **once**, from the conversation as it was opened.
+     * Marking it seen (on open) and every message after would otherwise move the line or remove it
+     * while the reader is looking for it.
+     */
+    const [unreadFrom, setUnreadFrom] = useState<string | null | undefined>(undefined)
+    useEffect(() => {
+        if (unreadFrom !== undefined || !conversation || thread.isLoading) return
+        if (thread.messages.length === 0) return
+        setUnreadFrom(
+            firstUnreadId(thread.messages, {
+                lastReadId: conversation.stats?.last_read_message_id ?? null,
+                unread: conversation.stats?.unread_messages ?? 0,
+                isOwn,
+            }),
+        )
+    }, [conversation, isOwn, thread.isLoading, thread.messages, unreadFrom])
+
     /* ---------------------------------------------------------------- the decision */
 
     const recipient = conversation?.recipient ?? null
@@ -211,6 +232,16 @@ export function ChatRoom({ slug }: { slug: string }) {
             slug={slug}
             online={online}
             chatAction={conversation ? chatActions.get(conversation.id) : undefined}
+            actions={
+                channel && conversation && recipient?.active && !channel.is_suspended ? (
+                    <ChatRoomMenu
+                        channel={channel}
+                        conversation={conversation}
+                        name={channel.name ?? `@${channel.slug}`}
+                        onDelete={() => setConfirmingDelete(true)}
+                    />
+                ) : null
+            }
         />
     )
 
@@ -325,6 +356,7 @@ export function ChatRoom({ slug }: { slug: string }) {
     return (
         <RoomFrame>
             {header}
+            <ConnectionBanner />
             {conversation && thread.isLoading ? (
                 <div className="flex min-h-0 flex-1 flex-col">
                     <ThreadSkeleton />
@@ -357,6 +389,7 @@ export function ChatRoom({ slug }: { slug: string }) {
                     isFetchingOlder={thread.isFetchingOlder}
                     loadOlder={thread.loadOlder}
                     locale={currentLanguage}
+                    unreadFrom={unreadFrom ?? null}
                     footer={
                         wall === 'first' ? (
                             <ChatWall
@@ -378,7 +411,20 @@ export function ChatRoom({ slug }: { slug: string }) {
                 />
             )}
 
-            {conversation && !wall && <MessageComposer composer={composer} />}
+            {conversation && !wall && (
+                <MessageComposer
+                    composer={composer}
+                    canAttach={!recipient?.is_bot}
+                    /* iOS's Open button beside the field, for a space that is a mini app. */
+                    leading={
+                        <OpenMiniAppButton
+                            channel={channel}
+                            size="medium"
+                            className="mb-1 flex-none"
+                        />
+                    }
+                />
+            )}
 
             {/*
              * Both deletes are confirmed, as legacy's are: "for everyone" cannot be undone and

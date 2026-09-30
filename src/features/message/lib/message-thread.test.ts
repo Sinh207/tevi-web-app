@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { MessagePage } from '../api/message-api'
 import { normalizeMessages } from '../api/types'
 import {
+    firstUnreadId,
     flattenThread,
     formatDayLabel,
     groupByDay,
@@ -170,5 +171,29 @@ describe('splitLinks', () => {
         expect(
             splitLinks('javascript:alert(1) data:text/html,x').every(p => p.kind === 'text'),
         ).toBe(true)
+    })
+})
+
+describe('firstUnreadId', () => {
+    const rows = normalizeMessages([
+        { id: 'a', sender: { alias: 'them' }, created_at: 1 },
+        { id: 'b', sender: { alias: 'me' }, created_at: 2 },
+        { id: 'c', sender: { alias: 'them' }, created_at: 3 },
+        { id: 'd', sender: { alias: 'them' }, created_at: 4 },
+    ])
+    const isOwn = (message: { sender: { alias: string } | null }) => message.sender?.alias === 'me'
+
+    it('goes after the read point when the service names one', () => {
+        expect(firstUnreadId(rows, { lastReadId: 'a', unread: 2, isOwn })).toBe('c')
+    })
+
+    it('counts back through their messages when it does not', () => {
+        expect(firstUnreadId(rows, { lastReadId: null, unread: 1, isOwn })).toBe('d')
+        expect(firstUnreadId(rows, { lastReadId: 'gone', unread: 2, isOwn })).toBe('c')
+        expect(firstUnreadId(rows, { lastReadId: null, unread: 9, isOwn })).toBe('a')
+    })
+
+    it('draws nothing when nothing is unread', () => {
+        expect(firstUnreadId(rows, { lastReadId: 'a', unread: 0, isOwn })).toBeNull()
     })
 })

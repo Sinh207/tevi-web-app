@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { gateOf, messageApi } from '../api/message-api'
 import { CHAT_ACTION, type ChatMessage, type ConversationGate } from '../api/types'
 import { messageText, type PendingMessage } from '../lib/message-thread'
+import { preparePhoto } from '../lib/photo-files'
 
 /**
  * How often "typing" is re-sent while the reader keeps typing. Receivers expire an indicator after
@@ -19,6 +20,28 @@ export const TYPING_REPEAT_MS = 4_000
 
 /** Legacy's Get started message — the whole of a first conversation's opening line. */
 export const WAVE = '👋👋👋'
+
+/** Tries per photo — the apps' three (iOS waits 1s between them, Android 800ms). */
+const UPLOAD_ATTEMPTS = 3
+const UPLOAD_BACKOFF_MS = 1_000
+
+async function uploadWithRetry(upload: () => Promise<unknown>): Promise<boolean> {
+    for (let attempt = 1; attempt <= UPLOAD_ATTEMPTS; attempt++) {
+        try {
+            await upload()
+            return true
+        } catch {
+            if (attempt < UPLOAD_ATTEMPTS) {
+                await new Promise(resolve => setTimeout(resolve, UPLOAD_BACKOFF_MS))
+            }
+        }
+    }
+    return false
+}
+
+function revoke(item: PendingMessage) {
+    for (const url of item.previews) URL.revokeObjectURL(url)
+}
 
 export interface UseComposerResult {
     text: string
@@ -34,6 +57,10 @@ export interface UseComposerResult {
     submit: () => void
     /** Send a message with no draft involved — Get started's wave. */
     sendText: (value: string) => void
+    /** Send photos with a caption, replying to whatever the composer is replying to. */
+    sendPhotos: (files: File[], caption: string) => void
+    /** The photo sheet is open — the other side sees "sending a photo" meanwhile. */
+    setAttaching: (attaching: boolean) => void
     pending: PendingMessage[]
     retry: (localId: string) => void
     discard: (localId: string) => void
@@ -135,21 +162,59 @@ export function useComposer({
     // Leaving the conversation mid-word ends the indicator on the other side.
     useEffect(() => stopTyping, [stopTyping])
 
+    // Leaving the conversation with sends in flight: their previews go with the screen.
+    const pendingRef = useRef(pending)
+    pendingRef.current = pending
+    useEffect(
+        () => () => {
+            for (const item of pendingRef.current) revoke(item)
+        },
+        [],
+    )
+
     /* ---------------------------------------------------------------- send */
+
+    /**
+     * The photo half of a send, after `send_message` has created the message: each photo uploaded
+     * against its id (in parallel, three tries apiece), with "sending a photo" repeated for the
+     * other side while it runs. Resolves to whether every photo arrived.
+     */
+    const uploadPhotos = useCallback(
+        async (messageId: string, files: File[]) => {
+            signal(CHAT_ACTION.uploadingPhoto)
+            const repeat = setInterval(() => signal(CHAT_ACTION.uploadingPhoto), TYPING_REPEAT_MS)
+            try {
+                const results = await Promise.all(
+                    files.map(async (file, index) => {
+                        const photo = await preparePhoto(file)
+                        return uploadWithRetry(() =>
+                            messageApi.uploadPhoto(messageId, index, photo, {
+                                accountId: activeId,
+                            }),
+                        )
+                    }),
+                )
+                return results.every(Boolean)
+            } finally {
+                clearInterval(repeat)
+                signal(CHAT_ACTION.none)
+            }
+        },
+        [activeId, signal],
+    )
 
     const deliver = useCallback(
         async (item: PendingMessage) => {
+            let message: ChatMessage | null
             try {
-                const message = await messageApi.sendMessage({
+                message = await messageApi.sendMessage({
                     conversationId,
                     text: item.text,
                     replyToId: item.replyTo?.id ?? null,
+                    photoCount: item.files.length,
                     accountId: activeId,
                 })
                 if (!message) throw new Error('empty')
-                onMessage(message)
-                setPending(list => list.filter(row => row.localId !== item.localId))
-                onChanged()
             } catch (error) {
                 setPending(list =>
                     list.map(row =>
@@ -167,27 +232,63 @@ export function useComposer({
                  * otherwise — API_ERRORS.md. The failed bubble stays with its Retry.
                  */
                 toast.error(apiErrorText(error) ?? t('message_error_send'), { id: 'message-send' })
+                return
             }
+
+            /*
+             * Past this point the message exists on the server, so the bubble is the server's
+             * whatever happens to the photos: retrying `send_message` would post a second message.
+             * A photo that failed all its tries is said once, and the message shows what arrived.
+             */
+            if (item.files.length > 0) {
+                const complete = await uploadPhotos(message.id, item.files)
+                message =
+                    (await messageApi.getMessage(message.id, activeId).catch(() => null)) ?? message
+                if (!complete) {
+                    toast.error(t('message_error_photo_upload'), { id: 'message-photo' })
+                }
+            }
+            onMessage(message)
+            revoke(item)
+            setPending(list => list.filter(row => row.localId !== item.localId))
+            onChanged()
         },
-        [activeId, conversationId, onChanged, onGate, onMessage, t],
+        [activeId, conversationId, onChanged, onGate, onMessage, t, uploadPhotos],
     )
 
-    const sendText = useCallback(
-        (value: string) => {
-            const body = value.trim()
-            if (!body || !conversationId) return
+    /** Queue a send — the bubble appears at once, pending, and `deliver` takes it from there. */
+    const enqueue = useCallback(
+        (body: string, files: File[] = []) => {
+            if (!conversationId || (!body && files.length === 0)) return
             const item: PendingMessage = {
                 localId: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                 text: body,
                 replyTo,
                 createdAt: Date.now(),
                 status: 'sending',
+                files,
+                previews: files.map(file => URL.createObjectURL(file)),
             }
             setPending(list => [...list, item])
             setReplyTo(null)
             deliver(item)
         },
         [conversationId, deliver, replyTo],
+    )
+
+    const sendText = useCallback((value: string) => enqueue(value.trim()), [enqueue])
+
+    const sendPhotos = useCallback(
+        (files: File[], caption: string) => {
+            if (files.length === 0 || caption.trim().length > limit) return
+            enqueue(caption.trim(), files)
+        },
+        [enqueue, limit],
+    )
+
+    const setAttaching = useCallback(
+        (attaching: boolean) => signal(attaching ? CHAT_ACTION.uploadingPhoto : CHAT_ACTION.none),
+        [signal],
     )
 
     const submit = useCallback(async () => {
@@ -230,7 +331,11 @@ export function useComposer({
     )
 
     const discard = useCallback((localId: string) => {
-        setPending(list => list.filter(row => row.localId !== localId))
+        setPending(list => {
+            const item = list.find(row => row.localId === localId)
+            if (item) revoke(item)
+            return list.filter(row => row.localId !== localId)
+        })
     }, [])
 
     /* ---------------------------------------------------------------- reply / edit / delete */
@@ -287,6 +392,8 @@ export function useComposer({
         cancel,
         submit,
         sendText,
+        sendPhotos,
+        setAttaching,
         pending,
         retry,
         discard,

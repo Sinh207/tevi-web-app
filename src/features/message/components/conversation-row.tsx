@@ -25,6 +25,7 @@ import type { ReactNode } from 'react'
 import { CHAT_ACTION, type ChatAction } from '../api/types'
 import { formatConversationTime } from '../lib/conversation-time'
 import type { ConversationView } from '../lib/conversation-view'
+import { giftPlanLabel } from '../lib/message-link'
 import { conversationPath } from '../routes'
 import { ConversationRowMenu } from './conversation-row-menu'
 
@@ -337,6 +338,16 @@ function PreviewLine({
                     className="size-5 flex-none rounded-(--radius-sm) object-cover"
                 />
                 <span className="truncate">{t('message_preview_photo')}</span>
+            </span>
+        )
+    }
+
+    if (view.preview.kind === 'gift') {
+        return (
+            <span className={cn('block w-full min-w-0 truncate', tone)}>
+                {t(view.sentByMe ? 'message_preview_gift_sent' : 'message_preview_gift_received', {
+                    plan: giftPlanLabel(view.preview.productName, t),
+                })}
             </span>
         )
     }

@@ -4,11 +4,26 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
-import { type KeyboardEvent, useEffect, useLayoutEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
+import {
+    type ClipboardEvent,
+    type KeyboardEvent,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from 'react'
 import type { UseComposerResult } from '../hooks/use-composer'
 import { DISC } from '../lib/disc'
 import { messageText } from '../lib/message-thread'
+import { PHOTO_TYPES } from '../lib/photo-files'
+
+/* Loaded on first open — most visits to a conversation never attach anything. */
+const PhotoAttachDialog = dynamic(() =>
+    import('./photo-attach-dialog').then(module => module.PhotoAttachDialog),
+)
 
 /** Four lines of `type-body-default` (16 × 1.5) plus the field's padding — legacy's `maxRows: 4`. */
 const MAX_FIELD_PX = 4 * 24 + 16
@@ -19,9 +34,9 @@ const MAX_FIELD_PX = 4 * 24 + 16
  * No ground of its own — it sits on the room's pattern, as legacy's footer does; the field and the
  * reply banner carry their own fills.
  *
- * Legacy's grey tail-shaped box and white Send disc, as drawn. Its attachment button is not drawn:
- * the sheet it opens is not built yet (photos are the next step), and a control that opens nothing
- * is worse than none — nor is there a paperclip in the icon library to draw it with.
+ * Legacy's grey tail-shaped box and white Send disc, as drawn, with its paperclip at the start of
+ * the box opening the photo sheet (`PhotoAttachDialog`). A photo **pasted** into the field opens the
+ * same sheet with it already in — legacy drops a paste of an image on the floor.
  *
  * ## Enter sends — except while an IME is composing
  *
@@ -36,14 +51,21 @@ const MAX_FIELD_PX = 4 * 24 + 16
  */
 export function MessageComposer({
     composer,
+    canAttach = true,
+    leading,
     onFocusRequest,
 }: {
     composer: UseComposerResult
+    /** `false` for a bot — iOS hides the attach button there, and bots read no photos. */
+    canAttach?: boolean
+    /** Drawn before the box — the space's mini app, where it has one. */
+    leading?: ReactNode
     /** Called with the field so the room can focus it after Reply / Edit. */
     onFocusRequest?: (field: HTMLTextAreaElement | null) => void
 }) {
     const { t } = useTranslation()
     const field = useRef<HTMLTextAreaElement>(null)
+    const [attach, setAttach] = useState<{ files: File[] } | null>(null)
     const { text, setText, limit, overLimit, canSend, replyTo, editing, cancel, submit, onBlur } =
         composer
     const length = text.trim().length
@@ -78,9 +100,22 @@ export function MessageComposer({
     }
 
     const context = editing ?? replyTo
+    /* Photos are a new message, so an edit in progress offers none. */
+    const attachable = canAttach && !editing
+
+    const onPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
+        if (!attachable) return
+        const files = [...event.clipboardData.files].filter(file =>
+            (PHOTO_TYPES as readonly string[]).includes(file.type),
+        )
+        if (files.length === 0) return
+        event.preventDefault()
+        setAttach({ files })
+    }
 
     return (
         <div className="flex flex-none items-end gap-2 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-3">
+            {leading}
             {/*
              * Legacy's box (`footerChat`): one `#F4F4F4` block holding the reply / edit card and the
              * field, square at the bottom-end corner where a curved tail joins it — a speech bubble
@@ -134,20 +169,37 @@ export function MessageComposer({
                     </div>
                 )}
 
-                <textarea
-                    ref={field}
-                    data-testid="message-composer-input"
-                    rows={1}
-                    value={text}
-                    onChange={event => setText(event.target.value)}
-                    onKeyDown={onKeyDown}
-                    onBlur={onBlur}
-                    placeholder={t('message_composer_placeholder')}
-                    aria-label={t('message_composer_placeholder')}
-                    aria-invalid={overLimit || undefined}
-                    aria-describedby={overLimit ? 'message-composer-limit' : undefined}
-                    className="block max-h-[112px] w-full resize-none overflow-y-auto bg-transparent py-2 ps-1 type-body-default text-(--text-title) outline-none [field-sizing:content] placeholder:text-(--text-placeholder)"
-                />
+                <div className="flex items-end">
+                    {attachable && (
+                        /* Legacy's paperclip: 24px, dark, flush with the field's first line. */
+                        <Button
+                            data-testid="message-composer-attach"
+                            variant="ghost"
+                            size="small"
+                            iconOnly
+                            aria-label={t('message_attach_photos')}
+                            onClick={() => setAttach({ files: [] })}
+                            className="my-1 size-8 flex-none text-(--icon-default)"
+                        >
+                            <Icon name="paperclip" size={24} className="size-6" />
+                        </Button>
+                    )}
+                    <textarea
+                        ref={field}
+                        data-testid="message-composer-input"
+                        rows={1}
+                        value={text}
+                        onChange={event => setText(event.target.value)}
+                        onKeyDown={onKeyDown}
+                        onBlur={onBlur}
+                        onPaste={onPaste}
+                        placeholder={t('message_composer_placeholder')}
+                        aria-label={t('message_composer_placeholder')}
+                        aria-invalid={overLimit || undefined}
+                        aria-describedby={overLimit ? 'message-composer-limit' : undefined}
+                        className="block max-h-[112px] min-w-0 flex-1 resize-none overflow-y-auto bg-transparent py-2 ps-1 type-body-default text-(--text-title) outline-none [field-sizing:content] placeholder:text-(--text-placeholder)"
+                    />
+                </div>
                 {/* The counter appears in the last 10% and past the limit — never as clutter
                     on a two-word message. */}
                 {length > limit * 0.9 && (
@@ -178,6 +230,17 @@ export function MessageComposer({
             >
                 <Icon name="send" weight="filled" size={24} className="size-6 rtl:-scale-x-100" />
             </Button>
+
+            {attach && (
+                <PhotoAttachDialog
+                    open
+                    onOpenChange={open => {
+                        if (!open) setAttach(null)
+                    }}
+                    composer={composer}
+                    initialFiles={attach.files}
+                />
+            )}
         </div>
     )
 }

@@ -10,6 +10,7 @@ import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Loader } from '@shared/ui/loader'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { CHAT_ACTION, type ChatAction } from '../api/types'
 import { DISC } from '../lib/disc'
 import { MESSAGES_PATH } from '../routes'
@@ -31,12 +32,15 @@ export function ChatHeader({
     slug: urlSlug,
     online,
     chatAction,
+    actions,
 }: {
     channel: Channel | null
     /** The slug from the URL — what the bar says while the space is unknown (loading, missing). */
     slug?: string
     online: boolean
     chatAction?: ChatAction
+    /** The conversation's menu — drawn once there is a conversation to act on. */
+    actions?: ReactNode
 }) {
     const { t } = useTranslation()
     /* Only a space the service *says* is suspended is anonymised. One this client has not loaded —
@@ -144,6 +148,7 @@ export function ChatHeader({
             ) : (
                 <div className="flex min-w-0 flex-1 items-center gap-1">{identity}</div>
             )}
+            {actions}
         </header>
     )
 }

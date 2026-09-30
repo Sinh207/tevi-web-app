@@ -85,7 +85,15 @@ export function markConversationSeen(data: ConversationData, id: string): Conver
         pages: data.pages.map(page => ({
             ...page,
             results: page.results.map(row =>
-                row.id === id ? { ...row, stats: { ...row.stats, unread_messages: 0 } } : row,
+                row.id === id
+                    ? {
+                          ...row,
+                          stats: {
+                              last_read_message_id: row.stats?.last_read_message_id ?? null,
+                              unread_messages: 0,
+                          },
+                      }
+                    : row,
             ),
         })),
     }

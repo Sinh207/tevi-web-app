@@ -13,11 +13,14 @@ import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Loader } from '@shared/ui/loader'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 import type { ChatMessage, InlineMenuItem, ReplyMessage } from '../api/types'
 import { DISC } from '../lib/disc'
-import { formatMessageTime, isPremiumGift, messageText, splitLinks } from '../lib/message-thread'
+import { messageEmbed, teviPath } from '../lib/message-link'
+import { formatMessageTime, messageText, splitLinks } from '../lib/message-thread'
 import { PHOTO_SIZE, type PhotoTile, photoLayout } from '../lib/photo-layout'
+import { MessageEmbed } from './message-embed'
 
 /**
  * One message — legacy's `itemMessage/common/layout` with its text, image and reply parts.
@@ -31,17 +34,16 @@ import { PHOTO_SIZE, type PhotoTile, photoLayout } from '../lib/photo-layout'
  *
  * ## What is rendered, and what is not yet
  *
- * Text (with links), photos, replies, bot buttons and the Premium gift line. Legacy additionally
- * resolves the first URL in a message into a post, space, live, collection or membership **card**
- * (`useMessageType`, one short-link request per message). Here such a message is its text with the
- * link clickable — correct, just not rich. The cards are a follow-up, and each reuses a feature's
- * own card rather than a DM-only copy.
+ * Text (with links), photos, replies, bot buttons, and a card for a Premium gift, a space (or its
+ * mini app) or a post (`messageEmbed` decides, `MessageEmbed` draws). Legacy also cards collections,
+ * events and external sites; those stay links — `message-link.ts` says why.
  *
  * ## Nothing here is HTML
  *
  * Legacy renders `html_text` with `dangerouslySetInnerHTML`, i.e. the other person's markup as ours.
- * This renders `text` as text nodes and turns `http(s)` runs into links, each through
- * `safeExternalUrl`, opened in a new tab with `noopener noreferrer`.
+ * This renders `text` as text nodes and turns `http(s)` runs into links: a Tevi link navigates in
+ * this tab (`teviPath`), anything else goes through `safeExternalUrl` into a new tab with
+ * `noopener noreferrer`.
  */
 export function MessageBubble({
     message,
@@ -56,10 +58,18 @@ export function MessageBubble({
     onRetry,
     onDiscard,
     onOpenImage,
+    embedRoot,
 }: {
     message: Pick<
         ChatMessage,
-        'id' | 'text' | 'markdown_text' | 'images' | 'created_at' | 'edited_at' | 'seen_by'
+        | 'id'
+        | 'text'
+        | 'markdown_text'
+        | 'images'
+        | 'created_at'
+        | 'edited_at'
+        | 'seen_by'
+        | 'attachments'
     > & {
         sender?: ChatMessage['sender']
         reply_message?: ReplyMessage | null
@@ -78,10 +88,13 @@ export function MessageBubble({
     onDiscard?: () => void
     /** The index of the photo pressed, for the viewer. */
     onOpenImage?: (index: number) => void
+    /** The thread's scroller, which a card waits to come near before it fetches. */
+    embedRoot?: Element | null
 }) {
     const { t } = useTranslation()
     const text = messageText(message)
-    const gift = isPremiumGift(message)
+    const embed = status === 'sent' ? messageEmbed(message) : null
+    const gift = embed?.kind === 'gift'
     const seen = Object.keys(message.seen_by ?? {}).length > 0
     const time = formatMessageTime(message.created_at, locale)
     const items = message.inline_menu?.items ?? []
@@ -118,12 +131,9 @@ export function MessageBubble({
                      * wide as they are — `w-0 min-w-full` lets the photos set the width and the text
                      * wrap to it instead of stretching the bubble.
                      */}
-                    {gift ? (
-                        <p className="flex items-center gap-2 px-2 pt-2 type-dense-strong text-(--text-title)">
-                            <Icon name="premium" weight="filled" size={20} />
-                            {t('message_premium_gift')}
-                        </p>
-                    ) : text ? (
+                    {/* A gift's text is its `tevi://` link, which says nothing to a reader — the card
+                        says it instead. */}
+                    {!gift && text ? (
                         <p
                             className={cn(
                                 'px-2 pt-2 type-dense-default whitespace-pre-wrap break-words text-(--text-title) [overflow-wrap:anywhere]',
@@ -133,6 +143,17 @@ export function MessageBubble({
                             <LinkedText text={text} />
                         </p>
                     ) : null}
+
+                    {embed && (
+                        <MessageEmbed
+                            embed={embed}
+                            own={own}
+                            senderSlug={
+                                message.sender?.channel_slug ?? message.sender?.slug ?? null
+                            }
+                            root={embedRoot}
+                        />
+                    )}
 
                     {message.images.length > 0 && (
                         <MessagePhotos
@@ -417,7 +438,15 @@ function MessagePhotos({
                 className,
             )}
         >
-            <Image src={urls[index]} alt="" fill sizes={`${width}px`} className="object-cover" />
+            {/* A photo still being sent is a `blob:` preview, which the optimiser cannot fetch. */}
+            <Image
+                src={urls[index]}
+                alt=""
+                fill
+                sizes={`${width}px`}
+                unoptimized={urls[index].startsWith('blob:')}
+                className="object-cover"
+            />
         </button>
     )
 
@@ -504,6 +533,19 @@ function LinkedText({ text }: { text: string }) {
         const key = `${index}-${part.value.slice(0, 12)}`
         if (part.kind === 'text') {
             parts.push(<span key={key}>{part.value}</span>)
+            return
+        }
+        const inApp = teviPath(part.href)
+        if (inApp) {
+            parts.push(
+                <Link
+                    key={key}
+                    href={inApp}
+                    className="text-(--text-link) underline [overflow-wrap:anywhere]"
+                >
+                    {part.value}
+                </Link>,
+            )
             return
         }
         const href = safeExternalUrl(part.href)

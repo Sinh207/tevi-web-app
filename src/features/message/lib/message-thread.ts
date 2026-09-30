@@ -32,6 +32,10 @@ export type PendingMessage = {
     replyTo: ChatMessage | null
     createdAt: number
     status: 'sending' | 'failed'
+    /** The photos as picked — kept so Retry can send them again. Empty for a text message. */
+    files: File[]
+    /** `blob:` previews of `files`, drawn in the pending bubble and revoked when it leaves. */
+    previews: string[]
 }
 
 /** Every loaded message, oldest first, one copy per id. */
@@ -182,14 +186,6 @@ export function messageText(message: Pick<ChatMessage, 'text' | 'markdown_text'>
     return message.text ?? message.markdown_text ?? null
 }
 
-/**
- * A Premium gift is sent as a text message whose body is an app link. Legacy renders a card for
- * it; this client renders the gift as a labelled line rather than an unreadable `tevi://` URL.
- */
-export function isPremiumGift(message: Pick<ChatMessage, 'text'>): boolean {
-    return message.text?.startsWith('tevi://TEVI_PREMIUM_GIFT') ?? false
-}
-
 export type TextPart =
     | { kind: 'text'; value: string }
     | { kind: 'link'; value: string; href: string }
@@ -218,4 +214,32 @@ export function splitLinks(text: string): TextPart[] {
     }
     if (last < text.length) parts.push({ kind: 'text', value: text.slice(last) })
     return parts
+}
+
+/**
+ * Where "Unread messages" goes: the id of the first of the other side's messages the reader has not
+ * read, or `null` for no divider.
+ *
+ * iOS anchors on `stats.last_read_message_id` — the divider sits after that message — and this does
+ * too when the message is loaded. Without it (an older service, or a read point further back than
+ * the newest page) the count decides: the `unread`-th of their messages from the end. When there are
+ * more unread than loaded, the divider goes above the oldest loaded one of theirs — everything below
+ * it is unread, which is still true.
+ */
+export function firstUnreadId(
+    messages: ChatMessage[],
+    {
+        lastReadId,
+        unread,
+        isOwn,
+    }: { lastReadId: string | null; unread: number; isOwn: (message: ChatMessage) => boolean },
+): string | null {
+    if (unread <= 0) return null
+    const readAt = lastReadId ? messages.findIndex(message => message.id === lastReadId) : -1
+    if (readAt >= 0) {
+        return messages.slice(readAt + 1).find(message => !isOwn(message))?.id ?? null
+    }
+    const theirs = messages.filter(message => !isOwn(message))
+    if (theirs.length === 0) return null
+    return theirs[Math.max(0, theirs.length - unread)].id
 }

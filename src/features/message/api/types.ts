@@ -64,6 +64,16 @@ function nullable<T extends z.ZodType>(schema: T) {
         .catch(null)
 }
 
+const optionalId = z
+    .union([z.string(), z.number()])
+    .transform(value => {
+        const text = String(value).trim()
+        return text === '' ? null : text
+    })
+    .nullish()
+    .transform(value => value ?? null)
+    .catch(null)
+
 const imageSchema = z.looseObject({
     url: nullableText,
     w: z.coerce.number().catch(0),
@@ -120,6 +130,8 @@ const recipientSchema = z.looseObject({
     space_tier_image: nullableText,
     blocking: boolish,
     last_online_at: epochMs,
+    /** A bot account (LeoAI, a creator's bot). iOS hides the attach button for one. */
+    is_bot: boolish,
 })
 
 const conversationSchema = z.looseObject({
@@ -137,7 +149,13 @@ const conversationSchema = z.looseObject({
             muted: boolish,
         }),
     ),
-    stats: nullable(z.looseObject({ unread_messages: count })),
+    stats: nullable(
+        z.looseObject({
+            unread_messages: count,
+            /** The last message this account has read — where iOS draws "Unread messages". */
+            last_read_message_id: optionalId,
+        }),
+    ),
     latest_message: nullable(latestMessageSchema),
 })
 
@@ -196,16 +214,6 @@ export function parseChatActionFrame(
  * are **B112**.
  */
 
-const optionalId = z
-    .union([z.string(), z.number()])
-    .transform(value => {
-        const text = String(value).trim()
-        return text === '' ? null : text
-    })
-    .nullish()
-    .transform(value => value ?? null)
-    .catch(null)
-
 const senderSchema = z.looseObject({
     id,
     alias: id,
@@ -224,6 +232,16 @@ const inlineItemSchema = z.looseObject({
     label: nullableText,
     action: nullableText,
     target: nullableText,
+})
+
+/**
+ * A message's attachment — iOS reads `attachments[0]`, and the one type anyone has seen is the
+ * Premium gift (`TEVI_PREMIUM_GIFT`, with the plan in `preview_data.product_name`). Android and
+ * legacy read the same gift out of a `tevi://` text instead; `premiumGiftName` takes both.
+ */
+const attachmentSchema = z.looseObject({
+    type: nullableText,
+    preview_data: nullable(z.looseObject({ product_name: nullableText })),
 })
 
 const messageFields = {
@@ -245,6 +263,7 @@ const messageFields = {
         .transform(value => value ?? {})
         .catch({}),
     reply_to_id: optionalId,
+    attachments: z.array(attachmentSchema).catch([]),
 }
 
 const replyMessageSchema = z.looseObject(messageFields)
@@ -270,6 +289,7 @@ const chatMessageSchema = z.looseObject({
 export type ChatMessage = z.infer<typeof chatMessageSchema>
 export type ReplyMessage = z.infer<typeof replyMessageSchema>
 export type InlineMenuItem = z.infer<typeof inlineItemSchema>
+export type MessageAttachment = z.infer<typeof attachmentSchema>
 
 /** One message, or `null` when the body is not one (no id). */
 export function parseMessage(value: unknown): ChatMessage | null {

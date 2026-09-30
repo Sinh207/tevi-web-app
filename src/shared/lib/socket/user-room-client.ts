@@ -109,17 +109,24 @@ export function onUserRoomEvent(
 }
 
 /**
- * Follow the room's connection status — told only when it **changes**, so a listener can tell a
- * reconnect (`disconnected` → `connected`) from the first connect. Same lazy attach as
+ * Follow the room's connection status — told only when it **changes** (plus, with `immediate`, where
+ * it stands on attach), so a listener can tell a reconnect (`disconnected` → `connected`) from the
+ * first connect. Same lazy attach as
  * `onUserRoomEvent`: nothing loads `socket.io-client` that would not have loaded anyway.
  */
-export function onUserRoomStatus(listener: (status: UserRoomStatus) => void): () => void {
+export function onUserRoomStatus(
+    listener: (status: UserRoomStatus) => void,
+    { immediate = false }: { immediate?: boolean } = {},
+): () => void {
     let off: (() => void) | null = null
     let cancelled = false
 
     void ensureRoom().then(instance => {
         if (cancelled) return
         let last = instance.status()
+        // A reader of the *state* (a banner) needs where it stands now; a reader of *changes*
+        // (`useSocketReconnect`) must not be told about a connect it did not see happen.
+        if (immediate) listener(last)
         off = instance.subscribeStatus(() => {
             const next = instance.status()
             if (next === last) return

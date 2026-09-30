@@ -1,4 +1,5 @@
 import type { Conversation, ConversationRecipient } from '../api/types'
+import { isPremiumGift, premiumGiftName } from './message-link'
 
 /**
  * Everything a conversation row *shows*, derived once from the payload — so the row is markup and
@@ -14,6 +15,8 @@ export const ONLINE_WINDOW_MS = 5 * 60_000
 export type ConversationPreview =
     | { kind: 'text'; text: string }
     | { kind: 'photo'; thumb: string }
+    /** A Premium gift — its text is a `tevi://` link, so the row words it (Android's line). */
+    | { kind: 'gift'; productName: string | null }
     | { kind: 'none' }
 
 export type ConversationView = {
@@ -71,6 +74,7 @@ function previewOf(conversation: Conversation): ConversationPreview {
     if (!message) return { kind: 'none' }
     const image = message.images[0]
     if (image?.url) return { kind: 'photo', thumb: image.url }
+    if (isPremiumGift(message)) return { kind: 'gift', productName: premiumGiftName(message) }
     /*
      * `text` before `html_text`. Legacy prefers the HTML, but the plain spelling is the same words
      * without markup to strip — it is only when a client sent HTML alone that the fallback runs.

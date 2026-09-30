@@ -6,7 +6,7 @@ import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Loader } from '@shared/ui/loader'
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatMessage, InlineMenuItem } from '../api/types'
 import { DISC } from '../lib/disc'
 import { formatDayLabel, groupByDay, type PendingMessage } from '../lib/message-thread'
@@ -49,6 +49,7 @@ export function MessageThreadView({
     loadOlder,
     locale,
     footer,
+    unreadFrom = null,
     onReply,
     onEdit,
     onDelete,
@@ -67,6 +68,8 @@ export function MessageThreadView({
     locale: string
     /** A wall or the Get started panel, drawn after the last message. */
     footer?: ReactNode
+    /** The first message the reader had not read when the room opened — "Unread messages" goes above it. */
+    unreadFrom?: string | null
     onReply: (message: ChatMessage) => void
     onEdit: (message: ChatMessage) => void
     onDelete: (message: ChatMessage, both: boolean) => void
@@ -76,7 +79,29 @@ export function MessageThreadView({
     onDiscard: (localId: string) => void
 }) {
     const { t } = useTranslation()
-    const scroller = useRef<HTMLDivElement>(null)
+    const scroller = useRef<HTMLDivElement | null>(null)
+    /* The same node as state, for the cards that measure "near the screen" against it. */
+    const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null)
+    const attachScroller = useCallback((node: HTMLDivElement | null) => {
+        scroller.current = node
+        setScrollRoot(node)
+    }, [])
+
+    /*
+     * Open at the divider rather than at the bottom — iOS's behaviour, and the point of having one:
+     * a reader with thirty unread lands on the first of them. Once, and only if it is above the fold.
+     */
+    const divider = useRef<HTMLDivElement>(null)
+    const scrolledToUnread = useRef(false)
+    useEffect(() => {
+        const node = divider.current
+        const root = scroller.current
+        if (!node || !root || scrolledToUnread.current) return
+        scrolledToUnread.current = true
+        if (node.getBoundingClientRect().top < root.getBoundingClientRect().top) {
+            node.scrollIntoView({ block: 'start' })
+        }
+    })
     const [awayFromBottom, setAwayFromBottom] = useState(false)
     const [unseen, setUnseen] = useState(0)
     const [viewer, setViewer] = useState<{ urls: string[]; index: number } | null>(null)
@@ -128,7 +153,7 @@ export function MessageThreadView({
     return (
         <div className="relative flex min-h-0 flex-1 flex-col">
             <div
-                ref={scroller}
+                ref={attachScroller}
                 data-testid="message-thread"
                 onScroll={onScroll}
                 className={cn(
@@ -157,18 +182,33 @@ export function MessageThreadView({
                             {day.messages.map(message => {
                                 const own = isOwn(message)
                                 return (
-                                    <MessageBubble
-                                        key={message.id}
-                                        message={message}
-                                        own={own}
-                                        locale={locale}
-                                        onReply={() => onReply(message)}
-                                        onCopy={() => onCopy(message)}
-                                        onEdit={own ? () => onEdit(message) : undefined}
-                                        onDelete={both => onDelete(message, both)}
-                                        onInline={item => onInline(message, item)}
-                                        onOpenImage={index => openImage(message, index)}
-                                    />
+                                    <Fragment key={message.id}>
+                                        {message.id === unreadFrom && (
+                                            <div
+                                                ref={divider}
+                                                data-testid="message-thread-unread"
+                                                className="my-2 flex items-center gap-2 type-caption-label text-(--white)"
+                                            >
+                                                <span className="h-px flex-1 bg-(--opacity-white-50)" />
+                                                <span className="rounded-(--radius-fill) bg-(--opacity-black-25) px-3 py-0.5 backdrop-blur-[2.5px]">
+                                                    {t('message_unread_divider')}
+                                                </span>
+                                                <span className="h-px flex-1 bg-(--opacity-white-50)" />
+                                            </div>
+                                        )}
+                                        <MessageBubble
+                                            message={message}
+                                            own={own}
+                                            locale={locale}
+                                            onReply={() => onReply(message)}
+                                            onCopy={() => onCopy(message)}
+                                            onEdit={own ? () => onEdit(message) : undefined}
+                                            onDelete={both => onDelete(message, both)}
+                                            onInline={item => onInline(message, item)}
+                                            onOpenImage={index => openImage(message, index)}
+                                            embedRoot={scrollRoot}
+                                        />
+                                    </Fragment>
                                 )
                             })}
                         </section>
@@ -184,7 +224,8 @@ export function MessageThreadView({
                                 id: item.localId,
                                 text: item.text,
                                 markdown_text: null,
-                                images: [],
+                                images: item.previews.map(url => ({ url, w: 0, h: 0 })),
+                                attachments: [],
                                 created_at: item.createdAt,
                                 edited_at: null,
                                 seen_by: {},

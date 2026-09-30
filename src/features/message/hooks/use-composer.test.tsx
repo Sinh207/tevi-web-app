@@ -18,7 +18,13 @@ const api = vi.hoisted(() => ({
     editMessage: vi.fn(),
     deleteMessage: vi.fn(),
     sendChatAction: vi.fn(() => Promise.resolve()),
+    uploadPhoto: vi.fn(),
+    getMessage: vi.fn(),
 }))
+
+// jsdom has no object URLs; the previews only need to be strings that can be revoked.
+URL.createObjectURL = vi.fn(() => 'blob:preview')
+URL.revokeObjectURL = vi.fn()
 vi.mock('../api/message-api', async importOriginal => ({
     ...(await importOriginal<typeof import('../api/message-api')>()),
     messageApi: api,
@@ -165,5 +171,57 @@ describe('useComposer', () => {
         act(() => result.current.setText('h'))
         act(() => result.current.onBlur())
         expect(api.sendChatAction).toHaveBeenLastCalledWith('c1', 'NONE', 'acc-1')
+    })
+
+    describe('photos', () => {
+        const photo = () => new File(['x'], 'a.jpg', { type: 'image/jpeg' })
+        const [created] = normalizeMessages([{ id: 'img-1', text: 'look', created_at: 1 }])
+        const [uploaded] = normalizeMessages([
+            { id: 'img-1', text: 'look', created_at: 1, images: [{ url: 'https://x/1' }] },
+        ])
+
+        it('creates the message, uploads each photo against it, then shows the server copy', async () => {
+            api.sendMessage.mockResolvedValueOnce(created)
+            api.uploadPhoto.mockResolvedValue({})
+            api.getMessage.mockResolvedValueOnce(uploaded)
+            const { result, onMessage } = setup()
+
+            await act(async () => result.current.sendPhotos([photo(), photo()], ' look '))
+
+            expect(api.sendMessage).toHaveBeenCalledWith(
+                expect.objectContaining({ text: 'look', photoCount: 2 }),
+            )
+            expect(api.uploadPhoto.mock.calls.map(call => [call[0], call[1]])).toEqual([
+                ['img-1', 0],
+                ['img-1', 1],
+            ])
+            expect(onMessage).toHaveBeenCalledWith(uploaded)
+            expect(result.current.pending).toEqual([])
+            expect(URL.revokeObjectURL).toHaveBeenCalledTimes(2)
+        })
+
+        /* The message exists once `send_message` answers, so a photo that will not upload must not
+           turn into a second send — the apps' three tries, then the message as the server has it. */
+        it('never sends the message twice when a photo keeps failing', async () => {
+            vi.useFakeTimers()
+            try {
+                api.sendMessage.mockResolvedValueOnce(created)
+                api.uploadPhoto.mockRejectedValue(new Error('503'))
+                api.getMessage.mockResolvedValueOnce(created)
+                const { result, onMessage } = setup()
+
+                await act(async () => {
+                    result.current.sendPhotos([photo()], '')
+                    await vi.runAllTimersAsync()
+                })
+
+                expect(api.uploadPhoto).toHaveBeenCalledTimes(3)
+                expect(api.sendMessage).toHaveBeenCalledTimes(1)
+                expect(onMessage).toHaveBeenCalledWith(created)
+                expect(toast.error).toHaveBeenCalled()
+            } finally {
+                vi.useRealTimers()
+            }
+        })
     })
 })

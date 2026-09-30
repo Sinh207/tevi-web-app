@@ -143,6 +143,8 @@ function ThreadPreview({ now, locale }: { now: number; locale: string }) {
         },
         submit: () => setText(''),
         sendText: () => undefined,
+        sendPhotos: () => undefined,
+        setAttaching: () => undefined,
         onBlur: () => undefined,
         pending: [],
         retry: () => undefined,
@@ -166,6 +168,8 @@ function ThreadPreview({ now, locale }: { now: number; locale: string }) {
                         replyTo: null,
                         createdAt: now,
                         status: 'sending',
+                        files: [],
+                        previews: [],
                     },
                     {
                         localId: 'local-2',
@@ -173,6 +177,8 @@ function ThreadPreview({ now, locale }: { now: number; locale: string }) {
                         replyTo: null,
                         createdAt: now,
                         status: 'failed',
+                        files: [],
+                        previews: [],
                     },
                 ]}
                 isOwn={m => m.sender?.alias === '1'}

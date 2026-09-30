@@ -222,7 +222,13 @@ export function threadFixtures(now: number) {
                 ],
             },
         },
-        { id: 't8', sender: them, text: 'tevi://TEVI_PREMIUM_GIFT?id=1', created_at: minutes(2) },
+        {
+            id: 't8',
+            sender: them,
+            text: 'tevi://TEVI_PREMIUM_GIFT?product_name=Gift%20Premium%20(3%20months)',
+            created_at: minutes(2),
+        },
+        { id: 't9', sender: me, text: 'My space: https://tevi.com/@ada', created_at: minutes(1) },
     ])
 }
 
