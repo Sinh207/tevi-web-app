@@ -404,7 +404,12 @@ export function ReplyComposer({
                                 event.preventDefault()
                                 send()
                             }}
-                            className="type-body-default max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-(--text-title) outline-none placeholder:text-(--text-placeholder) disabled:opacity-60"
+                            /*
+                             * 14, where legacy's `ContentInput` is 16. A ramp to 16 from `md` is
+                             * what this wanted and `md:type-*` does not work — see the note in
+                             * `reply-dialog.tsx`. 14 is the size that matches the quote above it.
+                             */
+                            className="type-dense-default max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-(--text-title) outline-none placeholder:text-(--text-placeholder) disabled:opacity-60"
                         />
                         {/* At rest the button sits **here**, on the input's own line. */}
                         {expanded ? null : submitButton}
@@ -477,9 +482,17 @@ export function ReplyComposer({
                                     event.preventDefault()
                                     fileRef.current?.click()
                                 }}
-                                className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
+                                className="flex size-9 flex-none items-center justify-center rounded-full text-(--icon-default) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
                             >
-                                <Icon name="image" size={20} />
+                                {/*
+                                 * `images`, not `image` — the correction `post-composer-body.tsx`
+                                 * already made and wrote down: legacy's `upload-media.svg` is
+                                 * **two stacked frames**, rendered from the real asset to identify
+                                 * it. The single frame was the first guess here too, at 20 and in
+                                 * the secondary tint, so the two composers disagreed about the same
+                                 * control.
+                                 */}
+                                <Icon name="images" size={24} />
                             </button>
                             {submitButton}
                         </div>
