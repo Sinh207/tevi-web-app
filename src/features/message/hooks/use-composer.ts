@@ -6,8 +6,8 @@ import { apiErrorText } from '@shared/lib/api/error-message'
 import { useWebConfig } from '@shared/lib/remote-config'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { messageApi } from '../api/message-api'
-import { CHAT_ACTION, type ChatMessage } from '../api/types'
+import { gateOf, messageApi } from '../api/message-api'
+import { CHAT_ACTION, type ChatMessage, type ConversationGate } from '../api/types'
 import { messageText, type PendingMessage } from '../lib/message-thread'
 
 /**
@@ -38,6 +38,8 @@ export interface UseComposerResult {
     retry: (localId: string) => void
     discard: (localId: string) => void
     remove: (message: ChatMessage, both: boolean) => Promise<boolean>
+    /** The field lost focus — the other side stops seeing "typing". */
+    onBlur: () => void
 }
 
 /**
@@ -62,6 +64,7 @@ export function useComposer({
     onMessage,
     onDropped,
     onChanged,
+    onGate,
 }: {
     conversationId: string
     /** The server's copy of a sent or edited message. */
@@ -70,6 +73,12 @@ export function useComposer({
     onDropped: (id: string) => void
     /** Anything that changes the conversation's preview in the list. */
     onChanged: () => void
+    /**
+     * A write was refused with one of the messenger's wall codes (`C001`, `MSG002`, …) — the room
+     * swaps the composer for that wall. Both apps do this on a send, not only on open: a block or a
+     * lapsed membership is only found out when the next message bounces.
+     */
+    onGate?: (gate: ConversationGate) => void
 }): UseComposerResult {
     const { activeId } = useAuth()
     const { t } = useTranslation()
@@ -147,6 +156,12 @@ export function useComposer({
                         row.localId === item.localId ? { ...row, status: 'failed' } : row,
                     ),
                 )
+                const gate = gateOf(error)
+                if (gate) {
+                    // The wall explains it; a toast saying the same thing would be twice.
+                    onGate?.(gate)
+                    return
+                }
                 /*
                  * The API's own sentence where it sent one ("You can't message this space"), ours
                  * otherwise — API_ERRORS.md. The failed bubble stays with its Retry.
@@ -154,7 +169,7 @@ export function useComposer({
                 toast.error(apiErrorText(error) ?? t('message_error_send'), { id: 'message-send' })
             }
         },
-        [activeId, conversationId, onChanged, onMessage, t],
+        [activeId, conversationId, onChanged, onGate, onMessage, t],
     )
 
     const sendText = useCallback(
@@ -187,7 +202,12 @@ export function useComposer({
                 setTextState('')
                 onChanged()
             } catch (error) {
-                toast.error(apiErrorText(error) ?? t('message_error_edit'), { id: 'message-edit' })
+                const gate = gateOf(error)
+                if (gate) onGate?.(gate)
+                else
+                    toast.error(apiErrorText(error) ?? t('message_error_edit'), {
+                        id: 'message-edit',
+                    })
             } finally {
                 setBusy(false)
             }
@@ -195,7 +215,7 @@ export function useComposer({
         }
         sendText(trimmed)
         setTextState('')
-    }, [activeId, canSend, editing, onChanged, onMessage, sendText, stopTyping, t, trimmed])
+    }, [activeId, canSend, editing, onChanged, onGate, onMessage, sendText, stopTyping, t, trimmed])
 
     const retry = useCallback(
         (localId: string) => {
@@ -241,13 +261,17 @@ export function useComposer({
                 if (editing?.id === message.id) cancel()
                 return true
             } catch (error) {
-                toast.error(apiErrorText(error) ?? t('message_error_delete_message'), {
-                    id: 'message-delete',
-                })
+                const gate = gateOf(error)
+                if (gate) onGate?.(gate)
+                else {
+                    toast.error(apiErrorText(error) ?? t('message_error_delete_message'), {
+                        id: 'message-delete',
+                    })
+                }
                 return false
             }
         },
-        [activeId, cancel, editing?.id, onChanged, onDropped, t],
+        [activeId, cancel, editing?.id, onChanged, onDropped, onGate, t],
     )
 
     return {
@@ -267,5 +291,8 @@ export function useComposer({
         retry,
         discard,
         remove,
+        /* iOS sends NONE on `textViewDidEndEditing`; without it a reader who clicks away mid-word
+           shows "typing" for the rest of the other side's expiry. */
+        onBlur: stopTyping,
     }
 }

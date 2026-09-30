@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
+
+import { ApiError } from '@shared/lib/api/errors'
 import { act, render } from '@testing-library/react'
+import { toast } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { normalizeMessages } from '../api/types'
 import { type UseComposerResult, useComposer } from './use-composer'
@@ -16,7 +19,10 @@ const api = vi.hoisted(() => ({
     deleteMessage: vi.fn(),
     sendChatAction: vi.fn(() => Promise.resolve()),
 }))
-vi.mock('../api/message-api', () => ({ messageApi: api }))
+vi.mock('../api/message-api', async importOriginal => ({
+    ...(await importOriginal<typeof import('../api/message-api')>()),
+    messageApi: api,
+}))
 
 const [serverCopy] = normalizeMessages([{ id: 'srv-1', text: 'hello', created_at: 1 }])
 
@@ -24,13 +30,20 @@ function setup() {
     const onMessage = vi.fn()
     const onDropped = vi.fn()
     const onChanged = vi.fn()
+    const onGate = vi.fn()
     const result = {} as { current: UseComposerResult }
     function Probe() {
-        result.current = useComposer({ conversationId: 'c1', onMessage, onDropped, onChanged })
+        result.current = useComposer({
+            conversationId: 'c1',
+            onMessage,
+            onDropped,
+            onChanged,
+            onGate,
+        })
         return null
     }
     render(<Probe />)
-    return { result, onMessage, onDropped, onChanged }
+    return { result, onMessage, onDropped, onChanged, onGate }
 }
 
 describe('useComposer', () => {
@@ -132,5 +145,25 @@ describe('useComposer', () => {
         })
         expect(api.deleteMessage).toHaveBeenLastCalledWith('d-1', true, 'acc-1')
         expect(onDropped).toHaveBeenCalledWith('d-1')
+    })
+
+    /* Both apps answer a refused send with the wall it names (Android's `MSG001`–`MSG005` branch),
+       not a toast — the composer is the wrong thing to leave on screen when nothing can be sent. */
+    it('turns a gated refusal into a wall, and keeps the toast for everything else', async () => {
+        api.sendMessage.mockRejectedValueOnce(
+            new ApiError({ message: 'blocked', status: 400, code: 'MSG002' }),
+        )
+        const { result, onGate } = setup()
+        act(() => result.current.setText('hello'))
+        await act(async () => result.current.submit())
+        expect(onGate).toHaveBeenCalledWith('blocked-me')
+        expect(toast.error).not.toHaveBeenCalled()
+    })
+
+    it('lets the typing signal end when the field loses focus', () => {
+        const { result } = setup()
+        act(() => result.current.setText('h'))
+        act(() => result.current.onBlur())
+        expect(api.sendChatAction).toHaveBeenLastCalledWith('c1', 'NONE', 'acc-1')
     })
 })

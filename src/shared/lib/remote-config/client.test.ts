@@ -116,7 +116,7 @@ describe('fetchRemoteConfigSnapshot', () => {
 
         const snapshot = await fetchRemoteConfigSnapshot()
 
-        expect(snapshot.web.directMessage.limitCharacters).toBe(500)
+        expect(snapshot.web.directMessage.limitCharacters).toBe(1000)
         expect(snapshot.event.chargeStarInLive.viewer.defaultCountry?.enable).toBe(true)
     })
 
@@ -144,7 +144,7 @@ describe('fetchRemoteConfigSnapshot', () => {
         const snapshot = await fetchRemoteConfigSnapshot()
         expect(sdk.getRemoteConfig).not.toHaveBeenCalled()
         expect(snapshot.isRemote).toBe(false)
-        expect(snapshot.web.directMessage.limitCharacters).toBe(500)
+        expect(snapshot.web.directMessage.limitCharacters).toBe(1000)
     })
 
     /** Never rejects: a config read failing is not something a screen should have to handle. */

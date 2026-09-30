@@ -19,10 +19,11 @@ export interface UseRoomResult {
  * loading flag it clears in two places; here the channel is `useChannel` and this is one query over
  * `start_conversation_with` (see `openConversation` for why one call is enough).
  *
- * **`is_followed` is in the key.** Following from the wall patches the cached channel
- * (`useChannelActions`), the key moves, and the room is asked again — the wall turns into the
- * conversation without this hook being told anything. Legacy wires the same thing through an event
- * emitter and a second `start` call from the follow handler.
+ * **`is_followed` and `blocking_channel` are in the key.** Following or unblocking from a wall
+ * patches the cached channel (`useChannelActions`), the key moves, and the room is asked again — the
+ * wall turns into the conversation without this hook being told anything. Legacy wires the same
+ * thing through an event emitter and a second `start` call from the follow handler; Android calls
+ * `start_conversation_with` again after both.
  *
  * `refetchOnMount: 'always'`, because the member wall's way out is a purchase on another page: a
  * reader who comes back from `/@{slug}/membership` must not see the wall they just paid through
@@ -32,9 +33,10 @@ export function useRoom(channel: Channel | null | undefined): UseRoomResult {
     const { activeId, isAuthenticated } = useAuth()
     const ownerId = channel?.owner_id ?? ''
     const followed = channel?.is_followed ?? false
+    const blocking = channel?.blocking_channel ?? false
 
     const query = useQuery({
-        queryKey: messageKeys.room(ownerId, followed, activeId),
+        queryKey: messageKeys.room(ownerId, followed, blocking, activeId),
         queryFn: () => messageApi.openConversation(ownerId, activeId),
         enabled: isAuthenticated && ownerId !== '',
         refetchOnMount: 'always',

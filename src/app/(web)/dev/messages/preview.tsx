@@ -143,6 +143,7 @@ function ThreadPreview({ now, locale }: { now: number; locale: string }) {
         },
         submit: () => setText(''),
         sendText: () => undefined,
+        onBlur: () => undefined,
         pending: [],
         retry: () => undefined,
         discard: () => undefined,

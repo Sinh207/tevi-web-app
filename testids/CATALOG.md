@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-875 ids across 29 surfaces.
+878 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -481,8 +481,8 @@ Routes: `/[slug]/messages`, `/messages`
 |---|---|---|
 | `message-bubble` | `data-message-id` | `src/features/message/components/message-bubble.tsx:92` |
 | `message-bubble-copy` | — | `src/features/message/components/message-bubble.tsx:277` |
-| `message-bubble-delete` | — | `src/features/message/components/message-bubble.tsx:315` |
-| `message-bubble-delete-all` | — | `src/features/message/components/message-bubble.tsx:330` |
+| `message-bubble-delete` | — | `src/features/message/components/message-bubble.tsx:317` |
+| `message-bubble-delete-all` | — | `src/features/message/components/message-bubble.tsx:332` |
 | `message-bubble-edit` | — | `src/features/message/components/message-bubble.tsx:304` |
 | `message-bubble-menu-reply` | — | `src/features/message/components/message-bubble.tsx:289` |
 | `message-bubble-menu-trigger` | — | `src/features/message/components/message-bubble.tsx:264` |
@@ -490,13 +490,14 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-bubble-remove` | — | `src/features/message/components/message-bubble.tsx:186` |
 | `message-bubble-reply` | — | `src/features/message/components/message-bubble.tsx:248` |
 | `message-bubble-retry` | — | `src/features/message/components/message-bubble.tsx:178` |
-| `message-composer-cancel` | — | `src/features/message/components/message-composer.tsx:123` |
-| `message-composer-input` | — | `src/features/message/components/message-composer.tsx:138` |
-| `message-composer-submit` | — | `src/features/message/components/message-composer.tsx:168` |
+| `message-composer-cancel` | — | `src/features/message/components/message-composer.tsx:124` |
+| `message-composer-input` | — | `src/features/message/components/message-composer.tsx:139` |
+| `message-composer-submit` | — | `src/features/message/components/message-composer.tsx:170` |
 | `message-delete-confirm` | — | `src/features/message/components/messages-shell.tsx:345` |
-| `message-delete-message-confirm` | — | `src/features/message/components/chat-room.tsx:292` |
+| `message-delete-conversation-confirm` | — | `src/features/message/components/chat-room.tsx:407` |
+| `message-delete-message-confirm` | — | `src/features/message/components/chat-room.tsx:388` |
 | `message-error` | — | `src/features/message/components/messages-shell.tsx:181` |
-| `message-intro` | — | `src/features/message/components/chat-walls.tsx:247` |
+| `message-intro` | — | `src/features/message/components/chat-walls.tsx:340` |
 | `message-list-scroller` | — | `src/features/message/components/messages-shell.tsx:333` |
 | `message-loading` | — | `src/features/message/components/conversation-skeleton.tsx:19` |
 | `message-no-chat` | — | `src/features/message/components/messages-shell.tsx:110` |
@@ -505,12 +506,12 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-photo-viewer-next` | — | `src/features/message/components/message-photo-viewer.tsx:83` |
 | `message-photo-viewer-prev` | — | `src/features/message/components/message-photo-viewer.tsx:72` |
 | `message-retry` | — | `src/features/message/components/messages-shell.tsx:189` |
-| `message-room` | — | `src/features/message/components/chat-room.tsx:323` |
+| `message-room` | — | `src/features/message/components/chat-room.tsx:432` |
 | `message-room-back` | — | `src/features/message/components/chat-header.tsx:126` |
-| `message-room-error` | — | `src/features/message/components/chat-room.tsx:212` |
-| `message-room-missing` | — | `src/features/message/components/chat-room.tsx:179` |
-| `message-room-sign-in` | — | `src/features/message/components/chat-room.tsx:164` |
-| `message-room-signed-out` | — | `src/features/message/components/chat-room.tsx:157` |
+| `message-room-error` | — | `src/features/message/components/chat-room.tsx:301` |
+| `message-room-missing` | — | `src/features/message/components/chat-room.tsx:260` |
+| `message-room-sign-in` | — | `src/features/message/components/chat-room.tsx:245` |
+| `message-room-signed-out` | — | `src/features/message/components/chat-room.tsx:238` |
 | `message-room-space` | — | `src/features/message/components/chat-header.tsx:138` |
 | `message-row` | — | `src/features/message/components/conversation-list.tsx:87` |
 | `message-row-link` | — | `src/features/message/components/conversation-row.tsx:202` |
@@ -525,15 +526,17 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-signed-out` | — | `src/features/message/components/messages-shell.tsx:204` |
 | `message-tab` | `data-tab-id` | `src/features/message/components/messages-shell.tsx:292` |
 | `message-thread` | — | `src/features/message/components/message-thread-view.tsx:132` |
-| `message-thread-error` | — | `src/features/message/components/chat-room.tsx:241` |
+| `message-thread-error` | — | `src/features/message/components/chat-room.tsx:337` |
 | `message-thread-jump` | — | `src/features/message/components/message-thread-view.tsx:207` |
-| `message-thread-loading` | — | `src/features/message/components/chat-room.tsx:343` |
-| `message-wall` | — | `src/features/message/components/chat-walls.tsx:216` |
-| `message-wall-first-wave` | — | `src/features/message/components/chat-walls.tsx:85` |
-| `message-wall-follow-submit` | — | `src/features/message/components/chat-walls.tsx:141` |
-| `message-wall-member-join` | — | `src/features/message/components/chat-walls.tsx:61` |
-| `message-wall-request-cancel` | — | `src/features/message/components/chat-walls.tsx:168` |
-| `message-wall-request-submit` | — | `src/features/message/components/chat-walls.tsx:180` |
+| `message-thread-loading` | — | `src/features/message/components/chat-room.tsx:452` |
+| `message-wall` | — | `src/features/message/components/chat-walls.tsx:309` |
+| `message-wall-delete` | — | `src/features/message/components/chat-walls.tsx:187` |
+| `message-wall-first-wave` | — | `src/features/message/components/chat-walls.tsx:92` |
+| `message-wall-follow-submit` | — | `src/features/message/components/chat-walls.tsx:234` |
+| `message-wall-member-join` | — | `src/features/message/components/chat-walls.tsx:68` |
+| `message-wall-request-cancel` | — | `src/features/message/components/chat-walls.tsx:261` |
+| `message-wall-request-submit` | — | `src/features/message/components/chat-walls.tsx:273` |
+| `message-wall-unblock` | — | `src/features/message/components/chat-walls.tsx:200` |
 
 ## `mini-app` — Mini-app player — window, tabs, top-up
 
@@ -1126,7 +1129,7 @@ name; you need it to know the element exists.
 | `CollectionOwnerMenu` | `src/features/post/components/collection-owner-menu.tsx` | `-apply` `-confirm` `-option` `-panel` `-remove` `-start` `-trigger` |
 | `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
 | `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
-| `PostCard` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
+| `PostCard`, `PostMediaBlock` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
 | `PostCollectionPicker` | `src/features/post/components/post-collection-picker.tsx` | `-cancel` `-input` `-message` `-option` `-panel` `-retry` `-submit` `-trigger` |
 | `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-error` `-field` `-input` `-list` `-trigger` |
 | `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-header` `-label-data` `-panel` `-prefix` `-reveal` `-submit` `-suffix` `-trigger` |

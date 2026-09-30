@@ -288,19 +288,42 @@ export function normalizeMessages(value: unknown): ChatMessage[] {
 }
 
 /**
- * Why `start_conversation_with` refused: **`C001`** the space only takes messages from followers,
- * **`C002`** only from members. Legacy's `ERROR_CODE`.
+ * Why the messenger refused — on `start_conversation_with` **or** on a write (`send_message`,
+ * `edit_message`). The codes are the ones both mobile apps switch on:
+ *
+ * | Code     | Meaning                                  | Wall          |
+ * |----------|------------------------------------------|---------------|
+ * | `C001`   | the space takes messages from followers  | `follow`      |
+ * | `C002`   | … from members only                      | `member`      |
+ * | `MSG001` | this account blocked them                | `i-blocked`   |
+ * | `MSG002` | they blocked this account                | `blocked-me`  |
+ * | `MSG003` | their account is not available           | `inactive`    |
+ * | `MSG004` | (same wall on iOS)                       | `inactive`    |
+ * | `MSG005` | the space is unpublished                 | `unpublished` |
+ *
+ * Android maps C001/C002/MSG002/MSG003/MSG005, iOS C001/C002 and MSG001–005; this is the union.
+ * Anything else is an ordinary failure, not a wall.
  */
-export const CONVERSATION_GATE = {
-    follow: 'C001',
-    member: 'C002',
-} as const
-export type ConversationGate = 'follow' | 'member'
+export type ConversationGate =
+    | 'follow'
+    | 'member'
+    | 'i-blocked'
+    | 'blocked-me'
+    | 'inactive'
+    | 'unpublished'
+
+const GATES: Record<string, ConversationGate> = {
+    C001: 'follow',
+    C002: 'member',
+    MSG001: 'i-blocked',
+    MSG002: 'blocked-me',
+    MSG003: 'inactive',
+    MSG004: 'inactive',
+    MSG005: 'unpublished',
+}
 
 export function gateFromCode(code: string | undefined): ConversationGate | null {
-    if (code === CONVERSATION_GATE.follow) return 'follow'
-    if (code === CONVERSATION_GATE.member) return 'member'
-    return null
+    return (code && GATES[code]) || null
 }
 
 /** A frame that names a conversation and, sometimes, a message — every DM frame has this much. */

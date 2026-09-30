@@ -44,7 +44,8 @@ export function MessageComposer({
 }) {
     const { t } = useTranslation()
     const field = useRef<HTMLTextAreaElement>(null)
-    const { text, setText, limit, overLimit, canSend, replyTo, editing, cancel, submit } = composer
+    const { text, setText, limit, overLimit, canSend, replyTo, editing, cancel, submit, onBlur } =
+        composer
     const length = text.trim().length
 
     /* Grow with the text up to four lines. `field-sizing: content` does this natively where it
@@ -140,6 +141,7 @@ export function MessageComposer({
                     value={text}
                     onChange={event => setText(event.target.value)}
                     onKeyDown={onKeyDown}
+                    onBlur={onBlur}
                     placeholder={t('message_composer_placeholder')}
                     aria-label={t('message_composer_placeholder')}
                     aria-invalid={overLimit || undefined}

@@ -9,8 +9,10 @@ import { RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
+import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect, useRef } from 'react'
+import type { ConversationGate } from '../api/types'
 
 /**
  * Why the composer is not there — one of legacy's six panels at the foot of a conversation, each
@@ -22,7 +24,8 @@ import type { ReactNode } from 'react'
  * | `member`     | `becomeAMember`       | the space's membership page                    |
  * | `first`      | `getStared`           | Get started 👋👋👋 — sends the wave             |
  * | `blocked-me` | `recipientBlock`      | none                                           |
- * | `i-blocked`  | `meBlock`             | none here (unblocking is the space page's)     |
+ * | `i-blocked`  | `meBlock` / Android   | Unblock, and Delete the conversation           |
+ * | `unpublished`| MSG005 (both apps)    | none                                           |
  * | `inactive`   | `inactiveRecipient`   | none                                           |
  *
  * The member wall links out rather than opening legacy's in-chat checkout (three dialogs and a
@@ -32,16 +35,20 @@ import type { ReactNode } from 'react'
 /** Legacy's wall button: full width, 36px on a phone and 40 wider, 8px corners, 14/500. */
 const WALL_BUTTON = 'h-9 w-full rounded-lg sm:h-10'
 
-export type ChatWallKind = 'follow' | 'member' | 'first' | 'blocked-me' | 'i-blocked' | 'inactive'
+/** Every refusal the messenger can give (`ConversationGate`), plus the empty conversation. */
+export type ChatWallKind = ConversationGate | 'first'
 
 export function ChatWall({
     kind,
     channel,
     onWave,
+    onDeleteConversation,
 }: {
     kind: ChatWallKind
     channel: Channel | null
     onWave?: () => void
+    /** The "You blocked this account" wall's Delete — offered only when there is a conversation. */
+    onDeleteConversation?: () => void
 }) {
     const { t } = useTranslation()
     const name = channel?.name ?? (channel?.slug ? `@${channel.slug}` : t('message_inactive_user'))
@@ -102,11 +109,27 @@ export function ChatWall({
                 />
             )
         case 'i-blocked':
-            return (
+            return channel ? (
+                <BlockedByMeWall
+                    channel={channel}
+                    name={name}
+                    onDeleteConversation={onDeleteConversation}
+                />
+            ) : (
                 <Panel
                     kind="i-blocked"
                     title={t('message_wall_i_blocked_title')}
                     body={t('message_wall_i_blocked_body', { name })}
+                />
+            )
+        case 'unpublished':
+            /* MSG005, or `privacy: 'unpublished'` read before asking — both apps' wall. No way out:
+               publishing is the creator's decision. */
+            return (
+                <Panel
+                    kind="unpublished"
+                    title={t('message_wall_unpublished_title')}
+                    body={t('message_wall_unpublished_body', { name })}
                 />
             )
         case 'inactive':
@@ -118,6 +141,76 @@ export function ChatWall({
                 />
             )
     }
+}
+
+/**
+ * "You blocked this account" with its two ways out, as Android draws them: **Unblock** — the space
+ * page's own action (`useChannelActions`), whose cache patch moves `useRoom`'s key so the room
+ * re-asks and opens — and **Delete**, which drops the conversation from this account's list.
+ */
+function BlockedByMeWall({
+    channel,
+    name,
+    onDeleteConversation,
+}: {
+    channel: Channel
+    name: string
+    onDeleteConversation?: () => void
+}) {
+    const { t } = useTranslation()
+    const queryClient = useQueryClient()
+    const { unblock } = useChannelActions(channel)
+
+    /*
+     * Re-ask the room once the unblock settles. The key usually moves by itself (the channel's
+     * `blocking_channel` flips), but the block may be known only from the conversation's
+     * `me.blocking` while the cached channel already says `false` — then nothing would move and the
+     * wall would stay up over a conversation that is open again.
+     */
+    const wasPending = useRef(false)
+    useEffect(() => {
+        if (wasPending.current && !unblock.isPending) {
+            queryClient.invalidateQueries({ queryKey: ['message', 'room'] })
+        }
+        wasPending.current = unblock.isPending
+    }, [unblock.isPending, queryClient])
+
+    return (
+        <Panel
+            kind="i-blocked"
+            title={t('message_wall_i_blocked_title')}
+            body={t('message_wall_i_blocked_body', { name })}
+            action={
+                <div className="flex w-full gap-2">
+                    {onDeleteConversation && (
+                        <Button
+                            data-testid="message-wall-delete"
+                            variant="ghost"
+                            size="medium"
+                            className={cn(
+                                WALL_BUTTON,
+                                'flex-1 bg-(--background-subtle) text-(--text-error)',
+                            )}
+                            onClick={onDeleteConversation}
+                        >
+                            {t('message_delete')}
+                        </Button>
+                    )}
+                    <Button
+                        data-testid="message-wall-unblock"
+                        variant="accent"
+                        size="medium"
+                        className={cn(WALL_BUTTON, 'flex-1')}
+                        disabled={unblock.isPending}
+                        aria-busy={unblock.isPending || undefined}
+                        onClick={unblock.run}
+                    >
+                        {t('message_wall_unblock')}
+                    </Button>
+                </div>
+            }
+        />
+    )
 }
 
 /**

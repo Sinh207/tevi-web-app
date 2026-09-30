@@ -2297,5 +2297,10 @@
     "message_conversation_label": "對話",
     "message_room_title": "與 @{{slug}} 的訊息",
     "message_photo_viewer_title": "照片",
-    "message_reply_myself": "自己"
+    "message_reply_myself": "自己",
+    "message_wall_unpublished_title": "此空間尚未發布",
+    "message_wall_unpublished_body": "你無法傳送訊息給 {{name}}。",
+    "message_wall_unblock": "解除封鎖",
+    "message_inline_invalid_url": "無法開啟此連結。",
+    "message_inline_not_supported": "尚不支援"
 }

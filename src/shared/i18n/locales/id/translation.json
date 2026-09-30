@@ -2297,5 +2297,10 @@
     "message_conversation_label": "Obrolan",
     "message_room_title": "Pesan dengan @{{slug}}",
     "message_photo_viewer_title": "Foto",
-    "message_reply_myself": "Diri Sendiri"
+    "message_reply_myself": "Diri Sendiri",
+    "message_wall_unpublished_title": "Ruang ini belum dipublikasikan",
+    "message_wall_unpublished_body": "Anda tidak dapat mengirim pesan ke {{name}}.",
+    "message_wall_unblock": "Buka blokir",
+    "message_inline_invalid_url": "Tautan ini tidak dapat dibuka.",
+    "message_inline_not_supported": "Belum didukung"
 }

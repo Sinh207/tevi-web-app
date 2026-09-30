@@ -2297,5 +2297,10 @@
     "message_conversation_label": "Conversation",
     "message_room_title": "Messages with @{{slug}}",
     "message_photo_viewer_title": "Photos",
-    "message_reply_myself": "Myself"
+    "message_reply_myself": "Myself",
+    "message_wall_unpublished_title": "This space is unpublished",
+    "message_wall_unpublished_body": "You can't send a message to {{name}}.",
+    "message_wall_unblock": "Unblock",
+    "message_inline_invalid_url": "This link can't be opened.",
+    "message_inline_not_supported": "Not supported yet"
 }

@@ -310,7 +310,9 @@ export function MessageBubble({
                                     />
                                 </ActionMenuItem>
                             )}
-                            {own && onDelete && (
+                            {/* "For me" on either side, as both apps offer it (`isOwn` gates only the
+                                second row): it hides a copy on this account, nothing more. */}
+                            {onDelete && (
                                 <ActionMenuItem
                                     data-testid="message-bubble-delete"
                                     tone="destructive"
@@ -405,7 +407,7 @@ function MessagePhotos({
     const layout = photoLayout(urls.length)
     const tile = (index: number, className: string, width: number) => (
         <button
-            // biome-ignore lint/suspicious/noArrayIndexKey: two photos may share a URL, and a message's photos never reorder — the position is their identity.
+            // two photos may share a URL, and a message's photos never reorder — the position is their identity.
             key={`${index}-${urls[index]}`}
             type="button"
             onClick={() => onOpen(index)}

@@ -49,10 +49,11 @@ export const messageKeys = {
         ['message', 'search', query, accountId ?? 'anon'] as const,
     /**
      * The conversation with one space's owner — or the reason there is none. Keyed on the owner's
-     * id **and** whether this account follows them, so following from the wall re-asks on its own.
+     * id **and** whether this account follows and blocks them, so Follow and Unblock from a wall
+     * re-ask on their own.
      */
-    room: (ownerId: string, followed: boolean, accountId: string | null) =>
-        ['message', 'room', ownerId, followed, accountId ?? 'anon'] as const,
+    room: (ownerId: string, followed: boolean, blocking: boolean, accountId: string | null) =>
+        ['message', 'room', ownerId, followed, blocking, accountId ?? 'anon'] as const,
     /** One conversation's messages, newest page first. */
     messages: (conversationId: string, accountId: string | null) =>
         ['message', 'messages', conversationId, accountId ?? 'anon'] as const,
@@ -60,6 +61,14 @@ export const messageKeys = {
 
 /** How many messages a page holds. Legacy's `LIMIT_MESSAGES`. */
 export const MESSAGE_PAGE_SIZE = 20
+
+/**
+ * The wall a failed call asks for, or `null` for an ordinary failure. By code, not by status — the
+ * apps read the body's `code` whatever the status (Android's `MSG005` arrives on a send).
+ */
+export function gateOf(error: unknown): ConversationGate | null {
+    return error instanceof ApiError ? gateFromCode(error.code) : null
+}
 
 export type RoomResult =
     | { kind: 'open'; conversation: Conversation }
@@ -187,10 +196,10 @@ export const messageApi = {
      * Open (or create) the direct conversation with a space's owner.
      *
      * One request where legacy makes two: it asks `can_start_conversation_with` first and then
-     * `start_conversation_with`, but the second answers **the same `422 { code }`** when it refuses
-     * (legacy reads `res.response.data.code` from both), so the first is a round trip that can only
-     * repeat what the second would say. A 422 without one of the two known codes is a real failure
-     * and rejects.
+     * `start_conversation_with`, but the second answers **the same `{ code }`** when it refuses
+     * (legacy reads `res.response.data.code` from both, and Android calls only the second), so the
+     * first is a round trip that can only repeat what the second would say. Any of the codes in
+     * `ConversationGate` becomes a wall; anything else is a real failure and rejects.
      *
      * A `POST` inside a query is deliberate: the call is idempotent from the reader's side — the
      * same member yields the same conversation — and it is the screen's *read*. It is not retried
@@ -207,10 +216,8 @@ export const messageApi = {
             if (!conversation) throw new ApiError({ message: 'No conversation in the response' })
             return { kind: 'open', conversation }
         } catch (error) {
-            if (error instanceof ApiError && error.status === 422) {
-                const gate = gateFromCode(error.code)
-                if (gate) return { kind: 'gated', gate }
-            }
+            const gate = gateOf(error)
+            if (gate) return { kind: 'gated', gate }
             throw error
         }
     },

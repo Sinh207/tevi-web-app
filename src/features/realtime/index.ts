@@ -7,6 +7,7 @@
  * ```
  * RealtimeProvider        app/session-providers.tsx, inside Auth and above Balance / MyChannel
  * useSocketEvent(name, h) subscribe for the life of a component
+ * useSocketReconnect(h)   run h when the room comes back after a drop — frames were missed
  * ```
  *
  * ## A socket event is a signal, never a source
@@ -39,4 +40,5 @@
  */
 
 export { useSocketEvent } from './hooks/use-socket-event'
+export { useSocketReconnect } from './hooks/use-socket-reconnect'
 export { RealtimeProvider } from './providers/realtime-provider'

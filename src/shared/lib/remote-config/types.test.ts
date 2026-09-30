@@ -21,7 +21,7 @@ describe('normalizeWebConfig', () => {
     it('returns a complete config for an empty payload', () => {
         const config = normalizeWebConfig({})
         // The fields legacy re-invents a fallback for at each of its call sites.
-        expect(config.directMessage.limitCharacters).toBe(500)
+        expect(config.directMessage.limitCharacters).toBe(1000)
         expect(config.post.createPost.characterLimit).toBe(500)
         expect(config.event.charge.fee).toBe(1)
         expect(config.event.charge.timeUntilNextFee).toBe(5)
@@ -67,7 +67,7 @@ describe('normalizeWebConfig', () => {
             direct_message: { limit_characters: 'lots' },
             event: { charge: { fee: '', followers: null } },
         })
-        expect(config.directMessage.limitCharacters).toBe(500)
+        expect(config.directMessage.limitCharacters).toBe(1000)
         expect(config.event.charge.fee).toBe(1)
         expect(config.event.charge.followers).toBe(10_000)
     })

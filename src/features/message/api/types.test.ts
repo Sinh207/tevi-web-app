@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeConversations, parseChatActionFrame } from './types'
+import { gateFromCode, normalizeConversations, parseChatActionFrame } from './types'
 
 describe('normalizeConversations', () => {
     it('is empty for anything that is not an array', () => {
@@ -64,5 +64,23 @@ describe('parseChatActionFrame', () => {
     it('is null without a conversation', () => {
         expect(parseChatActionFrame({ action: 'TYPING' })).toBeNull()
         expect(parseChatActionFrame(null)).toBeNull()
+    })
+})
+
+describe('gateFromCode', () => {
+    it('maps every code both apps handle to its wall', () => {
+        expect(gateFromCode('C001')).toBe('follow')
+        expect(gateFromCode('C002')).toBe('member')
+        expect(gateFromCode('MSG001')).toBe('i-blocked')
+        expect(gateFromCode('MSG002')).toBe('blocked-me')
+        expect(gateFromCode('MSG003')).toBe('inactive')
+        expect(gateFromCode('MSG004')).toBe('inactive')
+        expect(gateFromCode('MSG005')).toBe('unpublished')
+    })
+
+    it('is null for anything else — an unknown refusal is an error, not a wall', () => {
+        expect(gateFromCode(undefined)).toBeNull()
+        expect(gateFromCode('')).toBeNull()
+        expect(gateFromCode('EC0001')).toBeNull()
     })
 })

@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@features/auth'
-import { useSocketEvent } from '@features/realtime'
+import { useSocketEvent, useSocketReconnect } from '@features/realtime'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { forgetConversationCache, messageApi, messageKeys } from '../api/message-api'
@@ -43,6 +43,7 @@ export interface UseThreadResult {
  * | `update_message`  | `get_message/{id}` → upsert (an edit)                          |
  * | `deleted_message` | remove by id                                                   |
  * | `seen_message`    | re-read the newest page and fold it in (the ticks live there)  |
+ * | *reconnect*       | the same re-read, plus the list — frames in the gap are lost    |
  *
  * Legacy writes each frame's payload straight into its state, and orders nothing: a frame that
  * overtakes the HTTP response for the same message is simply the version on screen. Here the frame
@@ -174,14 +175,30 @@ export function useThread(conversation: Conversation | null): UseThreadResult {
         const ids = mine(payload)
         if (ids?.messageId) drop(ids.messageId)
     })
-    useSocketEvent('seen_message', payload => {
-        if (!mine(payload)) return
+    /** Re-read the newest page and fold it in — the ticks, and anything a dropped socket missed. */
+    const refreshNewest = useCallback(() => {
+        if (!conversationId) return
         messageApi
             .getMessages({ conversationId, accountId: activeId })
             .then(fresh => {
                 queryClient.setQueryData<ThreadData>(queryKey, data => mergeNewest(data, fresh))
             })
             .catch(() => undefined)
+    }, [activeId, conversationId, queryClient, queryKey])
+
+    useSocketEvent('seen_message', payload => {
+        if (mine(payload)) refreshNewest()
+    })
+
+    /*
+     * Back after a drop: every frame in the gap is gone, so ask. Both apps do this — Android
+     * refetches the open conversation's unread messages on reconnect, iOS reloads the room when it
+     * returns to the foreground — and without it a message sent during a wifi blip never appears.
+     * The list is re-asked too: its previews missed the same frames.
+     */
+    useSocketReconnect(() => {
+        refreshNewest()
+        refreshList()
     })
 
     const { fetchNextPage, hasNextPage, isFetchingNextPage } = query

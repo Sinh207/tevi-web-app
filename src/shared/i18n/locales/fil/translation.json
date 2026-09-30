@@ -2297,5 +2297,10 @@
     "message_conversation_label": "Pag-uusap",
     "message_room_title": "Mga mensahe kay @{{slug}}",
     "message_photo_viewer_title": "Mga larawan",
-    "message_reply_myself": "Aking sarili"
+    "message_reply_myself": "Aking sarili",
+    "message_wall_unpublished_title": "Hindi pa naka-publish ang space na ito",
+    "message_wall_unpublished_body": "Hindi ka makakapagpadala ng mensahe kay {{name}}.",
+    "message_wall_unblock": "I-unblock",
+    "message_inline_invalid_url": "Hindi mabuksan ang link na ito.",
+    "message_inline_not_supported": "Hindi pa suportado"
 }

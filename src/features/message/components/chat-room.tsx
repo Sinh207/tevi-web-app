@@ -2,6 +2,7 @@
 
 import { useAuth, useRequireAuth } from '@features/auth'
 import { ChannelEmptyState, useChannel, useMyChannel } from '@features/channel'
+import { NsfwGatePanel, useNsfwGate } from '@features/nsfw'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { safeExternalUrl } from '@shared/lib/safe-url'
 import { cn } from '@shared/lib/utils'
@@ -9,10 +10,16 @@ import { Button } from '@shared/ui/button'
 import { ConfirmDialog } from '@shared/ui/confirm-dialog'
 import { Skeleton } from '@shared/ui/skeleton'
 import { useQueryClient } from '@tanstack/react-query'
-import { type ReactNode, useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { type ReactNode, useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { forgetConversationCache, messageApi } from '../api/message-api'
-import type { ChatMessage, InlineMenuItem } from '../api/types'
+import {
+    type ChatMessage,
+    type ConversationGate,
+    type InlineMenuItem,
+    parseMessage,
+} from '../api/types'
 import { useChatActions } from '../hooks/use-chat-actions'
 import { useComposer, WAVE } from '../hooks/use-composer'
 import { useRoom } from '../hooks/use-room'
@@ -20,6 +27,7 @@ import { useThread } from '../hooks/use-thread'
 import { ONLINE_WINDOW_MS } from '../lib/conversation-view'
 import { isOwnMessage, messageText } from '../lib/message-thread'
 import { ROOM_GROUND, THREAD_SCROLLBAR } from '../lib/room-ground'
+import { MESSAGES_PATH } from '../routes'
 import { ChatHeader } from './chat-header'
 import { ChannelIntro, ChatWall, type ChatWallKind } from './chat-walls'
 import { MessageComposer } from './message-composer'
@@ -43,9 +51,17 @@ export function ChatRoom({ slug }: { slug: string }) {
     const queryClient = useQueryClient()
     const { myChannel } = useMyChannel()
 
+    const router = useRouter()
     const { channel, isLoading: channelLoading, isError: channelError, refetch } = useChannel(slug)
     const own = !!myChannel?.slug && myChannel.slug.toLowerCase() === slug.toLowerCase()
-    const room = useRoom(own || channel?.is_suspended ? null : channel)
+    const nsfw = useNsfwGate(slug)
+    /* The panel runs its own copy of the gate, so its "allowed" is carried here as well. */
+    const [nsfwPassed, setNsfwPassed] = useState(false)
+    /** Both apps ask before a sensitive space's chat opens (`canFollow`), as its page does. */
+    const nsfwGated = !!channel?.is_nsfw && !own && !nsfw.isAllowed && !nsfwPassed
+    /** iOS reads this before asking (and Android's send answers MSG005): nothing to open. */
+    const unpublished = channel?.privacy === 'unpublished'
+    const room = useRoom(own || nsfwGated || unpublished || channel?.is_suspended ? null : channel)
     const conversation = room.result?.kind === 'open' ? room.result.conversation : null
     const thread = useThread(conversation)
     const chatActions = useChatActions()
@@ -55,12 +71,36 @@ export function ChatRoom({ slug }: { slug: string }) {
         queryClient.invalidateQueries({ queryKey: ['message', 'conversations'] })
     }, [activeId, queryClient])
 
+    /**
+     * A wall a **write** ran into (`C001` on a send, `MSG002` on an edit, …). Cleared whenever the
+     * room is asked again — a follow or an unblock re-asks, and the answer then speaks for itself.
+     */
+    const [writeGate, setWriteGate] = useState<ConversationGate | null>(null)
+    useEffect(() => {
+        if (room.result) setWriteGate(null)
+    }, [room.result])
+
     const composer = useComposer({
         conversationId: conversation?.id ?? '',
         onMessage: thread.put,
         onDropped: thread.drop,
         onChanged: refreshList,
+        onGate: setWriteGate,
     })
+
+    /** The i-blocked wall's Delete: confirmed, then back to the list — nothing is left to show. */
+    const [confirmingDelete, setConfirmingDelete] = useState(false)
+    const deleteConversation = useCallback(async () => {
+        if (!conversation) return
+        try {
+            await messageApi.deleteConversation(conversation.id, activeId)
+            await refreshList()
+            toast.success(t('message_conversation_deleted'), { id: 'message-action' })
+            router.push(MESSAGES_PATH)
+        } catch {
+            toast.error(t('message_error_delete'), { id: 'message-action' })
+        }
+    }, [activeId, conversation, refreshList, router, t])
 
     const [confirming, setConfirming] = useState<{ message: ChatMessage; both: boolean } | null>(
         null,
@@ -85,22 +125,56 @@ export function ChatRoom({ slug }: { slug: string }) {
         [t],
     )
 
-    /** A bot button: open a link, answer the bot, or show its note — legacy's three actions. */
+    /**
+     * A bot button — the union of the apps' actions (iOS `DMMenuItem`, Android `CDF:958`):
+     *
+     * | Action               | What it does                                                |
+     * |----------------------|-------------------------------------------------------------|
+     * | `OPEN_URL`           | opens `target` in a new tab, if it is a safe URL            |
+     * | `SET_TEXT_MESSAGE`   | sends `target` as a message (iOS; Android pre-fills instead) |
+     * | `CALLBACK_DATA`      | answers the bot; the message it returns replaces the row    |
+     * | `SHOW_*_TOAST`       | info / success / warning / error toast with `target`        |
+     * | anything else        | "Not supported yet", as iOS says                            |
+     */
     const onInline = useCallback(
         (message: ChatMessage, item: InlineMenuItem) => {
-            if (!item.target) return
-            if (item.action === 'OPEN_URL') {
-                const href = safeExternalUrl(item.target)
-                if (href) window.open(href, '_blank', 'noopener,noreferrer')
-            } else if (item.action === 'CALLBACK_DATA') {
-                messageApi
-                    .setCallbackData(message.id, item.target, activeId)
-                    .catch(() => toast.error(t('message_error_generic'), { id: 'message-inline' }))
-            } else if (item.action === 'SHOW_INFO_TOAST') {
-                toast.info(item.target, { id: 'message-inline' })
+            const target = item.target
+            const id = { id: 'message-inline' }
+            switch (item.action) {
+                case 'OPEN_URL': {
+                    const href = target ? safeExternalUrl(target) : null
+                    if (href) window.open(href, '_blank', 'noopener,noreferrer')
+                    else toast.error(t('message_inline_invalid_url'), id)
+                    return
+                }
+                case 'SET_TEXT_MESSAGE':
+                    if (target) composer.sendText(target)
+                    return
+                case 'CALLBACK_DATA':
+                    if (!target) return
+                    messageApi
+                        .setCallbackData(message.id, target, activeId)
+                        .then(body => {
+                            const updated = parseMessage(body)
+                            if (updated) thread.put(updated)
+                        })
+                        .catch(() => toast.error(t('message_error_generic'), id))
+                    return
+                case 'SHOW_INFO_TOAST':
+                case 'SHOW_WARNING_TOAST':
+                    if (target) toast.info(target, id)
+                    return
+                case 'SHOW_SUCCESS_TOAST':
+                    if (target) toast.success(target, id)
+                    return
+                case 'SHOW_ERROR_TOAST':
+                    if (target) toast.error(target, id)
+                    return
+                default:
+                    toast.info(t('message_inline_not_supported'), id)
             }
         },
-        [activeId, t],
+        [activeId, composer.sendText, t, thread.put],
     )
 
     /* ---------------------------------------------------------------- the decision */
@@ -109,8 +183,15 @@ export function ChatRoom({ slug }: { slug: string }) {
     const online =
         !!recipient?.last_online_at && Date.now() - recipient.last_online_at <= ONLINE_WINDOW_MS
 
+    /*
+     * In order of what explains the most: an account that is gone, a space that is not published,
+     * a refusal the last write met, a refusal the room met, then the flags on the conversation, then
+     * "nothing yet". Only one wall shows, and the composer only when there is none.
+     */
     let wall: ChatWallKind | null = null
     if (channel?.is_suspended || (conversation && recipient && !recipient.active)) wall = 'inactive'
+    else if (unpublished) wall = 'unpublished'
+    else if (writeGate) wall = writeGate
     else if (room.result?.kind === 'gated') wall = room.result.gate
     else if (conversation?.recipient?.blocking) wall = 'blocked-me'
     else if (conversation?.me?.blocking) wall = 'i-blocked'
@@ -204,6 +285,14 @@ export function ChatRoom({ slug }: { slug: string }) {
         )
     }
 
+    if (nsfwGated) {
+        return shell(
+            <div className="flex flex-1 flex-col items-center justify-center p-4">
+                <NsfwGatePanel slug={slug} onAllowed={() => setNsfwPassed(true)} />
+            </div>,
+        )
+    }
+
     if (room.isLoading && !wall) return shell(<ThreadSkeleton />)
 
     if (room.isError) {
@@ -224,7 +313,14 @@ export function ChatRoom({ slug }: { slug: string }) {
         )
     }
 
-    const blockedWall = wall && wall !== 'first' ? <ChatWall kind={wall} channel={channel} /> : null
+    const blockedWall =
+        wall && wall !== 'first' ? (
+            <ChatWall
+                kind={wall}
+                channel={channel}
+                onDeleteConversation={conversation ? () => setConfirmingDelete(true) : undefined}
+            />
+        ) : null
 
     return (
         <RoomFrame>
@@ -305,6 +401,19 @@ export function ChatRoom({ slug }: { slug: string }) {
                 onConfirm={() => {
                     if (confirming) composer.remove(confirming.message, confirming.both)
                     setConfirming(null)
+                }}
+            />
+            <ConfirmDialog
+                testId="message-delete-conversation-confirm"
+                open={confirmingDelete}
+                onOpenChange={setConfirmingDelete}
+                title={t('message_confirm_delete_title')}
+                description={t('message_confirm_delete_body')}
+                confirmLabel={t('message_delete')}
+                destructive
+                onConfirm={() => {
+                    setConfirmingDelete(false)
+                    deleteConversation()
                 }}
             />
         </RoomFrame>
