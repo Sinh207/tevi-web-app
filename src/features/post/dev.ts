@@ -140,6 +140,28 @@ export const POST_VERY_LONG = makePostFixture({
     reply_count: 1,
 })
 
+/**
+ * A post whose height lands **on** the reply popup's 400px threshold.
+ *
+ * The clamp's failure mode is a feedback loop, and a loop only happens near the boundary: a post
+ * far above it (like `POST_VERY_LONG`) clamps once and sits still, which is why that fixture showed
+ * nothing wrong. This one exists to sit in the unstable band and stay there.
+ */
+export const POST_BORDERLINE = makePostFixture({
+    id: 'borderline',
+    /*
+     * Twenty, because a paragraph measures ~21px in the popup's column — ten came to 210px, nowhere
+     * near the 400 it was supposed to straddle, and a fixture that misses the band it exists for
+     * proves nothing. Measured in the harness rather than reasoned about.
+     */
+    text: Array.from(
+        { length: 20 },
+        (_, i) => `Paragraph ${i + 1}: this post is as tall as the popup's threshold, on purpose.`,
+    ).join('\n'),
+    reaction_count: 1,
+    reply_count: 0,
+})
+
 /** One image, with dimensions — so the card reserves the right box before it loads. */
 export const POST_ONE_IMAGE = makePostFixture({
     id: 'one-image',

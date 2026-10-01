@@ -286,14 +286,33 @@ const QUOTE_COLLAPSED = 200
  */
 function CollapsibleQuote({ children, testId }: { children: ReactNode; testId: string }) {
     const { t } = useTranslation()
-    const ref = useRef<HTMLDivElement>(null)
+    const contentRef = useRef<HTMLDivElement>(null)
     const [expanded, setExpanded] = useState(false)
     const [long, setLong] = useState(false)
 
+    /**
+     * ⚠ **Measure one element, clamp a different one.**
+     *
+     * This used to put `maxHeight` and `overflow: hidden` on the very node it observed, which makes
+     * the measurement a function of its own result — the shape every `ResizeObserver` flicker is
+     * made of. Anything that changed the content's height when the clamp went on (a scrollbar
+     * appearing in the dialog body and reflowing the text is the easy one) could push the reading
+     * back across the threshold, and the component would then clamp, unclamp, clamp, forever.
+     *
+     * Now the clamp is on the **outer** box and the observer watches the **inner** one, which always
+     * has its natural height. The reading cannot be affected by what the reading decides, so there
+     * is no loop to tune — it is gone by construction rather than damped.
+     *
+     * The latch below is the second line of defence: once a post is known to be long it stays long.
+     * Content only grows as images decode, and "it briefly measured short" is never a reason to
+     * take the control away from under the reader's cursor.
+     */
     useEffect(() => {
-        const node = ref.current
+        const node = contentRef.current
         if (!node) return
-        const measure = () => setLong(node.scrollHeight > QUOTE_THRESHOLD)
+        const measure = () => {
+            if (node.scrollHeight > QUOTE_THRESHOLD) setLong(true)
+        }
         measure()
         const observer = new ResizeObserver(measure)
         observer.observe(node)
@@ -305,11 +324,12 @@ function CollapsibleQuote({ children, testId }: { children: ReactNode; testId: s
     return (
         <div className="flex min-w-0 flex-1 flex-col gap-2">
             <div
-                ref={ref}
-                className="relative flex min-w-0 flex-col gap-2"
+                className="relative min-w-0"
                 style={clamped ? { maxHeight: QUOTE_COLLAPSED, overflow: 'hidden' } : undefined}
             >
-                {children}
+                <div ref={contentRef} className="flex min-w-0 flex-col gap-2">
+                    {children}
+                </div>
                 {clamped ? (
                     <span
                         aria-hidden="true"

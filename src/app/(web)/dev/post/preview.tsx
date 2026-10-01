@@ -4,6 +4,7 @@ import {
     emptyPostDraft,
     makePostFixture,
     POST_AFFILIATE,
+    POST_BORDERLINE,
     POST_DECORATED,
     POST_DELETED,
     POST_FIXTURE_CHANNEL,
@@ -264,6 +265,11 @@ const GROUPS: Group[] = [
                 title: 'Long text',
                 note: 'No clamp — a feed shows whole posts, which is legacy’s behaviour.',
                 post: POST_LONG_TEXT,
+            },
+            {
+                title: 'Borderline height',
+                note: 'Sits on the popup’s 400px threshold — the band where a measure-and-clamp loop oscillates.',
+                post: POST_BORDERLINE,
             },
             {
                 title: 'Very long, with a picture',

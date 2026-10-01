@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-901 ids across 29 surfaces.
+902 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -1077,13 +1077,14 @@ Also present on every route it is mounted under — `src/features/channel/compon
 
 | testid | companions | source |
 |---|---|---|
-| `share-channel` | `data-option-value` | `src/features/share/components/share-dialog.tsx:190` |
-| `share-channels-next` | — | `src/features/share/components/share-dialog.tsx:442` |
-| `share-channels-prev` | — | `src/features/share/components/share-dialog.tsx:435` |
-| `share-preview` | — | `src/features/share/components/share-dialog.tsx:574` |
-| `share-qr-code` | — | `src/features/share/components/share-dialog.tsx:169` |
-| `share-sheet` | — | `src/features/share/components/share-dialog.tsx:146` |
-| `share-sheet-header` | — | `src/features/share/components/share-dialog.tsx:162` |
+| `share-channel` | `data-option-value` | `src/features/share/components/share-dialog.tsx:222` |
+| `share-channels-next` | — | `src/features/share/components/share-dialog.tsx:476` |
+| `share-channels-prev` | — | `src/features/share/components/share-dialog.tsx:469` |
+| `share-dm` | — | `src/features/share/components/share-dialog.tsx:202` |
+| `share-preview` | — | `src/features/share/components/share-dialog.tsx:608` |
+| `share-qr-code` | — | `src/features/share/components/share-dialog.tsx:181` |
+| `share-sheet` | — | `src/features/share/components/share-dialog.tsx:152` |
+| `share-sheet-header` | — | `src/features/share/components/share-dialog.tsx:174` |
 
 ## `star-transfer` — Star transfer
 
@@ -1138,6 +1139,7 @@ name; you need it to know the element exists.
 | `HomeEmptyState` | `src/features/home/components/home-empty-state.tsx` | `-retry` `-title` `-trigger` |
 | `HomeLiveFeed` | `src/features/home/components/home-live-feed.tsx` | `-row` |
 | `HomePostFeed` | `src/features/home/components/home-post-feed.tsx` | `-item` |
+| `ShareInMessage` | `src/features/message/components/share-in-message.tsx` | `-input` `-item` `-list` `-message` `-option` `-panel` `-retry` `-search` `-submit` |
 | `TotalBalanceCard` | `src/features/my-wallet/components/total-balance-card.tsx` | `-count` |
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
 | `BookmarkBarActions` | `src/features/post/components/bookmark-bar-actions.tsx` | `-clear` `-confirm` |
