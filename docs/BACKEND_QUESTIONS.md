@@ -3409,6 +3409,37 @@ Encoded in: `features/message/api/message-api.ts` (`openConversation`, `getMessa
 
 ---
 
+## B113 — **sharing into a DM** (`send_message` from the share sheet): the three shipped clients send three different messages · **the web client had to pick one**
+
+"Send in message" fans out one `POST messenger/v2/rpc/send_message` per picked conversation on every
+client — body `{ conversation_id, input_text, msg_type: "TEXT" }` — and agrees on nothing else:
+
+| | Legacy web | iOS | Android | **This client** |
+|---|---|---|---|---|
+| Link sent | minted, `share_channel=internal` | **raw** `shareable_url`, nothing minted | minted, `internal` (`source_screen=copy_link`) | minted, `internal`; raw URL if the mint fails |
+| Body | `text + "\n" + link` | `link + "\n\n" + text` | `text + " " + link` | `text + "\n" + link` |
+| `parser` | (none) | (none) | `HTML` — each URL first wrapped via `external-shorten/` | `PLAIN` |
+| Typed-text limit | none | 1,000 | 64 | `directMessage.limitCharacters` (remote config) |
+| Recipients offered | `get_recent_conversations` + `search_conversation`; search drops inactive | same two endpoints; nothing dropped | the local cache (≤100), searched in memory | the two endpoints; inactive **and blocked** dropped |
+| Partial failure | closes, toasts who failed; all-failed keeps them selected | closes before the requests finish, first error only | first HTTP error aborts the batch, no dismiss | legacy web's |
+
+Questions:
+
+1. **Should a DM share mint a link at all?** If `share_link_created_v2` on `internal` is what
+   "shares by channel" counts, iOS's DM shares are missing from it today. If a raw URL is preferred
+   (it is what the message card unfurls from), every client should stop minting.
+2. **Is there one canonical body?** The bubble turns a link into a card wherever it sits, so the order
+   only changes what a reader sees first; but Android's `HTML` parser renders a different message from
+   the same share. Which `parser` should a share use?
+3. **What is the server's limit on `input_text`?** The client counts only the typed part against the
+   chat's limit; a link pushed over it would come back as a 4xx, whose message is shown.
+
+Encoded in: `features/message/hooks/use-share-in-message.ts` (`shareMessageText`, the fan-out),
+`features/share/lib/share-channels.ts` (`DIRECT_MESSAGE_WIRE`), `features/share/hooks/use-share-link.ts`
+(`messageLink`).
+
+---
+
 ## Closed
 
 Answered and acted on. Kept as one line so the `Bnn` references in the code still resolve; the

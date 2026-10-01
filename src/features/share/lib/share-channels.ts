@@ -25,9 +25,9 @@ import type { TeviIconName } from '@shared/ui/icon-names'
  *   would be porting the bug; drawing the real mark from memory is what `CLAUDE.md` forbids. It
  *   needs one SVG from Brand, and then it is one entry here: `wire: 'whatsapp'`, brand `#25D366`,
  *   `target: url => 'https://wa.me/?text=' + encodeURIComponent(url)`.
- * - **The DM row** (`internal`) — "Send in message", the whole middle third of legacy's sheet. It
- *   needs the conversation list and the send endpoint, i.e. a messenger feature this app does not
- *   have yet. `share-dialog.tsx` says what the block is and where it goes back in.
+ * - **The DM block** (`internal`) — "Send in message". It is not a row: it is a block of its own,
+ *   drawn by `features/message` and reached through `lib/share-in-message.tsx`, so its one wire
+ *   value lives beside this table as `DIRECT_MESSAGE_WIRE` rather than in it.
  */
 export type ShareChannel =
     | 'copy-link'
@@ -222,6 +222,12 @@ export function visibleShareChannels(): readonly ShareChannelSpec[] {
     if (env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID) return SHARE_CHANNELS
     return SHARE_CHANNELS.filter(spec => spec.id !== 'messenger')
 }
+
+/**
+ * `share_channel` for a link sent in a Tevi DM — legacy's `SHARE_CHANNEL.DIRECT_MESSAGE`, and the
+ * value Android mints with too. iOS mints nothing for a DM and sends the raw URL (**B113**).
+ */
+export const DIRECT_MESSAGE_WIRE = 'internal'
 
 /** Lookup by id, for the two call sites that act on one channel rather than the row. */
 export const SHARE_CHANNEL_BY_ID: Record<ShareChannel, ShareChannelSpec> = Object.fromEntries(

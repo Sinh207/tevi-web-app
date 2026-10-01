@@ -7,7 +7,7 @@ import { keepFor } from '@shared/lib/api/query-client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { type ShareLink, shareKeys, shareLinkApi } from '../api/share-link-api'
-import { SHARE_CHANNEL_BY_ID, type ShareChannel } from '../lib/share-channels'
+import { DIRECT_MESSAGE_WIRE, SHARE_CHANNEL_BY_ID, type ShareChannel } from '../lib/share-channels'
 import type { ShareContext } from '../lib/share-context'
 
 /**
@@ -83,19 +83,19 @@ export function useShareLink({
     const { activeId } = useAuth()
     const queryClient = useQueryClient()
 
-    /** The cache channel: the pressed one for a content share, one constant for everything else. */
-    const cacheChannel = (channel: ShareChannel) =>
-        context ? SHARE_CHANNEL_BY_ID[channel].wire : 'legacy'
-
-    function linkQuery(channel: ShareChannel) {
-        const spec = SHARE_CHANNEL_BY_ID[channel]
+    /**
+     * One link per **wire** value, not per row: Messenger and Facebook are one channel on the wire
+     * and share a link, and the DM block is not a row at all. The cache channel is that wire value
+     * for a content share, and one constant for everything else.
+     */
+    function linkQuery(wire: string) {
         return {
-            queryKey: shareKeys.link(activeId, url, cacheChannel(channel)),
+            queryKey: shareKeys.link(activeId, url, context ? wire : 'legacy'),
             queryFn: (): Promise<ShareLink | null> =>
                 context
                     ? shareLinkApi.createLink({
                           url,
-                          channel: spec.wire,
+                          channel: wire,
                           context,
                           accountId: activeId,
                       })
@@ -111,12 +111,12 @@ export function useShareLink({
         }
     }
 
-    const copy = useQuery({ ...linkQuery('copy-link'), enabled })
+    const copy = useQuery({ ...linkQuery(SHARE_CHANNEL_BY_ID['copy-link'].wire), enabled })
 
-    /** The link for one channel — the minted one, or the plain URL if the service would not. */
-    async function linkFor(channel: ShareChannel): Promise<string> {
+    /** The link for one wire channel — the minted one, or the plain URL if the service would not. */
+    async function linkFor(wire: string): Promise<string> {
         try {
-            const link = await queryClient.fetchQuery(linkQuery(channel))
+            const link = await queryClient.fetchQuery(linkQuery(wire))
             return link?.url ?? url
         } catch {
             return url
@@ -137,7 +137,9 @@ export function useShareLink({
              * The `await` branch only runs if someone presses Copy before the eager query settles,
              * where the alternative is refusing a press that is perfectly reasonable.
              */
-            const link = copy.data?.url ?? (copy.isPending ? await linkFor('copy-link') : url)
+            const link =
+                copy.data?.url ??
+                (copy.isPending ? await linkFor(SHARE_CHANNEL_BY_ID['copy-link'].wire) : url)
             try {
                 await navigator.clipboard.writeText(link)
                 // One id, so a second press replaces the toast instead of stacking two — the same
@@ -152,7 +154,14 @@ export function useShareLink({
         },
 
         /** The QR step's link. Same cache as the row, so the code and a pasted link agree. */
-        qrLink: () => linkFor('qr-code'),
+        qrLink: () => linkFor(SHARE_CHANNEL_BY_ID['qr-code'].wire),
+
+        /**
+         * The link a DM carries, minted on `internal` — so a share sent in a conversation is counted
+         * as one, rather than vanishing from "shares by channel". Lazy, unlike the copy link: only a
+         * press of Send needs it, and nothing has to be written to the clipboard in the gesture.
+         */
+        messageLink: () => linkFor(DIRECT_MESSAGE_WIRE),
 
         /** Send the reader to one channel's own share page. */
         async openChannel(channel: ShareChannel) {
@@ -170,7 +179,7 @@ export function useShareLink({
                 appId: env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID,
             }
             const navigate = openBlankTab()
-            const target = spec.target(await linkFor(channel), ctx)
+            const target = spec.target(await linkFor(spec.wire), ctx)
             if (navigate) {
                 navigate(target)
                 return

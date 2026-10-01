@@ -7,6 +7,7 @@
  * ChatRoom            /@{slug}/messages' page — one conversation
  * ChatPopup           the floating window on every (rail) page, from md up
  * useOpenConversation a space's "Send message": opens the window, or the route on a phone
+ * ShareInMessage      the share sheet's "Send in message" block — handed to `features/share` by `app/`
  * ./routes            MESSAGES_PATH + conversationPath(slug) — imports nothing, for the shell
  * ```
  *
@@ -45,5 +46,6 @@ export { messageKeys } from './api/message-api'
 export { ChatPopup } from './components/chat-popup'
 export { ChatRoom } from './components/chat-room'
 export { MessagesShell, NoChatSelected } from './components/messages-shell'
+export { ShareInMessage } from './components/share-in-message'
 export { useOpenConversation } from './hooks/use-open-conversation'
 export { conversationPath, MESSAGES_PATH } from './routes'
