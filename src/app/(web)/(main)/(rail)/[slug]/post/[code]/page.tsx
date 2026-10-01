@@ -182,10 +182,37 @@ export default async function PostDetailPage({ params }: PageProps) {
             : null) ?? t('post_detail_title')
 
     return (
-        <main className="mx-auto flex w-full max-w-[612px] flex-1 flex-col">
-            <PageBackBar title={heading} />
+        /*
+         * ⚠ **From `md` up this page owns its scroll; below `md` it does not.**
+         *
+         * On a desktop the bar and its title stay put and the thread scrolls under them, which is
+         * what the window is for: the left rail is `sticky` and already immovable, and a reader
+         * following a long thread should not have to scroll the chrome away to reach it. So `<main>`
+         * is exactly one viewport tall, `overflow-hidden` so nothing escapes it, and the scroll is
+         * the wrapper below.
+         *
+         * Below `md` it stays **document scroll**, deliberately. There is no left rail to hold
+         * still there, the tab bar is `fixed` and the shell already reserves its 84px — and an inner
+         * scroller on a phone is where the virtual keyboard turns a composer into a trap, because
+         * the viewport shrinks under a box whose height was pinned to the old one. Legacy and both
+         * native clients scroll the page on a phone too.
+         *
+         * Two details, both measured rather than assumed:
+         *
+         * - **`md:flex-none` beside the height.** `<main>` is a flex item, and `flex-1` is
+         *   `flex: 1 1 0%` — a basis on the main axis beats `height`, so `md:h-[…]` alone did
+         *   nothing and the page still grew to 3224px. The height only applies once the item stops
+         *   flexing.
+         * - **`min-h-0` on the scroller.** A flex child's automatic minimum size is its content, so
+         *   without it the wrapper refuses to be shorter than the thread and `overflow-y-auto`
+         *   never has anything to scroll.
+         */
+        <main className="mx-auto flex w-full max-w-[612px] flex-1 flex-col md:h-[var(--window-height)] md:flex-none md:overflow-hidden">
+            <PageBackBar title={heading} className="md:flex-none" />
             {/* A client boundary, and only because a hook has to be read. See the file. */}
-            <PostDetailScreen identifier={code} serverPost={serverPost} />
+            <div className="flex min-w-0 flex-1 flex-col md:min-h-0 md:overflow-y-auto">
+                <PostDetailScreen identifier={code} serverPost={serverPost} />
+            </div>
         </main>
     )
 }
