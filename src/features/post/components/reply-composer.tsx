@@ -455,7 +455,7 @@ export function ReplyComposer({
                                 width: null,
                                 height: null,
                             }))}
-                            size="compact"
+                            size="tight"
                             /*
                              * The gallery counts positions and the draft keys by id, so the index
                              * is resolved here rather than the gallery being taught about ids — a
