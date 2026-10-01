@@ -438,6 +438,15 @@ export function PostMediaBlock({
 }
 
 /**
+ * How tall a clip's tile may get in the feed, in px.
+ *
+ * A ceiling on the **height** rather than on the ratio, so the shape stays honest and the width is
+ * what gives way — see the tile's own note for why the first attempt (a `dvh` cap on the height)
+ * cropped the frame instead.
+ */
+const VIDEO_MAX_HEIGHT = 480
+
+/**
  * The video — a poster and a duration in the feed, the real clip in the lightbox.
  *
  * A feed that mounts one `<video>` per card pays a decode and a connection for each, and past the
@@ -473,6 +482,10 @@ function PostVideoTile({
     const poster = post.video?.thumbnail ?? post.cover_image?.uri ?? null
     const duration = formatDuration(post.video?.duration_seconds ?? null)
     const Tag = onOpen ? 'button' : 'div'
+    const ratio = detectVideoAspectRatio(post.video)
+    /* `'9/16'` → `0.5625`. The string is what CSS wants and the number is what the cap needs. */
+    const [ratioW, ratioH] = ratio.split('/').map(Number)
+    const ratioValue = ratioW / ratioH
 
     return (
         <Tag
@@ -481,20 +494,32 @@ function PostVideoTile({
             aria-label={onOpen ? t('post_video_play') : undefined}
             data-testid={testId}
             /*
-             * ⚠ **Capped at 65% of the window**, which is the one number here that is nobody's
-             * reference. A 9:16 clip in a 612 column is 1003px of card — on a laptop that is the
-             * whole screen for one post, and the reader cannot see who wrote it and what it says at
-             * the same time. Legacy and Android both let the ratio run, and both are wrong about it
-             * on a desktop: Android's holder is the width of a phone, where 9:16 is about a screen
-             * *because the screen is that shape*.
+             * ⚠ **The cap is on the height, and the width gives way** — so a portrait clip is drawn
+             * at its real shape, narrower, rather than full-width and cropped.
              *
-             * The ratio still decides the shape whenever it fits; the cap only bites on the tall
-             * end, and the poster is `object-cover`, so what it costs is a crop rather than a
-             * letterbox. `dvh` and not a pixel number: the thing being bounded is the reader's
-             * screen, which is the only unit that means the same on all of them.
+             * `max-width: height × ratio` is what does it. With `w-full` beside it the width is
+             * `min(column, 480 × ratio)` and `aspect-ratio` derives the height from whichever won,
+             * so the ratio is never broken at either end: a 9:16 clip comes out 270×480 and a 16:9
+             * one still fills the column. Clamping the **height** directly (the first attempt) left
+             * the width at 100% and `object-cover` then ate the top and bottom of the frame.
+             *
+             * 480 is a product number, not a reference one: legacy and Android both let a tall clip
+             * run to the full 9:16 of their column, which on a phone is about a screen because the
+             * screen is that shape, and on a 612px desktop column is 1003px — one post, whole
+             * laptop. Neither client has a desktop to be wrong about.
+             *
+             * `mx-auto` **with `block`**, and both halves were needed. `PostMediaBlock` wraps this
+             * in a plain block, so there is no flex line and `self-center` is inert; and when
+             * `onOpen` is given this element is a `<button>`, which is inline-level — auto margins
+             * on an inline-level box compute to `0`, measured. Only once it is `display: block` do
+             * they split the leftover and centre the narrowed tile instead of parking it against
+             * the leading edge with the rest of the column empty beside it.
              */
-            className="relative max-h-[65dvh] w-full overflow-hidden rounded-[8px] bg-(--background-segment)"
-            style={{ aspectRatio: detectVideoAspectRatio(post.video) }}
+            className="relative mx-auto block w-full overflow-hidden rounded-[8px] bg-(--background-segment)"
+            style={{
+                aspectRatio: ratio,
+                maxWidth: `${Math.round(VIDEO_MAX_HEIGHT * ratioValue)}px`,
+            }}
         >
             {poster ? (
                 <Image
