@@ -1174,7 +1174,7 @@ name; you need it to know the element exists.
 | `PostSlider` | `src/features/post/components/post-slider.tsx` | `-apply` `-clear` `-close` `-confirm` `-copy` `-description` `-footer` `-group` `-label-data` `-list` `-next` `-prev` `-reveal` `-slide` |
 | `PostUnlockDialogs` | `src/features/post/components/post-unlock-dialogs.tsx` | `-cancel` `-confirm` `-description` `-next` `-option` `-title` |
 | `ReplyAudienceNotice` | `src/features/post/components/reply-audience-notice.tsx` | `-description` `-panel` `-title` `-trigger` |
-| `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-item` `-list` `-remove` `-submit` `-trigger` |
+| `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-list` `-submit` `-trigger` |
 | `ReplyDialog` | `src/features/post/components/reply-dialog.tsx` | `-apply` `-description` `-footer` `-item` `-panel` |
 | `ReplyRow` | `src/features/post/components/reply-row.tsx` | `-description` `-header` `-label-data` `-message` `-next` `-overlay` `-panel` `-remove` `-reveal` `-slide` `-trigger` |
 | `ReplyThread` | `src/features/post/components/reply-thread.tsx` | `-item` `-next` `-panel` `-retry` `-row` |

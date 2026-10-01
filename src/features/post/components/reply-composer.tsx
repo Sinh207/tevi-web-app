@@ -27,6 +27,7 @@ import {
     replyDraftProblem,
 } from '../lib/reply-draft'
 import { mayReply, showsReplyAudienceNotice } from '../lib/who-can-reply'
+import { PostImageGallery } from './post-image-gallery'
 import { ReplyAudienceNotice } from './reply-audience-notice'
 
 /**
@@ -429,49 +430,43 @@ export function ReplyComposer({
                         {expanded ? null : submitButton}
                     </div>
 
+                    {/*
+                     * ⚠ The **same gallery the post composer draws**, not a row of 64px squares.
+                     *
+                     * A reply carries up to ten pictures and the composer is the one place the
+                     * reader finds out what they will look like — which is the question a composer
+                     * exists to answer. Square crops answered a different one: every picture became
+                     * a thumbnail of itself, and a portrait shot gave no clue it was portrait.
+                     * `post-composer-body.tsx` reached this conclusion first; this is the reply box
+                     * catching up, so the two agree about the same draft.
+                     *
+                     * `previewUrl` becomes `uri` and the measured size becomes `w`/`h` — the whole
+                     * adaptation, and the same one the post composer performs, because
+                     * `ReplyDraftImage` and the post draft's image are the same five fields.
+                     */}
                     {draft.images.length > 0 ? (
-                        <ul
-                            data-testid={subTestId(testId, 'list')}
+                        <PostImageGallery
+                            images={draft.images.map(image => ({
+                                uri: image.previewUrl,
+                                thumb: null,
+                                blur: null,
+                                w: image.width,
+                                h: image.height,
+                                width: null,
+                                height: null,
+                            }))}
+                            size="compact"
                             /*
-                             * A scrolling row, not a carousel: these are thumbnails the reader
-                             * scrubs sideways, with no slide semantics at all
-                             * (`DESIGN_SYSTEM.md` §10).
+                             * The gallery counts positions and the draft keys by id, so the index
+                             * is resolved here rather than the gallery being taught about ids — a
+                             * removal that missed would take the wrong picture off.
                              */
-                            className="mt-1 flex snap-x gap-2 overflow-x-auto"
-                        >
-                            {draft.images.map(image => (
-                                <li
-                                    key={image.id}
-                                    data-testid={subTestId(testId, 'item')}
-                                    className="relative size-16 flex-none snap-start overflow-hidden rounded-[8px] bg-(--background-segment)"
-                                >
-                                    {/*
-                                     * A local `blob:` URL that exists for as long as this draft
-                                     * does, so `next/image` has nothing to optimise and no loader
-                                     * that would accept it. The plain tag is correct here rather
-                                     * than a concession.
-                                     */}
-                                    {/* biome-ignore lint/performance/noImgElement: a blob: URL has nothing for next/image to optimise and no loader that accepts it. */}
-                                    <img
-                                        src={image.previewUrl}
-                                        alt=""
-                                        className="size-full object-cover"
-                                    />
-                                    <button
-                                        type="button"
-                                        data-testid={subTestId(testId, 'remove')}
-                                        aria-label={t('post_reply_remove_image')}
-                                        onClick={() => remove(image.id)}
-                                        className="absolute end-1 top-1 flex size-6 items-center justify-center rounded-full bg-(--background-overlay) text-(--text-on)"
-                                    >
-                                        {/* 16 is the smallest the sprite ships — `IconSize` is a
-                                            union, so a hand-picked 12 is a type error rather than a
-                                            blurry glyph. */}
-                                        <Icon name="xmark" size={16} />
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                            onRemove={index => {
+                                const going = draft.images[index]
+                                if (going && !reply.isPending) remove(going.id)
+                            }}
+                            testId={subTestId(testId, 'list')}
+                        />
                     ) : null}
 
                     {/*
