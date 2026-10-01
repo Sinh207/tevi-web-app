@@ -12,6 +12,7 @@ import { useState } from 'react'
 import type { Post } from '../api/types'
 import { usePostActions } from '../hooks/use-post-actions'
 import { usePostUnlock } from '../hooks/use-post-unlock'
+import { useVideoAutoplay } from '../hooks/use-video-autoplay'
 import { isNsfw, postDisplay } from '../lib/post-access'
 import { postHref } from '../lib/post-link'
 import {
@@ -20,6 +21,7 @@ import {
     POST_COLUMN_SIZES,
     videoSrc,
 } from '../lib/post-media'
+import { mayAutoplay } from '../lib/video-autoplay'
 import { openReplyDialog } from '../store/reply-store'
 import { PostActions } from './post-actions'
 import {
@@ -452,8 +454,15 @@ const VIDEO_MAX_HEIGHT = 480
  * A feed that mounts one `<video>` per card pays a decode and a connection for each, and past the
  * third or fourth a phone browser simply refuses, so some cards silently show nothing. Legacy
  * dynamic-imports **video.js** and then guards it with `react-intersection-observer` to keep only
- * the visible one alive; the cheaper answer with the same result is to mount none and play in the
- * overlay, which is where a reader wants a video full width anyway.
+ * the visible one alive.
+ *
+ * ## It autoplays, and exactly one at a time
+ *
+ * iOS's policy, ported in `use-video-autoplay.ts`: the clip under the viewport's **1/3** mark plays
+ * (falling back to **2/3**), muted, and only while it is the focused one. That bound is what makes
+ * it affordable — one `<video>` in the document however long the feed is, which is the same number
+ * the old "mount none" answer had. Everything else is still the overlay's job: a press opens the
+ * lightbox, where a reader wants the clip full width and with sound.
  *
  * ## The box follows the clip, and 16/9 was a bug
  *
@@ -483,12 +492,20 @@ function PostVideoTile({
     const duration = formatDuration(post.video?.duration_seconds ?? null)
     const Tag = onOpen ? 'button' : 'div'
     const ratio = detectVideoAspectRatio(post.video)
+    /*
+     * Autoplay is for a tile that is **in a feed** — one with a press that opens the viewer. The
+     * inert copy in the reply popup's quote (`onOpen` absent) stays a still: it is a reference to a
+     * post, and a quote that starts moving while the reader types is the opposite of helpful.
+     */
+    const { isPlaying, register } = useVideoAutoplay(Boolean(onOpen) && mayAutoplay(post))
+    const src = videoSrc(post.video)
     /* `'9/16'` → `0.5625`. The string is what CSS wants and the number is what the cap needs. */
     const [ratioW, ratioH] = ratio.split('/').map(Number)
     const ratioValue = ratioW / ratioH
 
     return (
         <Tag
+            ref={register}
             type={onOpen ? 'button' : undefined}
             onClick={onOpen}
             aria-label={onOpen ? t('post_video_play') : undefined}
@@ -533,7 +550,30 @@ function PostVideoTile({
                     className="object-cover"
                 />
             ) : null}
-            {onOpen ? (
+            {/*
+             * Over the poster rather than instead of it, so there is no gap while the first frame
+             * decodes — the still is what the reader sees until the clip has something to show.
+             *
+             * `muted` is not a preference: a browser refuses to autoplay anything with sound, so an
+             * unmuted `autoPlay` is simply a video that never starts. iOS mutes too
+             * (`lazy var isMuted = true`). `loop` because these are ≤60s clips, which is what iOS's
+             * own ceiling makes them.
+             */}
+            {isPlaying && src ? (
+                <video
+                    src={src}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="none"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    className="absolute inset-0 size-full object-cover"
+                />
+            ) : null}
+            {/* The play disc goes while the clip is running — it is an offer, not an ornament. */}
+            {onOpen && !isPlaying ? (
                 <span className="absolute inset-0 flex items-center justify-center">
                     <span className="flex size-12 items-center justify-center rounded-full bg-black/50 text-white">
                         <Icon name="play" size={24} weight="filled" />
