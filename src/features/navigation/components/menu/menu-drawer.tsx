@@ -280,28 +280,30 @@ export function MenuDrawer() {
     }
 
     /**
-     * Picking a language applies it and closes, as legacy does — the switch repaints the
-     * whole shell, so leaving the drawer standing on the list you just used would show
-     * you a screen mid-swap instead of the app in the language you asked for. Closing
-     * also pops the view back to root, so the drawer reopens where the next visit expects it.
+     * Picking a language applies it and pops back to the root, like every picker in this drawer:
+     * the root's Language row carries the active value, so returning to it *is* the confirmation.
+     * (Legacy closes the whole drawer here; returning to the menu was asked for instead.)
      *
-     * Picking the language that is already active still closes: it is what a picker does,
+     * Picking the language that is already active still pops: it is what a picker does,
      * and `changeLanguage` is a no-op cost either way.
      *
-     * Not awaited, deliberately. `changeLanguage` is async now — the client carries English plus
-     * the locale the page was served in, so a third one is a chunk fetch away (7–25 KB, see
-     * `i18n/locale-bundles.ts`). Closing first is still right: the drawer standing open on the list
-     * while a request settles is the mid-swap screen this avoids, and the shell repaints itself the
-     * moment the bundle lands.
+     * Not awaited, deliberately. `changeLanguage` is async — the client carries English plus the
+     * locale the page was served in, so a third one is a chunk fetch away (7–25 KB, see
+     * `i18n/locale-bundles.ts`). The root repaints in the new language the moment the bundle lands.
      */
     const selectLanguage = (code: string) => {
         void changeLanguage(code)
-        close()
+        pop()
+    }
+
+    /** Same rule for the theme: apply, then back to the menu the row was pressed on. */
+    const selectThemeAndReturn = (value: string) => {
+        setTheme(value)
+        pop()
     }
 
     /**
-     * Picking a currency pops back to the root rather than closing, unlike the language picker: what
-     * changed is one figure on the card you pressed to get here, so returning to it *is* the
+     * Picking a currency pops back to the root rather than closing: what changed is one figure on the card you pressed to get here, so returning to it *is* the
      * confirmation. Closing the drawer would hide the only thing that moved.
      */
     const selectCurrencyAndReturn = (code: string) => {
@@ -789,9 +791,7 @@ export function MenuDrawer() {
                  * Appearance — Dark / Light / System, the mobile app's screen minus its App Icon
                  * section (see `THEME_OPTIONS`).
                  *
-                 * Picking does *not* close the drawer, unlike the language picker: the theme swaps
-                 * in CSS with nothing to remount, so staying put lets you see the choice land and
-                 * try another. Closing would be throwing the picker away mid-comparison.
+                 * Picking pops back to the root, as every picker in this drawer does.
                  */}
                 <DrawerScreen depth="pushed" active={open && view === 'appearance'}>
                     <DrawerSubScreen
@@ -804,7 +804,7 @@ export function MenuDrawer() {
                             label={t('menu_appearance')}
                             options={themeOptions}
                             value={activeTheme}
-                            onSelect={setTheme}
+                            onSelect={selectThemeAndReturn}
                             /*
                              * A pushed screen stays **mounted** while parked, so the list has to be
                              * told when it is the one on screen — otherwise its scroll-to-selection
