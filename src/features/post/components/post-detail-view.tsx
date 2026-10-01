@@ -166,7 +166,17 @@ export function PostDetailView({
              * `min-h-[var(--window-height)]`, runs through `TabBarShell` and `<main flex-1>`, and
              * ends here — a break anywhere in it and the block below collapses to its content.
              */
-            className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-b-2xl md:rounded-2xl"
+            /*
+             * ⚠ `shrink-0` beside `flex-1`, i.e. `flex: 1 0 0%` rather than `1 1 0%`.
+             *
+             * From `md` the route gives this stack a **height-constrained** parent (the page's own
+             * scroller — see `[code]/page.tsx`). A flex child defaults to `flex-shrink: 1`, so in
+             * that parent the stack would be compressed to the viewport instead of overflowing it
+             * — and with `overflow-hidden` on itself, the rest of the thread would be clipped with
+             * no way to reach it. Growing is still wanted (a short thread paints to the bottom);
+             * being squashed is not.
+             */
+            className="flex min-w-0 flex-1 shrink-0 flex-col overflow-hidden rounded-b-2xl md:rounded-2xl"
         >
             <div className="bg-(--background-surface)">
                 <PostCard
