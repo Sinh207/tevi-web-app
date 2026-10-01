@@ -230,9 +230,17 @@ export const channelSchema = z.looseObject({
     blocking_channel: boolish,
     blocked_user: boolish,
     notification_settings: nullable(z.looseObject({ notification: boolish })),
+    /**
+     * Who may **start** a conversation with this space's owner — legacy's message settings.
+     * `subscriber` is members only; anything else, or nothing, is legacy's default, followers.
+     */
+    messaging_settings: nullable(
+        z.looseObject({ sender: z.enum(['follower', 'subscriber']).catch('follower') }),
+    ),
 })
 
 export type Channel = z.infer<typeof channelSchema>
+export type MessagingSender = 'follower' | 'subscriber'
 
 /**
  * `GET /analytics/v2/channel/{slug}/stats/`.

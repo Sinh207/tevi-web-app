@@ -2347,5 +2347,18 @@
     "message_popup_open_full": "메시지에서 열기",
     "message_popup_open": "채팅 열기",
     "message_popup_close": "채팅 최소화",
-    "message_popup_see_all": "채팅에서 모두 보기"
+    "message_popup_see_all": "채팅에서 모두 보기",
+    "message_embed_collection": "컬렉션",
+    "message_settings_title": "메시지 설정",
+    "message_settings_allow_from": "메시지를 시작할 수 있는 사람",
+    "message_settings_followers": "팔로워",
+    "message_settings_followers_body": "팔로워가 회원님과 채팅을 시작할 수 있습니다",
+    "message_settings_members": "멤버",
+    "message_settings_members_body": "멤버만 회원님과 채팅을 시작할 수 있습니다",
+    "message_settings_link_title": "내 메시지 링크",
+    "message_settings_link_body": "다이렉트 메시지로 사람들을 초대하세요",
+    "message_settings_share": "링크 공유",
+    "message_settings_save": "설정 저장",
+    "message_settings_saved": "메시지 설정을 저장했습니다",
+    "message_settings_error": "메시지 설정을 저장하지 못했습니다. 다시 시도해 주세요."
 }

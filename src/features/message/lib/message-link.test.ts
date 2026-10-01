@@ -33,15 +33,19 @@ describe('messageEmbed', () => {
         ).toEqual({ kind: 'post', slug: 'ada', postId: '42' })
     })
 
+    it('cards a collection link, as legacy does', () => {
+        expect(
+            messageEmbed(message({ text: 'https://tevi.com/@ada/collections/3' }), null),
+        ).toEqual({ kind: 'collection', slug: 'ada', collectionId: '3' })
+    })
+
     it('draws no card for a photo message, an external site, or a Tevi page it has no card for', () => {
         expect(
             messageEmbed(message({ text: 'https://tevi.com/@ada', images: [{ url: 'x' }] }), null),
         ).toBeNull()
         expect(messageEmbed(message({ text: 'https://example.com/@ada' }), null)).toBeNull()
         expect(messageEmbed(message({ text: 'https://tevi.com/messages' }), null)).toBeNull()
-        expect(
-            messageEmbed(message({ text: 'https://tevi.com/@ada/collections/3' }), null),
-        ).toBeNull()
+        expect(messageEmbed(message({ text: 'https://tevi.com/@ada/event/7' }), null)).toBeNull()
     })
 
     it('recognises a gift in either spelling — the text Android sends, the attachment iOS reads', () => {

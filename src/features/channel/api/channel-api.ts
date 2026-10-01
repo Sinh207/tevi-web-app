@@ -181,6 +181,8 @@ export interface ChannelPatch {
     categories?: string[]
     social_links?: { platform: string; title: string | null; url: string }[]
     show_income?: boolean
+    /** Who may start a conversation — `/messages`' settings dialog, which sends nothing else. */
+    messaging_settings?: { sender: 'follower' | 'subscriber' }
     images?: {
         thumb: string | null
         cover: string | null

@@ -2347,5 +2347,18 @@
     "message_popup_open_full": "在訊息中開啟",
     "message_popup_open": "開啟聊天",
     "message_popup_close": "最小化聊天",
-    "message_popup_see_all": "在聊天中查看全部"
+    "message_popup_see_all": "在聊天中查看全部",
+    "message_embed_collection": "合集",
+    "message_settings_title": "訊息設定",
+    "message_settings_allow_from": "允許以下用戶發起訊息",
+    "message_settings_followers": "追蹤者",
+    "message_settings_followers_body": "你的追蹤者可以與你發起聊天",
+    "message_settings_members": "會員",
+    "message_settings_members_body": "只有你的會員可以與你發起聊天",
+    "message_settings_link_title": "你的訊息連結",
+    "message_settings_link_body": "邀請他人傳送私訊給你",
+    "message_settings_share": "分享連結",
+    "message_settings_save": "儲存設定",
+    "message_settings_saved": "訊息設定已儲存",
+    "message_settings_error": "無法儲存訊息設定，請再試一次。"
 }

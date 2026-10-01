@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-901 ids across 29 surfaces.
+909 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -495,15 +495,16 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-composer-cancel` | — | `src/features/message/components/message-composer.tsx:159` |
 | `message-composer-input` | — | `src/features/message/components/message-composer.tsx:189` |
 | `message-composer-submit` | — | `src/features/message/components/message-composer.tsx:222` |
-| `message-delete-confirm` | — | `src/features/message/components/conversation-pane.tsx:302` |
+| `message-delete-confirm` | — | `src/features/message/components/conversation-pane.tsx:334` |
 | `message-delete-conversation-confirm` | — | `src/features/message/components/chat-room.tsx:468` |
 | `message-delete-message-confirm` | — | `src/features/message/components/chat-room.tsx:449` |
-| `message-embed-mini-app` | — | `src/features/message/components/message-embed.tsx:228` |
-| `message-embed-post` | — | `src/features/message/components/message-embed.tsx:349` |
-| `message-embed-space` | — | `src/features/message/components/message-embed.tsx:263` |
-| `message-error` | — | `src/features/message/components/conversation-pane.tsx:117` |
+| `message-embed-collection` | — | `src/features/message/components/message-embed.tsx:425` |
+| `message-embed-mini-app` | — | `src/features/message/components/message-embed.tsx:231` |
+| `message-embed-post` | — | `src/features/message/components/message-embed.tsx:352` |
+| `message-embed-space` | — | `src/features/message/components/message-embed.tsx:266` |
+| `message-error` | — | `src/features/message/components/conversation-pane.tsx:128` |
 | `message-intro` | — | `src/features/message/components/chat-walls.tsx:340` |
-| `message-list-scroller` | — | `src/features/message/components/conversation-pane.tsx:289` |
+| `message-list-scroller` | — | `src/features/message/components/conversation-pane.tsx:318` |
 | `message-loading` | — | `src/features/message/components/conversation-skeleton.tsx:19` |
 | `message-no-chat` | — | `src/features/message/components/messages-shell.tsx:89` |
 | `message-photo-viewer` | — | `src/features/message/components/message-photo-viewer.tsx:52` |
@@ -517,14 +518,14 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-photos-remove` | — | `src/features/message/components/photo-attach-dialog.tsx:166` |
 | `message-photos-submit` | — | `src/features/message/components/photo-attach-dialog.tsx:248` |
 | `message-popup` | — | `src/features/message/components/chat-popup-window.tsx:68` |
-| `message-popup-bar` | — | `src/features/message/components/conversation-pane.tsx:212` |
+| `message-popup-bar` | — | `src/features/message/components/conversation-pane.tsx:223` |
 | `message-popup-full` | — | `src/features/message/components/chat-popup-window.tsx:141` |
 | `message-popup-see-all` | — | `src/features/message/components/chat-popup-window.tsx:181` |
 | `message-popup-toggle` | — | `src/features/message/components/chat-popup-window.tsx:154` |
-| `message-retry` | — | `src/features/message/components/conversation-pane.tsx:125` |
+| `message-retry` | — | `src/features/message/components/conversation-pane.tsx:136` |
 | `message-room` | — | `src/features/message/components/chat-room.tsx:500` |
 | `message-room-back` | — | `src/features/message/components/chat-header.tsx:136` |
-| `message-room-connection` | — | `src/features/message/components/connection-banner.tsx:53` |
+| `message-room-connection` | — | `src/features/message/components/connection-banner.tsx:58` |
 | `message-room-error` | — | `src/features/message/components/chat-room.tsx:347` |
 | `message-room-menu-block` | — | `src/features/message/components/chat-room-menu.tsx:81` |
 | `message-room-menu-delete` | — | `src/features/message/components/chat-room-menu.tsx:89` |
@@ -541,15 +542,22 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-row-menu-space` | — | `src/features/message/components/conversation-row-menu.tsx:61` |
 | `message-row-menu-trigger` | — | `src/features/message/components/conversation-row-menu.tsx:49` |
 | `message-row-online` | — | `src/features/message/components/conversation-row.tsx:194` |
-| `message-search-empty` | — | `src/features/message/components/conversation-pane.tsx:169` |
-| `message-search-input` | — | `src/features/message/components/conversation-pane.tsx:231` |
-| `message-search-list` | — | `src/features/message/components/conversation-pane.tsx:161` |
-| `message-sign-in` | — | `src/features/message/components/conversation-pane.tsx:149` |
-| `message-signed-out` | — | `src/features/message/components/conversation-pane.tsx:140` |
-| `message-tab` | `data-tab-id` | `src/features/message/components/conversation-pane.tsx:248` |
+| `message-search-empty` | — | `src/features/message/components/conversation-pane.tsx:180` |
+| `message-search-input` | — | `src/features/message/components/conversation-pane.tsx:260` |
+| `message-search-list` | — | `src/features/message/components/conversation-pane.tsx:172` |
+| `message-settings` | — | `src/features/message/components/message-settings-dialog.tsx:96` |
+| `message-settings-close` | — | `src/features/message/components/message-settings-dialog.tsx:168` |
+| `message-settings-copy` | — | `src/features/message/components/message-settings-dialog.tsx:144` |
+| `message-settings-sender` | — | `src/features/message/components/message-settings-dialog.tsx:106` |
+| `message-settings-share` | — | `src/features/message/components/message-settings-dialog.tsx:126` |
+| `message-settings-submit` | — | `src/features/message/components/message-settings-dialog.tsx:157` |
+| `message-settings-trigger` | — | `src/features/message/components/conversation-pane.tsx:240` |
+| `message-sign-in` | — | `src/features/message/components/conversation-pane.tsx:160` |
+| `message-signed-out` | — | `src/features/message/components/conversation-pane.tsx:151` |
+| `message-tab` | `data-tab-id` | `src/features/message/components/conversation-pane.tsx:277` |
 | `message-thread` | — | `src/features/message/components/message-thread-view.tsx:157` |
 | `message-thread-error` | — | `src/features/message/components/chat-room.tsx:384` |
-| `message-thread-jump` | — | `src/features/message/components/message-thread-view.tsx:248` |
+| `message-thread-jump` | — | `src/features/message/components/message-thread-view.tsx:250` |
 | `message-thread-loading` | — | `src/features/message/components/chat-room.tsx:520` |
 | `message-thread-unread` | — | `src/features/message/components/message-thread-view.tsx:189` |
 | `message-wall` | — | `src/features/message/components/chat-walls.tsx:309` |

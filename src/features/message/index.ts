@@ -27,8 +27,6 @@
  *
  * - **Collection, event and external link cards**: space, mini-app, post and gift cards are drawn
  *   (`message-link.ts`); the rest stay links — an external preview needs a server-side fetcher.
- * - **Message settings**: who may start a conversation (followers / members) and the shareable
- *   `/@{slug}/messages` link. Needs `messaging_settings` on `channelApi.updateMyChannel`.
  * - Legacy's **member badge** on a row (`is_my_subscriber`) — no DS mark for it exists yet.
  *
  * ## The socket events this feature owns

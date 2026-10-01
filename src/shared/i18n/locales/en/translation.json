@@ -2347,5 +2347,18 @@
     "message_popup_open_full": "Open in Messages",
     "message_popup_open": "Open chats",
     "message_popup_close": "Minimise chats",
-    "message_popup_see_all": "See all in Chats"
+    "message_popup_see_all": "See all in Chats",
+    "message_embed_collection": "Collection",
+    "message_settings_title": "Message settings",
+    "message_settings_allow_from": "Allow starting a message from",
+    "message_settings_followers": "Followers",
+    "message_settings_followers_body": "Your followers can start a chat with you",
+    "message_settings_members": "Members",
+    "message_settings_members_body": "Only your members can start a chat with you",
+    "message_settings_link_title": "Link to your messages",
+    "message_settings_link_body": "Invite people to your direct messages",
+    "message_settings_share": "Share link",
+    "message_settings_save": "Save settings",
+    "message_settings_saved": "Message settings saved",
+    "message_settings_error": "Couldn't save your message settings. Please try again."
 }

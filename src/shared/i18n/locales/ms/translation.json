@@ -2347,5 +2347,18 @@
     "message_popup_open_full": "Buka dalam Mesej",
     "message_popup_open": "Buka sembang",
     "message_popup_close": "Kecilkan sembang",
-    "message_popup_see_all": "Lihat semua dalam Sembang"
+    "message_popup_see_all": "Lihat semua dalam Sembang",
+    "message_embed_collection": "Koleksi",
+    "message_settings_title": "Tetapan mesej",
+    "message_settings_allow_from": "Benarkan memulakan mesej daripada",
+    "message_settings_followers": "Pengikut",
+    "message_settings_followers_body": "Pengikut anda boleh memulakan sembang dengan anda",
+    "message_settings_members": "Ahli",
+    "message_settings_members_body": "Hanya ahli anda boleh memulakan sembang dengan anda",
+    "message_settings_link_title": "Pautan ke mesej anda",
+    "message_settings_link_body": "Jemput orang ke mesej langsung anda",
+    "message_settings_share": "Kongsi pautan",
+    "message_settings_save": "Simpan tetapan",
+    "message_settings_saved": "Tetapan mesej disimpan",
+    "message_settings_error": "Tidak dapat menyimpan tetapan mesej. Sila cuba lagi."
 }

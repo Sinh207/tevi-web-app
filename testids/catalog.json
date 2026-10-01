@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 901,
+        "ids": 909,
         "surfaces": 29
     },
     "surfaces": {
@@ -7211,7 +7211,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:302"
+            "source": "src/features/message/components/conversation-pane.tsx:334"
         },
         "message-delete-conversation-confirm": {
             "scope": "message",
@@ -7229,13 +7229,21 @@
             ],
             "source": "src/features/message/components/chat-room.tsx:449"
         },
+        "message-embed-collection": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-embed.tsx:425"
+        },
         "message-embed-mini-app": {
             "scope": "message",
             "routes": [
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-embed.tsx:228"
+            "source": "src/features/message/components/message-embed.tsx:231"
         },
         "message-embed-post": {
             "scope": "message",
@@ -7243,7 +7251,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-embed.tsx:349"
+            "source": "src/features/message/components/message-embed.tsx:352"
         },
         "message-embed-space": {
             "scope": "message",
@@ -7251,7 +7259,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-embed.tsx:263"
+            "source": "src/features/message/components/message-embed.tsx:266"
         },
         "message-error": {
             "scope": "message",
@@ -7259,7 +7267,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:117"
+            "source": "src/features/message/components/conversation-pane.tsx:128"
         },
         "message-intro": {
             "scope": "message",
@@ -7275,7 +7283,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:289"
+            "source": "src/features/message/components/conversation-pane.tsx:318"
         },
         "message-loading": {
             "scope": "message",
@@ -7387,7 +7395,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:212"
+            "source": "src/features/message/components/conversation-pane.tsx:223"
         },
         "message-popup-full": {
             "scope": "message",
@@ -7419,7 +7427,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:125"
+            "source": "src/features/message/components/conversation-pane.tsx:136"
         },
         "message-room": {
             "scope": "message",
@@ -7443,7 +7451,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/connection-banner.tsx:53"
+            "source": "src/features/message/components/connection-banner.tsx:58"
         },
         "message-room-error": {
             "scope": "message",
@@ -7579,7 +7587,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:169"
+            "source": "src/features/message/components/conversation-pane.tsx:180"
         },
         "message-search-input": {
             "scope": "message",
@@ -7587,7 +7595,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:231"
+            "source": "src/features/message/components/conversation-pane.tsx:260"
         },
         "message-search-list": {
             "scope": "message",
@@ -7595,7 +7603,63 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:161"
+            "source": "src/features/message/components/conversation-pane.tsx:172"
+        },
+        "message-settings": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-settings-dialog.tsx:96"
+        },
+        "message-settings-close": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-settings-dialog.tsx:168"
+        },
+        "message-settings-copy": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-settings-dialog.tsx:144"
+        },
+        "message-settings-sender": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-settings-dialog.tsx:106"
+        },
+        "message-settings-share": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-settings-dialog.tsx:126"
+        },
+        "message-settings-submit": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/message-settings-dialog.tsx:157"
+        },
+        "message-settings-trigger": {
+            "scope": "message",
+            "routes": [
+                "/[slug]/messages",
+                "/messages"
+            ],
+            "source": "src/features/message/components/conversation-pane.tsx:240"
         },
         "message-sign-in": {
             "scope": "message",
@@ -7603,7 +7667,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:149"
+            "source": "src/features/message/components/conversation-pane.tsx:160"
         },
         "message-signed-out": {
             "scope": "message",
@@ -7611,7 +7675,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:140"
+            "source": "src/features/message/components/conversation-pane.tsx:151"
         },
         "message-tab": {
             "scope": "message",
@@ -7622,7 +7686,7 @@
             "companions": [
                 "data-tab-id"
             ],
-            "source": "src/features/message/components/conversation-pane.tsx:248"
+            "source": "src/features/message/components/conversation-pane.tsx:277"
         },
         "message-thread": {
             "scope": "message",
@@ -7646,7 +7710,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-thread-view.tsx:248"
+            "source": "src/features/message/components/message-thread-view.tsx:250"
         },
         "message-thread-loading": {
             "scope": "message",

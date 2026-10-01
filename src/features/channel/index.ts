@@ -58,6 +58,7 @@ export type {
     FollowedOrdering,
     FollowRequest,
     ListUser,
+    MessagingSender,
     Paginated,
 } from './api/types'
 /**
@@ -197,6 +198,11 @@ export { useFollowRequestsCount } from './hooks/use-follow-requests-count'
  */
 export type { UseFollowedLivesResult } from './hooks/use-followed-lives'
 export { useFollowedLives } from './hooks/use-followed-lives'
+/**
+ * Who may start a conversation with the reader — the write behind `features/message`'s settings
+ * dialog. The field and the endpoint are this feature's; the dialog is that one's.
+ */
+export { useMessagingSettings } from './hooks/use-messaging-settings'
 export { AUTO_FOLLOW_SECONDS } from './lib/auto-follow'
 export type { ChannelOwnership, ChannelVisibility } from './lib/channel-flags'
 export {

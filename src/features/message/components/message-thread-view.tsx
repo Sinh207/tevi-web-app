@@ -187,7 +187,9 @@ export function MessageThreadView({
                                             <div
                                                 ref={divider}
                                                 data-testid="message-thread-unread"
-                                                className="my-2 flex items-center gap-2 type-caption-label text-(--white)"
+                                                /* `scroll-mt-10`: the open lands it just under the sticky day chip,
+                                                   not beneath it. */
+                                                className="my-2 flex scroll-mt-10 items-center gap-2 type-caption-label text-(--white)"
                                             >
                                                 <span className="h-px flex-1 bg-(--opacity-white-50)" />
                                                 <span className="rounded-(--radius-fill) bg-(--opacity-black-25) px-3 py-0.5 backdrop-blur-[2.5px]">

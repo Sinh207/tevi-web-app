@@ -6,6 +6,13 @@
  * author hoped.
  */
 
+import { useAuth } from '@features/auth'
+import { type Channel, type ChannelStats, channelKeys } from '@features/channel'
+import { normalizeChannel } from '@features/channel/dev'
+import { postKeys } from '@features/post'
+import { makePostFixture } from '@features/post/dev'
+import { type QueryKey, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { normalizeConversations, normalizeMessages } from './api/types'
 import { toConversationView } from './lib/conversation-view'
 
@@ -126,13 +133,19 @@ export function messageFixtures(now: number) {
 }
 
 export { ChatHeader } from './components/chat-header'
+export { ChatRoomMenu } from './components/chat-room-menu'
 export { ChatWall } from './components/chat-walls'
+export { ConnectionStrip } from './components/connection-banner'
 export { MessageComposer } from './components/message-composer'
+export { MessageSettingsDialog } from './components/message-settings-dialog'
 export { MessageThreadView } from './components/message-thread-view'
 
 /**
- * A conversation's worth of messages: yesterday and today, a reply, photos, an edit, a link, a bot
- * with buttons and a Premium gift. `me` is alias 1.
+ * A conversation's worth of messages — one of everything a bubble draws: yesterday and today,
+ * replies (text and photo), 1/2/3/5/10 photos, an edit, bot buttons, an external link, a Tevi link
+ * of each kind that gets a card (space, post, collection, mini app) and one that does not (event),
+ * and the gift in both wire spellings plus one with no plan. `me` is alias 1. The cards' data is
+ * seeded by `useSeedEmbedFixtures`, so nothing here reaches the API.
  */
 export function threadFixtures(now: number) {
     const minutes = (n: number) => now - n * 60_000
@@ -225,9 +238,91 @@ export function threadFixtures(now: number) {
             },
         },
         {
-            id: 't8',
+            id: 't7b',
+            sender: them,
+            images: [
+                { url: AVATAR, w: 400, h: 400 },
+                { url: AVATAR, w: 400, h: 400 },
+            ],
+            created_at: minutes(4.8),
+        },
+        {
+            id: 't7c',
+            sender: me,
+            images: Array.from({ length: 10 }, () => ({ url: AVATAR, w: 400, h: 400 })),
+            text: 'All ten from the rehearsal',
+            created_at: minutes(4.6),
+            seen_by: { 7: true },
+        },
+        {
+            id: 't7d',
+            sender: them,
+            text: 'This one?',
+            reply_message: { id: 't5', sender: them, images: [{ url: AVATAR, w: 400, h: 400 }] },
+            created_at: minutes(4.4),
+        },
+        // ---- links: external, then one of each card the room draws ----
+        {
+            id: 'l1',
+            sender: them,
+            text: 'The venue guide is at https://example.com/guide, a new tab.',
+            created_at: minutes(4.2),
+        },
+        {
+            id: 'l2',
+            sender: them,
+            text: 'Come say hi on my space https://tevi.com/@ada',
+            created_at: minutes(4),
+        },
+        {
+            id: 'l3',
+            sender: me,
+            text: 'New post 👉 https://tevi.com/@ada/post/42',
+            created_at: minutes(3.8),
+            seen_by: { 7: true },
+        },
+        {
+            id: 'l4',
+            sender: them,
+            text: 'Everything from the tour: https://tevi.com/@ada/collections/3',
+            created_at: minutes(3.6),
+        },
+        {
+            id: 'l5',
+            sender: them,
+            text: 'Play the game: https://tevi.com/@arcade',
+            created_at: minutes(3.4),
+        },
+        {
+            id: 'l6',
+            sender: them,
+            text: 'An event stays a link: https://tevi.com/@ada/event/7',
+            created_at: minutes(3.2),
+        },
+        // ---- gifts: Android's tevi:// text, iOS's attachment, and a plan with no duration ----
+        {
+            id: 'g1',
             sender: them,
             text: 'tevi://TEVI_PREMIUM_GIFT?product_name=Gift%20Premium%20(3%20months)',
+            created_at: minutes(3),
+        },
+        {
+            id: 'g2',
+            sender: me,
+            text: 'Gift',
+            attachments: [
+                {
+                    type: 'TEVI_PREMIUM_GIFT',
+                    preview_data: { product_name: 'Gift Premium 1 year' },
+                },
+            ],
+            created_at: minutes(2.5),
+            seen_by: { 7: true },
+        },
+        {
+            id: 'g3',
+            sender: them,
+            text: 'tevi://TEVI_PREMIUM_GIFT?id=1',
             created_at: minutes(2),
         },
         { id: 't9', sender: me, text: 'My space: https://tevi.com/@ada', created_at: minutes(1) },
@@ -248,3 +343,104 @@ export const DEV_CHANNEL = {
     is_followed: false,
     follow_requested: false,
 } as const
+
+function devChannel(overrides: Record<string, unknown>): Channel {
+    const parsed = normalizeChannel({
+        id: 'ch-1',
+        owner_id: '7',
+        slug: 'ada',
+        name: 'Ada Lovelace',
+        description: 'Live coding, every Friday.',
+        privacy: 'public',
+        images: { thumb: AVATAR, cover: null, avatar_video: null },
+        is_premium: true,
+        ...overrides,
+    })
+    if (!parsed) throw new Error('dev channel did not parse')
+    return parsed
+}
+
+/** The two spaces the thread's links point at: Ada's, and one that *is* a mini app. */
+export const DEV_SPACES = {
+    ada: devChannel({}),
+    arcade: devChannel({
+        id: 'ch-2',
+        owner_id: '8',
+        slug: 'arcade',
+        name: 'Tevi Arcade',
+        description: 'Tiny games you can play right here in the chat.',
+        has_mini_app: true,
+        mini_app_url: 'https://example.com/app',
+        mini_app_id: 'app-1',
+    }),
+}
+
+/** The conversation `ChatRoomMenu` is drawn over — Ada, not muted. */
+export const DEV_CONVERSATION = normalizeConversations([
+    {
+        id: 'conv-dev',
+        recipient: { id: 7, active: true, name: 'Ada Lovelace', channel_slug: 'ada' },
+        me: { tevi_user_alias: 1 },
+        my_settings: { muted: false },
+    },
+])[0]
+
+/**
+ * Put every card's data in the cache, under the keys the cards read, and never let it go stale —
+ * so the harness's space, mini-app, post and collection cards render from fixtures and nothing asks
+ * the API about spaces that do not exist. Re-seeded when the session's account settles, because
+ * every one of those keys carries it.
+ *
+ * Returns whether the seed is in: render the cards only after it, or a card that mounts first
+ * starts its own request, and that request's 404 lands *on top of* the fixture.
+ */
+export function useSeedEmbedFixtures(): boolean {
+    const queryClient = useQueryClient()
+    const { activeId, isBootstrapping } = useAuth()
+    const [seededFor, setSeededFor] = useState<string | null | undefined>(undefined)
+    useEffect(() => {
+        if (isBootstrapping) return
+        const seed = (key: QueryKey, data: unknown) => {
+            queryClient.setQueryDefaults(key, { staleTime: Number.POSITIVE_INFINITY })
+            queryClient.setQueryData(key, data)
+        }
+        // The reader's own space, for the settings dialog: members-only is the saved choice, so the
+        // dialog shows both rows whatever the (unseeded) membership read answers.
+        seed(channelKeys.myChannel(activeId), {
+            ...DEV_SPACES.ada,
+            messaging_settings: { sender: 'subscriber' },
+        })
+        for (const space of Object.values(DEV_SPACES)) {
+            seed(channelKeys.detail(space.slug, activeId), space)
+        }
+        seed(channelKeys.stats('ada', activeId), {
+            follower_count: 12_400,
+            member_count: 318,
+            post_count: 96,
+            income_usd: 0,
+        } satisfies ChannelStats)
+        seed(
+            postKeys.detail('42', activeId),
+            makePostFixture({
+                id: '42',
+                text: 'Friday’s set list is up — eleven songs, two of them new, and one I have never played live.',
+                shareable_url: '/@ada/post/42',
+                images: [{ uri: AVATAR, thumb: AVATAR, w: 400, h: 400 }],
+                channel: {
+                    id: 'ch-1',
+                    slug: 'ada',
+                    name: 'Ada Lovelace',
+                    images: { thumb: AVATAR, uri: AVATAR, avatar_video: null },
+                },
+            }),
+        )
+        seed(postKeys.spaceCollection('ada', '3', activeId), {
+            id: '3',
+            name: 'On tour 2026',
+            post_count: 12,
+            created_at: new Date(Date.now() - 86_400_000 * 9).toISOString(),
+        })
+        setSeededFor(activeId)
+    }, [activeId, isBootstrapping, queryClient])
+    return seededFor === activeId && !isBootstrapping
+}

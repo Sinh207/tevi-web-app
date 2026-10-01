@@ -27,7 +27,6 @@ function subscribeOnline(onChange: () => void) {
  * offline fails into its own Retry, and the thread re-reads on reconnect (`useSocketReconnect`).
  */
 export function ConnectionBanner() {
-    const { t } = useTranslation()
     const online = useSyncExternalStore(
         subscribeOnline,
         () => navigator.onLine,
@@ -47,20 +46,27 @@ export function ConnectionBanner() {
     }, [down])
 
     if (online && !showDown) return null
+    return <ConnectionStrip kind={online ? 'connecting' : 'offline'} />
+}
 
+/** The strip itself, for one state — split out so the dev harness can draw both. */
+export function ConnectionStrip({ kind }: { kind: 'offline' | 'connecting' }) {
+    const { t } = useTranslation()
+    const connecting = kind === 'connecting'
     return (
         <p
             data-testid="message-room-connection"
+            data-connection-state={kind}
             role="status"
             className={cn(
                 'flex flex-none items-center justify-center gap-2 px-3 py-1 type-caption-label',
-                online
+                connecting
                     ? 'bg-(--background-subtle) text-(--text-body)'
                     : 'bg-(--accents-error-bg-active) text-(--text-error)',
             )}
         >
-            {online && <Loader className="size-4" />}
-            {t(online ? 'message_connecting' : 'message_offline')}
+            {connecting && <Loader className="size-4" />}
+            {t(connecting ? 'message_connecting' : 'message_offline')}
         </p>
     )
 }

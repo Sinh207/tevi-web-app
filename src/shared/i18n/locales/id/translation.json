@@ -2347,5 +2347,18 @@
     "message_popup_open_full": "Buka di Pesan",
     "message_popup_open": "Buka obrolan",
     "message_popup_close": "Perkecil obrolan",
-    "message_popup_see_all": "Lihat semua di Obrolan"
+    "message_popup_see_all": "Lihat semua di Obrolan",
+    "message_embed_collection": "Koleksi",
+    "message_settings_title": "Pengaturan pesan",
+    "message_settings_allow_from": "Izinkan memulai pesan dari",
+    "message_settings_followers": "Pengikut",
+    "message_settings_followers_body": "Pengikut Anda dapat memulai obrolan dengan Anda",
+    "message_settings_members": "Anggota",
+    "message_settings_members_body": "Hanya anggota Anda yang dapat memulai obrolan dengan Anda",
+    "message_settings_link_title": "Tautan ke pesan Anda",
+    "message_settings_link_body": "Undang orang ke pesan langsung Anda",
+    "message_settings_share": "Bagikan tautan",
+    "message_settings_save": "Simpan pengaturan",
+    "message_settings_saved": "Pengaturan pesan disimpan",
+    "message_settings_error": "Tidak dapat menyimpan pengaturan pesan. Silakan coba lagi."
 }

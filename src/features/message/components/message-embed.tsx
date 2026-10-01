@@ -3,7 +3,8 @@
 import { useAuth } from '@features/auth'
 import { type Channel, toChannelPath, useChannel, useChannelStats } from '@features/channel'
 import { hasMiniApp, miniAppFromChannel, useMiniApp } from '@features/mini-app'
-import { isLocked, postApi, postHref, postKeys, postSnippet } from '@features/post'
+import { CollectionCard, isLocked, postApi, postHref, postKeys, postSnippet } from '@features/post'
+import { collectionHref } from '@features/post/routes'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useInView } from '@shared/hooks/use-in-view'
@@ -52,8 +53,10 @@ export function MessageEmbed({
         <Deferred root={root} own={own}>
             {embed.kind === 'space' ? (
                 <SpaceEmbed slug={embed.slug} own={own} />
-            ) : (
+            ) : embed.kind === 'post' ? (
                 <PostEmbed postId={embed.postId} own={own} />
+            ) : (
+                <CollectionEmbed slug={embed.slug} collectionId={embed.collectionId} own={own} />
             )}
         </Deferred>
     )
@@ -378,6 +381,52 @@ function PostEmbed({ postId, own }: { postId: string; own: boolean }) {
                     </span>
                 )}
             </Link>
+        </EmbedFrame>
+    )
+}
+
+/**
+ * A collection — legacy's `itemMessage/collection`: whose it is, then the collection's own row (the
+ * tile with its count, the name, the date and how many posts), drawn by `features/post`'s
+ * `CollectionCard` so the two screens cannot disagree. The viewer read is the same one the space's
+ * collection page makes, under the same key.
+ */
+function CollectionEmbed({
+    slug,
+    collectionId,
+    own,
+}: {
+    slug: string
+    collectionId: string
+    own: boolean
+}) {
+    const { t } = useTranslation()
+    const { activeId } = useAuth()
+    const { channel } = useChannel(slug)
+    const { data: collection, isLoading } = useQuery({
+        queryKey: postKeys.spaceCollection(slug, collectionId, activeId),
+        queryFn: ({ signal }) => postApi.getSpaceCollection(slug, collectionId, activeId, signal),
+    })
+
+    if (isLoading) {
+        return (
+            <EmbedFrame own={own}>
+                <Skeleton className="h-16 w-full rounded-(--radius-md)" />
+            </EmbedFrame>
+        )
+    }
+    if (!collection) return null
+
+    return (
+        <EmbedFrame own={own} label={t('message_embed_collection')}>
+            {channel && !channel.is_suspended && <ChannelRow channel={channel} />}
+            <div className="overflow-hidden rounded-(--radius-lg)">
+                <CollectionCard
+                    testId="message-embed-collection"
+                    collection={collection}
+                    href={collectionHref(slug, collectionId)}
+                />
+            </div>
         </EmbedFrame>
     )
 }

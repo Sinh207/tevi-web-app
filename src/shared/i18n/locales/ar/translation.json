@@ -2435,5 +2435,18 @@
     "message_popup_open_full": "فتح في الرسائل",
     "message_popup_open": "فتح الدردشات",
     "message_popup_close": "تصغير الدردشات",
-    "message_popup_see_all": "عرض الكل في الدردشات"
+    "message_popup_see_all": "عرض الكل في الدردشات",
+    "message_embed_collection": "مجموعة",
+    "message_settings_title": "إعدادات الرسائل",
+    "message_settings_allow_from": "السماح ببدء رسالة من",
+    "message_settings_followers": "المتابعون",
+    "message_settings_followers_body": "يمكن لمتابعيك بدء محادثة معك",
+    "message_settings_members": "الأعضاء",
+    "message_settings_members_body": "يمكن لأعضائك فقط بدء محادثة معك",
+    "message_settings_link_title": "رابط رسائلك",
+    "message_settings_link_body": "ادعُ الآخرين إلى رسائلك المباشرة",
+    "message_settings_share": "مشاركة الرابط",
+    "message_settings_save": "حفظ الإعدادات",
+    "message_settings_saved": "تم حفظ إعدادات الرسائل",
+    "message_settings_error": "تعذّر حفظ إعدادات الرسائل. يُرجى المحاولة مرة أخرى."
 }

@@ -1,19 +1,21 @@
 'use client'
 
 import { useAuth, useRequireAuth } from '@features/auth'
-import { ChannelEmptyState } from '@features/channel'
+import { ChannelEmptyState, useMyChannel } from '@features/channel'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
 import { NotificationBadge } from '@shared/ui/badge'
 import { Button } from '@shared/ui/button'
 import { ConfirmDialog } from '@shared/ui/confirm-dialog'
+import { Icon } from '@shared/ui/icon'
 import { SearchBar } from '@shared/ui/search-bar'
 import {
     SegmentedControl,
     SegmentedControlItem,
     SegmentedControlItemLabel,
 } from '@shared/ui/segmented-control'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { type ComponentProps, type ReactNode, useEffect, useState } from 'react'
 import { CONVERSATION_FILTER, type Conversation, type ConversationFilter } from '../api/types'
@@ -27,6 +29,11 @@ import { MESSAGE_ART } from '../lib/illustrations'
 import { MESSAGES_PATH } from '../routes'
 import { ConversationList } from './conversation-list'
 import { ConversationSkeleton } from './conversation-skeleton'
+
+/* Opened rarely — its chunk (and the membership read it makes) waits for the gear. */
+const MessageSettingsDialog = dynamic(() =>
+    import('./message-settings-dialog').then(module => module.MessageSettingsDialog),
+)
 
 const PANE = 'bg-(--background-surface)'
 
@@ -97,6 +104,10 @@ export function ConversationPane({
     /** The conversation a Delete is being confirmed for. */
     const [confirming, setConfirming] = useState<Conversation | null>(null)
 
+    const { hasChannel } = useMyChannel()
+    const [settingsOpen, setSettingsOpen] = useState(false)
+    /* Mounted from the first open on, so closing it can animate and its Share sheet can outlive it. */
+    const [settingsUsed, setSettingsUsed] = useState(false)
     const popup = variant === 'popup'
     const Title = popup ? 'h2' : 'h1'
 
@@ -222,6 +233,24 @@ export function ConversationPane({
                             {t('message_title')}
                         </Title>
                     )}
+                    {/* Legacy's gear — who may start a conversation with the reader. A space's
+                        setting, so an account without a space has nothing to set. */}
+                    {isAuthenticated && hasChannel && (
+                        <Button
+                            data-testid="message-settings-trigger"
+                            variant="ghost"
+                            size="large"
+                            iconOnly
+                            aria-label={t('message_settings_title')}
+                            onClick={() => {
+                                setSettingsUsed(true)
+                                setSettingsOpen(true)
+                            }}
+                            className="size-10 flex-none"
+                        >
+                            <Icon name="gear" size={24} className="size-6" />
+                        </Button>
+                    )}
                     {headerActions}
                 </div>
                 {isAuthenticated && (
@@ -292,6 +321,9 @@ export function ConversationPane({
                 <div className="flex min-h-full flex-col pb-5">{body}</div>
             </div>
             {isAuthenticated && footer}
+            {settingsUsed && (
+                <MessageSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+            )}
 
             {/*
              * Delete is confirmed: the conversation goes from this account's list and its history

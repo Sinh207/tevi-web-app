@@ -50,6 +50,7 @@ export type MessageEmbed =
     | { kind: 'gift'; productName: string | null }
     | { kind: 'space'; slug: string }
     | { kind: 'post'; slug: string; postId: string }
+    | { kind: 'collection'; slug: string; collectionId: string }
 
 const PREMIUM_GIFT_SCHEME = 'tevi://TEVI_PREMIUM_GIFT'
 const PREMIUM_GIFT_TYPE = 'TEVI_PREMIUM_GIFT'
@@ -88,10 +89,11 @@ export function isPremiumGift(message: GiftSource): boolean {
  *
  * Legacy's order: a photo message is its photos; a gift is a gift; otherwise the **first** URL
  * decides (iOS takes the last — legacy is the reference, and the first is what the reader sees
- * first). Only two Tevi shapes get a card, `/@slug` and `/@slug/post/{id}`, because those are the
- * two the apps render too. Anything else — an external site, a collection, an event — stays a plain
- * link: an external preview needs a server that fetches arbitrary URLs for us (legacy's
- * `/api/link-preview`), which is an SSRF surface this app deliberately does not have.
+ * first). Three Tevi shapes get a card — `/@slug`, `/@slug/post/{id}` and `/@slug/collections/{id}`,
+ * legacy's space, post and collection. Two stay plain links: an **event** (`/@slug/event/{id}` —
+ * there is no read of one event by id in this client), and an **external site** — its preview needs
+ * a server that fetches arbitrary URLs for us (legacy's `/api/link-preview`), which is an SSRF surface
+ * this app deliberately does not have.
  */
 export function messageEmbed(
     message: Pick<ChatMessage, 'text' | 'markdown_text' | 'images' | 'attachments'>,
@@ -110,6 +112,7 @@ export function messageEmbed(
     if (!slug) return null
     if (!second) return { kind: 'space', slug }
     if (second === 'post' && third) return { kind: 'post', slug, postId: third }
+    if (second === 'collections' && third) return { kind: 'collection', slug, collectionId: third }
     return null
 }
 

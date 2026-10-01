@@ -2347,5 +2347,18 @@
     "message_popup_open_full": "在消息中打开",
     "message_popup_open": "打开聊天",
     "message_popup_close": "最小化聊天",
-    "message_popup_see_all": "在聊天中查看全部"
+    "message_popup_see_all": "在聊天中查看全部",
+    "message_embed_collection": "合集",
+    "message_settings_title": "消息设置",
+    "message_settings_allow_from": "允许以下用户发起消息",
+    "message_settings_followers": "关注者",
+    "message_settings_followers_body": "你的关注者可以与你发起聊天",
+    "message_settings_members": "会员",
+    "message_settings_members_body": "只有你的会员可以与你发起聊天",
+    "message_settings_link_title": "你的消息链接",
+    "message_settings_link_body": "邀请他人给你发私信",
+    "message_settings_share": "分享链接",
+    "message_settings_save": "保存设置",
+    "message_settings_saved": "消息设置已保存",
+    "message_settings_error": "无法保存消息设置，请重试。"
 }

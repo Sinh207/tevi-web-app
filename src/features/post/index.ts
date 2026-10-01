@@ -54,7 +54,12 @@ export { BookmarkList } from './components/bookmark-list'
  * consumer holding `useCollection` could render a *Delete collection* with no collection on screen,
  * or a list that pages a query nothing else is reading.
  */
-export { CollectionScreenHeader } from './components/collection-card'
+/**
+ * The collection row on its own, for **`features/message`**: a collection link in a conversation is
+ * drawn as this card (legacy's `itemMessage/collection` is the same tile, name and count), so the two
+ * cannot drift. Read-only there — no `menu` is passed.
+ */
+export { CollectionCard, CollectionScreenHeader } from './components/collection-card'
 export { CollectionCreateButton } from './components/collection-create'
 export { CollectionDetail } from './components/collection-detail'
 export { CollectionList } from './components/collection-list'

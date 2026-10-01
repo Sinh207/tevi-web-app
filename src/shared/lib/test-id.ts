@@ -209,6 +209,11 @@ export const TESTID_COMPANIONS = [
     'data-membership-id',
     /** A direct message's id — every bubble in a conversation is `message-bubble`. */
     'data-message-id',
+    /**
+     * Which strip a conversation's connection banner is (`offline`, `connecting`) — both are
+     * `message-room-connection`, and which one shows is state.
+     */
+    'data-connection-state',
     'data-metric-id',
     'data-option-key',
     'data-option-value',
@@ -227,7 +232,7 @@ export const TESTID_COMPANIONS = [
     'data-transfer-id',
     /**
      * Which of a conversation's walls is showing (`follow`, `member`, `first`, `blocked-me`,
-     * `i-blocked`, `inactive`) — all of them are `message-wall`. The kind is *state*: following from
+     * `i-blocked`, `inactive`, `unpublished`) — all of them are `message-wall`. The kind is *state*: following from
      * the wall turns it into the conversation, so it cannot be in the id.
      */
     'data-wall-kind',

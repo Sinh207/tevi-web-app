@@ -2347,5 +2347,18 @@
     "message_popup_open_full": "Mở trang Chat",
     "message_popup_open": "Mở cuộc trò chuyện",
     "message_popup_close": "Thu nhỏ cuộc trò chuyện",
-    "message_popup_see_all": "Xem tất cả trong Chat"
+    "message_popup_see_all": "Xem tất cả trong Chat",
+    "message_embed_collection": "Bộ sưu tập",
+    "message_settings_title": "Cài đặt tin nhắn",
+    "message_settings_allow_from": "Cho phép bắt đầu trò chuyện từ",
+    "message_settings_followers": "Người theo dõi",
+    "message_settings_followers_body": "Người theo dõi của bạn có thể bắt đầu trò chuyện với bạn",
+    "message_settings_members": "Thành viên",
+    "message_settings_members_body": "Chỉ thành viên của bạn mới có thể bắt đầu trò chuyện với bạn",
+    "message_settings_link_title": "Liên kết tới tin nhắn của bạn",
+    "message_settings_link_body": "Mời mọi người nhắn tin trực tiếp cho bạn",
+    "message_settings_share": "Chia sẻ liên kết",
+    "message_settings_save": "Lưu cài đặt",
+    "message_settings_saved": "Đã lưu cài đặt tin nhắn",
+    "message_settings_error": "Không thể lưu cài đặt tin nhắn. Vui lòng thử lại."
 }
