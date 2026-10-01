@@ -54,7 +54,22 @@ import { gallerySlideRatio, isLocalImageSrc } from '../lib/post-media'
  * look like, and the composer's job is the second. In compact the row is used for **one** image
  * too, where the feed would go full width — a picture in a dialog beside a caption is not the shape
  * the feed is built around.
+ *
+ * ## `tight` is shorter than legacy, on purpose
+ *
+ * 160/240, and it is the one size here with **no** legacy counterpart: `btnUploadMedia`'s preview is
+ * `{ xs: 200, md: 300 }`, the same as the post composer's. The reply popup asked for less because
+ * it is a different envelope — the quoted post is above the box and the keyboard is below it, so a
+ * 300px preview pushes both out of view on the surface where the reader is actually typing. A
+ * product call, taken knowingly against parity; the post composer keeps legacy's number.
  */
+/** One place for the three row heights, so a fourth caller cannot invent a fourth number inline. */
+const ROW_HEIGHT = {
+    default: 'h-[260px] md:h-[310px]',
+    compact: 'h-[200px] md:h-[300px]',
+    tight: 'h-[160px] md:h-[240px]',
+} as const
+
 export function PostImageGallery({
     images,
     onOpen,
@@ -81,8 +96,8 @@ export function PostImageGallery({
      * could.
      */
     onRemove?: (index: number) => void
-    /** `compact` is the composer's 200/300 row — see the note above. */
-    size?: 'default' | 'compact'
+    /** `compact` is the composer's 200/300 row, `tight` the reply box's 160/240 — see the note above. */
+    size?: 'default' | 'compact' | 'tight'
     testId?: string
 }) {
     const { t } = useTranslation()
@@ -136,7 +151,7 @@ export function PostImageGallery({
 
     if (images.length === 0) return null
 
-    const rowHeight = size === 'compact' ? 'h-[200px] md:h-[300px]' : 'h-[260px] md:h-[310px]'
+    const rowHeight = ROW_HEIGHT[size]
 
     return (
         <div data-testid={testId} className="group relative w-full">

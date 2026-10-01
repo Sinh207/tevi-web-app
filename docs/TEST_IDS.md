@@ -168,6 +168,16 @@ And three subtrees are torn down deliberately — the password form on every ste
 on every challenge, the Stripe panel on every checkout secret. A cached element handle there going
 stale is correct behaviour, not a flake.
 
+### One block arrives through a slot, so its sub-ids are not in the catalog
+
+The share sheet's "Send in message" block is drawn by `features/message` and handed to
+`features/share` through a context (`features/share/lib/share-in-message.tsx`), which the catalog
+script cannot follow. Only the wrapper, `share-dm`, is listed. Under it, derived as usual:
+`share-dm-search` (the "More" disc), `share-dm-item` (a conversation disc, `data-conversation-id`,
+`aria-pressed`), `share-dm-panel` (the "Send to" step), `share-dm-input` (its search),
+`share-dm-list` / `share-dm-option` (a row's checkbox, `data-conversation-id`), `share-dm-retry`,
+`share-dm-message` and `share-dm-submit`. Scope queries to `share-dm` and they are unambiguous.
+
 ---
 
 ## 6. A missing id may mean "not granted"

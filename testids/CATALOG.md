@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-909 ids across 29 surfaces.
+910 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -1085,13 +1085,14 @@ Also present on every route it is mounted under — `src/features/channel/compon
 
 | testid | companions | source |
 |---|---|---|
-| `share-channel` | `data-option-value` | `src/features/share/components/share-dialog.tsx:190` |
-| `share-channels-next` | — | `src/features/share/components/share-dialog.tsx:442` |
-| `share-channels-prev` | — | `src/features/share/components/share-dialog.tsx:435` |
-| `share-preview` | — | `src/features/share/components/share-dialog.tsx:574` |
-| `share-qr-code` | — | `src/features/share/components/share-dialog.tsx:169` |
-| `share-sheet` | — | `src/features/share/components/share-dialog.tsx:146` |
-| `share-sheet-header` | — | `src/features/share/components/share-dialog.tsx:162` |
+| `share-channel` | `data-option-value` | `src/features/share/components/share-dialog.tsx:222` |
+| `share-channels-next` | — | `src/features/share/components/share-dialog.tsx:476` |
+| `share-channels-prev` | — | `src/features/share/components/share-dialog.tsx:469` |
+| `share-dm` | — | `src/features/share/components/share-dialog.tsx:202` |
+| `share-preview` | — | `src/features/share/components/share-dialog.tsx:608` |
+| `share-qr-code` | — | `src/features/share/components/share-dialog.tsx:181` |
+| `share-sheet` | — | `src/features/share/components/share-dialog.tsx:152` |
+| `share-sheet-header` | — | `src/features/share/components/share-dialog.tsx:174` |
 
 ## `star-transfer` — Star transfer
 
@@ -1146,6 +1147,7 @@ name; you need it to know the element exists.
 | `HomeEmptyState` | `src/features/home/components/home-empty-state.tsx` | `-retry` `-title` `-trigger` |
 | `HomeLiveFeed` | `src/features/home/components/home-live-feed.tsx` | `-row` |
 | `HomePostFeed` | `src/features/home/components/home-post-feed.tsx` | `-item` |
+| `ShareInMessage` | `src/features/message/components/share-in-message.tsx` | `-input` `-item` `-list` `-message` `-option` `-panel` `-retry` `-search` `-submit` |
 | `TotalBalanceCard` | `src/features/my-wallet/components/total-balance-card.tsx` | `-count` |
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
 | `BookmarkBarActions` | `src/features/post/components/bookmark-bar-actions.tsx` | `-clear` `-confirm` |
@@ -1180,7 +1182,7 @@ name; you need it to know the element exists.
 | `PostSlider` | `src/features/post/components/post-slider.tsx` | `-apply` `-clear` `-close` `-confirm` `-copy` `-description` `-footer` `-group` `-label-data` `-list` `-next` `-prev` `-reveal` `-slide` |
 | `PostUnlockDialogs` | `src/features/post/components/post-unlock-dialogs.tsx` | `-cancel` `-confirm` `-description` `-next` `-option` `-title` |
 | `ReplyAudienceNotice` | `src/features/post/components/reply-audience-notice.tsx` | `-description` `-panel` `-title` `-trigger` |
-| `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-item` `-list` `-remove` `-submit` `-trigger` |
+| `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-list` `-submit` `-trigger` |
 | `ReplyDialog` | `src/features/post/components/reply-dialog.tsx` | `-apply` `-description` `-footer` `-item` `-panel` |
 | `ReplyRow` | `src/features/post/components/reply-row.tsx` | `-description` `-header` `-label-data` `-message` `-next` `-overlay` `-panel` `-remove` `-reveal` `-slide` `-trigger` |
 | `ReplyThread` | `src/features/post/components/reply-thread.tsx` | `-item` `-next` `-panel` `-retry` `-row` |

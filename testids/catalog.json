@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 909,
+        "ids": 910,
         "surfaces": 29
     },
     "surfaces": {
@@ -13668,37 +13668,42 @@
             "companions": [
                 "data-option-value"
             ],
-            "source": "src/features/share/components/share-dialog.tsx:190"
+            "source": "src/features/share/components/share-dialog.tsx:222"
         },
         "share-channels-next": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:442"
+            "source": "src/features/share/components/share-dialog.tsx:476"
         },
         "share-channels-prev": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:435"
+            "source": "src/features/share/components/share-dialog.tsx:469"
+        },
+        "share-dm": {
+            "scope": "share",
+            "routes": [],
+            "source": "src/features/share/components/share-dialog.tsx:202"
         },
         "share-preview": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:574"
+            "source": "src/features/share/components/share-dialog.tsx:608"
         },
         "share-qr-code": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:169"
+            "source": "src/features/share/components/share-dialog.tsx:181"
         },
         "share-sheet": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:146"
+            "source": "src/features/share/components/share-dialog.tsx:152"
         },
         "share-sheet-header": {
             "scope": "share",
             "routes": [],
-            "source": "src/features/share/components/share-dialog.tsx:162"
+            "source": "src/features/share/components/share-dialog.tsx:174"
         },
         "star-transfer-amount": {
             "scope": "star-transfer",
@@ -13967,6 +13972,22 @@
             ],
             "parts": [
                 "item"
+            ]
+        },
+        "src/features/message/components/share-in-message.tsx": {
+            "accepts": [
+                "ShareInMessage"
+            ],
+            "parts": [
+                "input",
+                "item",
+                "list",
+                "message",
+                "option",
+                "panel",
+                "retry",
+                "search",
+                "submit"
             ]
         },
         "src/features/my-wallet/components/total-balance-card.tsx": {
@@ -14413,9 +14434,7 @@
                 "error",
                 "field",
                 "input",
-                "item",
                 "list",
-                "remove",
                 "submit",
                 "trigger"
             ]

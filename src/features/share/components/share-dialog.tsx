@@ -11,6 +11,7 @@ import { type CSSProperties, type ReactNode, useCallback, useEffect, useRef, use
 import { useShareLink } from '../hooks/use-share-link'
 import { type ShareChannel, visibleShareChannels } from '../lib/share-channels'
 import type { ShareContext } from '../lib/share-context'
+import { useShareInMessage } from '../lib/share-in-message'
 import { MessengerMark } from './brand-marks'
 import { ShareQrPanel } from './share-qr-panel'
 
@@ -44,21 +45,25 @@ import { ShareQrPanel } from './share-qr-panel'
  * whose ✕ dismisses it and leaves you back on the rows; here it is a step in the same popup with a
  * back arrow — the same press, minus a second scrim over the first and a second thing to dismiss.
  *
- * ## The middle third is missing on purpose
+ * ## The middle third comes from `features/message`, through a slot
  *
  * Legacy's sheet has three blocks: the link preview, **"Send in message"** (the reader's DM
  * conversations as a swipeable row, with a message box and a fan-out send), and "Share to". The
- * middle one needs the conversation list, the conversation search and `messenger/`'s send endpoint —
- * a feature this app does not have yet — so it is not stubbed, not faked, and not represented by a
- * disabled row. It goes back between the preview and the channel row, with a second 4px slab, and
- * the block that replaces it should keep legacy's two behaviours worth keeping: a send that
- * partially fails **keeps the failed recipients selected** so the press can be repeated, and the
- * message body is `[typed text, link].join('\n')` with the link minted on the `internal` channel.
+ * middle one is a messenger screen, and this feature cannot import the messenger feature without
+ * closing a barrel cycle — `lib/share-in-message.tsx` says which, and how `app/` hands the block in.
+ * The sheet owns where it goes (between the preview and the channel row, with a second 4px slab),
+ * the link it sends (minted on `internal`) and the step its "More" opens; the block owns everything
+ * about conversations.
  *
- * Because that block is gone, this sheet reads nothing account-scoped, so — unlike legacy, which
- * wraps its share button in `RequireAuth` for exactly that reason — **a guest can share.** A visitor
- * always carries an anonymous session, so the mint is authorised either way, and gating a press that
- * only hands over a URL would be a sign-in dialog for nothing.
+ * That step is legacy's **second modal** ("Send to", with the search) turned into a step of this
+ * one, like the QR code: same popup, `angle-left` back to the rows. The block stays mounted across
+ * the switch, so what was picked in the row is still picked in the search — legacy shares one
+ * selection between its two modals for the same reason.
+ *
+ * The block renders nothing for a guest, so — unlike legacy, which wraps its share button in
+ * `RequireAuth` — **a guest can still share.** A visitor always carries an anonymous session, so the
+ * mint is authorised either way, and gating a press that only hands over a URL would be a sign-in
+ * dialog for nothing; what a guest loses is the one block that needs an inbox.
  *
  * ## The row scrolls, with legacy's arrows and without its carousel
  *
@@ -100,9 +105,10 @@ export function ShareDialog({
     context?: ShareContext | null
 }) {
     const { t } = useTranslation()
-    const [step, setStep] = useState<'share' | 'qr'>('share')
+    const [step, setStep] = useState<'share' | 'qr' | 'message'>('share')
     const [qrUrl, setQrUrl] = useState<string>()
-    const { shareUrl, copyLink, qrLink, openChannel } = useShareLink({
+    const SendInMessage = useShareInMessage()
+    const { shareUrl, copyLink, qrLink, messageLink, openChannel } = useShareLink({
         url,
         context,
         enabled: open,
@@ -155,122 +161,150 @@ export function ShareDialog({
                 className="w-[512px] gap-0 bg-(--background-surface) p-0"
             >
                 <DialogScreenHeader
-                    title={step === 'qr' ? t('share_qr_title') : t('share_title')}
-                    // The same slot carries `angle-left` at the QR step, which is the whole reason
-                    // §7 puts it at the leading edge.
-                    onBack={step === 'qr' ? () => setStep('share') : undefined}
+                    title={
+                        step === 'qr'
+                            ? t('share_qr_title')
+                            : step === 'message'
+                              ? t('share_send_to')
+                              : t('share_title')
+                    }
+                    // The same slot carries `angle-left` at the QR and Send-to steps, which is the
+                    // whole reason §7 puts it at the leading edge.
+                    onBack={step === 'share' ? undefined : () => setStep('share')}
                     testId="share-sheet-header"
                 />
 
-                {step === 'qr' ? (
+                {step === 'qr' && (
                     <ShareQrPanel
                         url={qrUrl}
                         onCopy={() => void copyLink()}
                         testId="share-qr-code"
                     />
-                ) : (
+                )}
+                {step === 'share' && (
                     <>
                         <SharePreview title={title} image={image} url={shareUrl} />
                         {/*
                          * The 4px slab legacy sets between every block (`Divider borderWidth: 4px`,
                          * `#F4F4F4`) — a section break rather than a rule, which is why it is a band
-                         * of the segment fill and not `--separator-default`. There is one because
-                         * there are two blocks; the DM block brings the second back with it.
+                         * of the segment fill and not `--separator-default`.
                          */}
-                        <div className="h-1 flex-none bg-(--background-segment)" aria-hidden />
-                        <div className="flex flex-col gap-3 p-4">
-                            <h3 className="type-dense-strong m-0 text-(--text-title)">
-                                {t('share_title')}
-                            </h3>
-                            <ChannelRow>
-                                {visibleShareChannels().map(spec => (
-                                    <button
-                                        key={spec.id}
-                                        type="button"
-                                        data-testid="share-channel"
-                                        // Identity in a companion attribute, never in the id —
-                                        // `shared/lib/test-id.ts` says why.
-                                        data-option-value={spec.id}
-                                        onClick={() => press(spec.id)}
+                        <ShareSlab />
+                    </>
+                )}
+                {/*
+                 * Mounted at every step, and in one place in the tree, so the selection inside it
+                 * survives the trip to the picker and to the QR code and back. Hidden rather than
+                 * unmounted at the QR step for that reason. The block draws its own trailing slab:
+                 * it is the one that knows whether it drew anything at all (a guest, an empty inbox).
+                 */}
+                {SendInMessage && (
+                    <div data-testid="share-dm" className={step === 'qr' ? 'hidden' : 'contents'}>
+                        <SendInMessage
+                            view={step === 'message' ? 'picker' : 'row'}
+                            onExpand={() => setStep('message')}
+                            resolveLink={messageLink}
+                            onSent={() => close(false)}
+                            testScope="share-dm"
+                        />
+                    </div>
+                )}
+                {step === 'share' && (
+                    <div className="flex flex-col gap-3 p-4">
+                        <h3 className="type-dense-strong m-0 text-(--text-title)">
+                            {t('share_title')}
+                        </h3>
+                        <ChannelRow>
+                            {visibleShareChannels().map(spec => (
+                                <button
+                                    key={spec.id}
+                                    type="button"
+                                    data-testid="share-channel"
+                                    // Identity in a companion attribute, never in the id —
+                                    // `shared/lib/test-id.ts` says why.
+                                    data-option-value={spec.id}
+                                    onClick={() => press(spec.id)}
+                                    className={cn(
+                                        'flex w-16 flex-none snap-start cursor-pointer flex-col items-center gap-1',
+                                        'rounded-(--radius-md) border-0 bg-transparent p-0',
+                                        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)',
+                                    )}
+                                >
+                                    <span
                                         className={cn(
-                                            'flex w-16 flex-none snap-start cursor-pointer flex-col items-center gap-1',
-                                            'rounded-(--radius-md) border-0 bg-transparent p-0',
-                                            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)',
-                                        )}
-                                    >
-                                        <span
-                                            className={cn(
-                                                'flex size-12 items-center justify-center rounded-full',
-                                                /*
-                                                 * `transition-[opacity,scale]`, not
-                                                 * `transition-transform`: Tailwind v4 writes
-                                                 * `scale-*` to the **`scale` property**, so naming
-                                                 * `transform` here would animate nothing and the
-                                                 * press would snap.
-                                                 */
-                                                'transition-[opacity,scale] duration-150',
-                                                'hover:opacity-85 active:scale-95 motion-reduce:transition-none',
-                                                spec.brand && 'bg-(--share-disc)',
-                                                // Messenger's disc is a gradient, i.e. a
-                                                // `background-image` — a different utility for the
-                                                // same custom property.
-                                                spec.brandGradient &&
-                                                    'bg-[image:var(--share-disc)]',
-                                                spec.brand || spec.brandGradient
-                                                    ? 'text-white'
-                                                    : 'bg-(--background-segment) text-(--icon-default)',
-                                                spec.invertInDark &&
-                                                    'dark:bg-white dark:text-black',
-                                            )}
+                                            'flex size-12 items-center justify-center rounded-full',
                                             /*
-                                             * The inline value is a **custom property**, not the
-                                             * `background-color` itself, so a class can still win in
-                                             * dark mode — an inline declaration beats any class, and
-                                             * X's disc has to invert (`lib/share-channels.ts`).
-                                             *
-                                             * It is inline at all because the value is another
-                                             * company's brand colour rather than a token; the same
-                                             * table argues that. A Tailwind arbitrary value would put
-                                             * the hex in the class string, which is what `pnpm lint`
-                                             * and a DS review look for.
+                                             * `transition-[opacity,scale]`, not
+                                             * `transition-transform`: Tailwind v4 writes
+                                             * `scale-*` to the **`scale` property**, so naming
+                                             * `transform` here would animate nothing and the
+                                             * press would snap.
                                              */
-                                            style={
-                                                spec.brand || spec.brandGradient
-                                                    ? ({
-                                                          '--share-disc':
-                                                              spec.brandGradient ?? spec.brand,
-                                                      } as CSSProperties)
-                                                    : undefined
-                                            }
-                                        >
-                                            {/* The one logo the DS sprite has no glyph for —
+                                            'transition-[opacity,scale] duration-150',
+                                            'hover:opacity-85 active:scale-95 motion-reduce:transition-none',
+                                            spec.brand && 'bg-(--share-disc)',
+                                            // Messenger's disc is a gradient, i.e. a
+                                            // `background-image` — a different utility for the
+                                            // same custom property.
+                                            spec.brandGradient && 'bg-[image:var(--share-disc)]',
+                                            spec.brand || spec.brandGradient
+                                                ? 'text-white'
+                                                : 'bg-(--background-segment) text-(--icon-default)',
+                                            spec.invertInDark && 'dark:bg-white dark:text-black',
+                                        )}
+                                        /*
+                                         * The inline value is a **custom property**, not the
+                                         * `background-color` itself, so a class can still win in
+                                         * dark mode — an inline declaration beats any class, and
+                                         * X's disc has to invert (`lib/share-channels.ts`).
+                                         *
+                                         * It is inline at all because the value is another
+                                         * company's brand colour rather than a token; the same
+                                         * table argues that. A Tailwind arbitrary value would put
+                                         * the hex in the class string, which is what `pnpm lint`
+                                         * and a DS review look for.
+                                         */
+                                        style={
+                                            spec.brand || spec.brandGradient
+                                                ? ({
+                                                      '--share-disc':
+                                                          spec.brandGradient ?? spec.brand,
+                                                  } as CSSProperties)
+                                                : undefined
+                                        }
+                                    >
+                                        {/* The one logo the DS sprite has no glyph for —
                                                 `components/brand-marks.tsx` says why it may live
                                                 outside the sprite. */}
-                                            {spec.glyph === 'messenger-mark' ? (
-                                                <MessengerMark />
-                                            ) : (
-                                                <Icon name={spec.glyph} size={24} aria-hidden />
-                                            )}
-                                        </span>
-                                        {/*
-                                         * Wraps rather than truncates, which is legacy's behaviour
-                                         * and the right one in nine locales: "Copy link" is "Sao
-                                         * chép liên kết", and a 64px column truncates it to nothing
-                                         * useful. `items-start` above keeps the discs on one line
-                                         * while the labels under them run to different heights.
-                                         */}
-                                        <span className="type-caption-meta text-center text-(--text-subtitle)">
-                                            {t(spec.labelKey)}
-                                        </span>
-                                    </button>
-                                ))}
-                            </ChannelRow>
-                        </div>
-                    </>
+                                        {spec.glyph === 'messenger-mark' ? (
+                                            <MessengerMark />
+                                        ) : (
+                                            <Icon name={spec.glyph} size={24} aria-hidden />
+                                        )}
+                                    </span>
+                                    {/*
+                                     * Wraps rather than truncates, which is legacy's behaviour
+                                     * and the right one in nine locales: "Copy link" is "Sao
+                                     * chép liên kết", and a 64px column truncates it to nothing
+                                     * useful. `items-start` above keeps the discs on one line
+                                     * while the labels under them run to different heights.
+                                     */}
+                                    <span className="type-caption-meta text-center text-(--text-subtitle)">
+                                        {t(spec.labelKey)}
+                                    </span>
+                                </button>
+                            ))}
+                        </ChannelRow>
+                    </div>
                 )}
             </DialogContent>
         </Dialog>
     )
+}
+
+/** The 4px band between two blocks — see where the preview's one is drawn. */
+function ShareSlab() {
+    return <div className="h-1 flex-none bg-(--background-segment)" aria-hidden />
 }
 
 /**

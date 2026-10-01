@@ -3,10 +3,12 @@
 import { AccountSwitcherDialog, AuthProvider, LoginDialog, SplashGate } from '@features/auth'
 import { BalanceProvider } from '@features/balance'
 import { MyChannelProvider } from '@features/channel'
+import { ShareInMessage } from '@features/message'
 import { MiniAppHost } from '@features/mini-app'
 import { PaymentProvider } from '@features/payment'
 import { PermissionProvider } from '@features/permission'
 import { RealtimeProvider } from '@features/realtime'
+import { ShareInMessageProvider } from '@features/share'
 import { PostComposerHost } from './post-composer-host'
 import { ReplyDialogHost } from './reply-dialog-host'
 
@@ -117,8 +119,14 @@ export function SessionProviders({
                             `features/payment`. */}
                         <PaymentProvider>
                             <MyChannelProvider>
-                                {children}
-                                {/* The mini-app player — third-party apps framed inside Tevi
+                                {/* The share sheet's "Send in message" block. A slot rather than an
+                                    import because `features/share` cannot reach `features/message`
+                                    without closing a barrel cycle (message → channel → share); `app/`
+                                    sees both. Inside the session because the block reads the inbox,
+                                    and a webview — which mounts none — gets a sheet without it. */}
+                                <ShareInMessageProvider component={ShareInMessage}>
+                                    {children}
+                                    {/* The mini-app player — third-party apps framed inside Tevi
                                     (`features/mini-app`). An overlay, not a wrapper: it renders
                                     **nothing** until an app is opened, and the window itself is a
                                     dynamic import, so a visit that opens none costs one store
@@ -137,13 +145,14 @@ export function SessionProviders({
                                     Open, the Star purchase sheet when an app asks for one — and the
                                     player is `z-40` against their `z-50`, so an application is
                                     never drawn on top of the question it just asked. */}
-                                <MiniAppHost />
-                                {/* One mount for two openers — the rail's `+` and the tab bar's
+                                    <MiniAppHost />
+                                    {/* One mount for two openers — the rail's `+` and the tab bar's
                                     FAB are both in the DOM, so the dialog cannot live beside
                                     either. Inside `MyChannelProvider` because it draws the
                                     author's own avatar. */}
-                                <PostComposerHost />
-                                <ReplyDialogHost />
+                                    <PostComposerHost />
+                                    <ReplyDialogHost />
+                                </ShareInMessageProvider>
                             </MyChannelProvider>
                         </PaymentProvider>
                     </BalanceProvider>
