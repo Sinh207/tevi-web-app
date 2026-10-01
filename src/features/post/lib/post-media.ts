@@ -219,6 +219,71 @@ export function detectAspectRatio(image: PostImage): string {
 }
 
 /**
+ * The **presentation** ratio for a clip in the feed — one of ten buckets, with both ends clamped.
+ *
+ * `videoAspectRatio` above is its raw counterpart and they pair exactly as `imageAspectRatio` pairs
+ * with `detectAspectRatio`: one reports what the payload said (`null` when it said nothing), this
+ * one is the layout rule applied on top.
+ *
+ * ## Why Android's rule and not legacy web's
+ *
+ * Legacy web has two buckets: `width / height > 1 ? '16/9' : '9/16'`
+ * (`postMain/common/media/video`). That is enough to stop a portrait clip being drawn landscape —
+ * which is the bug — but it is wrong in both directions either side of 1: a 4:3 clip is given a
+ * 16:9 box and letterboxed, and a **square** clip falls to the `else` and gets a 9:16 box, i.e. a
+ * tall column with a square video floating in it.
+ *
+ * Android carries the full table (`PostViewHolderHelper.getItemFeedViewType`, ten `FeedType`s and
+ * ten view holders) and this is it, verbatim — the ten targets, the two clamps and the two
+ * tolerance windows. The clamps are the part worth stating: a 1:10 clip does not get a card ten
+ * screens tall, it is capped at `9/16`, and a panorama is capped at `16/9`.
+ *
+ * ## The order of the branches is the rule
+ *
+ * `1/1` and `9/20` are decided by **windows** rather than by nearest-neighbour, because at those
+ * two ratios the neighbours are close enough that rounding would pick the wrong one — 1.0 sits
+ * between `5/6` and `6/5`, and `9/20` (0.45) sits beside `9/16` (0.5625) and nothing below. Both
+ * windows are checked before the nearest-of search, which is what Android does.
+ *
+ * No dimensions ⇒ `1/1`, which is Android's fallback (`?: FeedType.TYPE_VIDEO_1_1`) and not
+ * legacy's `16/9`: a square reserves a box that is wrong by less, whichever way the clip turns out.
+ */
+export function detectVideoAspectRatio(video: Pick<PostVideo, 'width' | 'height'> | null): string {
+    const width = video?.width ?? null
+    const height = video?.height ?? null
+    if (width === null || height === null || width <= 0 || height <= 0) return '1/1'
+
+    const ratio = width / height
+
+    /* Both ends clamped, so one absurd payload cannot hand a feed row an absurd height. */
+    if (ratio <= 0.2) return '9/16'
+    if (ratio >= 5) return '16/9'
+    /* Two windows before the search — see the note above for why these two and not the rest. */
+    if (ratio > 0.95 && ratio < 1.05) return '1/1'
+    if (ratio > 0.43 && ratio < 0.47) return '9/20'
+
+    let best: (typeof VIDEO_RATIOS)[number] = VIDEO_RATIOS[0]
+    for (const candidate of VIDEO_RATIOS) {
+        if (Math.abs(candidate.value - ratio) < Math.abs(best.value - ratio)) best = candidate
+    }
+    return best.label
+}
+
+/** Android's ten `FeedType` video shapes, in its own order. */
+const VIDEO_RATIOS = [
+    { label: '5/6', value: 5 / 6 },
+    { label: '6/5', value: 6 / 5 },
+    { label: '3/4', value: 3 / 4 },
+    { label: '4/3', value: 4 / 3 },
+    { label: '2/3', value: 2 / 3 },
+    { label: '3/2', value: 3 / 2 },
+    { label: '9/16', value: 9 / 16 },
+    { label: '16/9', value: 16 / 9 },
+    { label: '9/20', value: 9 / 20 },
+    { label: '1/1', value: 1 },
+] as const
+
+/**
  * The aspect ratio of a **locked** post's cover, which follows a different rule again.
  *
  * A locked post's cover is not the post's media — it is the one image the creator chose to show

@@ -14,7 +14,12 @@ import { usePostActions } from '../hooks/use-post-actions'
 import { usePostUnlock } from '../hooks/use-post-unlock'
 import { isNsfw, postDisplay } from '../lib/post-access'
 import { postHref } from '../lib/post-link'
-import { formatDuration, POST_COLUMN_SIZES, videoSrc } from '../lib/post-media'
+import {
+    detectVideoAspectRatio,
+    formatDuration,
+    POST_COLUMN_SIZES,
+    videoSrc,
+} from '../lib/post-media'
 import { openReplyDialog } from '../store/reply-store'
 import { PostActions } from './post-actions'
 import {
@@ -441,7 +446,13 @@ export function PostMediaBlock({
  * the visible one alive; the cheaper answer with the same result is to mount none and play in the
  * overlay, which is where a reader wants a video full width anyway.
  *
- * `16/9` is the box legacy reserves here regardless of the video's own dimensions.
+ * ## The box follows the clip, and 16/9 was a bug
+ *
+ * This reserved `16 / 9` unconditionally, so a **9:16 portrait clip was drawn landscape** — the
+ * poster letterboxed into a wide box with bars down both sides. The comment here used to claim that
+ * was legacy's behaviour; it is not. Legacy branches (`width / height > 1 ? '16/9' : '9/16'`), and
+ * Android carries the full ten-bucket table this now uses. `detectVideoAspectRatio` has the rule and
+ * why it is Android's rather than legacy's two buckets.
  */
 function PostVideoTile({
     post,
@@ -470,7 +481,7 @@ function PostVideoTile({
             aria-label={onOpen ? t('post_video_play') : undefined}
             data-testid={testId}
             className="relative w-full overflow-hidden rounded-[8px] bg-(--background-segment)"
-            style={{ aspectRatio: '16 / 9' }}
+            style={{ aspectRatio: detectVideoAspectRatio(post.video) }}
         >
             {poster ? (
                 <Image

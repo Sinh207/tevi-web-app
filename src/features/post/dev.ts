@@ -212,6 +212,26 @@ export const POST_VIDEO = makePostFixture({
     },
 })
 
+/**
+ * A **portrait** clip — the shape the feed used to draw landscape.
+ *
+ * The tile reserved `16 / 9` unconditionally, so this rendered as a wide box with the poster
+ * letterboxed between two bars. There was no fixture that could show it, which is why it survived:
+ * every clip in the harness was 1920×1080.
+ */
+export const POST_VIDEO_PORTRAIT = makePostFixture({
+    id: 'video-portrait',
+    text: 'Shot on a phone, the way most of them are.',
+    video: {
+        id: 'v2',
+        playback: { hls: 'https://example.invalid/v2.m3u8' },
+        thumbnail: '/illustrations/monetization/donation.webp',
+        duration_seconds: 42,
+        width: 1080,
+        height: 1920,
+    },
+})
+
 /** Members-only, and the reader is not one. */
 export const POST_LOCKED_MEMBERS = makePostFixture({
     id: 'locked-members',

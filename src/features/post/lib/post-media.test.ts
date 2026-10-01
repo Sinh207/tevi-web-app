@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { normalizePost, type Post, type PostImage, postImageSchema } from '../api/types'
 import {
     detectAspectRatio,
+    detectVideoAspectRatio,
     formatDuration,
     formatDurationPadded,
     gallerySlideRatio,
@@ -380,5 +381,50 @@ describe('mediaTileSummary', () => {
         expect(
             mediaTileSummary(post({ video: { playback: {}, duration_seconds: 0 } })).duration,
         ).toBeNull()
+    })
+})
+
+/**
+ * The feed's **presentation** box for a clip — Android's ten buckets, its two clamps and its two
+ * windows (`PostViewHolderHelper.getItemFeedViewType`).
+ *
+ * Worth pinning as a table rather than as prose because the bug it replaces was invisible in code
+ * and obvious on screen: the tile hard-coded `16 / 9`, so a portrait clip was drawn landscape with
+ * bars down both sides. A table is also the only way to state that the *order* of the branches is
+ * part of the rule — 1:1 and 9:20 are decided by windows **before** the nearest-of search, because
+ * at those two ratios the neighbours are close enough that rounding picks the wrong one.
+ */
+describe('detectVideoAspectRatio', () => {
+    const clip = (width: number | null, height: number | null) => ({ width, height })
+
+    it.each([
+        ['portrait 1080×1920', 1080, 1920, '9/16'],
+        ['landscape 1920×1080', 1920, 1080, '16/9'],
+        ['square 1000×1000', 1000, 1000, '1/1'],
+        ['tall phone 1080×2400', 1080, 2400, '9/20'],
+        ['classic 1024×768', 1024, 768, '4/3'],
+        ['classic portrait 768×1024', 768, 1024, '3/4'],
+        ['35mm 1500×1000', 1500, 1000, '3/2'],
+        ['6:5 1200×1000', 1200, 1000, '6/5'],
+        ['5:6 1000×1200', 1000, 1200, '5/6'],
+        ['2:3 1000×1500', 1000, 1500, '2/3'],
+    ])('%s → %s', (_name, width, height, expected) => {
+        expect(detectVideoAspectRatio(clip(width, height))).toBe(expected)
+    })
+
+    /** Both ends clamped, so one absurd payload cannot hand a feed row an absurd height. */
+    it('clamps a sliver of a video rather than making the card its height', () => {
+        expect(detectVideoAspectRatio(clip(100, 2000))).toBe('9/16')
+        expect(detectVideoAspectRatio(clip(2000, 100))).toBe('16/9')
+    })
+
+    /**
+     * ⚠ `1/1`, not legacy web's `16/9`. A square reserves a box that is wrong by less whichever way
+     * the clip turns out, and it is Android's own fallback.
+     */
+    it('falls back to a square when the payload carries no dimensions', () => {
+        expect(detectVideoAspectRatio(clip(null, null))).toBe('1/1')
+        expect(detectVideoAspectRatio(clip(0, 0))).toBe('1/1')
+        expect(detectVideoAspectRatio(null)).toBe('1/1')
     })
 })

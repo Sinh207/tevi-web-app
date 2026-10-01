@@ -137,6 +137,7 @@ export { type PostIntent, postIntent, postUnlockPrice } from './lib/post-intent'
 export { postHref, postPath } from './lib/post-link'
 export {
     detectAspectRatio,
+    detectVideoAspectRatio,
     formatDuration,
     formatDurationPadded,
     GALLERY_HEIGHT,

@@ -60,6 +60,7 @@ import {
     POST_VIDEO,
     POST_VIDEO_AND_IMAGES,
     POST_VIDEO_BARE,
+    POST_VIDEO_PORTRAIT,
     type Post,
     PostCard,
     PostComposerDialog,
@@ -275,6 +276,11 @@ const GROUPS: Group[] = [
                 title: 'Very long, with a picture',
                 note: 'The feed still shows it whole. Press Comment: the popup clamps it at 200 and offers Show all — the one place a post is cut.',
                 post: POST_VERY_LONG,
+            },
+            {
+                title: 'Portrait video',
+                note: 'The box follows the clip — ten buckets from Android, clamped at both ends. It used to be a hard 16/9 and drew this landscape.',
+                post: POST_VIDEO_PORTRAIT,
             },
             {
                 title: 'One image, dimensions known',
