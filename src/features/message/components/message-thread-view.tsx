@@ -1,6 +1,7 @@
 'use client'
 
 import type { Channel } from '@features/channel'
+import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
@@ -113,6 +114,18 @@ export function MessageThreadView({
     const [viewer, setViewer] = useState<{ message: ChatMessage; index: number } | null>(null)
 
     const days = useMemo(() => groupByDay(messages), [messages])
+
+    /*
+     * Only the messages around the reader are mounted — the home feed's `useRenderWindow`. A long
+     * conversation keeps every page it has loaded, and each bubble carries images, a card, its menu;
+     * past a few hundred the room slows to the speed of its oldest history. A message off screen is
+     * stood down to an empty box of the height it had, so nothing moves.
+     *
+     * Wider overscan than the feed's: a bubble is a few lines, so eight rows each side is still one
+     * flick of headroom rather than one card.
+     */
+    const keys = useMemo(() => messages.map(message => message.id), [messages])
+    const { observe, heightFor } = useRenderWindow(keys, { minimum: 20, overscan: 8 })
     const now = Date.now()
 
     const onScroll = useCallback(() => {
@@ -159,8 +172,10 @@ export function MessageThreadView({
      */
     const [highlighted, setHighlighted] = useState<string | null>(null)
     const jumpTo = (id: string) => {
+        // The window's wrapper, not the bubble: a message off screen is stood down and has no
+        // bubble, but its box is always there at its own height.
         const node = scroller.current?.querySelector<HTMLElement>(
-            `[data-message-id="${CSS.escape(id)}"]`,
+            `[data-window-key="${CSS.escape(id)}"]`,
         )
         if (!node) {
             toast.info(t('message_reply_not_loaded'), { id: 'message-jump' })
@@ -206,6 +221,7 @@ export function MessageThreadView({
                             </h3>
                             {day.messages.map(message => {
                                 const own = isOwn(message)
+                                const height = heightFor(message.id)
                                 return (
                                     <Fragment key={message.id}>
                                         {message.id === unreadFrom && (
@@ -223,24 +239,37 @@ export function MessageThreadView({
                                                 <span className="h-px flex-1 bg-(--opacity-white-50)" />
                                             </div>
                                         )}
-                                        <MessageBubble
-                                            message={message}
-                                            own={own}
-                                            locale={locale}
-                                            onReply={() => onReply(message)}
-                                            onCopy={() => onCopy(message)}
-                                            onEdit={own ? () => onEdit(message) : undefined}
-                                            onDelete={both => onDelete(message, both)}
-                                            onInline={item => onInline(message, item)}
-                                            onOpenImage={index => openImage(message, index)}
-                                            embedRoot={scrollRoot}
-                                            highlighted={highlighted === message.id}
-                                            onOpenReply={
-                                                message.reply_message?.id
-                                                    ? () => jumpTo(message.reply_message?.id ?? '')
-                                                    : undefined
-                                            }
-                                        />
+                                        <div
+                                            ref={observe}
+                                            {...windowKeyProps(message.id)}
+                                            className="flex min-w-0 flex-col"
+                                            style={height === null ? undefined : { height }}
+                                        >
+                                            {height === null && (
+                                                <MessageBubble
+                                                    message={message}
+                                                    own={own}
+                                                    locale={locale}
+                                                    onReply={() => onReply(message)}
+                                                    onCopy={() => onCopy(message)}
+                                                    onEdit={own ? () => onEdit(message) : undefined}
+                                                    onDelete={both => onDelete(message, both)}
+                                                    onInline={item => onInline(message, item)}
+                                                    onOpenImage={index => openImage(message, index)}
+                                                    embedRoot={scrollRoot}
+                                                    highlighted={highlighted === message.id}
+                                                    onOpenReply={
+                                                        message.reply_message?.id
+                                                            ? () =>
+                                                                  jumpTo(
+                                                                      message.reply_message?.id ??
+                                                                          '',
+                                                                  )
+                                                            : undefined
+                                                    }
+                                                />
+                                            )}
+                                        </div>
                                     </Fragment>
                                 )
                             })}
