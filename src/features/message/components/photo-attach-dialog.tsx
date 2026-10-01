@@ -11,6 +11,7 @@ import { type DragEvent, type KeyboardEvent, useEffect, useMemo, useRef, useStat
 import type { UseComposerResult } from '../hooks/use-composer'
 import { DISC } from '../lib/disc'
 import { PHOTO_ACCEPT, PHOTO_MAX, type PhotoPickError, pickPhotos } from '../lib/photo-files'
+import { FIELD_SCROLLBAR } from '../lib/room-ground'
 
 /**
  * The photo sheet — legacy's `common/chat/attachment`: pick or drop up to ten photos, write a
@@ -224,17 +225,24 @@ export function PhotoAttachDialog({
                 {/* Legacy's footer: the caption field on grey, a send disc beside it. */}
                 <div className="flex flex-none items-end gap-2 border-t border-solid border-(--separator-default) bg-(--background-subtle) p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                     <span className="flex min-w-0 flex-1 flex-col">
-                        <textarea
-                            data-testid="message-photos-caption"
-                            rows={1}
-                            value={caption}
-                            onChange={event => setCaption(event.target.value)}
-                            onKeyDown={onKeyDown}
-                            placeholder={t('message_photos_caption')}
-                            aria-label={t('message_photos_caption')}
-                            aria-invalid={overLimit || undefined}
-                            className="block max-h-[112px] w-full resize-none overflow-y-auto rounded-[25px] bg-(--background-surface) px-4 py-2 type-body-default text-(--text-title) outline-none [field-sizing:content] placeholder:text-(--text-placeholder)"
-                        />
+                        {/* The pill carries the fill and the inset, so a long caption scrolls
+                            inside it rather than into its rounded edge. */}
+                        <span className="flex rounded-[25px] bg-(--background-surface) py-2 ps-4 pe-2">
+                            <textarea
+                                data-testid="message-photos-caption"
+                                rows={1}
+                                value={caption}
+                                onChange={event => setCaption(event.target.value)}
+                                onKeyDown={onKeyDown}
+                                placeholder={t('message_photos_caption')}
+                                aria-label={t('message_photos_caption')}
+                                aria-invalid={overLimit || undefined}
+                                className={cn(
+                                    'block max-h-24 w-full resize-none overflow-y-auto bg-transparent type-body-default text-(--text-title) outline-none [field-sizing:content] placeholder:text-(--text-placeholder)',
+                                    FIELD_SCROLLBAR,
+                                )}
+                            />
+                        </span>
                         {overLimit && (
                             <span
                                 role="alert"

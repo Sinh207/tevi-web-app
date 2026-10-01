@@ -19,14 +19,19 @@ import type { UseComposerResult } from '../hooks/use-composer'
 import { DISC } from '../lib/disc'
 import { messageText } from '../lib/message-thread'
 import { PHOTO_TYPES } from '../lib/photo-files'
+import { FIELD_SCROLLBAR } from '../lib/room-ground'
 
 /* Loaded on first open — most visits to a conversation never attach anything. */
 const PhotoAttachDialog = dynamic(() =>
     import('./photo-attach-dialog').then(module => module.PhotoAttachDialog),
 )
 
-/** Four lines of `type-body-default` (16 × 1.5) plus the field's padding — legacy's `maxRows: 4`. */
-const MAX_FIELD_PX = 4 * 24 + 16
+/**
+ * Four lines of `type-body-default` (16 × 1.5) — legacy's `maxRows: 4`. The field's 8px inset is a
+ * **margin**, not padding: padding scrolls with the text, so a long draft ran into the box's top
+ * edge once scrolled; a margin keeps the inset on screen at any scroll position.
+ */
+const MAX_FIELD_PX = 4 * 24
 
 /**
  * The foot of a conversation: what is being replied to or edited, the field, and Send.
@@ -197,7 +202,10 @@ export function MessageComposer({
                         aria-label={t('message_composer_placeholder')}
                         aria-invalid={overLimit || undefined}
                         aria-describedby={overLimit ? 'message-composer-limit' : undefined}
-                        className="block max-h-[112px] min-w-0 flex-1 resize-none overflow-y-auto bg-transparent py-2 ps-1 type-body-default text-(--text-title) outline-none [field-sizing:content] placeholder:text-(--text-placeholder)"
+                        className={cn(
+                            'my-2 block max-h-24 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent ps-1 type-body-default text-(--text-title) outline-none [field-sizing:content] placeholder:text-(--text-placeholder)',
+                            FIELD_SCROLLBAR,
+                        )}
                     />
                 </div>
                 {/* The counter appears in the last 10% and past the limit — never as clutter

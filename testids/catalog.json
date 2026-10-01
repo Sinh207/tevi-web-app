@@ -7179,7 +7179,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-composer.tsx:176"
+            "source": "src/features/message/components/message-composer.tsx:181"
         },
         "message-composer-cancel": {
             "scope": "message",
@@ -7187,7 +7187,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-composer.tsx:159"
+            "source": "src/features/message/components/message-composer.tsx:164"
         },
         "message-composer-input": {
             "scope": "message",
@@ -7195,7 +7195,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-composer.tsx:189"
+            "source": "src/features/message/components/message-composer.tsx:194"
         },
         "message-composer-submit": {
             "scope": "message",
@@ -7203,7 +7203,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-composer.tsx:222"
+            "source": "src/features/message/components/message-composer.tsx:230"
         },
         "message-delete-confirm": {
             "scope": "message",
@@ -7363,7 +7363,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/photo-attach-dialog.tsx:114"
+            "source": "src/features/message/components/photo-attach-dialog.tsx:115"
         },
         "message-photos-caption": {
             "scope": "message",
@@ -7371,7 +7371,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/photo-attach-dialog.tsx:228"
+            "source": "src/features/message/components/photo-attach-dialog.tsx:232"
         },
         "message-photos-close": {
             "scope": "message",
@@ -7379,7 +7379,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/photo-attach-dialog.tsx:121"
+            "source": "src/features/message/components/photo-attach-dialog.tsx:122"
         },
         "message-photos-pick": {
             "scope": "message",
@@ -7387,7 +7387,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/photo-attach-dialog.tsx:184"
+            "source": "src/features/message/components/photo-attach-dialog.tsx:185"
         },
         "message-photos-remove": {
             "scope": "message",
@@ -7395,7 +7395,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/photo-attach-dialog.tsx:166"
+            "source": "src/features/message/components/photo-attach-dialog.tsx:167"
         },
         "message-photos-submit": {
             "scope": "message",
@@ -7403,7 +7403,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/photo-attach-dialog.tsx:248"
+            "source": "src/features/message/components/photo-attach-dialog.tsx:256"
         },
         "message-popup": {
             "scope": "message",

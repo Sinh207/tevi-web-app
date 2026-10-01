@@ -436,7 +436,7 @@ export function ChatRoom({
                             channel={channel}
                             size="medium"
                             iconOnly={composer.text.trim() !== ''}
-                            className="mb-1 flex-none"
+                            className={cn('h-10 flex-none', composer.text.trim() !== '' && 'w-10')}
                         />
                     }
                 />

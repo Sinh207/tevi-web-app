@@ -404,7 +404,7 @@ function ThreadPreview({ now, locale }: { now: number; locale: string }) {
                             channel={space}
                             size="medium"
                             iconOnly={text.trim() !== ''}
-                            className="mb-1 flex-none"
+                            className={cn('h-10 flex-none', text.trim() !== '' && 'w-10')}
                         />
                     }
                 />

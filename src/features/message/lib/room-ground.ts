@@ -33,3 +33,16 @@ export const THREAD_SCROLLBAR = [
     '[&::-webkit-scrollbar-thumb]:rounded-(--radius-fill) [&::-webkit-scrollbar-thumb]:bg-(--scrollbar-message-thread)',
     '[&::-webkit-scrollbar-thumb:hover]:bg-(--scrollbar-message-thread-hover)',
 ].join(' ')
+
+/**
+ * The composer's field once it passes four lines — the same thumb as the thread, thinner and kept
+ * off the box's rounded corners. `scrollbar-gutter: stable` reserves its width from the first
+ * line, so the text does not reflow sideways the moment the fifth line appears.
+ */
+export const FIELD_SCROLLBAR = [
+    '[scrollbar-gutter:stable] [scrollbar-width:thin]',
+    '[scrollbar-color:var(--scrollbar-message-thread)_transparent]',
+    '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:my-2 [&::-webkit-scrollbar-track]:bg-transparent',
+    '[&::-webkit-scrollbar-thumb]:rounded-(--radius-fill) [&::-webkit-scrollbar-thumb]:bg-(--scrollbar-message-thread)',
+    '[&::-webkit-scrollbar-thumb:hover]:bg-(--scrollbar-message-thread-hover)',
+].join(' ')
