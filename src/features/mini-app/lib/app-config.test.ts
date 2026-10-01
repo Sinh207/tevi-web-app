@@ -4,6 +4,7 @@ import {
     miniAppDedupKey,
     miniAppFromChannel,
     normalizeMiniAppConfig,
+    spaceSlugFromUrl,
 } from './app-config'
 
 describe('normalizeMiniAppConfig', () => {
@@ -118,5 +119,18 @@ describe('miniAppFromChannel', () => {
         // One rule: a row must not hide its membership button for an app the player would refuse.
         expect(hasMiniApp(channel)).toBe(true)
         expect(hasMiniApp({ ...channel, mini_app_url: 'javascript:1' })).toBe(false)
+    })
+})
+
+describe('spaceSlugFromUrl', () => {
+    it('reads the handle off a space URL', () => {
+        expect(spaceSlugFromUrl('https://tevi.com/@arcade')).toBe('arcade')
+        expect(spaceSlugFromUrl('https://tevi.com/@arcade/post/1?x=1')).toBe('arcade')
+    })
+
+    it('is null for a URL that names no space', () => {
+        expect(spaceSlugFromUrl('https://tevi.com/messages')).toBeNull()
+        expect(spaceSlugFromUrl('not a url')).toBeNull()
+        expect(spaceSlugFromUrl(null)).toBeNull()
     })
 })

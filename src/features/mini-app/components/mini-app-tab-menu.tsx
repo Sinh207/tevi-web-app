@@ -1,12 +1,14 @@
 'use client'
 
+import { useOpenConversation } from '@features/message'
 import { ActionMenu, ActionMenuContent, ActionMenuItem } from '@shared/components/action-menu'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Icon } from '@shared/ui/icon'
 import { MenuTrigger } from '@shared/ui/menu'
+import { spaceSlugFromUrl } from '../lib/app-config'
 import { isMiniAppCenter } from '../lib/center'
 import type { MiniAppTab } from '../lib/tabs'
-import { getTabHandlers } from '../store/mini-app-store'
+import { getTabHandlers, useMiniAppStore } from '../store/mini-app-store'
 
 /**
  * The active tab's ⋯ menu, hung off its own mark (see `mini-app-tab.tsx`).
@@ -18,17 +20,19 @@ import { getTabHandlers } from '../store/mini-app-store'
  *   Only for the Mini App Center, which is legacy's rule: it is the one app known to implement it,
  *   and a row that silently does nothing is worse than an absent row.
  * - **Visit Space** — the app's Tevi page, in a new tab. Only when there is one.
- * - **Send message** — the space's DM thread, in a new tab.
+ * - **Send message** — the conversation with the app's space, in this tab: the floating chat window
+ *   from `md` up (the player minimises first — it is `z-40` and the window is `z-30`, so it would
+ *   open underneath), `/@{slug}/messages` below it. Only when `shareableUrl` names a space.
  * - **Share** — the platform share sheet, or the clipboard where there is none.
  * - **Reload page** — remounts the frame.
  * - **Terms** / **Privacy** — this app's own, in a new tab, because the reader is inside a third
  *   party's screen and those are the terms that still apply.
  *
- * ⚠ **"Send message" points at a route this app does not have yet.** It is legacy's target verbatim
- * — `${shareableUrl}/messages` — which resolves on the legacy app and 404s here until direct
- * messages are ported. It is present rather than hidden because the cutover is same-origin and
- * big-bang: the URL is the one that will be right, and a mini app's ⋯ menu is not where a reader
- * discovers that DMs exist. Whoever ports messaging should check this row still lands.
+ * "Send message" used to open legacy's `${shareableUrl}/messages` in a new tab, which 404'd here
+ * until direct messages were ported. It now goes through `features/message`'s `useOpenConversation`
+ * — the same door as a space's own Send message — so the reader stays in the app they are using. The
+ * two barrels reference each other (the chat draws this feature's Open button), which is safe for the
+ * reason `features/membership` ⇄ `features/channel` is: neither touches the other at module scope.
  *
  * ## No group divider, and that is not an omission
  *
@@ -55,6 +59,9 @@ export function MiniAppTabMenu({ tab, children }: { tab: MiniAppTab; children: R
     const { t } = useTranslation()
     const { config } = tab
     const handlers = () => getTabHandlers(tab.id)
+    const openConversation = useOpenConversation()
+    const minimize = useMiniAppStore(state => state.minimize)
+    const spaceSlug = spaceSlugFromUrl(config.shareableUrl)
 
     return (
         <ActionMenu>
@@ -95,16 +102,13 @@ export function MiniAppTabMenu({ tab, children }: { tab: MiniAppTab; children: R
                         />
                     </ActionMenuItem>
                 )}
-                {config.shareableUrl && (
+                {spaceSlug && (
                     <ActionMenuItem
                         data-testid="mini-app-menu-messages"
-                        onClick={() =>
-                            window.open(
-                                `${config.shareableUrl}/messages`,
-                                '_blank',
-                                'noopener,noreferrer',
-                            )
-                        }
+                        onClick={() => {
+                            minimize()
+                            openConversation(spaceSlug)
+                        }}
                     >
                         {t('miniapp_menu_send_message')}
                         <Icon name="send" size={20} className="size-5 flex-none" />

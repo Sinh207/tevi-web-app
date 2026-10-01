@@ -7219,7 +7219,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:468"
+            "source": "src/features/message/components/chat-room.tsx:469"
         },
         "message-delete-message-confirm": {
             "scope": "message",
@@ -7227,7 +7227,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:449"
+            "source": "src/features/message/components/chat-room.tsx:450"
         },
         "message-embed-collection": {
             "scope": "message",
@@ -7459,7 +7459,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:500"
+            "source": "src/features/message/components/chat-room.tsx:501"
         },
         "message-room-back": {
             "scope": "message",
@@ -7742,7 +7742,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:520"
+            "source": "src/features/message/components/chat-room.tsx:521"
         },
         "message-thread-unread": {
             "scope": "message",
@@ -7864,7 +7864,7 @@
                 "/privacy/mini-app",
                 "/tos/mini-app"
             ],
-            "source": "src/features/mini-app/components/open-mini-app-button.tsx:75"
+            "source": "src/features/mini-app/components/open-mini-app-button.tsx:81"
         },
         "mini-app-maximize": {
             "scope": "mini-app",
@@ -7884,7 +7884,7 @@
                 "/privacy/mini-app",
                 "/tos/mini-app"
             ],
-            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:67"
+            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:74"
         },
         "mini-app-menu-messages": {
             "scope": "mini-app",
@@ -7894,7 +7894,7 @@
                 "/privacy/mini-app",
                 "/tos/mini-app"
             ],
-            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:100"
+            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:107"
         },
         "mini-app-menu-open-space": {
             "scope": "mini-app",
@@ -7904,7 +7904,7 @@
                 "/privacy/mini-app",
                 "/tos/mini-app"
             ],
-            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:85"
+            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:92"
         },
         "mini-app-menu-privacy": {
             "scope": "mini-app",
@@ -7914,7 +7914,7 @@
                 "/privacy/mini-app",
                 "/tos/mini-app"
             ],
-            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:135"
+            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:139"
         },
         "mini-app-menu-reload": {
             "scope": "mini-app",
@@ -7924,7 +7924,7 @@
                 "/privacy/mini-app",
                 "/tos/mini-app"
             ],
-            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:121"
+            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:125"
         },
         "mini-app-menu-settings": {
             "scope": "mini-app",
@@ -7934,7 +7934,7 @@
                 "/privacy/mini-app",
                 "/tos/mini-app"
             ],
-            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:76"
+            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:83"
         },
         "mini-app-menu-share": {
             "scope": "mini-app",
@@ -7944,7 +7944,7 @@
                 "/privacy/mini-app",
                 "/tos/mini-app"
             ],
-            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:114"
+            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:118"
         },
         "mini-app-menu-terms": {
             "scope": "mini-app",
@@ -7954,7 +7954,7 @@
                 "/privacy/mini-app",
                 "/tos/mini-app"
             ],
-            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:128"
+            "source": "src/features/mini-app/components/mini-app-tab-menu.tsx:132"
         },
         "mini-app-minimize": {
             "scope": "mini-app",

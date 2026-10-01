@@ -435,6 +435,7 @@ export function ChatRoom({
                         <OpenMiniAppButton
                             channel={channel}
                             size="medium"
+                            iconOnly={composer.text.trim() !== ''}
                             className="mb-1 flex-none"
                         />
                     }

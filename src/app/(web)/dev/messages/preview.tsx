@@ -23,6 +23,7 @@ import {
     toConversationView,
     useSeedEmbedFixtures,
 } from '@features/message/dev'
+import { OpenMiniAppButton } from '@features/mini-app'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { type ReactNode, useEffect, useState } from 'react'
@@ -238,6 +239,9 @@ const WIDTHS = [
 function ThreadPreview({ now, locale }: { now: number; locale: string }) {
     const messages = threadFixtures(now)
     const [width, setWidth] = useState<(typeof WIDTHS)[number]['id']>(640)
+    /* Ada's space, or one that is a mini app — the room then carries the app's Open button. */
+    const [spaceSlug, setSpaceSlug] = useState<keyof typeof DEV_SPACES>('ada')
+    const space = DEV_SPACES[spaceSlug]
     const [text, setText] = useState('')
     const [replyTo, setReplyTo] = useState<(typeof messages)[number] | null>(null)
     const [editing, setEditing] = useState<(typeof messages)[number] | null>(null)
@@ -331,7 +335,28 @@ function ThreadPreview({ now, locale }: { now: number; locale: string }) {
 
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+                {(
+                    [
+                        { id: 'ada', label: 'Space · Ada' },
+                        { id: 'arcade', label: 'Mini app · Arcade' },
+                    ] as const
+                ).map(option => (
+                    <button
+                        key={option.id}
+                        type="button"
+                        aria-pressed={spaceSlug === option.id}
+                        onClick={() => setSpaceSlug(option.id)}
+                        className={cn(
+                            'rounded-(--radius-fill) px-3 py-1 type-dense-strong',
+                            spaceSlug === option.id
+                                ? 'bg-(--text-link) text-(--text-on-accent)'
+                                : 'bg-(--background-surface) text-(--text-title)',
+                        )}
+                    >
+                        {option.label}
+                    </button>
+                ))}
                 {WIDTHS.map(option => (
                     <button
                         key={option.id}
@@ -353,9 +378,9 @@ function ThreadPreview({ now, locale }: { now: number; locale: string }) {
                 className="@container flex h-[640px] max-w-full flex-col overflow-hidden rounded-[var(--radius-xl)] bg-(--background-surface)"
                 style={{ ...ROOM_GROUND, width }}
             >
-                <ChatHeader channel={DEV_SPACES.ada} online chatAction="TYPING" />
+                <ChatHeader channel={space} online chatAction="TYPING" />
                 <MessageThreadView
-                    channel={DEV_SPACES.ada}
+                    channel={space}
                     messages={messages}
                     pending={pending}
                     unreadFrom="l1"
@@ -372,7 +397,17 @@ function ThreadPreview({ now, locale }: { now: number; locale: string }) {
                     onRetry={() => undefined}
                     onDiscard={() => undefined}
                 />
-                <MessageComposer composer={composer} />
+                <MessageComposer
+                    composer={composer}
+                    leading={
+                        <OpenMiniAppButton
+                            channel={space}
+                            size="medium"
+                            iconOnly={text.trim() !== ''}
+                            className="mb-1 flex-none"
+                        />
+                    }
+                />
             </div>
         </div>
     )
