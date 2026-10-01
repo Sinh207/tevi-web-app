@@ -480,7 +480,20 @@ function PostVideoTile({
             onClick={onOpen}
             aria-label={onOpen ? t('post_video_play') : undefined}
             data-testid={testId}
-            className="relative w-full overflow-hidden rounded-[8px] bg-(--background-segment)"
+            /*
+             * ⚠ **Capped at 65% of the window**, which is the one number here that is nobody's
+             * reference. A 9:16 clip in a 612 column is 1003px of card — on a laptop that is the
+             * whole screen for one post, and the reader cannot see who wrote it and what it says at
+             * the same time. Legacy and Android both let the ratio run, and both are wrong about it
+             * on a desktop: Android's holder is the width of a phone, where 9:16 is about a screen
+             * *because the screen is that shape*.
+             *
+             * The ratio still decides the shape whenever it fits; the cap only bites on the tall
+             * end, and the poster is `object-cover`, so what it costs is a crop rather than a
+             * letterbox. `dvh` and not a pixel number: the thing being bounded is the reader's
+             * screen, which is the only unit that means the same on all of them.
+             */
+            className="relative max-h-[65dvh] w-full overflow-hidden rounded-[8px] bg-(--background-segment)"
             style={{ aspectRatio: detectVideoAspectRatio(post.video) }}
         >
             {poster ? (
