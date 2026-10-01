@@ -50,18 +50,19 @@ const SURFACE =
  * the URL stays put and signing in leaves them on the screen they asked for. Legacy renders the
  * empty state for a guest.
  *
- * ## The list header sticks; the Live now header does not
+ * ## Both headers stick, at the same offset
  *
  * Legacy pins three things — "Live now" at `top: 48`, "Following" at `top: 56`, the limit alert at
  * `top: 112.5` — inside a scroll container of its own. This app scrolls the **document**, and the
  * top of the viewport already holds a 60px bar at every width: the global `AppTopBar` below `md`
  * (`(tabs)/layout.tsx`), `PageBackBar` from `md` (`following/page.tsx`). Both are `sticky top-0`
- * and both are `h-[60px]`, so the list header parks at `top-[60px]` with no breakpoint-dependent
+ * and both are `h-[60px]`, so each header parks at `top-[60px]` with no breakpoint-dependent
  * offset. Change either bar's height and this number moves with it.
  *
- * Only the "Following" header sticks. It carries the sort control, which is what a reader reaches
- * for halfway down a long list; "Live now" is a short strip whose header scrolls away with it, and
- * two stacked stickies are exactly the arithmetic legacy's three magic numbers get wrong.
+ * Both use the **same** offset, and they never collide because of where each one sits: "Live now"
+ * is inside the strip's own wrapper, so it can only stick while that block is on screen and is
+ * carried off with it; "Following" is a direct child of the card, so it takes the slot over as the
+ * strip leaves. That hand-off is what legacy's three stacked offsets were trying to fake.
  *
  * ## The Live now strip fails quietly
  *
@@ -197,7 +198,8 @@ export function FollowingView({ className }: { className?: string }) {
         lives.isLoading ||
         lives.total === 0 ? null : (
             <div className={RISE}>
-                <ListHeader>
+                {/* Sticks at the same `top-[60px]` as the list header — see "Both headers stick". */}
+                <ListHeader className="sticky top-[60px] z-10 bg-(--background-surface)">
                     <ListHeaderTitle as="h2">{t('following_live_now')}</ListHeaderTitle>
                 </ListHeader>
                 <ul className="flex list-none flex-col gap-3 p-4">
@@ -410,7 +412,7 @@ export function FollowingView({ className }: { className?: string }) {
              * a failed load it is a control with nothing to act on, and a header over no rows.
              */}
             {!isBootstrapping && !isSignedOut && !isError && (isLoading || !isEmpty) && (
-                /* `sticky top-[60px]` clears the 60px bar above — see "The list header sticks". It
+                /* `sticky top-[60px]` clears the 60px bar above — see "Both headers stick". It
                    needs its own surface fill or the rows scroll visibly through it, and `z-10` keeps
                    it over the rows' entrance animations, which create stacking contexts. */
                 <ListHeader className="sticky top-[60px] z-10 bg-(--background-surface)">

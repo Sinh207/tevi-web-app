@@ -2690,7 +2690,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-view.tsx:420"
+            "source": "src/features/channel/components/following-view.tsx:422"
         },
         "channel-following-find-people": {
             "scope": "channel",
@@ -2712,7 +2712,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-view.tsx:298"
+            "source": "src/features/channel/components/following-view.tsx:300"
         },
         "channel-following-live": {
             "scope": "channel",
@@ -2734,7 +2734,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-view.tsx:206"
+            "source": "src/features/channel/components/following-view.tsx:208"
         },
         "channel-following-live-link": {
             "scope": "channel",
@@ -2800,7 +2800,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-view.tsx:223"
+            "source": "src/features/channel/components/following-view.tsx:225"
         },
         "channel-following-loading": {
             "scope": "channel",
@@ -2869,7 +2869,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-view.tsx:272"
+            "source": "src/features/channel/components/following-view.tsx:274"
         },
         "channel-following-row": {
             "scope": "channel",
@@ -2891,7 +2891,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-view.tsx:350"
+            "source": "src/features/channel/components/following-view.tsx:352"
         },
         "channel-following-row-link": {
             "scope": "channel",
@@ -2938,7 +2938,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-view.tsx:252"
+            "source": "src/features/channel/components/following-view.tsx:254"
         },
         "channel-following-sort": {
             "scope": "channel",
@@ -2960,7 +2960,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/following-view.tsx:445"
+            "source": "src/features/channel/components/following-view.tsx:447"
         },
         "channel-header-loading": {
             "scope": "channel",
