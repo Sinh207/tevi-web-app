@@ -1,7 +1,7 @@
 'use client'
 
 import type { Channel } from '@features/channel'
-import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
+import { useRenderWindow, windowKeyProps, windowKeySelector } from '@shared/hooks/use-render-window'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
@@ -174,9 +174,7 @@ export function MessageThreadView({
     const jumpTo = (id: string) => {
         // The window's wrapper, not the bubble: a message off screen is stood down and has no
         // bubble, but its box is always there at its own height.
-        const node = scroller.current?.querySelector<HTMLElement>(
-            `[data-window-key="${CSS.escape(id)}"]`,
-        )
+        const node = scroller.current?.querySelector<HTMLElement>(windowKeySelector(id))
         if (!node) {
             toast.info(t('message_reply_not_loaded'), { id: 'message-jump' })
             return

@@ -7718,7 +7718,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-thread-view.tsx:197"
+            "source": "src/features/message/components/message-thread-view.tsx:195"
         },
         "message-thread-error": {
             "scope": "message",
@@ -7734,7 +7734,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-thread-view.tsx:310"
+            "source": "src/features/message/components/message-thread-view.tsx:308"
         },
         "message-thread-loading": {
             "scope": "message",
@@ -7750,7 +7750,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/message-thread-view.tsx:230"
+            "source": "src/features/message/components/message-thread-view.tsx:228"
         },
         "message-wall": {
             "scope": "message",

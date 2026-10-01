@@ -244,6 +244,14 @@ export function useRenderWindow(
  */
 const OBSERVER_OPTIONS: IntersectionObserverInit = { threshold: 0 }
 
+/**
+ * A selector for one row's wrapper — for a caller that has to reach a row that may be stood down
+ * (a chat's "go to the quoted message"), which only the wrapper is guaranteed to be.
+ */
+export function windowKeySelector(key: string): string {
+    return `[${KEY_ATTRIBUTE}="${CSS.escape(key)}"]`
+}
+
 /** The attribute `observe` reads the key from. Exported so the row can publish it. */
 export function windowKeyProps(key: string): { [KEY_ATTRIBUTE]: string } {
     return { [KEY_ATTRIBUTE]: key }
