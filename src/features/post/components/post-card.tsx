@@ -508,14 +508,17 @@ function PostVideoTile({
              * screen is that shape, and on a 612px desktop column is 1003px — one post, whole
              * laptop. Neither client has a desktop to be wrong about.
              *
-             * `mx-auto` **with `block`**, and both halves were needed. `PostMediaBlock` wraps this
-             * in a plain block, so there is no flex line and `self-center` is inert; and when
-             * `onOpen` is given this element is a `<button>`, which is inline-level — auto margins
-             * on an inline-level box compute to `0`, measured. Only once it is `display: block` do
-             * they split the leftover and centre the narrowed tile instead of parking it against
-             * the leading edge with the rest of the column empty beside it.
+             * `me-auto`, so a narrowed tile sits against the **leading** edge and the slack goes to
+             * the trailing one — the clip lines up with the author's name and the words above it
+             * rather than floating in the middle of the column. Logical, so it is the left edge in
+             * English and the right in Arabic; `ms-auto`/`mx-auto` would be the other two choices
+             * and neither is this.
+             *
+             * `block` is load-bearing beside it: with `onOpen` this element is a `<button>`, which
+             * is inline-level, and an auto margin on an inline-level box computes to `0` — measured
+             * while trying to centre it, where the tile ignored `mx-auto` entirely.
              */
-            className="relative mx-auto block w-full overflow-hidden rounded-[8px] bg-(--background-segment)"
+            className="relative me-auto block w-full overflow-hidden rounded-[8px] bg-(--background-segment)"
             style={{
                 aspectRatio: ratio,
                 maxWidth: `${Math.round(VIDEO_MAX_HEIGHT * ratioValue)}px`,
