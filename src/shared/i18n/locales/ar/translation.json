@@ -2466,5 +2466,11 @@
     "message_settings_share": "مشاركة الرابط",
     "message_settings_save": "حفظ الإعدادات",
     "message_settings_saved": "تم حفظ إعدادات الرسائل",
-    "message_settings_error": "تعذّر حفظ إعدادات الرسائل. يُرجى المحاولة مرة أخرى."
+    "message_settings_error": "تعذّر حفظ إعدادات الرسائل. يُرجى المحاولة مرة أخرى.",
+    "message_embed_live": "بث مباشر",
+    "message_embed_live_free": "مجاني",
+    "message_photo_viewer_from": "من {{name}}",
+    "message_reply_not_loaded": "الرسالة الأصلية أقدم في المحادثة.",
+    "message_reply_open": "الانتقال إلى الرسالة الأصلية",
+    "message_error_send_offline": "أنت غير متصل. سيتم الإرسال عند عودة الاتصال."
 }

@@ -9,8 +9,9 @@ import Image from 'next/image'
 import { type KeyboardEvent, useState } from 'react'
 
 /**
- * A message's photos, full screen — legacy's `messageList/viewImage`, without its per-photo
- * Reply / Delete / Download bar (those act on the *message* and are on the bubble already).
+ * A message's photos, full screen — legacy's `messageList/viewImage`, with its top bar: whose
+ * photos and when, then Delete (the reader's own message, "for me", confirmed by the room) and Reply.
+ * Legacy's Download button is commented out of its bar and is not drawn here either.
  *
  * Its own small viewer rather than `features/post`'s lightbox: that one is the post card's (it
  * draws the post's author and actions over the media, and the post feature keeps it internal on
@@ -22,10 +23,22 @@ export function MessagePhotoViewer({
     urls,
     startIndex,
     onClose,
+    from,
+    time,
+    onReply,
+    onDelete,
 }: {
     urls: string[]
     startIndex: number
     onClose: () => void
+    /** "Myself" or the sender's name — the bar's first line. */
+    from?: string
+    /** When it was sent, already formatted. */
+    time?: string
+    /** Close the viewer and reply to the message. */
+    onReply?: () => void
+    /** Close the viewer and ask to delete the message for this account. Own messages only. */
+    onDelete?: () => void
 }) {
     const { t } = useTranslation()
     const [index, setIndex] = useState(() => Math.min(Math.max(startIndex, 0), urls.length - 1))
@@ -54,6 +67,43 @@ export function MessagePhotoViewer({
                 className="h-dvh max-h-dvh w-screen max-w-none gap-0 rounded-none border-0 bg-(--opacity-black-75) p-0 shadow-none"
             >
                 <DialogTitle className="sr-only">{t('message_photo_viewer_title')}</DialogTitle>
+                {/* Legacy's bar: 50% black, 12px in; the close disc beside it stays last in the DOM. */}
+                <div className="flex h-16 flex-none items-center gap-3 bg-(--opacity-black-50) ps-3 pe-14 text-(--white)">
+                    <span className="flex min-w-0 flex-1 flex-col gap-1 type-caption-label">
+                        {from && (
+                            <span className="truncate">
+                                {t('message_photo_viewer_from', { name: from })}
+                            </span>
+                        )}
+                        {time && <span className="truncate">{time}</span>}
+                    </span>
+                    {onDelete && (
+                        <Button
+                            data-testid="message-photo-viewer-delete"
+                            variant="ghost"
+                            size="large"
+                            iconOnly
+                            aria-label={t('message_delete_for_me')}
+                            onClick={onDelete}
+                            className="size-10 rounded-(--radius-fill) bg-(--opacity-black-50) text-(--white) hover:not-disabled:bg-(--opacity-black-75)"
+                        >
+                            <Icon name="trash" weight="filled" size={20} />
+                        </Button>
+                    )}
+                    {onReply && (
+                        <Button
+                            data-testid="message-photo-viewer-reply"
+                            variant="ghost"
+                            size="large"
+                            iconOnly
+                            aria-label={t('message_reply')}
+                            onClick={onReply}
+                            className="size-10 rounded-(--radius-fill) bg-(--opacity-black-50) text-(--white) hover:not-disabled:bg-(--opacity-black-75)"
+                        >
+                            <Icon name="reply" weight="filled" size={20} />
+                        </Button>
+                    )}
+                </div>
                 <div className="relative flex min-h-0 flex-1 items-center justify-center p-4">
                     {url && (
                         <Image

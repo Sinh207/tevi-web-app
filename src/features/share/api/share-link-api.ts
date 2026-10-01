@@ -55,6 +55,8 @@ export const shareKeys = {
      */
     link: (accountId: string | null, target: string, channel: string) =>
         ['share', 'link', accountId ?? 'anon', target, channel] as const,
+    /** Where a short link goes. Not per account: a short link means the same thing to everyone. */
+    target: (code: string) => ['share', 'target', code] as const,
 }
 
 function parseShareLink(body: unknown): ShareLink | null {
@@ -97,6 +99,20 @@ export const shareLinkApi = {
                 accountId ? { accountId } : undefined,
             )
             .then(parseShareLink)
+    },
+
+    /**
+     * Where a short link points — `GET v1/params/{code}`, legacy's `getLongLink`, answering
+     * `{ original_url }`. `null` when the code resolves to nothing usable.
+     */
+    async resolveShortLink(code: string, signal?: AbortSignal): Promise<string | null> {
+        const body = await api.get<{ original_url?: unknown }>(
+            `v1/params/${encodeURIComponent(code)}`,
+            undefined,
+            { signal },
+        )
+        const url = typeof body?.original_url === 'string' ? body.original_url.trim() : ''
+        return url || null
     },
 
     /** The older endpoint: a short link and nothing else. No channel, so one link serves them all. */

@@ -2368,5 +2368,11 @@
     "message_settings_share": "分享連結",
     "message_settings_save": "儲存設定",
     "message_settings_saved": "訊息設定已儲存",
-    "message_settings_error": "無法儲存訊息設定，請再試一次。"
+    "message_settings_error": "無法儲存訊息設定，請再試一次。",
+    "message_embed_live": "直播",
+    "message_embed_live_free": "免費",
+    "message_photo_viewer_from": "來自 {{name}}",
+    "message_reply_not_loaded": "原訊息在對話更早的位置。",
+    "message_reply_open": "前往原訊息",
+    "message_error_send_offline": "你已離線，恢復連線後將自動傳送。"
 }

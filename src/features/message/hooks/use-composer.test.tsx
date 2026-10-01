@@ -12,6 +12,7 @@ vi.mock('@shared/lib/remote-config', () => ({
     useWebConfig: () => ({ directMessage: { limitCharacters: 10 } }),
 }))
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
+vi.mock('@features/realtime', () => ({ useSocketReconnect: vi.fn() }))
 
 const api = vi.hoisted(() => ({
     sendMessage: vi.fn(),
@@ -223,5 +224,22 @@ describe('useComposer', () => {
                 vi.useRealTimers()
             }
         })
+    })
+
+    /* Android resends what the connection lost; a refusal is never retried on its own. */
+    it('sends again by itself when the connection is back, and only what the connection lost', async () => {
+        api.sendMessage
+            .mockRejectedValueOnce(new ApiError({ message: 'offline', isNetwork: true }))
+            .mockResolvedValueOnce(serverCopy)
+        const { result, onMessage } = setup()
+        act(() => result.current.setText('hello'))
+        await act(async () => result.current.submit())
+        expect(result.current.pending[0]).toMatchObject({ status: 'failed', offline: true })
+
+        await act(async () => {
+            window.dispatchEvent(new Event('online'))
+        })
+        expect(api.sendMessage).toHaveBeenCalledTimes(2)
+        expect(onMessage).toHaveBeenCalledWith(serverCopy)
     })
 })

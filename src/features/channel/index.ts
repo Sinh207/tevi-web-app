@@ -45,6 +45,7 @@
  */
 
 export { channelKeys } from './api/channel-api'
+export type { ChannelEvent } from './api/events-api'
 export type {
     BlockedAccount,
     Channel,
@@ -84,6 +85,7 @@ export { BlockedAccountRow } from './components/blocked-account-row'
 export { BlockedAccountsSkeleton } from './components/blocked-accounts-skeleton'
 export { BlockedAccountsView } from './components/blocked-accounts-view'
 export { ChannelEmptyState } from './components/channel-empty-state'
+export { ChannelLiveBadge } from './components/channel-live-badge'
 export { ChannelLiveEventScreen } from './components/channel-live-event-screen'
 /**
  * The space's manifest link, which has to be put in `<head>` by hand — Next streams metadata into
@@ -231,6 +233,11 @@ export {
     FOLLOW_REQUESTS_ART,
     FOLLOWING_ART,
 } from './lib/illustrations'
+/**
+ * A stream's access rule (members only / unlock for N ★), for `features/message`'s event card — the
+ * third surface that draws a live, and the reason the rule must stay in one place.
+ */
+export { type LiveAccess, liveAccess } from './lib/live-access'
 /**
  * The routes the account drawer's "Space visibility", "Blocked accounts" and "Follow requests"
  * rows point at.

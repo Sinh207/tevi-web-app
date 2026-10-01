@@ -3402,8 +3402,16 @@ falls back to `stats.unread_messages`. **`attachments[]`** (iOS) carries the Pre
 same gift out of a `tevi://TEVI_PREMIUM_GIFT?product_name=…` text — both are read. **`recipient.is_bot`**
 hides the attach button, as on iOS.
 
+**10. A short link resolves through `shortlink/api/v1/params/{code}` → `{ original_url }`.** That is
+legacy's `getLongLink`, and legacy applies it to any `/{segment}/s/{code}` path — its `/x/s/…` links
+*and* the share sheet's `/@creator/s/{share_id}`. Does `params/` resolve a `share_id` minted by
+`v1/links`, or does that family need its own read? If not, a shared post arrives as a plain link
+instead of a post card. An event card reads the event off `channel.lives` (the event page's own
+source), so an event that has dropped out of that list shows no card.
+
 Encoded in: `features/message/api/message-api.ts` (`openConversation`, `getMessages`,
-`sendMessage`, `uploadPhoto`, `setMuted`, `deleteMessage`), `features/message/hooks/use-thread.ts`,
+`sendMessage`, `uploadPhoto`, `setMuted`, `deleteMessage`), `features/share/api/share-link-api.ts`
+(`resolveShortLink`), `features/message/hooks/use-thread.ts`,
 `features/message/hooks/use-composer.ts`, `features/message/lib/message-thread.ts`,
 `features/message/lib/message-link.ts`.
 

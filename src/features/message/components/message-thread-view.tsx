@@ -7,9 +7,15 @@ import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Loader } from '@shared/ui/loader'
 import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import type { ChatMessage, InlineMenuItem } from '../api/types'
 import { DISC } from '../lib/disc'
-import { formatDayLabel, groupByDay, type PendingMessage } from '../lib/message-thread'
+import {
+    formatDayLabel,
+    formatMessageTime,
+    groupByDay,
+    type PendingMessage,
+} from '../lib/message-thread'
 import { THREAD_SCROLLBAR } from '../lib/room-ground'
 import { ChannelIntro } from './chat-walls'
 import { MessageBubble } from './message-bubble'
@@ -104,7 +110,7 @@ export function MessageThreadView({
     })
     const [awayFromBottom, setAwayFromBottom] = useState(false)
     const [unseen, setUnseen] = useState(0)
-    const [viewer, setViewer] = useState<{ urls: string[]; index: number } | null>(null)
+    const [viewer, setViewer] = useState<{ message: ChatMessage; index: number } | null>(null)
 
     const days = useMemo(() => groupByDay(messages), [messages])
     const now = Date.now()
@@ -144,11 +150,30 @@ export function MessageThreadView({
         setUnseen(0)
     }
 
-    const openImage = (message: ChatMessage, index: number) =>
-        setViewer({
-            index,
-            urls: message.images.flatMap(image => (image.url ? [image.url] : [])),
-        })
+    const openImage = (message: ChatMessage, index: number) => setViewer({ message, index })
+
+    /*
+     * A reply's quote takes the reader to what it quotes — iOS's behaviour; legacy's quote is inert.
+     * Only within what is loaded: paging back through history to find it would move the reader
+     * somewhere they did not ask to go, so a quote of something older says so instead.
+     */
+    const [highlighted, setHighlighted] = useState<string | null>(null)
+    const jumpTo = (id: string) => {
+        const node = scroller.current?.querySelector<HTMLElement>(
+            `[data-message-id="${CSS.escape(id)}"]`,
+        )
+        if (!node) {
+            toast.info(t('message_reply_not_loaded'), { id: 'message-jump' })
+            return
+        }
+        node.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        setHighlighted(id)
+    }
+    useEffect(() => {
+        if (!highlighted) return
+        const timer = setTimeout(() => setHighlighted(null), 1600)
+        return () => clearTimeout(timer)
+    }, [highlighted])
 
     return (
         <div className="relative flex min-h-0 flex-1 flex-col">
@@ -209,6 +234,12 @@ export function MessageThreadView({
                                             onInline={item => onInline(message, item)}
                                             onOpenImage={index => openImage(message, index)}
                                             embedRoot={scrollRoot}
+                                            highlighted={highlighted === message.id}
+                                            onOpenReply={
+                                                message.reply_message?.id
+                                                    ? () => jumpTo(message.reply_message?.id ?? '')
+                                                    : undefined
+                                            }
                                         />
                                     </Fragment>
                                 )
@@ -271,9 +302,33 @@ export function MessageThreadView({
 
             {viewer && (
                 <MessagePhotoViewer
-                    urls={viewer.urls}
+                    urls={viewer.message.images.flatMap(image => (image.url ? [image.url] : []))}
                     startIndex={viewer.index}
                     onClose={() => setViewer(null)}
+                    from={
+                        isOwn(viewer.message)
+                            ? t('message_reply_myself')
+                            : (viewer.message.sender?.name ?? t('message_inactive_user'))
+                    }
+                    time={
+                        viewer.message.created_at
+                            ? `${formatDayLabel(viewer.message.created_at, locale, now)} · ${formatMessageTime(viewer.message.created_at, locale)}`
+                            : undefined
+                    }
+                    onReply={() => {
+                        const message = viewer.message
+                        setViewer(null)
+                        onReply(message)
+                    }}
+                    onDelete={
+                        isOwn(viewer.message)
+                            ? () => {
+                                  const message = viewer.message
+                                  setViewer(null)
+                                  onDelete(message, false)
+                              }
+                            : undefined
+                    }
                 />
             )}
         </div>

@@ -51,6 +51,13 @@ export type MessageEmbed =
     | { kind: 'space'; slug: string }
     | { kind: 'post'; slug: string; postId: string }
     | { kind: 'collection'; slug: string; collectionId: string }
+    | { kind: 'event'; slug: string; code: string }
+    /**
+     * A short link — `/{anything}/s/{code}`, legacy's own test (`partsShortLink[1] === 's'`), which
+     * covers both its `/x/s/…` and the share sheet's `/@creator/s/…`. Resolved first, then carded as
+     * whatever it points at.
+     */
+    | { kind: 'short'; code: string }
 
 const PREMIUM_GIFT_SCHEME = 'tevi://TEVI_PREMIUM_GIFT'
 const PREMIUM_GIFT_TYPE = 'TEVI_PREMIUM_GIFT'
@@ -89,11 +96,11 @@ export function isPremiumGift(message: GiftSource): boolean {
  *
  * Legacy's order: a photo message is its photos; a gift is a gift; otherwise the **first** URL
  * decides (iOS takes the last — legacy is the reference, and the first is what the reader sees
- * first). Three Tevi shapes get a card — `/@slug`, `/@slug/post/{id}` and `/@slug/collections/{id}`,
- * legacy's space, post and collection. Two stay plain links: an **event** (`/@slug/event/{id}` —
- * there is no read of one event by id in this client), and an **external site** — its preview needs
- * a server that fetches arbitrary URLs for us (legacy's `/api/link-preview`), which is an SSRF surface
- * this app deliberately does not have.
+ * first). Every Tevi shape legacy cards gets one — `/@slug` (space, or its mini app),
+ * `/@slug/post/{id}`, `/@slug/collections/{id}` and `/@slug/event/{code}` — and a legacy short link
+ * (`/{x|@creator}/s/{code}`) is resolved and then carded as what it points at. One thing stays a plain link: an
+ * **external site** — its preview needs a server that fetches arbitrary URLs for us (legacy's
+ * `/api/link-preview`), which is an SSRF surface this app deliberately does not have.
  */
 export function messageEmbed(
     message: Pick<ChatMessage, 'text' | 'markdown_text' | 'images' | 'attachments'>,
@@ -108,11 +115,13 @@ export function messageEmbed(
     const path = teviPath(link.href, ownHost)
     if (!path) return null
     const [first, second, third] = path.split(/[?#]/)[0].split('/').filter(Boolean)
+    if (first && second === 's' && third) return { kind: 'short', code: third }
     const slug = first?.match(SLUG)?.[1]
     if (!slug) return null
     if (!second) return { kind: 'space', slug }
     if (second === 'post' && third) return { kind: 'post', slug, postId: third }
     if (second === 'collections' && third) return { kind: 'collection', slug, collectionId: third }
+    if (second === 'event' && third) return { kind: 'event', slug, code: third }
     return null
 }
 

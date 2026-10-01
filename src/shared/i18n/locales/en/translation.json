@@ -2370,5 +2370,11 @@
     "message_settings_share": "Share link",
     "message_settings_save": "Save settings",
     "message_settings_saved": "Message settings saved",
-    "message_settings_error": "Couldn't save your message settings. Please try again."
+    "message_settings_error": "Couldn't save your message settings. Please try again.",
+    "message_embed_live": "Live",
+    "message_embed_live_free": "Free",
+    "message_photo_viewer_from": "From {{name}}",
+    "message_reply_not_loaded": "The original message is further back in the conversation.",
+    "message_reply_open": "Go to the original message",
+    "message_error_send_offline": "You're offline. It will be sent when you're back online."
 }

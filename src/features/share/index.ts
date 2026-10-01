@@ -58,6 +58,8 @@
  */
 
 export { ShareDialog } from './components/share-dialog'
+/** What a short link points at — `features/message` cards a shared post as the post it is. */
+export { useShortLinkTarget } from './hooks/use-short-link-target'
 export {
     postShareContext,
     type ShareContentType,

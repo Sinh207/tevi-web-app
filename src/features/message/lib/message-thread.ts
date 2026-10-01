@@ -36,6 +36,12 @@ export type PendingMessage = {
     files: File[]
     /** `blob:` previews of `files`, drawn in the pending bubble and revoked when it leaves. */
     previews: string[]
+    /**
+     * It failed because the request never reached the service (offline, a dropped connection), so
+     * it is sent again on its own once the connection is back — Android's resend on reconnect. A
+     * refusal is never retried by itself: the service said no, and only the reader can change that.
+     */
+    offline?: boolean
 }
 
 /** Every loaded message, oldest first, one copy per id. */

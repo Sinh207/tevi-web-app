@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-910 ids across 29 surfaces.
+913 ids across 29 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -480,17 +480,17 @@ Routes: `/[slug]/messages`, `/messages`
 | testid | companions | source |
 |---|---|---|
 | `message-block-confirm` | — | `src/features/message/components/chat-room-menu.tsx:99` |
-| `message-bubble` | `data-message-id` | `src/features/message/components/message-bubble.tsx:105` |
-| `message-bubble-copy` | — | `src/features/message/components/message-bubble.tsx:298` |
-| `message-bubble-delete` | — | `src/features/message/components/message-bubble.tsx:338` |
-| `message-bubble-delete-all` | — | `src/features/message/components/message-bubble.tsx:353` |
-| `message-bubble-edit` | — | `src/features/message/components/message-bubble.tsx:325` |
-| `message-bubble-menu-reply` | — | `src/features/message/components/message-bubble.tsx:310` |
-| `message-bubble-menu-trigger` | — | `src/features/message/components/message-bubble.tsx:285` |
-| `message-bubble-option` | `data-option-value` | `src/features/message/components/message-bubble.tsx:234` |
-| `message-bubble-remove` | — | `src/features/message/components/message-bubble.tsx:207` |
-| `message-bubble-reply` | — | `src/features/message/components/message-bubble.tsx:269` |
-| `message-bubble-retry` | — | `src/features/message/components/message-bubble.tsx:199` |
+| `message-bubble` | `data-message-id` | `src/features/message/components/message-bubble.tsx:111` |
+| `message-bubble-copy` | — | `src/features/message/components/message-bubble.tsx:306` |
+| `message-bubble-delete` | — | `src/features/message/components/message-bubble.tsx:346` |
+| `message-bubble-delete-all` | — | `src/features/message/components/message-bubble.tsx:361` |
+| `message-bubble-edit` | — | `src/features/message/components/message-bubble.tsx:333` |
+| `message-bubble-menu-reply` | — | `src/features/message/components/message-bubble.tsx:318` |
+| `message-bubble-menu-trigger` | — | `src/features/message/components/message-bubble.tsx:293` |
+| `message-bubble-option` | `data-option-value` | `src/features/message/components/message-bubble.tsx:242` |
+| `message-bubble-remove` | — | `src/features/message/components/message-bubble.tsx:215` |
+| `message-bubble-reply` | — | `src/features/message/components/message-bubble.tsx:277` |
+| `message-bubble-retry` | — | `src/features/message/components/message-bubble.tsx:207` |
 | `message-composer-attach` | — | `src/features/message/components/message-composer.tsx:176` |
 | `message-composer-cancel` | — | `src/features/message/components/message-composer.tsx:159` |
 | `message-composer-input` | — | `src/features/message/components/message-composer.tsx:189` |
@@ -498,19 +498,22 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-delete-confirm` | — | `src/features/message/components/conversation-pane.tsx:334` |
 | `message-delete-conversation-confirm` | — | `src/features/message/components/chat-room.tsx:468` |
 | `message-delete-message-confirm` | — | `src/features/message/components/chat-room.tsx:449` |
-| `message-embed-collection` | — | `src/features/message/components/message-embed.tsx:425` |
-| `message-embed-mini-app` | — | `src/features/message/components/message-embed.tsx:231` |
-| `message-embed-post` | — | `src/features/message/components/message-embed.tsx:352` |
-| `message-embed-space` | — | `src/features/message/components/message-embed.tsx:266` |
+| `message-embed-collection` | — | `src/features/message/components/message-embed.tsx:444` |
+| `message-embed-live` | — | `src/features/message/components/message-embed.tsx:480` |
+| `message-embed-mini-app` | — | `src/features/message/components/message-embed.tsx:250` |
+| `message-embed-post` | — | `src/features/message/components/message-embed.tsx:371` |
+| `message-embed-space` | — | `src/features/message/components/message-embed.tsx:285` |
 | `message-error` | — | `src/features/message/components/conversation-pane.tsx:128` |
 | `message-intro` | — | `src/features/message/components/chat-walls.tsx:340` |
 | `message-list-scroller` | — | `src/features/message/components/conversation-pane.tsx:318` |
 | `message-loading` | — | `src/features/message/components/conversation-skeleton.tsx:19` |
 | `message-no-chat` | — | `src/features/message/components/messages-shell.tsx:89` |
-| `message-photo-viewer` | — | `src/features/message/components/message-photo-viewer.tsx:52` |
-| `message-photo-viewer-close` | — | `src/features/message/components/message-photo-viewer.tsx:103` |
-| `message-photo-viewer-next` | — | `src/features/message/components/message-photo-viewer.tsx:83` |
-| `message-photo-viewer-prev` | — | `src/features/message/components/message-photo-viewer.tsx:72` |
+| `message-photo-viewer` | — | `src/features/message/components/message-photo-viewer.tsx:65` |
+| `message-photo-viewer-close` | — | `src/features/message/components/message-photo-viewer.tsx:153` |
+| `message-photo-viewer-delete` | — | `src/features/message/components/message-photo-viewer.tsx:82` |
+| `message-photo-viewer-next` | — | `src/features/message/components/message-photo-viewer.tsx:133` |
+| `message-photo-viewer-prev` | — | `src/features/message/components/message-photo-viewer.tsx:122` |
+| `message-photo-viewer-reply` | — | `src/features/message/components/message-photo-viewer.tsx:95` |
 | `message-photos` | — | `src/features/message/components/photo-attach-dialog.tsx:114` |
 | `message-photos-caption` | — | `src/features/message/components/photo-attach-dialog.tsx:228` |
 | `message-photos-close` | — | `src/features/message/components/photo-attach-dialog.tsx:121` |
@@ -555,11 +558,11 @@ Routes: `/[slug]/messages`, `/messages`
 | `message-sign-in` | — | `src/features/message/components/conversation-pane.tsx:160` |
 | `message-signed-out` | — | `src/features/message/components/conversation-pane.tsx:151` |
 | `message-tab` | `data-tab-id` | `src/features/message/components/conversation-pane.tsx:277` |
-| `message-thread` | — | `src/features/message/components/message-thread-view.tsx:157` |
+| `message-thread` | — | `src/features/message/components/message-thread-view.tsx:182` |
 | `message-thread-error` | — | `src/features/message/components/chat-room.tsx:384` |
-| `message-thread-jump` | — | `src/features/message/components/message-thread-view.tsx:250` |
+| `message-thread-jump` | — | `src/features/message/components/message-thread-view.tsx:281` |
 | `message-thread-loading` | — | `src/features/message/components/chat-room.tsx:520` |
-| `message-thread-unread` | — | `src/features/message/components/message-thread-view.tsx:189` |
+| `message-thread-unread` | — | `src/features/message/components/message-thread-view.tsx:214` |
 | `message-wall` | — | `src/features/message/components/chat-walls.tsx:309` |
 | `message-wall-delete` | — | `src/features/message/components/chat-walls.tsx:187` |
 | `message-wall-first-wave` | — | `src/features/message/components/chat-walls.tsx:92` |

@@ -1,11 +1,20 @@
 'use client'
 
 import { useAuth } from '@features/auth'
-import { type Channel, toChannelPath, useChannel, useChannelStats } from '@features/channel'
+import {
+    type Channel,
+    ChannelLiveBadge,
+    liveAccess,
+    toChannelPath,
+    useChannel,
+    useChannelStats,
+} from '@features/channel'
 import { hasMiniApp, miniAppFromChannel, useMiniApp } from '@features/mini-app'
 import { CollectionCard, isLocked, postApi, postHref, postKeys, postSnippet } from '@features/post'
 import { collectionHref } from '@features/post/routes'
+import { useShortLinkTarget } from '@features/share'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { StarMark } from '@shared/components/star-mark'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useTranslation } from '@shared/i18n/use-translation'
@@ -18,11 +27,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { MESSAGE_ART } from '../lib/illustrations'
-import { type MessageEmbed as Embed, giftPlanLabel } from '../lib/message-link'
+import { type MessageEmbed as Embed, giftPlanLabel, messageEmbed } from '../lib/message-link'
 
 /**
  * The card under a message's text — legacy's `itemMessage` embeds (`giftPremium`, `space`,
- * `miniApp`, `post`), on the same frame as a reply's quote: tinted by the side it sits on, a 2px
+ * `miniApp`, `post`, `collection`, `live`, and a short link resolved into one of those), on the same frame as a reply's quote: tinted by the side it sits on, a 2px
  * rule at the start edge, the kind named in the side's colour.
  *
  * ## Nothing is fetched until the card is near the screen
@@ -51,15 +60,25 @@ export function MessageEmbed({
     }
     return (
         <Deferred root={root} own={own}>
-            {embed.kind === 'space' ? (
-                <SpaceEmbed slug={embed.slug} own={own} />
-            ) : embed.kind === 'post' ? (
-                <PostEmbed postId={embed.postId} own={own} />
-            ) : (
-                <CollectionEmbed slug={embed.slug} collectionId={embed.collectionId} own={own} />
-            )}
+            <LinkedEmbed embed={embed} own={own} />
         </Deferred>
     )
+}
+
+/** The cards that need a read — everything but the gift, which is all in the message. */
+function LinkedEmbed({ embed, own }: { embed: Exclude<Embed, { kind: 'gift' }>; own: boolean }) {
+    switch (embed.kind) {
+        case 'space':
+            return <SpaceEmbed slug={embed.slug} own={own} />
+        case 'post':
+            return <PostEmbed postId={embed.postId} own={own} />
+        case 'collection':
+            return <CollectionEmbed slug={embed.slug} collectionId={embed.collectionId} own={own} />
+        case 'event':
+            return <EventEmbed slug={embed.slug} code={embed.code} own={own} />
+        case 'short':
+            return <ShortLinkEmbed code={embed.code} own={own} />
+    }
 }
 
 /** Mounts `children` once it has come within the margin — and keeps them mounted after. */
@@ -429,4 +448,97 @@ function CollectionEmbed({
             </div>
         </EmbedFrame>
     )
+}
+
+/**
+ * A live event — legacy's `itemMessage/live`: whose it is, the 16:9 banner with the stream's state
+ * and access over it, and its title. The event is read off the space (`channel.lives`), the way the
+ * event page finds it, so it costs the space read the card already makes. The access label is
+ * `features/channel`'s `liveAccess`, the rule the space's own live card draws.
+ */
+function EventEmbed({ slug, code, own }: { slug: string; code: string; own: boolean }) {
+    const { t, currentLanguage } = useTranslation()
+    const { channel, isLoading } = useChannel(slug)
+
+    if (isLoading) {
+        return (
+            <EmbedFrame own={own}>
+                <Skeleton className="aspect-video w-full rounded-(--radius-md)" />
+            </EmbedFrame>
+        )
+    }
+    const event = channel?.lives.find(live => live.code === code)
+    if (!channel || channel.is_suspended || !event) return null
+
+    const access = liveAccess(event)
+    const price =
+        access?.price == null ? '' : new Intl.NumberFormat(currentLanguage).format(access.price)
+
+    return (
+        <EmbedFrame own={own} label={t('message_embed_live')}>
+            <Link
+                data-testid="message-embed-live"
+                href={`${toChannelPath(channel.slug)}/event/${encodeURIComponent(code)}`}
+                className="flex flex-col gap-2 no-underline outline-none focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
+            >
+                <ChannelRow channel={channel} />
+                <span className="relative block aspect-video w-full overflow-hidden rounded-(--radius-md) bg-(--background-segment)">
+                    {event.images.banner ? (
+                        <Image
+                            src={event.images.banner}
+                            alt=""
+                            fill
+                            sizes="260px"
+                            className="object-cover"
+                        />
+                    ) : (
+                        <span className="flex size-full items-center justify-center text-(--icon-secondary)">
+                            <Icon name="signal-stream" weight="filled" size={24} />
+                        </span>
+                    )}
+                    <span className="absolute start-2 top-2 flex items-center gap-1">
+                        {event.status === 'LIVE' && <ChannelLiveBadge />}
+                        <span className="flex items-center gap-1 rounded-(--radius-fill) bg-(--opacity-black-50) px-2 py-0.5 type-caption-label text-(--white)">
+                            {access ? (
+                                <>
+                                    {access.price !== null && <StarMark size={12} />}
+                                    {t(access.key, { price })}
+                                </>
+                            ) : (
+                                t('message_embed_live_free')
+                            )}
+                        </span>
+                    </span>
+                </span>
+                <span className="line-clamp-2 type-dense-strong text-(--text-title)">
+                    {event.title ?? t('channel_event_untitled')}
+                </span>
+            </Link>
+        </EmbedFrame>
+    )
+}
+
+/**
+ * A short link (`/x/s/…`, `/@creator/s/…`) — resolved through the link service, then drawn as the
+ * card for whatever it points at. One level only: a short link to a short link is not a shape the
+ * service mints, and following one would be a loop the reader cannot see.
+ */
+function ShortLinkEmbed({ code, own }: { code: string; own: boolean }) {
+    const target = useShortLinkTarget(code)
+    if (target === undefined) {
+        return (
+            <EmbedFrame own={own}>
+                <Skeleton className="h-12 w-full rounded-(--radius-md)" />
+            </EmbedFrame>
+        )
+    }
+    if (!target) return null
+    const resolved = messageEmbed({
+        text: target,
+        markdown_text: null,
+        images: [],
+        attachments: [],
+    })
+    if (!resolved || resolved.kind === 'short' || resolved.kind === 'gift') return null
+    return <LinkedEmbed embed={resolved} own={own} />
 }

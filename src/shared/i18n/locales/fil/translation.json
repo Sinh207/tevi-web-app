@@ -2370,5 +2370,11 @@
     "message_settings_share": "Ibahagi ang link",
     "message_settings_save": "I-save ang mga setting",
     "message_settings_saved": "Na-save ang mga setting ng mensahe",
-    "message_settings_error": "Hindi ma-save ang mga setting ng mensahe. Pakisubukang muli."
+    "message_settings_error": "Hindi ma-save ang mga setting ng mensahe. Pakisubukang muli.",
+    "message_embed_live": "Live",
+    "message_embed_live_free": "Libre",
+    "message_photo_viewer_from": "Mula kay {{name}}",
+    "message_reply_not_loaded": "Mas nauna pa sa usapan ang orihinal na mensahe.",
+    "message_reply_open": "Pumunta sa orihinal na mensahe",
+    "message_error_send_offline": "Offline ka. Ipapadala ito kapag online ka na ulit."
 }

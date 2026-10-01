@@ -1,8 +1,10 @@
 'use client'
 
 import { useAuth } from '@features/auth'
+import { useSocketReconnect } from '@features/realtime'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { apiErrorText } from '@shared/lib/api/error-message'
+import { ApiError } from '@shared/lib/api/errors'
 import { useWebConfig } from '@shared/lib/remote-config'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -216,11 +218,17 @@ export function useComposer({
                 })
                 if (!message) throw new Error('empty')
             } catch (error) {
+                const offline = error instanceof ApiError && error.isNetwork
                 setPending(list =>
                     list.map(row =>
-                        row.localId === item.localId ? { ...row, status: 'failed' } : row,
+                        row.localId === item.localId ? { ...row, status: 'failed', offline } : row,
                     ),
                 )
+                if (offline) {
+                    // Said once; the bubble keeps its Retry, and it goes again when the line is back.
+                    toast.error(t('message_error_send_offline'), { id: 'message-send' })
+                    return
+                }
                 const gate = gateOf(error)
                 if (gate) {
                     // The wall explains it; a toast saying the same thing would be twice.
@@ -329,6 +337,19 @@ export function useComposer({
         },
         [deliver, pending],
     )
+
+    /* Back online — the socket reconnected, or the browser says so: every send that failed for
+       want of a connection goes again, in the order it was written. */
+    const resendOffline = useCallback(() => {
+        for (const item of pendingRef.current) {
+            if (item.status === 'failed' && item.offline) retry(item.localId)
+        }
+    }, [retry])
+    useSocketReconnect(resendOffline)
+    useEffect(() => {
+        window.addEventListener('online', resendOffline)
+        return () => window.removeEventListener('online', resendOffline)
+    }, [resendOffline])
 
     const discard = useCallback((localId: string) => {
         setPending(list => {

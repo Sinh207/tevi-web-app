@@ -2368,5 +2368,11 @@
     "message_settings_share": "Kongsi pautan",
     "message_settings_save": "Simpan tetapan",
     "message_settings_saved": "Tetapan mesej disimpan",
-    "message_settings_error": "Tidak dapat menyimpan tetapan mesej. Sila cuba lagi."
+    "message_settings_error": "Tidak dapat menyimpan tetapan mesej. Sila cuba lagi.",
+    "message_embed_live": "Live",
+    "message_embed_live_free": "Percuma",
+    "message_photo_viewer_from": "Daripada {{name}}",
+    "message_reply_not_loaded": "Mesej asal berada lebih awal dalam perbualan.",
+    "message_reply_open": "Pergi ke mesej asal",
+    "message_error_send_offline": "Anda di luar talian. Mesej akan dihantar apabila anda kembali dalam talian."
 }

@@ -33,6 +33,22 @@ describe('messageEmbed', () => {
         ).toEqual({ kind: 'post', slug: 'ada', postId: '42' })
     })
 
+    it('cards an event link, and resolves a short link before deciding', () => {
+        expect(messageEmbed(message({ text: 'https://tevi.com/@ada/event/7' }), null)).toEqual({
+            kind: 'event',
+            slug: 'ada',
+            code: '7',
+        })
+        expect(messageEmbed(message({ text: 'https://tevi.com/x/s/aB3' }), null)).toEqual({
+            kind: 'short',
+            code: 'aB3',
+        })
+        expect(messageEmbed(message({ text: 'https://tevi.com/@ada/s/q9' }), null)).toEqual({
+            kind: 'short',
+            code: 'q9',
+        })
+    })
+
     it('cards a collection link, as legacy does', () => {
         expect(
             messageEmbed(message({ text: 'https://tevi.com/@ada/collections/3' }), null),
@@ -45,7 +61,6 @@ describe('messageEmbed', () => {
         ).toBeNull()
         expect(messageEmbed(message({ text: 'https://example.com/@ada' }), null)).toBeNull()
         expect(messageEmbed(message({ text: 'https://tevi.com/messages' }), null)).toBeNull()
-        expect(messageEmbed(message({ text: 'https://tevi.com/@ada/event/7' }), null)).toBeNull()
     })
 
     it('recognises a gift in either spelling — the text Android sends, the attachment iOS reads', () => {

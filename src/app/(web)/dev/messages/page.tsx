@@ -14,8 +14,9 @@ export const metadata: Metadata = {
  * in each presence state (online, typing, sending a photo, offline, suspended, unknown) with its
  * menu; the connection strips; the message settings dialog; one conversation — at the popup's 390
  * and the page's 640 — holding every bubble kind (photos 1/2/3/5/10, text and photo replies, an
- * edit, bot buttons, an external link, space / post / collection / mini-app cards, an event link,
- * gifts in both wire spellings), the unread divider, and pending text and photo sends (the paperclip
+ * edit, bot buttons, an external link, space / post / collection / live / mini-app cards, a short
+ * link resolved into a post card, gifts in both wire spellings), quote-to-original jumps, the photo
+ * viewer with Reply and Delete, the unread divider, and pending text and photo sends (the paperclip
  * opens the real photo sheet); every wall; loading and empty states; and the floating window.
  *
  * The real list is unreachable without an account that has conversations in every state the DS

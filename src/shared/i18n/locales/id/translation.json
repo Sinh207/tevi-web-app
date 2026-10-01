@@ -2368,5 +2368,11 @@
     "message_settings_share": "Bagikan tautan",
     "message_settings_save": "Simpan pengaturan",
     "message_settings_saved": "Pengaturan pesan disimpan",
-    "message_settings_error": "Tidak dapat menyimpan pengaturan pesan. Silakan coba lagi."
+    "message_settings_error": "Tidak dapat menyimpan pengaturan pesan. Silakan coba lagi.",
+    "message_embed_live": "Live",
+    "message_embed_live_free": "Gratis",
+    "message_photo_viewer_from": "Dari {{name}}",
+    "message_reply_not_loaded": "Pesan aslinya ada lebih jauh di percakapan.",
+    "message_reply_open": "Buka pesan asli",
+    "message_error_send_offline": "Anda sedang offline. Pesan akan dikirim saat Anda kembali online."
 }

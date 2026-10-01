@@ -59,6 +59,8 @@ export function MessageBubble({
     onDiscard,
     onOpenImage,
     embedRoot,
+    highlighted = false,
+    onOpenReply,
 }: {
     message: Pick<
         ChatMessage,
@@ -90,6 +92,10 @@ export function MessageBubble({
     onOpenImage?: (index: number) => void
     /** The thread's scroller, which a card waits to come near before it fetches. */
     embedRoot?: Element | null
+    /** Just jumped to from a reply's quote — the bubble flashes so the eye finds it. */
+    highlighted?: boolean
+    /** Go to the message this one quotes. */
+    onOpenReply?: () => void
 }) {
     const { t } = useTranslation()
     const text = messageText(message)
@@ -116,6 +122,7 @@ export function MessageBubble({
                         // Legacy's fills: pale yellow for the reader's own, near-white for theirs.
                         own ? 'bg-(--background-bubble-own)' : 'bg-(--background-bubble-other)',
                         status === 'failed' && 'ring-1 ring-(--text-error)',
+                        highlighted && 'ring-2 ring-(--text-link) motion-safe:animate-pulse',
                     )}
                 >
                     {message.reply_message && (
@@ -123,6 +130,7 @@ export function MessageBubble({
                             reply={message.reply_message}
                             own={own}
                             self={sameSender(message.reply_message.sender, message.sender)}
+                            onOpen={onOpenReply}
                         />
                     )}
 
@@ -488,14 +496,36 @@ function sameSender(a: ReplyMessage['sender'] | undefined, b: ChatMessage['sende
  * quoted photo or else its sender's avatar at 44px, then whose it was — "Myself" when a message
  * quotes its own sender — and its first line, or "Photo".
  */
-function ReplyQuote({ reply, own, self }: { reply: ReplyMessage; own: boolean; self: boolean }) {
+function ReplyQuote({
+    reply,
+    own,
+    self,
+    onOpen,
+}: {
+    reply: ReplyMessage
+    own: boolean
+    self: boolean
+    /** Takes the reader to the quoted message — a button when there is somewhere to go. */
+    onOpen?: () => void
+}) {
     const { t } = useTranslation()
     const quoted = messageText(reply)
     const thumb = reply.images[0]?.url ?? reply.sender?.avatar?.thumb ?? null
+    const Box = onOpen ? 'button' : 'div'
     return (
-        <div
+        <Box
+            {...(onOpen
+                ? {
+                      type: 'button' as const,
+                      onClick: onOpen,
+                      'data-testid': 'message-bubble-quote',
+                      title: t('message_reply_open'),
+                  }
+                : {})}
             className={cn(
-                'mx-2 mt-2 flex min-w-[155px] items-start gap-2 rounded-(--radius-lg) p-2',
+                'mx-2 mt-2 flex min-w-[155px] items-start gap-2 rounded-(--radius-lg) p-2 text-start',
+                onOpen &&
+                    'cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-(--focus-ring)',
                 'border-s-2 border-solid',
                 own
                     ? 'border-(--text-success) bg-(--background-bubble-quote-own)'
@@ -526,7 +556,7 @@ function ReplyQuote({ reply, own, self }: { reply: ReplyMessage; own: boolean; s
                     {quoted ?? t('message_preview_photo')}
                 </span>
             </span>
-        </div>
+        </Box>
     )
 }
 

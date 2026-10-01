@@ -2368,5 +2368,11 @@
     "message_settings_share": "分享链接",
     "message_settings_save": "保存设置",
     "message_settings_saved": "消息设置已保存",
-    "message_settings_error": "无法保存消息设置，请重试。"
+    "message_settings_error": "无法保存消息设置，请重试。",
+    "message_embed_live": "直播",
+    "message_embed_live_free": "免费",
+    "message_photo_viewer_from": "来自 {{name}}",
+    "message_reply_not_loaded": "原消息在对话更早的位置。",
+    "message_reply_open": "前往原消息",
+    "message_error_send_offline": "你已离线，恢复联网后将自动发送。"
 }

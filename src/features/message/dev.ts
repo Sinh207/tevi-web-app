@@ -143,8 +143,8 @@ export { MessageThreadView } from './components/message-thread-view'
 /**
  * A conversation's worth of messages — one of everything a bubble draws: yesterday and today,
  * replies (text and photo), 1/2/3/5/10 photos, an edit, bot buttons, an external link, a Tevi link
- * of each kind that gets a card (space, post, collection, mini app) and one that does not (event),
- * and the gift in both wire spellings plus one with no plan. `me` is alias 1. The cards' data is
+ * of each kind that gets a card (space, post, collection, live event, mini app), a short link that
+ * resolves to the post, and the gift in both wire spellings plus one with no plan. `me` is alias 1. The cards' data is
  * seeded by `useSeedEmbedFixtures`, so nothing here reaches the API.
  */
 export function threadFixtures(now: number) {
@@ -296,8 +296,15 @@ export function threadFixtures(now: number) {
         {
             id: 'l6',
             sender: them,
-            text: 'An event stays a link: https://tevi.com/@ada/event/7',
+            text: 'Live now 🔴 https://tevi.com/@ada/event/live-7',
             created_at: minutes(3.2),
+        },
+        {
+            id: 'l7',
+            sender: me,
+            text: 'Shared from the share sheet: https://tevi.com/@ada/s/q9',
+            created_at: minutes(3.1),
+            seen_by: { 7: true },
         },
         // ---- gifts: Android's tevi:// text, iOS's attachment, and a plan with no duration ----
         {
@@ -362,7 +369,17 @@ function devChannel(overrides: Record<string, unknown>): Channel {
 
 /** The two spaces the thread's links point at: Ada's, and one that *is* a mini app. */
 export const DEV_SPACES = {
-    ada: devChannel({}),
+    ada: devChannel({
+        lives: [
+            {
+                code: 'live-7',
+                title: 'Friday night set — eleven songs, two of them new',
+                status: 'LIVE',
+                price: '50',
+                images: { banner: AVATAR },
+            },
+        ],
+    }),
     arcade: devChannel({
         id: 'ch-2',
         owner_id: '8',
@@ -434,6 +451,9 @@ export function useSeedEmbedFixtures(): boolean {
                 },
             }),
         )
+        // `features/share`'s key for a short link's target — spelled out here because the share
+        // feature exports the hook, not its keys.
+        seed(['share', 'target', 'q9'], 'https://tevi.com/@ada/post/42')
         seed(postKeys.spaceCollection('ada', '3', activeId), {
             id: '3',
             name: 'On tour 2026',

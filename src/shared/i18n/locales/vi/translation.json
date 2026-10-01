@@ -2368,5 +2368,11 @@
     "message_settings_share": "Chia sẻ liên kết",
     "message_settings_save": "Lưu cài đặt",
     "message_settings_saved": "Đã lưu cài đặt tin nhắn",
-    "message_settings_error": "Không thể lưu cài đặt tin nhắn. Vui lòng thử lại."
+    "message_settings_error": "Không thể lưu cài đặt tin nhắn. Vui lòng thử lại.",
+    "message_embed_live": "Live",
+    "message_embed_live_free": "Miễn phí",
+    "message_photo_viewer_from": "Từ {{name}}",
+    "message_reply_not_loaded": "Tin nhắn gốc nằm xa hơn trong cuộc trò chuyện.",
+    "message_reply_open": "Đi tới tin nhắn gốc",
+    "message_error_send_offline": "Bạn đang ngoại tuyến. Tin nhắn sẽ được gửi khi có mạng trở lại."
 }
