@@ -26,17 +26,17 @@ import { FollowingSkeleton } from './following-skeleton'
 /**
  * The screen's content surface — the blocked list's panel, unchanged.
  *
- * `overflow-hidden` is back (the follow-requests panel had to drop it for its sticky action bar);
- * this screen has nothing sticky inside the card, which is a deliberate choice and not an accident —
- * see the note on the section headers below. So the clip is available again, and it is what tucks
- * the first and last rows' square corners inside the card's rounded ones.
+ * `overflow-clip`, not `overflow-hidden`: the list's header is `sticky` (see below), and
+ * `overflow: hidden` makes the card a scroll container, so the header would stick inside the card's
+ * own box and never move. `clip` still tucks the first and last rows' square corners inside the
+ * card's rounded ones without creating a scrollport.
  *
  * `--background-surface` rather than `--background-listing`, which is `--black` in dark mode and
  * would make the card vanish; `flex-1` so it fills the viewport without arithmetic; all four corners
  * rounded from `md` with the page's `md:pb-6` behind the bottom two.
  */
 const SURFACE =
-    'flex flex-1 flex-col overflow-hidden bg-(--background-surface) md:rounded-[var(--radius-xl)]'
+    'flex flex-1 flex-col overflow-clip bg-(--background-surface) md:rounded-[var(--radius-xl)]'
 
 /**
  * `/following` — the spaces this account follows, and which of them are on air.
@@ -50,20 +50,18 @@ const SURFACE =
  * the URL stays put and signing in leaves them on the screen they asked for. Legacy renders the
  * empty state for a guest.
  *
- * ## The section headers do not stick, and that is a decision
+ * ## The list header sticks; the Live now header does not
  *
  * Legacy pins three things — "Live now" at `top: 48`, "Following" at `top: 56`, the limit alert at
- * `top: 112.5` — inside a container of its own with `overflow: auto`. None of that transfers. This
- * app scrolls the **document**, and the one sticky slot at the top of a tab destination's viewport is
- * already occupied by the global mobile top bar (`(tabs)/layout.tsx`), so a sticky header here would
- * need a breakpoint-dependent offset, and two stacked stickies with a 6px separator between them is
- * precisely what those three magic numbers are trying and failing to manage. `overflow: hidden` on
- * the card would break them anyway — it makes an element a scroll container, so a sticky descendant
- * sticks inside *that* box (the trap `PROFILE_PANEL` and the follow-requests panel both record).
+ * `top: 112.5` — inside a scroll container of its own. This app scrolls the **document**, and the
+ * top of the viewport already holds a 60px bar at every width: the global `AppTopBar` below `md`
+ * (`(tabs)/layout.tsx`), `PageBackBar` from `md` (`following/page.tsx`). Both are `sticky top-0`
+ * and both are `h-[60px]`, so the list header parks at `top-[60px]` with no breakpoint-dependent
+ * offset. Change either bar's height and this number moves with it.
  *
- * So the headers scroll with their sections, which is what the DS `List/Header` is drawn as, and the
- * card keeps its clip. What is lost is knowing which section you are in while scrolling a long list —
- * and there are only two sections, the second of which is the rest of the page.
+ * Only the "Following" header sticks. It carries the sort control, which is what a reader reaches
+ * for halfway down a long list; "Live now" is a short strip whose header scrolls away with it, and
+ * two stacked stickies are exactly the arithmetic legacy's three magic numbers get wrong.
  *
  * ## The Live now strip fails quietly
  *
@@ -412,7 +410,10 @@ export function FollowingView({ className }: { className?: string }) {
              * a failed load it is a control with nothing to act on, and a header over no rows.
              */}
             {!isBootstrapping && !isSignedOut && !isError && (isLoading || !isEmpty) && (
-                <ListHeader>
+                /* `sticky top-[60px]` clears the 60px bar above — see "The list header sticks". It
+                   needs its own surface fill or the rows scroll visibly through it, and `z-10` keeps
+                   it over the rows' entrance animations, which create stacking contexts. */
+                <ListHeader className="sticky top-[60px] z-10 bg-(--background-surface)">
                     <ListHeaderTitle as="h2">{t('following_title')}</ListHeaderTitle>
                     <ListHeaderAction>
                         <FilterMenu

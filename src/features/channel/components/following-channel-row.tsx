@@ -2,6 +2,7 @@
 
 import { OpenMiniAppButton } from '@features/mini-app'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
@@ -26,19 +27,6 @@ import { type FollowedChannel, isFollowedChannelMuted } from '../api/types'
 import { formatRelativeTime } from '../lib/channel-format'
 import { toChannelPath } from '../lib/channel-slug'
 import { FollowingRowMenu } from './following-row-menu'
-
-/**
- * **The sensitive mark is off for now.** Product's call, not a defect — the mark itself is built and
- * verified (below), so this is a switch rather than a deletion: flip it to `true` and the pink disc
- * comes back on the avatar's bottom-end corner, with `/dev/following`'s two flagged fixtures there
- * to look at.
- *
- * Kept as a `const` rather than commented-out JSX so the block stays typechecked, linted and
- * formatted with everything around it — commented-out markup rots against the props it no longer
- * sees. `is_nsfw` stays on `followedChannelSchema` for the same reason: it is a real field of the
- * payload, and dropping it would make turning this back on a two-file change again.
- */
-const SHOW_NSFW_MARK = false
 
 /**
  * One followed space.
@@ -226,7 +214,7 @@ export function FollowingChannelRow({
                             />
                         </ListUserItemPin>
                     )}
-                    {SHOW_NSFW_MARK && channel.is_nsfw && (
+                    {channel.is_nsfw && (
                         /*
                          * Sensitive space — the mark legacy draws as a hand-rolled pink diamond over
                          * the avatar. The glyph is the DS's own `nsfw`, the one `SearchChannelRow`
@@ -305,6 +293,21 @@ export function FollowingChannelRow({
                                         nothing to draw without art. Mirror of
                                         `ChannelVerifiedMark`. */}
                                     <VerifiedBadge image={verifiedImage} size={16} />
+                                    {/*
+                                     * Legacy's `BadgePremium`, in its place after the tick. The
+                                     * plain badge, not the `href` one: the whole row is already a
+                                     * `<Link>` to the space, and an `<a>` inside an `<a>` is invalid
+                                     * — the browser hoists it out. Sparkle stays on (the default):
+                                     * the burst lives inside the badge's own art box and each loop
+                                     * is opacity/transform only.
+                                     */}
+                                    {channel.is_premium && (
+                                        <PremiumBadge
+                                            size={16}
+                                            label={t('channel_premium')}
+                                            className="flex-none"
+                                        />
+                                    )}
                                     {/*
                                      * The handle rides the **name line**, after the badges — which
                                      * is legacy's arrangement for this row (`channelItem` puts
