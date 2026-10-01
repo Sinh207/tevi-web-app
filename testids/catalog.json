@@ -7427,7 +7427,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:493"
+            "source": "src/features/message/components/chat-room.tsx:500"
         },
         "message-room-back": {
             "scope": "message",
@@ -7654,7 +7654,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/chat-room.tsx:513"
+            "source": "src/features/message/components/chat-room.tsx:520"
         },
         "message-thread-unread": {
             "scope": "message",

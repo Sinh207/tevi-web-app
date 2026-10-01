@@ -482,7 +482,14 @@ export function ChatRoom({
 }
 
 /**
- * The room's outer box — one element, whichever state it is in. Three rows: the header and the
+ * The room's outer box — one element, whichever state it is in.
+ *
+ * **A size container** (`@container`), and every "bigger from `sm`" inside the room is a container
+ * query (`@min-[612px]:`) rather than a viewport one. The room is drawn in three widths that have
+ * nothing to do with the viewport — a phone, the pane beside the list, and the 390px floating window
+ * on a desktop — and in the window a viewport breakpoint gives desktop-sized discs, tiles and type
+ * to a phone-sized box. Legacy special-cases the popup for the same reason (`isPopup` in its image
+ * sizes); a container query answers it for every part at once. Three rows: the header and the
  * composer take their own height (`flex-none`), the thread takes the rest and is the only thing that
  * scrolls (`MessageThreadView`'s scroller). `min-h-0` is what stops the thread's content from
  * growing this box past the pane instead.
@@ -491,7 +498,7 @@ function RoomFrame({ children }: { children: ReactNode }) {
     return (
         <div
             data-testid="message-room"
-            className="flex h-full min-h-0 flex-1 flex-col"
+            className="@container flex h-full min-h-0 flex-1 flex-col"
             style={ROOM_GROUND}
         >
             {children}

@@ -32,8 +32,8 @@ import type { ConversationGate } from '../api/types'
  * Stripe frame inside the chat). `/@{slug}/membership` is the one checkout every other entry point
  * uses, and `useRoom` re-asks on return, so coming back after paying opens the conversation.
  */
-/** Legacy's wall button: full width, 36px on a phone and 40 wider, 8px corners, 14/500. */
-const WALL_BUTTON = 'h-9 w-full rounded-lg sm:h-10'
+/** Legacy's wall button: full width, 36px in a narrow room and 40 wider, 8px corners, 14/500. */
+const WALL_BUTTON = 'h-9 w-full rounded-lg @min-[612px]:h-10'
 
 /** Every refusal the messenger can give (`ConversationGate`), plus the empty conversation. */
 export type ChatWallKind = ConversationGate | 'first'
@@ -302,8 +302,8 @@ function Panel({
             {/*
              * Legacy's card: white, 390 at most, 12px inside, 16px corners where there is a button
              * (`followChannel`, `becomeAMember`, `getStared`) and 12 where there is not (`meBlock`,
-             * `recipientBlock`, `inactiveRecipient`). Type steps down below `sm`, as legacy's does
-             * below 600.
+             * `recipientBlock`, `inactiveRecipient`). Type steps down in a room narrower than `sm`
+             * (a container query — see `RoomFrame`), as legacy's does below 600.
              */}
             <section
                 data-testid="message-wall"
@@ -314,10 +314,10 @@ function Panel({
                 )}
             >
                 <span className="flex flex-col items-center">
-                    <h2 className="type-subheading-strong text-(--text-title) sm:type-title-t1-bold">
+                    <h2 className="type-subheading-strong text-(--text-title) @min-[612px]:type-title-t1-bold">
                         {title}
                     </h2>
-                    <p className="type-caption-meta text-(--text-body) sm:type-dense-default">
+                    <p className="type-caption-meta text-(--text-body) @min-[612px]:type-dense-default">
                         {body}
                     </p>
                 </span>

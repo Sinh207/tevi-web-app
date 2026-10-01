@@ -262,7 +262,7 @@ export function MessageBubble({
                         '[@media(hover:none)]:opacity-100',
                     )}
                 >
-                    {/* Legacy's two discs (`replyButton`, `menuButton`): 36px on a phone, 40 wider,
+                    {/* Legacy's two discs (`replyButton`, `menuButton`): 36px in a narrow room, 40 wider,
                         Reply's glyph grey and More's dark. */}
                     {onReply && (
                         <Button
@@ -274,7 +274,7 @@ export function MessageBubble({
                             onClick={onReply}
                             className={cn(
                                 DISC,
-                                'size-9 text-(--icon-secondary) hover:text-(--icon-secondary) sm:size-10',
+                                'size-9 text-(--icon-secondary) hover:text-(--icon-secondary) @min-[612px]:size-10',
                             )}
                         >
                             <Icon name="reply" weight="filled" size={24} className="size-6" />
@@ -284,7 +284,7 @@ export function MessageBubble({
                         <ActionMenuTrigger
                             data-testid="message-bubble-menu-trigger"
                             aria-label={t('message_actions')}
-                            className={cn(DISC, 'size-9 sm:size-10')}
+                            className={cn(DISC, 'size-9 @min-[612px]:size-10')}
                         >
                             <Icon name="more-horizontal" size={24} className="size-6" />
                         </ActionMenuTrigger>
@@ -400,11 +400,15 @@ function DeliveryMark({ status, seen }: { status: 'sent' | 'sending' | 'failed';
     )
 }
 
-/** A tile's box, per `photoLayout`'s sizes — responsive tiles step up at `sm`, as legacy's do. */
+/**
+ * A tile's box, per `photoLayout`'s sizes — responsive tiles step up once the **room** is `sm` wide
+ * (a container query, see `RoomFrame`): legacy's `responsiveWidth` is 95 on a phone *and* in its
+ * popup.
+ */
 const TILE_CLASS: Record<PhotoTile, string> = {
     large: 'size-[144px]',
     small: 'size-[95px]',
-    responsive: 'size-[95px] sm:size-[144px]',
+    responsive: 'size-[95px] @min-[612px]:size-[144px]',
 }
 
 /**
