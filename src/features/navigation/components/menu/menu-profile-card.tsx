@@ -6,6 +6,7 @@ import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { PREMIUM_SHEEN } from '@shared/lib/motion'
+import { PREMIUM_GOLD } from '@shared/lib/premium-gold'
 import { cn } from '@shared/lib/utils'
 import { Card, CardTrailing } from '@shared/ui/card'
 import { Icon } from '@shared/ui/icon'
@@ -290,8 +291,7 @@ export function MenuProfileCard() {
  * them (the DS has no gold ramp at all), which is why they are written out rather than
  * approximated with `--accents-yellow`.
  */
-const GOLD_GRADIENT =
-    'bg-[linear-gradient(133.22deg,#ffc774_18.04%,#fff8ec_49.55%,#e8b558_74.66%,#ffe1a9_95.98%)]'
+const GOLD_GRADIENT = PREMIUM_GOLD
 
 /*
  * 97deg, and mirrored to 263deg under `rtl:`. The ramp is not decoration that happens to run

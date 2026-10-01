@@ -1,3 +1,4 @@
+import { PREMIUM_GOLD } from '@shared/lib/premium-gold'
 import { cn } from '@shared/lib/utils'
 
 /**
@@ -8,29 +9,18 @@ import { cn } from '@shared/lib/utils'
  * The DS draws its `Card type="premium"` as a lavender `Primary 400 → 300 → 500` ramp under a flat
  * `Accents/Yellow` hairline. The product ships a near-black-to-violet ramp under a four-stop gold
  * gradient. Those are two different surfaces rather than two readings of one, and the shipped one
- * is what people recognise as Premium — so it is what this screen wears. The DS has no gold ramp
- * at all, which is why the hexes are written out rather than approximated with `--accents-yellow`.
+ * is what people recognise as Premium — so it is what this screen wears.
  *
  * ## Written here as arbitrary values, not added to `globals.css`
  *
- * `--gradient-brand-sweep` sets the precedent for a brand gradient becoming a named token, and this
- * one is deliberately **not** following it, for two reasons. It is used by one feature (plus the
- * drawer's card, below), so a token would be a global name for a local paint; and a new `@theme`
- * entry is the one change in this repo that fails *silently* in development — Turbopack serves the
- * stale stylesheet until `.next` is cleared, so the screen renders with no gradient and nothing
- * says why. `menu-profile-card.tsx` makes the same call for the same values.
+ * A new `@theme` entry is the one change in this repo that fails *silently* in development —
+ * Turbopack serves the stale stylesheet until `.next` is cleared — so these stay arbitrary values.
  *
- * ## ⚠ The gold is duplicated
- *
- * `features/navigation/components/menu/menu-profile-card.tsx` holds a byte-identical copy as its
- * own `GOLD_GRADIENT`. That is the boundary rules working as intended — a feature may not import
- * another feature's internals, and neither of these two is the natural owner of the other's paint.
- * If a third surface needs it, it moves to `shared/` (the call `MY_STAR_CONTAINER` and
- * `GIFT_CODE_CONTAINER` already make about each other). Until then: **change both**, and the
- * pairing is stated in both files so the second one is findable.
+ * The **gold** itself lives in `shared/lib/premium-gold.ts`: the drawer's profile card and the shell
+ * avatar frame paint it too, and three owners is where it stopped being duplicated. It is
+ * re-exported here so this feature keeps one import for its paints.
  */
-export const PREMIUM_GOLD =
-    'bg-[linear-gradient(133.22deg,#ffc774_18.04%,#fff8ec_49.55%,#e8b558_74.66%,#ffe1a9_95.98%)]'
+export { PREMIUM_GOLD }
 
 /**
  * The same gold, clipped to text.

@@ -3,6 +3,7 @@
 import { StarChangeFlash, useBalanceDisplay } from '@features/balance'
 import { GET_STAR_PATH } from '@features/payment/routes'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { PremiumAvatarFrame } from '@shared/components/premium-avatar-frame'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { AppBarStarIcon } from '@shared/ui/app-bar'
 import Link from 'next/link'
@@ -124,7 +125,23 @@ export function EndRailPill() {
                 aria-label={t('nav_profile')}
                 className="flex flex-none rounded-(--radius-fill) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
             >
-                <AnimatedAvatar {...avatar} alt="" size="medium" />
+                {/* Premium wears the shell's gold ring and crown, same as the rail and the tab bar.
+                    Sized here because the anchor has no box of its own for the frame to fill. */}
+                {avatar.isPremium ? (
+                    <PremiumAvatarFrame
+                        badgeSize={16}
+                        className="size-[40px]"
+                        /* Tucked in from the default: the pill's 4px block padding is all there
+                           is below the avatar, and the shell's -4px hangs the crown off the
+                           pill's own edge. Flush with the avatar's box puts it on the ring's
+                           corner, well inside the pill. */
+                        badgeClassName="end-0 bottom-0"
+                    >
+                        <AnimatedAvatar {...avatar} alt="" size="medium" className="size-[36px]" />
+                    </PremiumAvatarFrame>
+                ) : (
+                    <AnimatedAvatar {...avatar} alt="" size="medium" />
+                )}
             </Link>
         </div>
     )

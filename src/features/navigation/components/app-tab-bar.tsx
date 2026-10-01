@@ -2,6 +2,7 @@
 
 import { useRequireAuth } from '@features/auth'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { PremiumAvatarFrame } from '@shared/components/premium-avatar-frame'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Icon } from '@shared/ui/icon'
 import { TabBar, TabBarItem, TabBarProfile } from '@shared/ui/tab-bar'
@@ -78,13 +79,26 @@ export function AppTabBar() {
                 href="/my-space"
                 selected={pathname === '/my-space' || pathname.startsWith('/@')}
                 label={t('nav_my_space')}
+                /* Same lift as the rail's: the crown overflows the clipped 22px circle, and the
+                   inner selected ring would paint over the gold (the accent ring outside stays). */
+                className={
+                    avatar.isPremium
+                        ? '[&_[data-slot=tab-bar-profile-avatar]]:overflow-visible [&_[data-slot=tab-bar-profile-avatar]]:after:hidden'
+                        : undefined
+                }
             >
                 {/*
                  * `AnimatedAvatar` rather than a bare `<Image>`: a Premium creator's clip plays here
                  * too, which is what legacy's shared `userAvatar` does. It handles the still, the
                  * placeholder and the Premium gate itself, so there is no branch left here.
                  */}
-                <AnimatedAvatar {...avatar} alt="" size="xs" />
+                {avatar.isPremium ? (
+                    <PremiumAvatarFrame badgeSize={11}>
+                        <AnimatedAvatar {...avatar} alt="" size="xs" className="size-[18px]" />
+                    </PremiumAvatarFrame>
+                ) : (
+                    <AnimatedAvatar {...avatar} alt="" size="xs" />
+                )}
             </TabBarProfile>
         </TabBar>
     )

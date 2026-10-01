@@ -4,6 +4,7 @@ import { useRequireAuth } from '@features/auth'
 import { NOTIFICATION_PATH, useUnreadInbox } from '@features/notification/shell'
 import { SEARCH_PATH } from '@features/search'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { PremiumAvatarFrame } from '@shared/components/premium-avatar-frame'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Icon } from '@shared/ui/icon'
 import { Logo } from '@shared/ui/logo'
@@ -229,9 +230,26 @@ export function AppNavbar() {
                     selected={pathname === '/my-space' || pathname.startsWith('/@')}
                     aria-label={t('nav_profile')}
                     data-testid="navigation-navbar-profile"
+                    /*
+                     * Premium hangs its crown outside the 24px circle, which the DS item clips —
+                     * lifted here rather than in `shared/ui`. The selected ring is dropped too: it
+                     * is drawn *inside* the circle and would paint over the gold; the item's own
+                     * selected ground still says where you are.
+                     */
+                    className={
+                        avatar.isPremium
+                            ? '[&_[data-slot=navbar-item-avatar]]:overflow-visible [&_[data-slot=navbar-item-avatar]]:after:hidden'
+                            : undefined
+                    }
                 >
                     {/* Animated for a Premium creator — same component the tab bar uses. */}
-                    <AnimatedAvatar {...avatar} alt="" size="xs" />
+                    {avatar.isPremium ? (
+                        <PremiumAvatarFrame badgeSize={12}>
+                            <AnimatedAvatar {...avatar} alt="" size="xs" className="size-[20px]" />
+                        </PremiumAvatarFrame>
+                    ) : (
+                        <AnimatedAvatar {...avatar} alt="" size="xs" />
+                    )}
                 </NavbarItem>
             </NavbarGroup>
 
