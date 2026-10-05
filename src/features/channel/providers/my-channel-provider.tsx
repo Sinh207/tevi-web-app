@@ -56,6 +56,13 @@ interface MyChannelValue {
     isError: boolean
     /** Re-read after a write (publish, rename, privacy change). */
     refresh: () => Promise<void>
+    /**
+     * Re-read the Premium state **past the ETag** — what the `premium_info` frame does, for a
+     * caller that has its own reason to believe it changed (the reader came back from buying
+     * Premium in another tab and the frame may not have arrived). `refresh()` alone would be
+     * answered `304` with the old body; see the note on the socket handler.
+     */
+    resyncPremium: () => Promise<void>
     // ── derived, so ~80 future call sites do not each re-derive them ──
     /** The account has a channel. Narrower than `Boolean(myChannel)` only in intent. */
     hasChannel: boolean
@@ -115,11 +122,13 @@ export function MyChannelProvider({ children }: { children: React.ReactNode }) {
      * Legacy patches `myChannel.is_premium` in place from the payload, which is why its verified badge
      * and avatar ring can disagree with the rest of the channel body until the next fetch.
      */
+    const resyncPremium = useCallback(async () => {
+        await forgetMyChannelCache(activeId)
+        await refresh()
+    }, [activeId, refresh])
+
     useSocketEvent('premium_info', () => {
-        void (async () => {
-            await forgetMyChannelCache(activeId)
-            await refresh()
-        })()
+        void resyncPremium()
     })
 
     const value = useMemo<MyChannelValue>(
@@ -128,13 +137,14 @@ export function MyChannelProvider({ children }: { children: React.ReactNode }) {
             isLoading: query.isLoading,
             isError: query.isError,
             refresh,
+            resyncPremium,
             hasChannel: Boolean(myChannel),
             isPremium: Boolean(myChannel?.is_premium),
             isUnpublished: myChannel?.privacy === 'unpublished',
             isProtected: myChannel?.privacy === 'protected',
             verifiedTickBadge: myChannel?.verified_tick_badge?.image ?? null,
         }),
-        [myChannel, query.isLoading, query.isError, refresh],
+        [myChannel, query.isLoading, query.isError, refresh, resyncPremium],
     )
 
     const gate = onboardingGate({

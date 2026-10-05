@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { eventDetailSchema } from '../api/types'
 import type { LiveChatState } from '../hooks/use-live-chat'
 import type { LiveChatLine } from '../lib/live-message'
-import { EventStudioChat, EventStudioChatStrip } from './event-studio-chat'
+import { EventStudioChat, EventStudioChatStrip, unreadSince } from './event-studio-chat'
 
 /**
  * **The two pieces of this column that only exist because of where the reader is scrolled.**
@@ -19,6 +19,9 @@ import { EventStudioChat, EventStudioChatStrip } from './event-studio-chat'
  * assertion, because what is under test is the **arithmetic** (`lines.length - seenCount`) and its
  * reset, not the browser's scrolling.
  */
+// The paid chat's *Out of Star* dialog is mounted in the column, and its fee-wall path reads the
+// router. The column never takes that path here; it only has to mount.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock('@shared/i18n/use-translation', () => ({
     useTranslation: () => ({
         t: (key: string, vars?: Record<string, unknown>) =>
@@ -54,6 +57,8 @@ function baseChat(lines: LiveChatLine[]): LiveChatState {
         errorKey: null,
         chargedAt: null,
         send: async () => {},
+        mustTopUp: false,
+        outOfStar: { open: false, show: () => {}, close: () => {} },
     }
 }
 
@@ -191,6 +196,20 @@ describe('the composer', () => {
         )
         expect(field().getAttribute('placeholder')).toBe('event_studio_chat_blocked')
     })
+
+    it('disables the emoji picker with the field, and closes a panel left open', () => {
+        const base = baseChat([])
+        const { rerender } = render(<EventStudioChat event={event} chat={base} />)
+        const emoji = () => screen.getByTestId('event-studio-emoji') as HTMLButtonElement
+        fireEvent.click(emoji())
+        expect(screen.queryByTestId('event-studio-emoji-panel')).not.toBeNull()
+
+        rerender(<EventStudioChat event={event} chat={{ ...base, canSend: false }} />)
+        expect(emoji().disabled).toBe(true)
+        expect(screen.queryByTestId('event-studio-emoji-panel')).toBeNull()
+        fireEvent.mouseEnter(emoji())
+        expect(screen.queryByTestId('event-studio-emoji-panel')).toBeNull()
+    })
 })
 
 /**
@@ -221,5 +240,162 @@ describe('the folded strip', () => {
         )
         expect(screen.getByTestId('event-studio-chat-strip-ccu').textContent).toBe('7.5k')
         expect(screen.queryByTestId('event-studio-chat-expand')).not.toBeNull()
+    })
+
+    /**
+     * The exclusive layout: no room is joined, so there is no transcript and nothing can be sent.
+     * The column keeps its shape and every way in points at the paywall.
+     */
+    describe('outside an exclusive stream', () => {
+        it('swaps the composer for the unlock control and draws no field', () => {
+            const onLocked = vi.fn()
+            render(<EventStudioChat event={event} chat={baseChat([])} onLocked={onLocked} />)
+            expect(screen.queryByRole('combobox')).toBeNull()
+            fireEvent.click(screen.getByTestId('event-studio-chat-locked'))
+            expect(onLocked).toHaveBeenCalledTimes(1)
+        })
+
+        it('offers the same unlock from the locked transcript', () => {
+            const onLocked = vi.fn()
+            render(<EventStudioChat event={event} chat={baseChat([])} onLocked={onLocked} />)
+            fireEvent.click(screen.getByTestId('event-studio-chat-unlock'))
+            expect(onLocked).toHaveBeenCalledTimes(1)
+        })
+
+        /** A mid-watch lock keeps the session's lines in the hook; the locked column shows none. */
+        it('shows none of a session’s transcript under the lock', () => {
+            const line: LiveChatLine = {
+                kind: 'comment',
+                user: null,
+                text: 'said while watching',
+                isMember: false,
+            }
+            render(<EventStudioChat event={event} chat={baseChat([line])} onLocked={() => {}} />)
+            expect(screen.queryByText('said while watching')).toBeNull()
+        })
+
+        it('keeps the normal composer when the reader is inside', () => {
+            render(<EventStudioChat event={event} chat={baseChat([])} />)
+            expect(screen.queryByTestId('event-studio-chat-locked')).toBeNull()
+            expect(screen.queryByRole('combobox')).not.toBeNull()
+        })
+    })
+
+    describe('the leaderboard', () => {
+        const board = (n: number) =>
+            Array.from({ length: n }, (_, i) => ({
+                score: (n - i) * 100,
+                user: {
+                    id: `u${i}`,
+                    display_name: `Person ${i}`,
+                    avatar: null,
+                    verified_tick_badge: null,
+                    premium_badge: null,
+                },
+            }))
+
+        /*
+         * The bug: inside the top three the reader's footer row repeated a row already on screen,
+         * so a viewer in first place saw themselves listed twice.
+         */
+        it('shows no footer row when the reader is already on the visible board', () => {
+            render(
+                <EventStudioChat
+                    event={event}
+                    chat={{ ...baseChat([]), topStars: board(5), topStarsSelfIndex: 0 }}
+                />,
+            )
+            expect(screen.queryByTestId('event-studio-leaderboard-me')).toBeNull()
+            expect(screen.getAllByText('Person 0')).toHaveLength(1)
+        })
+
+        it('keeps the footer row for a reader below the visible three', () => {
+            render(
+                <EventStudioChat
+                    event={event}
+                    chat={{ ...baseChat([]), topStars: board(6), topStarsSelfIndex: 4 }}
+                />,
+            )
+            expect(screen.queryByTestId('event-studio-leaderboard-me')).not.toBeNull()
+        })
+
+        it('stands the top three on the podium, in 2 · 1 · 3 order, and lists the rest', () => {
+            render(<EventStudioChat event={event} chat={{ ...baseChat([]), topStars: board(5) }} />)
+            const spots = screen.getAllByTestId('event-studio-leaderboard-spot')
+            expect(spots.map(s => s.getAttribute('data-option-value'))).toEqual(['2', '1', '3'])
+            expect(spots[1].textContent).toContain('Person 0')
+            const rest = screen.getByTestId('event-studio-leaderboard-rest')
+            expect(rest.textContent).toContain('Person 3')
+            expect(rest.textContent).not.toContain('Person 0')
+        })
+
+        it('keeps an open place on the podium when fewer than three have given', () => {
+            render(<EventStudioChat event={event} chat={{ ...baseChat([]), topStars: board(1) }} />)
+            expect(screen.getAllByTestId('event-studio-leaderboard-spot')).toHaveLength(3)
+            expect(screen.queryByTestId('event-studio-leaderboard-toggle')).toBeNull()
+        })
+
+        it('counts the people below the three it shows', () => {
+            render(
+                <EventStudioChat event={event} chat={{ ...baseChat([]), topStars: board(12) }} />,
+            )
+            expect(screen.queryByText('+9')).not.toBeNull()
+        })
+    })
+
+    /* Paid chat, short of Star: the press opens Out of Star and the message is still there after. */
+    it('keeps the draft and raises Out of Star when the reader cannot pay for it', () => {
+        const show = vi.fn()
+        const send = vi.fn(async () => {})
+        render(
+            <EventStudioChat
+                event={event}
+                chat={{
+                    ...baseChat([]),
+                    mustTopUp: true,
+                    send,
+                    outOfStar: { open: false, show, close: () => {} },
+                }}
+            />,
+        )
+        const input = screen.getByTestId('event-studio-chat-input') as HTMLInputElement
+        fireEvent.change(input, { target: { value: 'hello' } })
+        fireEvent.submit(input.closest('form') as HTMLFormElement)
+        expect(show).toHaveBeenCalled()
+        expect(send).not.toHaveBeenCalled()
+        expect(input.value).toBe('hello')
+    })
+})
+
+describe('unreadSince', () => {
+    const say = (text: string): LiveChatLine => ({
+        kind: 'comment',
+        user: null,
+        text,
+        isMember: false,
+    })
+    const notice: LiveChatLine = { kind: 'notice', text: 'welcome' }
+
+    it('counts what was said after the fold, not the room’s own notices', () => {
+        const a = say('a')
+        const lines = [a, notice, say('b'), say('c')]
+        expect(unreadSince(lines, a).map(l => (l.kind === 'comment' ? l.text : ''))).toEqual([
+            'b',
+            'c',
+        ])
+    })
+
+    it('counts everything when the chat was folded empty', () => {
+        expect(unreadSince([say('a'), say('b')], null)).toHaveLength(2)
+    })
+
+    /** The transcript is trimmed from the front: a fold-point that fell off means all of it is new. */
+    it('counts everything still on the list when the fold-point was trimmed away', () => {
+        expect(unreadSince([say('x'), say('y')], say('gone'))).toHaveLength(2)
+    })
+
+    it('is nothing when nothing came after', () => {
+        const last = say('last')
+        expect(unreadSince([say('a'), last], last)).toHaveLength(0)
     })
 })

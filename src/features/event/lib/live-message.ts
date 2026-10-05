@@ -42,11 +42,25 @@ const nullableId = z
     .catch(null)
 
 /**
+ * The Premium mark on a person — `{ image, title }`, as legacy reads it (`premium_badge.image`). A
+ * bare string is taken as the image in case a payload flattens it; anything else is "not Premium".
+ * Shared by the chat's people and the gift board's, so the two cannot read it differently.
+ */
+const premiumBadge = z
+    .unknown()
+    .transform(v => {
+        if (typeof v === 'string') return v.trim() ? { image: v.trim() } : null
+        const p = z.looseObject({ image: nullableText }).safeParse(v)
+        return p.success && p.data.image ? p.data : null
+    })
+    .catch(null)
+
+/**
  * Who said it.
  *
  * `channel_slug` rather than an id, because the chat row links to a space and that is the address.
- * `is_host` decides the badge. `premium_badge` and `verified_tick_badge` are image URLs the
- * backend picks, so neither may be inferred from anything local.
+ * `is_host` decides the badge. `premium_badge` and `verified_tick_badge` are `{ image }` objects
+ * the backend picks, so neither may be inferred from anything local.
  */
 export const liveChatUserSchema = z.looseObject({
     id: nullableId,
@@ -66,7 +80,13 @@ export const liveChatUserSchema = z.looseObject({
         .unknown()
         .transform(v => (v === undefined || v === null || v === '' || v === 0 ? null : v))
         .catch(null),
-    premium_badge: nullableText,
+    /**
+     * ⚠ **An object, `{ image, title }`, not a URL** — legacy reads `user.premium_badge.image` at
+     * all four of its chat rows. It was parsed as text here, so every real frame's object became
+     * `null` and no Premium reader ever showed a crown. A bare string is still accepted, as the
+     * image, in case a payload ever flattens it; anything else is "not Premium".
+     */
+    premium_badge: premiumBadge,
     verified_tick_badge: z
         .unknown()
         .transform(v => {
@@ -257,6 +277,23 @@ export const liveTopStarSchema = z.looseObject({
                             return q.success ? q.data : null
                         })
                         .catch(null),
+                    // The blue tick, when the board's service sends one — gated on `image` like
+                    // everywhere else (`VerifiedBadge`'s note).
+                    verified_tick_badge: z
+                        .unknown()
+                        .transform(b => {
+                            const q = z.looseObject({ image: nullableText }).safeParse(b)
+                            return q.success ? q.data : null
+                        })
+                        .catch(null),
+                    /*
+                     * Premium — **unconfirmed on this service.** The board comes from analytics,
+                     * whose schema is not published, and legacy draws no mark here at all. Read the
+                     * way the chat's people carry it, plus a plain `is_premium`, so whichever the
+                     * service sends lights the crown and an absent field draws nothing.
+                     */
+                    premium_badge: premiumBadge,
+                    is_premium: z.boolean().catch(false).optional(),
                 })
                 .safeParse(v)
             return p.success ? p.data : null

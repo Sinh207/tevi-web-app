@@ -1,7 +1,9 @@
 'use client'
 
 import { BecomeAMemberDialogs, type MembershipTarget, useJoinFlow } from '@features/membership'
+import { Sheen } from '@shared/components/sheen'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { PREMIUM_SHEEN, RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
 import Image from 'next/image'
 import type { CSSProperties } from 'react'
@@ -62,33 +64,48 @@ export function EventMembershipTile({
 
     return (
         <>
-            <button
-                type="button"
-                data-testid="event-membership-tile"
-                onClick={join.open}
-                style={EVENT_STUDIO_GIFT_VARS as CSSProperties}
-                className={cn(
-                    'group flex h-full w-[89px] flex-none flex-col items-center justify-center gap-1',
-                    'overflow-hidden rounded-2xl bg-(--live-gift-tray) p-1.5 text-white',
-                    // Legacy's hover lift, on the tile rather than the whole band.
-                    'transition-[scale,translate,background-color] duration-200',
-                    'hover:-translate-y-1 hover:scale-110 hover:bg-(--live-gift-tile-hover)',
-                    'motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100',
-                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                )}
-            >
-                <Image
-                    src={EVENT_ART.membershipKing.src}
-                    alt=""
-                    aria-hidden
-                    width={EVENT_ART.membershipKing.width}
-                    height={EVENT_ART.membershipKing.height}
-                    className="size-10 flex-none"
-                />
-                <span className="type-caption-label-strong w-full truncate text-center">
-                    {t('event_studio_membership')}
-                </span>
-            </button>
+            {/* `RISE` on a wrapper — the tray tile's note says why it cannot sit on the button. */}
+            <span className={cn('flex h-full flex-none', RISE)}>
+                <button
+                    type="button"
+                    data-testid="event-membership-tile"
+                    onClick={join.open}
+                    style={EVENT_STUDIO_GIFT_VARS as CSSProperties}
+                    className={cn(
+                        'group relative flex h-full w-[89px] flex-none flex-col items-center justify-center gap-1',
+                        'overflow-hidden rounded-2xl bg-(--live-gift-tray) p-1.5 text-white',
+                        // The tray's glass and hairline, so the two plates read as one band.
+                        'ring-1 ring-inset ring-white/10 backdrop-blur-md',
+                        // Legacy's hover lift, on the tile rather than the whole band.
+                        'transition-[scale,translate,background-color] duration-200',
+                        'hover:-translate-y-1 hover:scale-110 hover:bg-(--live-gift-tile-hover)',
+                        'motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100',
+                        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                    )}
+                >
+                    <Image
+                        src={EVENT_ART.membershipKing.src}
+                        alt=""
+                        aria-hidden
+                        width={EVENT_ART.membershipKing.width}
+                        height={EVENT_ART.membershipKing.height}
+                        className={cn(
+                            'size-10 flex-none drop-shadow-[0_2px_6px_rgba(255,183,1,0.45)]',
+                            'transition-[rotate] duration-[240ms] ease-[cubic-bezier(0.32,0.72,0,1)]',
+                            'group-hover:-rotate-8 rtl:group-hover:rotate-8 motion-reduce:transition-none',
+                        )}
+                    />
+                    <span className="type-caption-label-strong w-full truncate text-center">
+                        {t('event_studio_membership')}
+                    </span>
+                    {/*
+                     * The glare the Get Membership pill and `/premium` carry — `PREMIUM_SHEEN`, one
+                     * timing across every gold offer on the stage. See the keyframe for `inset-0` and
+                     * the `opacity-0` base.
+                     */}
+                    <Sheen strength="bright" />
+                </button>
+            </span>
             <BecomeAMemberDialogs flow={join} target={target} />
         </>
     )

@@ -2,6 +2,7 @@
 
 import { toChannelPath } from '@features/channel'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
@@ -120,6 +121,7 @@ export function SearchFollowingStrip({
                             onOpen={onOpen}
                             verifiedLabel={t('channel_verified')}
                             nsfwLabel={t('channel_nsfw')}
+                            premiumLabel={t('channel_premium')}
                         />
                     ))}
                 </ul>
@@ -306,11 +308,13 @@ function FollowingTile({
     onOpen,
     verifiedLabel,
     nsfwLabel,
+    premiumLabel,
 }: {
     channel: SearchChannel
     onOpen: () => void
     verifiedLabel: string
     nsfwLabel: string
+    premiumLabel: string
 }) {
     const name = searchChannelName(channel)
     const label = name || `@${channel.slug}`
@@ -327,22 +331,17 @@ function FollowingTile({
                 className="flex w-full min-w-0 flex-col items-center gap-1 rounded-(--radius-lg) py-1 no-underline outline-none transition-transform hover:scale-[1.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring) motion-reduce:transition-none motion-reduce:hover:scale-100"
             >
                 {/*
-                 * The two marks sit on the **avatar's corners**, not inline after the name — the
-                 * one place this tile departs from `SearchChannelRow`, and the reason is width.
+                 * ## The sensitive mark sits on the avatar; the tick and the crown follow the name
                  *
-                 * The row gives its name ~300px, so a 16px badge beside it costs nothing. A tile
-                 * gives it ~76, and measured: inline marks turned "katherine" into "kather…" and a
-                 * badge. The name is the only thing in a tile that distinguishes one face from
-                 * another, so it gets the whole width and the marks take space the avatar was
-                 * already occupying.
+                 * The tick and the Premium crown go **after the name**, the arrangement every other
+                 * row in the app uses (`SearchChannelRow`, `FollowingChannelRow`, the channel
+                 * header). They lived on the avatar's corners for width, which gave the same two
+                 * marks a second placement on this one surface. The cost is real but bounded: the
+                 * name is the one thing that truncates, the marks are `flex-none`, so a long name
+                 * ellipsises earlier and the marks stay whole.
                  *
-                 * Opposite corners, so the two never collide on a space that is both verified and
-                 * sensitive. `end-*` rather than `right-*`, so they mirror under RTL.
-                 *
-                 * Each carries a 2px ring in the panel's own colour — the cut-out treatment
-                 * `ListUserItemPin` uses for the same job, with `--background-surface` in place of
-                 * its `--background` because this tile sits on the card rather than on the page.
-                 * Without it the mark blends into a dark avatar.
+                 * The sensitive mark stays on the avatar's top-end corner. It is a pink disc, not a
+                 * name-row badge, and that is how `FollowingChannelRow` draws it too.
                  *
                  * ## The sensitive mark is a **pink disc with a white glyph**
                  *
@@ -351,24 +350,17 @@ function FollowingTile({
                  * `FollowingChannelRow` at 20, and this is that construction at the same 20/12: a
                  * `span` carrying the disc with a smaller glyph knocked out inside it, **not** a
                  * coloured 16px `Icon` — a glyph the size of its own disc has no disc, only tinted
-                 * corners.
-                 *
-                 * It was a grey glyph on a white disc, and `FollowingChannelRow`'s note already says
-                 * why that is wrong: it "reads as one more secondary icon; the point of the mark is
-                 * that it is not".
+                 * corners. The 2px ring in the panel's colour is the cut-out `ListUserItemPin` uses,
+                 * so the disc does not blend into a dark avatar.
                  *
                  * ⚠ Measured, the **white glyph** is 3.28:1 on the Light pink and **2.67:1 on the Dark
                  * one** — under WCAG's 3:1 for a graphic. That is a property of the token's dark rung,
                  * not of this call site: `NsfwGatePanel` and `FollowingChannelRow` ship the identical
-                 * pairing, and their notes quote the Light figure only. Reproduced here rather than
-                 * corrected, because a mark that differs between this grid and `/following` is a worse
-                 * problem than 0.33 of contrast; the fix belongs on `--accents-nsfw`'s dark value in
-                 * `globals.css`, where it lands on all three at once. The **disc against the panel** is
-                 * 3.28 Light / 6.63 Dark, so the mark is always findable — it is the 18 inside it that
-                 * is soft in Dark.
+                 * pairing. The fix belongs on `--accents-nsfw`'s dark value in `globals.css`, where it
+                 * lands on all three at once.
                  *
-                 * Neither mark becomes decorative by moving: the badge keeps its `alt` and the glyph
-                 * keeps its `title`, so the link still reads as "Ada Lovelace, Verified, @ada".
+                 * Every mark keeps its accessible name (`alt`, `title`, `label`), so the link still
+                 * reads as "Ada Lovelace, Verified, Premium, @ada".
                  */}
                 <span className="relative flex-none">
                     <AnimatedAvatar
@@ -391,21 +383,41 @@ function FollowingTile({
                             />
                         </span>
                     )}
-                    <VerifiedBadge
-                        image={verifiedImage}
-                        size={16}
-                        label={verifiedLabel}
-                        className="absolute bottom-0 end-0 rounded-(--radius-fill) bg-(--background-surface) ring-2 ring-(--background-surface)"
-                    />
                 </span>
                 {/*
                  * `type-dense-emphasis` and not the row's `type-body-strong`: 16px semibold in an
                  * ~80px tile truncates almost every real name to four or five glyphs. 14 is what
                  * legacy renders here too, and a tile is for recognising a face rather than for
                  * reading a name.
+                 *
+                 * `justify-center` keeps a short name centred under the avatar together with its
+                 * marks. Only the name truncates, so the marks are never cut.
+                 *
+                 * A Premium name is painted with `--gradient-premium-name`, as `ListUserItemName`
+                 * and `CardUserHeaderName` do. Those set `type-body-strong`, which is why the
+                 * gradient is written out here rather than borrowed: the badges sit beside the
+                 * name, never inside it, because the gradient makes the text's own colour transparent.
+                 *
+                 * **16 / 12, not equal sizes.** The verified art is a 768px PNG whose tick fills only
+                 * the middle 576 (75%), while the crown's hexagon fills ~92% of its box. At equal
+                 * sizes the crown reads a third larger. 16 and 12 both draw at about 12px, which is
+                 * the same 4:3 the channel header uses (24 / 18).
                  */}
-                <span className="type-dense-emphasis w-full min-w-0 truncate text-center text-(--text-title)">
-                    {label}
+                <span className="flex w-full min-w-0 items-center justify-center gap-0.5">
+                    <span
+                        className={cn(
+                            'type-dense-emphasis min-w-0 truncate',
+                            channel.is_premium
+                                ? '[background-image:var(--gradient-premium-name)] bg-clip-text text-transparent'
+                                : 'text-(--text-title)',
+                        )}
+                    >
+                        {label}
+                    </span>
+                    <VerifiedBadge image={verifiedImage} size={16} label={verifiedLabel} />
+                    {channel.is_premium && (
+                        <PremiumBadge size={12} label={premiumLabel} className="flex-none" />
+                    )}
                 </span>
                 <span className="type-caption-meta w-full min-w-0 truncate text-center text-(--text-subtitle)">
                     @{channel.slug}

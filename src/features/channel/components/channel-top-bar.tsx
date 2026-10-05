@@ -91,7 +91,7 @@ export function ChannelTopBar({
     return (
         // 60px tall and `top-0 z-20`, matching the sticky-bar precedent in `/brand-assets`. The tab
         // strip parks under it at `top-[60px] z-10`, so the two make one 108px stack.
-        <div className="sticky top-0 z-20 bg-(--background) print:hidden">
+        <div className="sticky top-0 z-20 bg-(--background-surface) md:bg-(--background) print:hidden">
             {/*
              * `md:px-0` — the same rule `PageBackBar` applies, at the same breakpoint.
              *

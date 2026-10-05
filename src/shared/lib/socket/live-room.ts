@@ -104,7 +104,21 @@ export const LIVE_ROOM_COMMANDS = [
 
 export type LiveRoomCommand = (typeof LIVE_ROOM_COMMANDS)[number]
 
-export type LiveRoomStatus = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error'
+/**
+ * `refused` — the wire is open but `join_event` answered a non-zero `err_code`: the server will not
+ * have this reader in the room (a reader the creator removed, coming back, is the case that showed
+ * it). Not `connected`, because nothing the room offers is this reader's: legacy gates the chat
+ * **and** the gifts on that ack (`isJoinEvent = err_code === 0`), and this port marked the room
+ * connected either way — so the composer took a message the room refused with a 403, and a gift
+ * was charged over HTTP and announced into a room that would not carry it.
+ */
+export type LiveRoomStatus =
+    | 'idle'
+    | 'connecting'
+    | 'connected'
+    | 'refused'
+    | 'disconnected'
+    | 'error'
 
 /**
  * What this file needs of a socket, which is more than the user room needs.
@@ -187,6 +201,11 @@ export interface LiveRoom {
      */
     request(command: LiveRoomCommand, payload?: unknown): Promise<unknown>
     status(): LiveRoomStatus
+    /**
+     * The server's own sentence from the `join_event` that put the room in `refused`, if it sent
+     * one — the only party that knows why. `null` in every other status.
+     */
+    refusalMessage(): string | null
     subscribeStatus(listener: () => void): () => void
     eventCode(): string | null
 }
@@ -198,9 +217,14 @@ export function createLiveRoom({ io, url, path, getToken, onAuthError }: LiveRoo
     let socket: LiveSocketLike | null = null
     let joinedCode: string | null = null
     let status: LiveRoomStatus = 'idle'
+    let refusal: string | null = null
     let failedAttempts = 0
+    /** Bumped on every transport connect, so only the latest `join_event` may report joined. */
+    let joinAttempt = 0
 
-    const setStatus = (next: LiveRoomStatus) => {
+    const setStatus = (next: LiveRoomStatus, message: string | null = null) => {
+        // Set before the equality check: a second refusal may carry a different sentence.
+        refusal = next === 'refused' ? message : null
         if (status === next) return
         status = next
         for (const listener of statusListeners) listener()
@@ -254,7 +278,8 @@ export function createLiveRoom({ io, url, path, getToken, onAuthError }: LiveRoo
                 // the one that replaced it.
                 if (socket !== instance) return
                 failedAttempts = 0
-                setStatus('connected')
+                // The wire is back but the room is not yet — see "connected means joined" below.
+                setStatus('connecting')
                 /*
                  * ⚠ `join_event` on **every** connect, not once after the first.
                  *
@@ -264,11 +289,49 @@ export function createLiveRoom({ io, url, path, getToken, onAuthError }: LiveRoo
                  * on the socket instance, which is the same object across a reconnect, so it
                  * joins once and never again.
                  */
-                instance.emit('join_event', eventCode, () => {})
+                /*
+                 * ⚠ **`connected` means *joined*, not *socket open*.** The status used to flip on
+                 * the transport's `connect`, before `join_event` had even been sent, and every
+                 * consumer keyed on it fired at once — so `get_message_history` and
+                 * `get_pinned_message` reached the server from a socket that was not yet in the
+                 * room, and came back empty or refused. Every reload showed a blank chat and no
+                 * pin. Legacy waits for this acknowledgement (`setIsJoinEvent(err_code === 0)`) and
+                 * only then asks for either.
+                 *
+                 * A refusal or silence still ends the wait — after the ack, or `ACK_TIMEOUT_MS` —
+                 * because the live channels are bound regardless, and a room that never says
+                 * "connected" would hold the studio on its connecting state forever. The commands
+                 * then fail on their own, which their callers already handle.
+                 */
+                const attempt = ++joinAttempt
+                let joined = false
+                const markJoined = (ack?: unknown) => {
+                    // A reconnect since this join was sent: its answer (or its timer) is stale.
+                    if (joined || socket !== instance || attempt !== joinAttempt) return
+                    joined = true
+                    clearTimeout(joinTimer)
+                    /*
+                     * An explicit refusal is `refused`. **Silence is still `connected`** — the
+                     * timer's call carries no ack, and holding a room that never answers on
+                     * "connecting" forever is the failure the timer exists to prevent.
+                     */
+                    const { err_code: code, message } = (ack ?? {}) as LiveAck
+                    if (typeof code === 'number' && code !== 0) {
+                        setStatus(
+                            'refused',
+                            typeof message === 'string' && message.trim() ? message.trim() : null,
+                        )
+                    } else {
+                        setStatus('connected')
+                    }
+                }
+                const joinTimer = setTimeout(() => markJoined(), ACK_TIMEOUT_MS)
+                instance.emit('join_event', eventCode, markJoined)
             })
 
             instance.on('disconnect', () => {
                 if (socket !== instance) return
+                joinAttempt++
                 setStatus('disconnected')
             })
 
@@ -364,6 +427,7 @@ export function createLiveRoom({ io, url, path, getToken, onAuthError }: LiveRoo
         },
 
         status: () => status,
+        refusalMessage: () => refusal,
 
         subscribeStatus(listener) {
             statusListeners.add(listener)

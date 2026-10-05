@@ -1,8 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'
-import { toast } from 'sonner'
 import type { LiveRoomState } from './use-live-room'
 
 /**
@@ -16,13 +14,17 @@ import type { LiveRoomState } from './use-live-room'
  * | frame        | legacy                                   | here                          |
  * |--------------|------------------------------------------|-------------------------------|
  * | `kickout`    | `setIsKickout(true)` → `<Kickout/>`      | `onKickedOut` → the studio's own refusal panel |
- * | `block_user` | `setIsBlocked(true)` → `<Banned/>` page  | `onBlocked` → `EventScreen`'s banned wall     |
- * | `ban`        | toast the server's sentence, go home     | the same                      |
+ * | `block_user` | `setIsBlocked(true)` → `<Banned/>` page  | `onBlocked` → a card on the studio frame |
+ * | `ban`        | toast the server's sentence, go home     | `onBanned(sentence)` → a card |
  *
  * ⚠ **`block_user` is not the chat's `block_chat`.** Legacy has two `isBlocked`s under one name —
  * the event's, which replaces the whole page, and the comment box's, which only disables typing —
  * and this port had only the second, in `use-live-chat.ts`. Keeping the callbacks named for what
  * they *do* is what stops that collision coming back.
+ *
+ * `ban` diverges on purpose: a toast in a corner while the page navigated under it was the one
+ * explanation most likely to be missed, so the sentence goes to a card that stays (see
+ * `EventAccountBannedPanel`).
  *
  * All three are **latches** in legacy, never reset short of a remount, and they stay latches here:
  * the caller holds the flag, and nothing in the room un-kicks a reader. Legacy also only acts when
@@ -33,12 +35,14 @@ export function useLiveRefusals({
     room,
     onKickedOut,
     onBlocked,
+    onBanned,
 }: {
     room: LiveRoomState
     onKickedOut: () => void
     onBlocked: () => void
+    /** The server's own sentence — the body of the card. */
+    onBanned: (message: string) => void
 }) {
-    const router = useRouter()
     const { isConnected, subscribe } = room
 
     /*
@@ -47,8 +51,10 @@ export function useLiveRefusals({
      */
     const kicked = useRef(onKickedOut)
     const blocked = useRef(onBlocked)
+    const banned = useRef(onBanned)
     kicked.current = onKickedOut
     blocked.current = onBlocked
+    banned.current = onBanned
 
     useEffect(() => {
         if (!isConnected) return
@@ -72,13 +78,11 @@ export function useLiveRefusals({
              */
             subscribe('ban', payload => {
                 const text = sentence(payload)
-                if (!text) return
-                toast.warning(text, { duration: 5000 })
-                router.push('/')
+                if (text) banned.current(text)
             }),
         ]
         return () => {
             for (const off of offs) off()
         }
-    }, [isConnected, subscribe, router])
+    }, [isConnected, subscribe])
 }

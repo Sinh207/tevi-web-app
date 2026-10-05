@@ -36,6 +36,7 @@ vi.mock('@shared/lib/socket/live-room-client', () => ({
     configureLiveRoom: configure,
     connectLiveRoom: connect,
     disconnectLiveRoom: disconnect,
+    liveRoomRefusalMessage: () => null,
     liveRoomStatus: () => 'connected',
     onLiveRoomEvent: vi.fn(() => () => {}),
     subscribeLiveRoomStatus: () => () => {},

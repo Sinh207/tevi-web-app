@@ -324,6 +324,28 @@ export const membershipApi = {
     },
 
     /**
+     * **Remove this account's subscription to one space outright** —
+     * `DELETE v3/subscription/my-subscriptions/delete/?channel_id=` (billy v3 schema,
+     * `subscription_my_subscriptions_delete_destroy`; answers `EmptyResponse`).
+     *
+     * Keyed on the **channel**, not the subscription: the path carries no id. Legacy's
+     * `SubscriptionModel.deleteMySubscription` builds `my-subscriptions/{id}/delete/`, which is not
+     * in the schema — and legacy renders nothing that calls it, so that path has never been
+     * exercised. The schema wins.
+     *
+     * ⚠ **Development only.** A test reset — put an account back to "not a member" so a join flow
+     * can be walked again — not a product action. The only caller is the detail dialog's header,
+     * behind `NEXT_PUBLIC_ENV`. Not retried, same rule as `cancel`.
+     */
+    remove({ channelId, accountId }: { channelId: string; accountId?: string | null }) {
+        return api.del(
+            'v3/subscription/my-subscriptions/delete/',
+            { channel_id: channelId },
+            accountId ? { accountId } : undefined,
+        )
+    },
+
+    /**
      * Buy a tier — used here to re-subscribe to an **expired** membership.
      *
      * ## Two currencies, and the response says which one happened

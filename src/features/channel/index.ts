@@ -94,6 +94,12 @@ export { ChannelLiveBadge } from './components/channel-live-badge'
  */
 export { ChannelManifestLink } from './components/channel-manifest-link'
 /**
+ * A protected space's wall for a **content** refusal (`422 CHN0009`) — exported for the live's
+ * details, which is where a non-follower meets it. `protectedChannelOf` reads the space out of
+ * the refusal; the wall sends the follow request with the space page's own actions.
+ */
+export { ChannelProtectedNotice } from './components/channel-protected-notice'
+/**
  * The follower / member / post counts and the owner's `income_usd`, for a slug.
  *
  * Exported for **`features/monetization`**, whose hub is legacy's `useChannelStats(myChannel.slug)`
@@ -229,6 +235,7 @@ export {
     FOLLOW_REQUESTS_ART,
     FOLLOWING_ART,
 } from './lib/illustrations'
+export { protectedChannelOf } from './lib/protected-channel'
 /**
  * The routes the account drawer's "Space visibility", "Blocked accounts" and "Follow requests"
  * rows point at.

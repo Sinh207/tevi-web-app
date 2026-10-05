@@ -1,6 +1,7 @@
 'use client'
 
 import { StarChangeFlash, useBalanceDisplay } from '@features/balance'
+import type { ShareContext } from '@features/share'
 import { GetAppDialog } from '@shared/components/get-app-dialog'
 import { PhoneMark } from '@shared/components/phone-mark'
 import { StarMark } from '@shared/components/star-mark'
@@ -12,9 +13,9 @@ import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import type { EventChannel } from '../api/types'
-import { EVENT_STUDIO_PILL, EVENT_STUDIO_TOOLBAR_PLATE } from '../lib/studio'
+import { EVENT_STUDIO_PILL } from '../lib/studio'
 import { EventStudioChannelActions } from './event-studio-channel-actions'
 
 /**
@@ -29,10 +30,8 @@ import { EventStudioChannelActions } from './event-studio-channel-actions'
  * drifted — `iconBtnBack` carries the smoked fill with **no** `backdrop-filter`, so the disc reads
  * as a different material from the pill 8px to its right. `EVENT_STUDIO_PILL` is what they share.
  *
- * ⚠ **Two plates, not three.** The trailing plate is deliberately *not* that material —
- * `EVENT_STUDIO_TOOLBAR_PLATE`, and its own note says why both legacy and the comps draw it darker,
- * unblurred and with a shadow. Sharing one constant across the stage was the reading that put a
- * blur on it that neither source has.
+ * The trailing toolbar is the same material and the same 40px — see `EVENT_STUDIO_PILL`'s note
+ * for why it no longer follows the comps' darker plate.
  *
  * ⚠ **Ink is literal here and that is correct** — see the header of `lib/studio.ts`. The ground is
  * a creator's camera under a scrim, not a surface of ours, so `--text-title` (which inverts between
@@ -119,6 +118,8 @@ export function EventStudioChannelBar({
     followerCount,
     eventTitle,
     getShareUrl,
+    shareContext = null,
+    compact = false,
     testId,
 }: {
     channel: EventChannel | null
@@ -131,6 +132,10 @@ export function EventStudioChannelBar({
     eventTitle: string | null
     /** Resolved when that panel opens — see `EventStudioChannelActions`. */
     getShareUrl: () => string | null
+    /** Forwarded to the ⋯ panel — see `EventStudioChannelActions`. */
+    shareContext?: ShareContext | null
+    /** The portrait studio: no upsell pill, and the plate may shrink to the row it is given. */
+    compact?: boolean
     testId?: string
 }) {
     const { t } = useTranslation()
@@ -143,17 +148,32 @@ export function EventStudioChannelBar({
     return (
         <div
             data-testid={testId}
-            className={cn(EVENT_STUDIO_PILL, 'flex h-10 items-center gap-3 p-2')}
+            /*
+             * The toolbar's grammar on the leading side: a 40px plate whose presses are 32px
+             * segments with their own hover wash, so the creator link reads as a control rather
+             * than as a caption, and ⋯ sits behind a hairline like Get App does.
+             */
+            className={cn(
+                EVENT_STUDIO_PILL,
+                'flex h-10 items-center gap-2 ps-1 pe-1',
+                compact && 'min-w-0 max-w-full',
+            )}
         >
             <Link
                 href={`/@${encodeURIComponent(channel.slug)}`}
                 data-testid="event-studio-channel-link"
-                className="flex min-w-0 items-center gap-1"
+                className={cn(
+                    'group flex h-8 min-w-0 items-center gap-2 rounded-full ps-0.5 pe-2.5',
+                    'transition-colors hover:bg-white/10',
+                    'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white',
+                )}
             >
                 <Avatar
                     size="small"
                     type={thumb ? 'image' : 'initials'}
-                    className="size-7 flex-none"
+                    /* A hairline rim, so the face separates from a dark frame behind the plate;
+                       it brightens with the segment's hover. */
+                    className="size-7 flex-none ring-1 ring-white/25 transition-shadow group-hover:ring-white/50"
                 >
                     {thumb ? (
                         <Image
@@ -170,7 +190,7 @@ export function EventStudioChannelBar({
                     )}
                 </Avatar>
 
-                <span className="flex min-w-0 flex-col gap-1">
+                <span className="flex min-w-0 flex-col">
                     <span className="type-caption-label-strong truncate text-white">{name}</span>
                     {followerCount !== null && followerCount > 0 && (
                         <span className="type-micro-overline truncate text-white/70">
@@ -196,6 +216,8 @@ export function EventStudioChannelBar({
                 channel={channel}
                 eventTitle={eventTitle}
                 getShareUrl={getShareUrl}
+                shareContext={shareContext}
+                compact={compact}
             />
         </div>
     )
@@ -253,9 +275,13 @@ export function EventStudioToolbar({ testId }: { testId?: string }) {
         <>
             <div
                 data-testid={testId}
-                /* 4/8 padding and a 4 gap around 28px rows — the comps' 190×36 plate, which the
-                   count's own width then drives. */
-                className={cn(EVENT_STUDIO_TOOLBAR_PLATE, 'flex items-center gap-1 px-2 py-1')}
+                /*
+                 * Two segments on one plate, each its own 32px hover target, split by a hairline —
+                 * the balance and the app are two different presses, and a plate with no seam
+                 * read as one sentence ("149,575 Get App"). 14px ink, the channel pill's scale,
+                 * rather than 16: at 16 this was the largest text in the band.
+                 */
+                className={cn(EVENT_STUDIO_PILL, 'flex h-10 items-center gap-0.5 px-1')}
             >
                 {isKnown && (
                     // internal-link-ok: a new tab on purpose — navigating in place would unmount
@@ -266,25 +292,41 @@ export function EventStudioToolbar({ testId }: { testId?: string }) {
                             target="_blank"
                             rel="noreferrer noopener"
                             data-testid="event-studio-star"
-                            className="flex h-7 items-center gap-1"
+                            className={SEGMENT}
                         >
                             <StarMark size={20} />
-                            <span className="type-body-emphasis text-white">{star}</span>
+                            <span className="type-dense-strong tabular-nums text-white">
+                                {star}
+                            </span>
+                            {/*
+                             * The top-up mark: says the figure is a button that adds Star, which
+                             * the bare number never did. `tabular-nums` above keeps the plate from
+                             * twitching width as the sustained fee ticks the count down.
+                             */}
+                            <span
+                                aria-hidden
+                                className="grid size-5 flex-none place-items-center rounded-full bg-white/20"
+                            >
+                                <Icon name="plus" size={16} />
+                            </span>
+                            <span className="sr-only">{t('balance_action_get_star')}</span>
                         </a>
 
                         <StarChangeFlash />
                     </span>
                 )}
 
+                {isKnown && <span aria-hidden className="h-4 w-px flex-none bg-white/20" />}
+
                 <button
                     type="button"
                     data-testid="event-studio-app"
                     onClick={() => setAppOpen(true)}
-                    className="flex h-7 items-center gap-1"
+                    className={SEGMENT}
                 >
-                    {/* 24, which is what the comps draw and what the rail's own Get App uses. */}
-                    <PhoneMark className="size-6 flex-none" />
-                    <span className="type-body-emphasis text-white">{t('event_studio_app')}</span>
+                    {/* 20 now the ink is 14 — the comps' 24 was drawn against 16px text. */}
+                    <PhoneMark className="size-5 flex-none" />
+                    <span className="type-dense-emphasis text-white">{t('event_studio_app')}</span>
                 </button>
             </div>
 
@@ -292,6 +334,60 @@ export function EventStudioToolbar({ testId }: { testId?: string }) {
                 open={appOpen}
                 onOpenChange={setAppOpen}
                 testId="event-studio-app-dialog"
+            />
+        </>
+    )
+}
+
+/** One press on the trailing plate — 32px tall inside its 40, so the hover wash keeps a 4px rim. */
+const SEGMENT = cn(
+    'flex h-8 flex-none items-center gap-1.5 rounded-full px-2.5 text-white',
+    'transition-colors hover:bg-white/10',
+    'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white',
+)
+
+/**
+ * **Star and Get App, on the portrait studio's top row** — the desktop toolbar's two segments,
+ * compacted for a phone: the balance as a glass chip (the Star and the figure, a new tab to top
+ * up so the stream keeps playing), and Get App as a round icon, its dialog the toolbar's.
+ */
+export function EventStudioTopActions() {
+    const { t } = useTranslation()
+    const { star, isKnown } = useBalanceDisplay()
+    const [appOpen, setAppOpen] = useState(false)
+    return (
+        <>
+            <div className="flex flex-none items-center gap-1.5">
+                {isKnown && (
+                    // internal-link-ok: a new tab on purpose — see the toolbar's note.
+                    <a
+                        href="/get-star"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        data-testid="event-studio-top-star"
+                        className="relative flex h-8 items-center gap-1 rounded-full bg-black/40 ps-1.5 pe-2.5 ring-1 ring-inset ring-white/15 backdrop-blur-md transition-transform active:scale-95 motion-reduce:transition-none"
+                    >
+                        <StarMark size={18} />
+                        <span className="type-caption-label-strong max-w-20 truncate tabular-nums text-white">
+                            {star}
+                        </span>
+                        <StarChangeFlash />
+                    </a>
+                )}
+                <button
+                    type="button"
+                    data-testid="event-studio-top-app"
+                    aria-label={t('event_studio_app')}
+                    onClick={() => setAppOpen(true)}
+                    className="grid size-8 place-items-center rounded-full bg-black/40 text-white ring-1 ring-inset ring-white/15 backdrop-blur-md transition-transform active:scale-95 motion-reduce:transition-none"
+                >
+                    <PhoneMark className="size-4" />
+                </button>
+            </div>
+            <GetAppDialog
+                open={appOpen}
+                onOpenChange={setAppOpen}
+                testId="event-studio-top-dialog"
             />
         </>
     )

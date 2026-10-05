@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@features/auth'
-import { balanceKeys, useRequireStars } from '@features/balance'
+import { balanceKeys, useBalance, useRequireStars } from '@features/balance'
 import { useMyChannel } from '@features/channel'
 import { ApiError } from '@shared/lib/api/errors'
 import { requestLiveRoom } from '@shared/lib/socket/live-room-client'
@@ -74,6 +74,8 @@ export interface SendGiftState {
     send: (pkg: GiftPackage, recipient?: LivePublisher | null) => void
     /** Is there anybody to send to at all. False hides the tray rather than offering a dead press. */
     canSend: boolean
+    /** **Not enough Stars** — set when a press could not be covered, for `EventNotEnoughStarsDialog`. */
+    notEnough: { open: boolean; close: () => void }
 }
 
 export function useSendGift({
@@ -88,6 +90,10 @@ export function useSendGift({
     const { myChannel } = useMyChannel()
     const queryClient = useQueryClient()
     const requireStars = useRequireStars()
+    const { isAuthenticated } = useAuth()
+    const { isKnown, hasEnoughStars } = useBalance()
+    /** The price of the gift the balance could not cover — the dialog is open while it is set. */
+    const [shortFor, setShortFor] = useState<number | null>(null)
 
     const [pendingId, setPendingId] = useState<number | null>(null)
     const [errorKey, setErrorKey] = useState<string | null>(null)
@@ -130,10 +136,8 @@ export function useSendGift({
                  * Legacy raises a toast carrying billy's own sentence and stops there.
                  */
                 if (isInsufficientBalance(error)) {
-                    requireStars(pkg.price, () => {
-                        // Topped up. The reader presses the gift again — a charge must not be
-                        // fired on their behalf out of a payment flow they may have abandoned.
-                    })()
+                    // The same wall as a press the balance could not cover — see `send`.
+                    setShortFor(pkg.price)
                 } else {
                     setErrorKey('event_gift_send_failed')
                 }
@@ -195,32 +199,39 @@ export function useSendGift({
             void queryClient.invalidateQueries({ queryKey: balanceKeys.all })
             setPendingId(null)
         },
-        [
-            code,
-            host,
-            channelId,
-            activeId,
-            currentUser,
-            myChannel,
-            event.channel?.name,
-            queryClient,
-            requireStars,
-        ],
+        [code, host, channelId, activeId, currentUser, myChannel, event.channel?.name, queryClient],
     )
 
     const send = useCallback(
         (pkg: GiftPackage, recipient?: LivePublisher | null) => {
             if (pendingId !== null) return
+            /*
+             * ⚠ **A known short balance meets *Not enough Stars* first** — legacy's
+             * `notEnoughStars`, raised on `price > balance` before anything is sent. It used to go
+             * straight to the purchase sheet, which skipped telling the reader why nothing was sent.
+             * A guest, or a balance not yet known, still goes through `requireStars`: that is where
+             * signing in and the "balance unknown, retrying" path live.
+             */
+            if (isAuthenticated && isKnown && !hasEnoughStars(pkg.price)) {
+                setShortFor(pkg.price)
+                return
+            }
             requireStars(pkg.price, () => {
                 void run(pkg, recipient)
             })()
         },
-        [pendingId, requireStars, run],
+        [pendingId, requireStars, run, isAuthenticated, isKnown, hasEnoughStars],
     )
+
+    const notEnough = {
+        open: shortFor !== null,
+        close: () => setShortFor(null),
+    }
 
     return {
         pendingId,
         errorKey,
+        notEnough,
         /*
          * Three conditions, and each removes a press that could only fail: a code to send against,
          * somebody to send to, and a wire to announce it on. The wire is the one worth stating —

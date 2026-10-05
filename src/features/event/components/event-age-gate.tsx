@@ -1,11 +1,16 @@
 'use client'
 
+import { Sheen } from '@shared/components/sheen'
+import { useMayAnimate } from '@shared/hooks/use-may-animate'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { LIVE_BREATH, PIN_OUT, PIN_OUT_MS, POP, RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { EVENT_CARD, EVENT_PADDING } from '../lib/container'
+import { EVENT_STUDIO_NOTICE } from '../lib/studio'
 
 /**
  * **Age-Restricted Content** — the wall over an event the creator marked 18+.
@@ -42,20 +47,51 @@ export function EventAgeGate({
     onConfirm,
     /** Where *take me back* goes — the host's space. `null` falls back to the home feed. */
     slug,
+    surface = 'card',
 }: {
     onConfirm: () => void
     slug: string | null
+    /**
+     * `studio` — the card centred in `EventStudioShell`, on the blurred ground: the studio's notice
+     * plate, arriving on `RISE` with the 18+ mark popping in after it, and **leaving** on confirm
+     * (`PIN_OUT`) before the studio takes its place, so the swap is a hand-over rather than a cut.
+     * `card` — the details page's block, still.
+     */
+    surface?: 'card' | 'studio'
 }) {
     const { t } = useTranslation()
+    const mayAnimate = useMayAnimate()
+    const isStudio = surface === 'studio'
+    const [leaving, setLeaving] = useState(false)
+
+    useEffect(() => {
+        if (!leaving) return
+        const timer = setTimeout(onConfirm, PIN_OUT_MS)
+        return () => clearTimeout(timer)
+    }, [leaving, onConfirm])
+
+    // Under reduced motion the exit would be a 200ms pause with nothing moving — confirm at once.
+    const confirm = () => (isStudio && mayAnimate ? setLeaving(true) : onConfirm())
 
     return (
         <section
             data-testid="event-age-gate"
             className={cn(
                 'flex min-w-0 flex-col items-center gap-4 text-center',
-                EVENT_CARD,
-                EVENT_PADDING,
-                'py-10 md:py-12',
+                isStudio
+                    ? cn(
+                          EVENT_STUDIO_NOTICE,
+                          /*
+                           * The room's own material — dark glass, lit edge, deep drop — as the
+                           * ended card has it. Inks are stated, not inherited: `--text-subtitle`
+                           * is resolved at `:root`, so a theme scope cannot reach it on the glass.
+                           */
+                          'gap-5 bg-[rgba(20,16,30,0.72)] backdrop-blur-2xl ring-1 ring-inset ring-white/10',
+                          'shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_60px_rgba(0,0,0,0.45)]',
+                          '[&_h1]:text-white [&_p]:text-white/70',
+                          leaving ? PIN_OUT : RISE,
+                      )
+                    : cn(EVENT_CARD, EVENT_PADDING, 'py-10 md:py-12'),
             )}
         >
             {/*
@@ -67,11 +103,34 @@ export function EventAgeGate({
              * `features/event` may not reach into another feature's internals, and the treatment is
              * six utility classes; the reasoning lives in one place and is linked from here.
              */}
-            <span className="flex size-14 flex-none items-center justify-center rounded-(--radius-fill) bg-(--accents-nsfw) text-(--white) ring-8 ring-[color-mix(in_srgb,var(--accents-nsfw)_16%,transparent)]">
+            <span
+                className={cn(
+                    'relative flex size-14 flex-none items-center justify-center rounded-(--radius-fill) bg-(--accents-nsfw) text-(--white) ring-8 ring-[color-mix(in_srgb,var(--accents-nsfw)_16%,transparent)]',
+                    isStudio && cn(POP, '[animation-delay:120ms]'),
+                )}
+            >
+                {/*
+                 * On the studio, a pink halo breathing behind the mark — the one colour on the
+                 * card, so the eye lands on what is being asked before it reads the words.
+                 */}
+                {isStudio && (
+                    <span
+                        aria-hidden
+                        className={cn(
+                            'pointer-events-none absolute -inset-8 -z-10 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--accents-nsfw)_55%,transparent),transparent)] blur-lg',
+                            LIVE_BREATH,
+                        )}
+                    />
+                )}
                 <Icon name="nsfw" size={32} title={t('event_age_gate_title')} />
             </span>
 
-            <div className="flex min-w-0 max-w-[340px] flex-col gap-1">
+            <div
+                className={cn(
+                    'flex min-w-0 max-w-[340px] flex-col gap-1.5',
+                    isStudio && !leaving && cn(RISE, '[animation-delay:160ms]'),
+                )}
+            >
                 <h1 className="type-title-t2-semibold text-balance text-(--text-title)">
                     {t('event_age_gate_title')}
                 </h1>
@@ -86,15 +145,24 @@ export function EventAgeGate({
              * paired action in this app does, and the destructive-looking one is not the default
              * focus target.
              */}
-            <div className="flex w-full min-w-0 max-w-[340px] flex-col gap-2">
+            <div
+                className={cn(
+                    'flex w-full min-w-0 max-w-[340px] flex-col gap-2',
+                    isStudio && !leaving && cn(RISE, '[animation-delay:260ms]'),
+                )}
+            >
                 <Button
                     data-testid="event-age-confirm"
                     variant="accent"
                     size="large"
                     fullWidth
-                    onClick={onConfirm}
+                    disabled={leaving}
+                    onClick={confirm}
+                    className={cn(isStudio && 'relative overflow-hidden')}
                 >
-                    {t('event_age_gate_confirm')}
+                    {/* A slow sheen across the answer that lets the reader in. */}
+                    {isStudio && <Sheen />}
+                    <span className="relative">{t('event_age_gate_confirm')}</span>
                 </Button>
                 <Button
                     data-testid="event-age-decline"
@@ -102,6 +170,10 @@ export function EventAgeGate({
                     size="large"
                     fullWidth
                     render={<Link href={slug ? `/@${encodeURIComponent(slug)}` : '/'} />}
+                    // Quieter than the confirm on the glass — it is the way out, not the ask.
+                    className={cn(
+                        isStudio && 'text-white/70 hover:bg-white/[0.06] hover:text-white',
+                    )}
                 >
                     {t('event_age_gate_decline')}
                 </Button>

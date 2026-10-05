@@ -1,5 +1,5 @@
 import { PageBackBar } from '@features/navigation'
-import { SEARCH_CONTAINER, SearchView } from '@features/search'
+import { SEARCH_CONTAINER, SEARCH_SCREEN, SearchView } from '@features/search'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -85,11 +85,11 @@ export default async function SearchPage() {
     const t = await getServerT()
 
     return (
-        <main className="flex flex-1 flex-col">
+        <main className={`flex flex-1 flex-col ${SEARCH_SCREEN}`}>
             {/* No hairline under the bar, matching `/settings/blocked-accounts`: the card below
                 brings its own edge at `md` and up, and a full-bleed rule across a screen whose
                 content is already a bounded surface only draws a second one. */}
-            <div className="sticky top-0 z-20 bg-(--background)">
+            <div className={`sticky top-0 z-20 ${SEARCH_SCREEN}`}>
                 <PageBackBar title={t('search_title')} className={SEARCH_CONTAINER} />
             </div>
             <div className={`${SEARCH_CONTAINER} flex flex-1 flex-col md:pb-6`}>

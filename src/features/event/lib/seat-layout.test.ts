@@ -135,11 +135,19 @@ describe('the stage box aspect', () => {
     })
 
     it('gives a multi-tile portrait grid a square box, not a 9:16 column', () => {
-        for (const code of ['P2', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9']) {
+        for (const code of ['P4', 'P5', 'P6', 'P7', 'P8', 'P9']) {
             expect(seatBoxAspect(seatArrangement({ layout: code, publisherCount: 1 }))).toBe(
                 '1 / 1',
             )
         }
+    })
+
+    /*
+     * The deliberate divergence: legacy's square split in two is a pair of 1:2 strips. A 3:2 box
+     * makes each of the two tiles 3:4.
+     */
+    it('gives P2 a 3:2 box, so its two tiles are 3:4 rather than legacy’s 1:2 strips', () => {
+        expect(seatBoxAspect(seatArrangement({ layout: 'P2', publisherCount: 2 }))).toBe('3 / 2')
     })
 
     it('keeps P1 a 9:16 column and P3 a half-width one', () => {

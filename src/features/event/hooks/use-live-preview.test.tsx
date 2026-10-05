@@ -168,6 +168,32 @@ describe('the quota gate', () => {
     })
 })
 
+describe('a refusal', () => {
+    /** Without it a refused preview looked like one that simply never started. */
+    it('reports an empty answer as refused, and asks for no layout', async () => {
+        getPreview.mockResolvedValue(null)
+        const seen = probe()
+        await waitFor(() => expect(seen.current?.isRefused).toBe(true))
+        expect(seen.current?.isLoading).toBe(false)
+        expect(getRoom).not.toHaveBeenCalled()
+    })
+
+    it('reports a failed request as refused, not as loading forever', async () => {
+        getPreview.mockRejectedValue(new Error('offline'))
+        const seen = probe()
+        await waitFor(() => expect(seen.current?.isRefused).toBe(true))
+        // Not a 4xx with a body, so there is no sentence of the API's to show.
+        expect(seen.current?.refusalText).toBeNull()
+    })
+
+    it('is not refused while the preview plays', async () => {
+        const seen = probe()
+        await waitFor(() => expect(seen.current?.publishers.length).toBe(1))
+        expect(seen.current?.isRefused).toBe(false)
+        expect(seen.current?.totalSeconds).toBe(PREVIEW_SECONDS)
+    })
+})
+
 describe('the two requests', () => {
     /* No layout is fetched on behalf of somebody who is being refused. */
     it('does not ask who is on camera when the preview is refused', async () => {
@@ -181,6 +207,15 @@ describe('the two requests', () => {
         const seen = probe()
         await waitFor(() => expect(seen.current?.publishers.length).toBe(1))
         expect(seen.current?.layout?.layout).toBe('P1')
+    })
+})
+
+describe('switched off', () => {
+    /** After a purchase the preview is disabled; its cached sample must not keep "playing". */
+    it('plays nothing when disabled, though the cache still holds the sample', () => {
+        const seen = probe({ enabled: false, seeded: true })
+        expect(seen.current?.isPlaying).toBe(false)
+        expect(seen.current?.playback).toBeNull()
     })
 })
 

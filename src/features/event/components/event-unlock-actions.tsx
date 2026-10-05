@@ -1,11 +1,15 @@
 'use client'
 
 import { BecomeAMemberDialogs, type MembershipTarget, useJoinFlow } from '@features/membership'
+import { Sheen } from '@shared/components/sheen'
 import { StarMark } from '@shared/components/star-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatStarAmount } from '@shared/lib/money'
+import { GIFT_BOB, RISE, riseDelay } from '@shared/lib/motion'
+import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { ConfirmDialog } from '@shared/ui/confirm-dialog'
+import { Icon } from '@shared/ui/icon'
 import type { ReactNode } from 'react'
 import type { EventDetail } from '../api/types'
 import { useUnlockEvent } from '../hooks/use-unlock-event'
@@ -96,8 +100,15 @@ export function EventUnlockActions({
                     size="large"
                     fullWidth
                     onClick={join.open}
+                    className={cn('relative overflow-hidden', RISE)}
+                    style={riseDelay(2)}
                 >
-                    {t('event_become_a_member')}
+                    {/* The recurring offer catches the light — a slow sheen across the accent. */}
+                    <Sheen strength="brightest" />
+                    {/* The membership crown — the same glyph the space's own Become a member
+                        button and the join dialog's CTA carry. */}
+                    <Icon name="crown" weight="filled" size={20} className="relative" />
+                    <span className="relative">{t('event_become_a_member')}</span>
                 </Button>
             )}
 
@@ -108,7 +119,11 @@ export function EventUnlockActions({
                  * surface: this panel is `--background-surface` below `md` and a card above it, and
                  * a word with an opaque background would show its own patch on one of the two.
                  */
-                <div aria-hidden className="flex min-w-0 items-center gap-3">
+                <div
+                    aria-hidden
+                    className={cn('flex min-w-0 items-center gap-3', RISE)}
+                    style={riseDelay(3)}
+                >
                     <span className="h-px flex-1 bg-(--separator-default)" />
                     <span className="type-caption-meta text-(--text-placeholder)">
                         {t('event_or')}
@@ -126,9 +141,13 @@ export function EventUnlockActions({
                     disabled={unlock.isPending}
                     aria-busy={unlock.isPending || undefined}
                     onClick={unlock.request}
+                    className={RISE}
+                    style={riseDelay(showMembership ? 4 : 2)}
                 >
                     {t('event_purchase_access', { price })}
-                    <StarMark size={16} />
+                    <span className={cn('flex', GIFT_BOB)}>
+                        <StarMark size={16} />
+                    </span>
                 </Button>
             )}
 

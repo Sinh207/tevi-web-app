@@ -60,3 +60,14 @@ export const SEARCH_CONTAINER = 'mx-auto w-full md:max-w-[612px]'
  */
 export const SEARCH_PANEL =
     'flex flex-1 flex-col overflow-hidden bg-(--background-surface) md:rounded-[var(--radius-xl)]'
+
+/**
+ * The **screen** behind the panel — `<main>` and its sticky bar.
+ *
+ * `/search` is a single panel, so below `md` the surface runs full-bleed from the bar to the bottom
+ * edge (`docs/DESIGN_SYSTEM.md` §6). The bar had been left on `--background`, which in Dark is
+ * `--black` against the panel's `#18181b`, so a page-coloured strip sat above the card. From `md`
+ * both return to `--background` and the panel becomes the card. Same constant shape as
+ * `MY_WALLET_SCREEN`.
+ */
+export const SEARCH_SCREEN = 'bg-(--background-surface) md:bg-(--background)'

@@ -1,14 +1,20 @@
 'use client'
 
 import { useAuth } from '@features/auth'
+import { apiErrorText } from '@shared/lib/api/error-message'
 import { isPreviewExhausted, spendPreview } from '@shared/lib/preview-quota'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { liveApi, liveKeys } from '../api/live-api'
+import { liveApi, liveKeys, type PreviewRefusal, previewRefusal } from '../api/live-api'
 import type { LiveLayout, LivePlayback, LivePublisher } from '../api/live-types'
 
 /**
  * How long the free look lasts. Legacy's `useState(10)` counting down once a second.
+ *
+ * ⚠ **Ten, not the payload's `preview_duration`.** The preview answer now carries a
+ * `preview_duration` (60 on staging) and a `preview_expires_at`; the product rule is ten seconds a
+ * look, three looks per device per event, and that is what this keeps. The fields are parsed
+ * (`livePlaybackSchema`) and deliberately not read — see **B-question 3** in `BACKEND_QUESTIONS.md`.
  *
  * Ten seconds is short enough to be an advertisement and long enough to see who is on camera and
  * what they are doing — which is the entire product argument for the preview existing.
@@ -24,10 +30,24 @@ export interface LivePreviewState {
     publishers: LivePublisher[]
     /** Seconds left, counting down from `PREVIEW_SECONDS`. `0` once it has run out. */
     secondsLeft: number
+    /** The whole look, for the countdown ring — always `PREVIEW_SECONDS`. */
+    totalSeconds: number
     /** The countdown has finished. The reader saw their preview; now they are asked to pay. */
     isComplete: boolean
     /** This **device** has spent all three of its looks at this event. */
     isExhausted: boolean
+    /**
+     * The request finished **without a stream** — refused (4xx), failed, or answered empty. Without
+     * it a refusal looked like a preview that simply never started.
+     */
+    isRefused: boolean
+    /** The API's own sentence for a 4xx refusal, when it sent one (`apiErrorText`'s rules). */
+    refusalText: string | null
+    /**
+     * Which refusal it was, from the body's `code` (`PREVIEW_REFUSAL`). ⚠ `geo-restricted` is the
+     * one state nothing else can tell this client — the event payload does not carry it.
+     */
+    refusal: PreviewRefusal | null
     /** Anything is on screen right now — the one flag the stage needs to decide what to draw. */
     isPlaying: boolean
 }
@@ -74,6 +94,15 @@ export interface LivePreviewState {
  * finishes counting before the first frame renders shows the paywall over a stream the reader
  * never saw.
  */
+/**
+ * The refusal code off a failed preview, at either depth: an error body keeps the `{ data }`
+ * envelope (the client unwraps success bodies only), so `code` may be on the body or one level in.
+ */
+function refusalOf(error: unknown): PreviewRefusal | null {
+    const body = (error as { data?: unknown } | null)?.data
+    return previewRefusal(body) ?? previewRefusal((body as { data?: unknown } | null)?.data)
+}
+
 export function useLivePreview({
     code,
     enabled = true,
@@ -121,7 +150,9 @@ export function useLivePreview({
         refetchOnWindowFocus: false,
     })
 
-    const playback = previewQuery.data ?? null
+    // Only while enabled — the cache outlives the switch-off (see `useLiveStream`'s note): after a
+    // purchase the preview is disabled, and its cached sample must not keep "playing".
+    const playback = active ? (previewQuery.data ?? null) : null
 
     const roomQuery = useQuery({
         queryKey: liveKeys.room(code ?? '', activeId),
@@ -133,8 +164,8 @@ export function useLivePreview({
         refetchOnWindowFocus: false,
     })
 
-    const layout = roomQuery.data?.layout ?? null
-    const publishers = roomQuery.data?.publishers ?? []
+    const layout = active ? (roomQuery.data?.layout ?? null) : null
+    const publishers = active ? (roomQuery.data?.publishers ?? []) : []
     const ready = playback !== null && publishers.length > 0
 
     /*
@@ -158,15 +189,25 @@ export function useLivePreview({
     }, [running])
 
     const isComplete = ready && secondsLeft <= 0
+    const isLoading =
+        active && (previewQuery.isLoading || (playback !== null && roomQuery.isLoading))
+    const isRefused =
+        active &&
+        !isLoading &&
+        (previewQuery.isError || (previewQuery.isSuccess && playback === null) || roomQuery.isError)
 
     return {
-        isLoading: active && (previewQuery.isLoading || (playback !== null && roomQuery.isLoading)),
+        isLoading,
         playback,
         layout,
         publishers,
         secondsLeft,
+        totalSeconds: PREVIEW_SECONDS,
         isComplete,
         isExhausted: exhaustedAtMount,
+        isRefused,
+        refusalText: isRefused ? apiErrorText(previewQuery.error) : null,
+        refusal: isRefused ? refusalOf(previewQuery.error) : null,
         isPlaying: ready && !isComplete,
     }
 }

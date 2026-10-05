@@ -17,6 +17,7 @@ import { type SustainedFeeState, useSustainedFee } from './use-sustained-fee'
  */
 const purchaseSustainedFee = vi.hoisted(() => vi.fn())
 const balance = vi.hoisted(() => ({ star: 100 }))
+const me = vi.hoisted(() => ({ isPremium: false }))
 const remote = vi.hoisted(() => ({
     rule: {
         enable: true,
@@ -29,6 +30,7 @@ const remote = vi.hoisted(() => ({
 
 vi.mock('@features/auth', () => ({ useAuth: () => ({ activeId: 'acc-1' }) }))
 vi.mock('@features/balance', () => ({ useBalance: () => balance }))
+vi.mock('@features/channel', () => ({ useMyChannel: () => ({ isPremium: me.isPremium }) }))
 vi.mock('@shared/lib/geo-provider', () => ({ useCountry: () => ({ country: 'VN' }) }))
 vi.mock('@shared/lib/remote-config', () => ({
     useRemoteConfig: () => ({ event: {} }),
@@ -194,6 +196,47 @@ describe('running out of Star', () => {
 
         await minutes(5)
         expect(purchaseSustainedFee).toHaveBeenCalledTimes(2)
+    })
+})
+
+describe('a Premium reader', () => {
+    afterEach(() => {
+        me.isPremium = false
+    })
+
+    /*
+     * The wall's own sentence promises Premium lets you keep watching. A reader who bought it in
+     * another tab came back to the same wall — the bug this pins.
+     */
+    it('lifts an open wall the moment Premium arrives', async () => {
+        balance.star = 0
+        const { seen, rerender } = mount()
+        await minutes(5)
+        expect(seen.current?.isOutOfStar).toBe(true)
+
+        await act(async () => {
+            me.isPremium = true
+            rerender()
+        })
+        expect(seen.current?.isOutOfStar).toBe(false)
+    })
+
+    it('is never walled for a period the balance cannot cover', async () => {
+        me.isPremium = true
+        balance.star = 0
+        const { seen } = mount()
+        await minutes(5)
+        expect(seen.current?.isOutOfStar).toBe(false)
+        expect(purchaseSustainedFee).not.toHaveBeenCalled()
+    })
+
+    /* B109: legacy charges Premium too, and whether it should is the backend's call. */
+    it('is still charged when the balance can pay', async () => {
+        me.isPremium = true
+        balance.star = 50
+        mount()
+        await minutes(5)
+        expect(purchaseSustainedFee).toHaveBeenCalledTimes(1)
     })
 })
 

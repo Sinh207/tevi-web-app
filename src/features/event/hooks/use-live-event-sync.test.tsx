@@ -20,6 +20,8 @@ function makeRoom() {
     const room: LiveRoomState = {
         status: 'connected',
         isConnected: true,
+        isRefused: false,
+        refusalMessage: null,
         subscribe: (channel, handler) => {
             handlers.set(channel, handler)
             return () => handlers.delete(channel)
@@ -28,13 +30,13 @@ function makeRoom() {
     return { room, handlers }
 }
 
-function mount() {
+function mount(onLocked?: () => void) {
     const { room, handlers } = makeRoom()
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const invalidate = vi.spyOn(client, 'invalidateQueries').mockResolvedValue(undefined)
 
     function Probe() {
-        useLiveEventSync({ code: 'evt-1', room })
+        useLiveEventSync({ code: 'evt-1', room, onLocked })
         return null
     }
     render(
@@ -66,6 +68,37 @@ describe('the event-record frames', () => {
         // A thinner payload is not a reason to leave the page stale forever.
         act(() => handlers.get('data_change')?.({}))
         expect(invalidate).toHaveBeenCalledTimes(2)
+    })
+})
+
+describe('the broadcast locked mid-stream', () => {
+    /**
+     * The refetch alone cannot tell "locked while watching" from "arrived at a gated stream", and
+     * the studio offered the first a preview it had no business spending. The flag is the tell.
+     */
+    it('raises onLocked as well as refetching', () => {
+        const onLocked = vi.fn()
+        const { handlers, invalidate } = mount(onLocked)
+        act(() => handlers.get('lock')?.({ updated_at: 't1' }))
+        expect(onLocked).toHaveBeenCalledTimes(1)
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: eventKeys.all })
+    })
+
+    /** ⚠ One edit, two frames, one stamp: the shared guard used to drop the lock as a repeat. */
+    it('does not drop a lock that carries the same stamp as the data_change before it', () => {
+        const onLocked = vi.fn()
+        const { handlers } = mount(onLocked)
+        act(() => handlers.get('data_change')?.({ updated_at: 'same' }))
+        act(() => handlers.get('lock')?.({ updated_at: 'same' }))
+        expect(onLocked).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not raise onLocked for any other frame', () => {
+        const onLocked = vi.fn()
+        const { handlers } = mount(onLocked)
+        act(() => handlers.get('data_change')?.({ updated_at: 'a' }))
+        act(() => handlers.get('live_status')?.({ updated_at: 'b' }))
+        expect(onLocked).not.toHaveBeenCalled()
     })
 })
 

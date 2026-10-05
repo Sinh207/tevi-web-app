@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@features/auth'
+import { protectedChannelOf } from '@features/channel'
 import { ApiError } from '@shared/lib/api/errors'
 import { useQuery } from '@tanstack/react-query'
 import { eventApi, eventKeys } from '../api/event-api'
@@ -83,8 +84,15 @@ export function useEvent({
         (query.error instanceof ApiError && query.error.status === 404) ||
         (query.isSuccess && query.data === null)
 
+    /*
+     * A protected space's live, asked for by somebody who does not follow it: `422 CHN0009`, with
+     * the space in the body. Not an error to retry — a door, which the screen draws as one.
+     */
+    const protectedChannel = protectedChannelOf(query.error)
+
     return {
         event: query.data ?? null,
+        protectedChannel,
         /**
          * ⚠ `isLoading` is false whenever `initialEvent` was given — there is data, so nothing is
          * loading. A skeleton must be gated on this and not on `isFetching`, or the page flashes one
@@ -95,7 +103,7 @@ export function useEvent({
         isFetching: query.isFetching,
         notFound,
         /** A real failure — not a missing event. See above. */
-        isError: query.isError && !notFound,
+        isError: query.isError && !notFound && !protectedChannel,
         refetch: query.refetch,
     }
 }

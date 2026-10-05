@@ -3206,6 +3206,14 @@ Legacy's `PREVIEW_LIMIT = 3` is a client constant against `localStorage`, which 
 look, not a gate. Please confirm the server's own rule, what it answers when the limit is reached,
 and whether the window is per event or per event **per day**.
 
+*Partly answered, 2026-10-03:* the preview response now carries `preview_duration` (seconds; `60` on
+staging) and `preview_expires_at` (ISO). **The product rule stays ten seconds a look, three looks per
+device per event**, enforced client-side as legacy does (`shared/lib/preview-quota.ts`); both fields
+are parsed and deliberately not read. **Open:** why the backend's window is 60s against a 10s product
+rule, and whether the server will enforce the three — if it does, the local counter can go and the
+countdown should read `preview_expires_at`. A refusal now reaches the screen with the API's own
+sentence (`refusalText`) instead of looking like a preview that never started.
+
 **4. Can `layout.layout` be a value outside `P1`–`P9` / `L1`–`L9`?** The renderer falls back to `P1`
 for anything unrecognised rather than failing, so a new code degrades to a single tile instead of a
 blank room — but if new arrangements are planned, the fallback is a silently wrong layout rather
@@ -3313,6 +3321,14 @@ Encoded in `features/event/api/unlock-api.ts` (`purchaseChatMessage`, `purchaseS
 
 ---
 
+**Client change, 2026-10 — Premium is no longer walled.** The *Out of Star* dialog says Premium
+lets the reader keep watching without the fee, and a reader who took that offer (in a new tab) came
+back to the same wall. So `useSustainedFee` now **skips** a period a Premium reader cannot cover
+instead of blocking, and lifts an open wall when `is_premium` turns true. It still **charges** a
+Premium reader who *can* pay, as legacy does — which is exactly this question: if Premium is
+meant to be exempt, the client should stop charging it too, and that is a one-line change at
+`collect` in `hooks/use-sustained-fee.ts`.
+
 ## B110 — **gifts in a live room**: the client announces its own charge, and three fields the schema and legacy disagree about · **the gift vertical is built on billy's OpenAPI plus one grep**
 
 Unlike the rest of the live room, gifting **has a published schema**
@@ -3369,6 +3385,45 @@ Encoded in `features/event/api/gift-api.ts`, `features/event/api/gift-types.ts`,
 `features/event/api/types.ts`.
 
 ---
+
+## B111 — the **room's publishers**: is there a channel slug? · **a co-host's card has no way to their space**
+
+Pressing a seat opens the publisher's card (`event-seat-card.tsx`) with *Send a gift* and, for the
+host, *View space*. `core/v4/live/event/{code}/layout/` describes each publisher as
+`{ id, name, avatar, audio, video, is_host, verified_tick_badge, premium_badge }` — legacy reads
+exactly these and **no slug**, so a co-host cannot be linked to: only the host is, through the
+event's own `channel.slug`.
+
+**Does the publisher object carry the channel's slug, and under which name?** The client already
+reads `channel_slug`, then `slug`, then `username` (`livePublisherSchema`), and shows *View space*
+for anybody who has one — so if the field exists under one of those spellings, nothing else
+changes. If it does not, the ask is to add it: the card is the one place a viewer meets a co-host.
+
+Encoded in `features/event/api/live-types.ts` (`slugOf`), `features/event/components/event-seat-card.tsx`.
+
+## B112 — a **removed** reader coming back: what does the room say, and how long does a kick last? · **the kick is only as strong as the client**
+
+A `kickout` frame reaches a reader who is *in* the room. One who reloads is not, so they never hear
+it again — and on the way back in **`join_event` refuses them** (a non-zero `err_code`; the exact
+code and message have not been captured). Legacy keeps the kick in page state, so a reload undoes
+it: the stream plays, and the chat and gifts are dead because both are gated on that join ack.
+
+The client now reads **any** refused join on a live session as "not allowed in this room": the
+removed card (in the server's own sentence when the ack carries one), the stream stopped, the room
+left. That is right for a kick and a guess for everything else, which is why it is a question:
+
+1. **Which `err_code` does `join_event` answer for a removed reader?** A distinct one lets the card
+   say *removed* only when it is, and anything else get its own wording.
+2. **Do `playback/` and `preview/` refuse a removed reader?** As far as the client can tell they
+   still hand out the stream — so the card is a client-side door, and anybody who calls the
+   endpoint directly is back in. Removal is only enforced if these refuse too.
+3. **How long does a kick last** — the rest of the broadcast, a set time, or until the creator
+   lifts it? The card says *"You may be able to rejoin later"*; that sentence is only true if
+   *later* exists.
+
+Encoded in `shared/lib/socket/live-room.ts` (`refused`, `refusalMessage`),
+`features/event/components/event-studio-screen.tsx` (the refused-join latch),
+`features/event/hooks/use-live-chat.ts`.
 
 ## Closed
 

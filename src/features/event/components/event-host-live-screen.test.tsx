@@ -59,7 +59,10 @@ vi.mock('../hooks/use-event-ownership', () => ({ useEventOwnership: () => 'host'
  * does not implement. `use-live-studio.test.tsx` pins the hook itself, and `event-screen.test.tsx`
  * pins the branch that chooses between the two viewer screens.
  */
-vi.mock('../hooks/use-live-studio', () => ({ useLiveStudio: () => false }))
+vi.mock('../hooks/use-live-studio', () => ({
+    useLiveStudio: () => false,
+    useCompactStudio: () => false,
+}))
 vi.mock('../hooks/use-age-gate', () => ({
     useAgeGate: () => ({ isResolving: false, isAllowed: true, required: false, confirm: vi.fn() }),
 }))

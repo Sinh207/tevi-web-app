@@ -7,6 +7,7 @@ import { MiniAppHost } from '@features/mini-app'
 import { PaymentProvider } from '@features/payment'
 import { PermissionProvider } from '@features/permission'
 import { RealtimeProvider } from '@features/realtime'
+import { useTrackInAppRoute } from '@shared/lib/in-app-referrer'
 
 /**
  * Everything that depends on there being a session (outer → inner):
@@ -79,6 +80,12 @@ import { RealtimeProvider } from '@features/realtime'
  *
  * The dialogs stay below it so a gated account can still be signed out of.
  */
+/** Renders nothing — records each route for `inAppReferrer` (`shared/lib/in-app-referrer.ts`). */
+function InAppRouteTracker() {
+    useTrackInAppRoute()
+    return null
+}
+
 export function SessionProviders({
     children,
     showSplash = true,
@@ -148,6 +155,7 @@ export function SessionProviders({
                 Outside MyChannelProvider on purpose: these are how an account is
                 signed in and switched, so they must keep working while the onboarding
                 gate is replacing the routes. */}
+            <InAppRouteTracker />
             <LoginDialog />
             {/* Same reasoning, and the two hand over to each other: "Add account" in
                 the switcher is a sign-in. */}

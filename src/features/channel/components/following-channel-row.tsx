@@ -303,7 +303,10 @@ export function FollowingChannelRow({
                                      */}
                                     {channel.is_premium && (
                                         <PremiumBadge
-                                            size={16}
+                                            /* 12 beside a 16 tick: the tick's PNG is 25%
+                                               padding, so this is the pair that draws at one
+                                               visible size — the header's 24 / 18. */
+                                            size={12}
                                             label={t('channel_premium')}
                                             className="flex-none"
                                         />

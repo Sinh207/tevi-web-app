@@ -86,7 +86,11 @@ export function BecomeAMemberDialogs({
     if (!offer) return null
 
     const price = formatStarAmount(offer.stars, currentLanguage)
-    const short = isKnown && !hasEnoughStars(offer.stars)
+    /*
+     * A Star shortfall only matters when paying **in Star**. Unscoped, it disabled the Cash tab's
+     * Join too — a reader with 0 Star could not pay $1.00 by card, the one route that needs no Star.
+     */
+    const short = flow.currency === 'star' && isKnown && !hasEnoughStars(offer.stars)
     const tierName = offer.name ?? t('membership_tier_fallback')
     const cashPrice =
         offer.usd == null ? '' : formatFiatAmount(offer.usd, MEMBERSHIP_USD, currentLanguage)

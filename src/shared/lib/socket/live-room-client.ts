@@ -129,6 +129,11 @@ export function liveRoomStatus(): ReturnType<LiveRoom['status']> {
     return room?.status() ?? 'idle'
 }
 
+/** Why the room refused the join, in the server's words — see `LiveRoom.refusalMessage`. */
+export function liveRoomRefusalMessage(): string | null {
+    return room?.refusalMessage() ?? null
+}
+
 export function subscribeLiveRoomStatus(listener: () => void): () => void {
     let off: (() => void) | null = null
     let cancelled = false

@@ -41,6 +41,8 @@ function mount(enabled = true) {
     const room: LiveRoomState = {
         status: 'connected',
         isConnected: true,
+        isRefused: false,
+        refusalMessage: null,
         subscribe: (channel, handler) => {
             handlers.set(channel, handler)
             return () => handlers.delete(channel)

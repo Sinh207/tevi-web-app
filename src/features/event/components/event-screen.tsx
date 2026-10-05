@@ -1,15 +1,17 @@
 'use client'
 
+import { ChannelProtectedNotice } from '@features/channel'
 import { cn } from '@shared/lib/utils'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { EventDetail } from '../api/types'
 import { useAgeGate } from '../hooks/use-age-gate'
 import { useCanonicalEventSlug } from '../hooks/use-canonical-event-slug'
 import { useEvent } from '../hooks/use-event'
 import { useEventOwnership } from '../hooks/use-event-ownership'
-import { useLiveStudio } from '../hooks/use-live-studio'
+import { useCompactStudio, useLiveStudio } from '../hooks/use-live-studio'
 import { EVENT_CONTAINER, EVENT_PANEL, EVENT_SCREEN } from '../lib/container'
 import { isLive } from '../lib/event-status'
+import { COMPACT_STUDIO_ENABLED } from '../lib/studio'
 import { EventAgeGate } from './event-age-gate'
 import { EventDescriptionCard } from './event-description-card'
 import { EventDetailsAutoFollow } from './event-details-auto-follow'
@@ -17,12 +19,15 @@ import { EventDetailsCard } from './event-details-card'
 import { EventHostCard } from './event-host-card'
 import { EventHostLiveScreen } from './event-host-live-screen'
 import { EventHostScreen } from './event-host-screen'
+import { EventMobileLiveNotice } from './event-mobile-live-notice'
 import { EventShareButton } from './event-share-button'
 import { EventSkeleton } from './event-skeleton'
 import { EventBannedState, EventErrorState, EventNotFoundState } from './event-state-screens'
 import { EventStudioScreen } from './event-studio-screen'
+import { EventStudioShell } from './event-studio-shell'
+import { EventStudioSkeleton } from './event-studio-skeleton'
 import { EventTopBar } from './event-top-bar'
-import { EventWatchPanel } from './event-watch-panel'
+import { EventAccountBannedPanel, EventBlockedPanel, EventWatchPanel } from './event-watch-panel'
 
 /**
  * `/@{slug}/event/{code}` — **one live event, from a viewer's side.**
@@ -101,7 +106,11 @@ export function EventScreen({
      */
     backdropUrl?: string | null
 }) {
-    const { event, isLoading, notFound, isError, refetch } = useEvent({ code, initialEvent })
+    const { event, isLoading, notFound, isError, protectedChannel, refetch } = useEvent({
+        code,
+        initialEvent,
+    })
+    const reask = useCallback(() => void refetch(), [refetch])
     const ownership = useEventOwnership(event)
 
     /*
@@ -113,6 +122,13 @@ export function EventScreen({
      * as legacy's is — nothing un-bans a reader mid-visit, and a reload re-asks the room.
      */
     const [isBlocked, setIsBlocked] = useState(false)
+    /*
+     * **Banned outright** — the room's `ban` frame, with the server's sentence. A latch like the
+     * one above, held here for the same reason: the studio unmounts (leaving the room) and the card
+     * stands in its frame. Legacy toasted the sentence and went home; see `EventAccountBannedPanel`.
+     */
+    const [bannedMessage, setBannedMessage] = useState<string | null>(null)
+    const isRefused = isBlocked || bannedMessage !== null
 
     /*
      * Called unconditionally, as a hook must be — `required` is what makes it inert. It reads the
@@ -120,9 +136,15 @@ export function EventScreen({
      * a bare field access: before the payload lands there is no question to ask, and after it lands
      * the effect inside re-reads the stored answer.
      */
+    /*
+     * ⚠ **Live only.** `age_restriction` gates the *broadcast*, not the page about it: an upcoming,
+     * ended or cancelled 18+ event shows its details card like any other. Legacy reads the flag in
+     * `LiveView` alone, after its `isEnded` branch — so this asked a question legacy never asks,
+     * on every status, and put the details of a finished stream behind a confirmation.
+     */
     const age = useAgeGate({
         code,
-        required: Boolean(event?.age_restriction),
+        required: Boolean(event?.age_restriction) && isLive(event?.status ?? null),
     })
 
     const slug = event?.channel?.slug ?? null
@@ -176,7 +198,38 @@ export function EventScreen({
     const studioEligible = useLiveStudio(event)
     // `!isBlocked` is the half of legacy's `EventLayout` condition this port left out — its own
     // comment in `lib/studio.ts` quoted it and the predicate dropped it.
-    const inStudio = studioEligible && !isBlocked && ownership === 'viewer' && Boolean(event)
+    const inStudio = studioEligible && !isRefused && ownership === 'viewer' && Boolean(event)
+    /*
+     * **A phone on a live stream** — while the phone studio is switched off
+     * (`COMPACT_STUDIO_ENABLED`), it gets one clear screen saying so, with the way into the app,
+     * rather than a details page that buries the fact the stream is on.
+     */
+    const isNarrow = useCompactStudio()
+    /*
+     * **A live stream whose screen is not decided yet** — the server render, the first client
+     * render (the studio arrives in an effect), and the wait for ownership. These used to paint the
+     * *details* page or its skeleton for a beat before a desktop reader was switched into the black
+     * full-screen studio. Neither the host nor a phone is known here, so the skeleton that shows is
+     * chosen by CSS width alone — the studio's frame from `md`, the details skeleton below.
+     */
+    // Set in an effect beside `useLiveStudio`'s own, so the two flip in the same batched render —
+    // a separate store would flip a render early and paint the details page for a frame.
+    const [mounted, setMounted] = useState(false)
+    useEffect(() => setMounted(true), [])
+    const studioPending =
+        Boolean(event) &&
+        isLive(event?.status ?? null) &&
+        !isRefused &&
+        // A known host never gets the studio — their screen is the hand-off.
+        ownership !== 'host' &&
+        (!mounted || ownership === 'unknown')
+    const showMobileNotice =
+        !COMPACT_STUDIO_ENABLED &&
+        isNarrow &&
+        !inStudio &&
+        !isRefused &&
+        ownership === 'viewer' &&
+        isLive(event?.status ?? null)
 
     return (
         <main className={cn('flex flex-1 flex-col', EVENT_SCREEN)}>
@@ -229,12 +282,39 @@ export function EventScreen({
                     <div className={cn('flex flex-1 flex-col', EVENT_PANEL)}>
                         <EventNotFoundState />
                     </div>
+                ) : protectedChannel ? (
+                    /*
+                     * A protected space's live, for a reader who does not follow it — the refusal
+                     * carries the space, so the wall can name it and send the follow request here.
+                     * Once the space reads followed, the live is asked for again.
+                     */
+                    <div className={cn('flex flex-1 flex-col', EVENT_PANEL)}>
+                        <ChannelProtectedNotice channel={protectedChannel} onUnlocked={reask} />
+                    </div>
                 ) : isError ? (
                     <div className={cn('flex flex-1 flex-col', EVENT_PANEL)}>
                         <EventErrorState onRetry={() => void refetch()} />
                     </div>
-                ) : isLoading || !event || ownership === 'unknown' ? (
-                    <EventSkeleton />
+                ) : isLoading || !event || ownership === 'unknown' || studioPending ? (
+                    studioPending && event ? (
+                        /*
+                         * A live stream, studio not decided yet: the studio's own skeleton from
+                         * `md`, the details skeleton below it — CSS picks, so nothing guesses the
+                         * viewport in HTML. See `EventStudioSkeleton`.
+                         */
+                        <>
+                            <div className="md:hidden">
+                                <EventSkeleton />
+                            </div>
+                            <EventStudioSkeleton
+                                event={event}
+                                backdropUrl={backdropUrl}
+                                className="hidden md:block"
+                            />
+                        </>
+                    ) : (
+                        <EventSkeleton />
+                    )
                 ) : isHostLive && event ? (
                     // No panel wrapper — its blocks are cards in the column, like the viewer's.
                     <EventHostLiveScreen event={event} />
@@ -259,17 +339,44 @@ export function EventScreen({
                      * answer we were handed at creation time.
                      */
                     <EventHostScreen event={event} />
+                ) : isRefused && event && (studioEligible || bannedMessage !== null) ? (
+                    /*
+                     * Refused by the room, on the studio's own frame — the room is only ever open in
+                     * the studio, so this is where the reader was. Before the age gate, as legacy
+                     * asks it: a banned reader is not asked their age.
+                     */
+                    <EventStudioShell event={event} backdropUrl={backdropUrl}>
+                        {bannedMessage !== null ? (
+                            <EventAccountBannedPanel message={bannedMessage} />
+                        ) : (
+                            <EventBlockedPanel />
+                        )}
+                    </EventStudioShell>
                 ) : isBlocked ? (
-                    // Before the age gate, as legacy asks it: a banned reader is not asked their age.
+                    // The window was narrowed past the studio since: the details page's wall.
                     <div className={cn('flex flex-1 flex-col', EVENT_PANEL)}>
                         <EventBannedState />
                     </div>
+                ) : inStudio && event && (age.isResolving || !age.isAllowed) ? (
+                    /*
+                     * **The 18+ question, in the studio's frame** — legacy's `AgeRestricted`, drawn
+                     * inside `LiveView`. `EventStudioShell` is the frame with nothing running in it,
+                     * so no preview is spent, no stream asked for and no room joined before the
+                     * reader agrees. While the stored answer is read, the frame alone stands.
+                     */
+                    <EventStudioShell event={event} backdropUrl={backdropUrl}>
+                        {!age.isResolving && (
+                            <EventAgeGate onConfirm={age.confirm} slug={slug} surface="studio" />
+                        )}
+                    </EventStudioShell>
                 ) : age.isResolving ? (
                     // Only the viewer waits on it now — the stored answer is per account and per
                     // event, and the host branch never asks the question.
                     <EventSkeleton />
                 ) : !age.isAllowed ? (
                     <EventAgeGate onConfirm={age.confirm} slug={slug} />
+                ) : showMobileNotice && event ? (
+                    <EventMobileLiveNotice event={event} backdropUrl={backdropUrl} />
                 ) : inStudio ? (
                     /*
                      * The stage is `fixed inset-0 z-40`, so it covers this column and the site's
@@ -282,6 +389,7 @@ export function EventScreen({
                         event={event}
                         backdropUrl={backdropUrl}
                         onBlocked={() => setIsBlocked(true)}
+                        onBanned={setBannedMessage}
                     />
                 ) : (
                     <>

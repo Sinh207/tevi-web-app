@@ -1,12 +1,16 @@
 'use client'
 
 import { useRequireAuth } from '@features/auth'
+import { Sheen } from '@shared/components/sheen'
 import { StarMark } from '@shared/components/star-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatStarAmount } from '@shared/lib/money'
+import { GIFT_BOB, LIVE_BREATH, LOCK_JIGGLE, POP, RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
+import { Avatar, AvatarInitials } from '@shared/ui/avatar'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
+import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { appLink } from '../access'
@@ -61,9 +65,16 @@ export type EventPanelSurface = 'card' | 'studio'
 export function EventWatchPanel({
     event,
     surface = 'card',
+    lockedMidStream = false,
 }: {
     event: EventDetail
     surface?: EventPanelSurface
+    /**
+     * The room locked this broadcast while the reader was watching it — legacy's `isLocked`. Only
+     * the locked panel reads it: *Event is locked … to continue watching Live*, legacy's copy for
+     * that case, instead of the offer made to a reader arriving at a gated stream.
+     */
+    lockedMidStream?: boolean
 }) {
     const state = watchState(event)
     const url = appLink(event)
@@ -76,7 +87,15 @@ export function EventWatchPanel({
         case 'upcoming':
             return <UpcomingPanel url={url} surface={surface} />
         case 'locked':
-            return <LockedPanel event={event} state={state} url={url} surface={surface} />
+            return (
+                <LockedPanel
+                    event={event}
+                    state={state}
+                    url={url}
+                    surface={surface}
+                    midStream={lockedMidStream}
+                />
+            )
         case 'watchable':
             return <WatchablePanel url={url} surface={surface} />
         case 'unknown':
@@ -178,8 +197,13 @@ export function EventPanelShell({
                          * invitation rather than a caution. Same class of mistake `NsfwGatePanel`
                          * records from the other direction, where a category was painted as a fault.
                          */
-                        tone === 'brand' &&
-                            'bg-(--accents-indigo-bg-active) text-(--accents-indigo-active)',
+                        /*
+                         * The **brand pair** (`--background-brand` / `--text-on-brand`), which did not
+                         * exist when this was Indigo — and Indigo reads blue, not Tevi's violet, beside
+                         * the violet accent button right under it. The pair is measured in both modes
+                         * (`e2e/wallet.spec.ts`); the page's `--text-brand` would not be.
+                         */
+                        tone === 'brand' && 'bg-(--background-brand) text-(--text-on-brand)',
                         tone === 'neutral' && 'bg-(--background-segment) text-(--icon-secondary)',
                     )}
                 >
@@ -229,6 +253,87 @@ function WatchablePanel({ url, surface }: { url: string | null; surface: EventPa
 }
 
 /**
+ * **The studio's refusal card** — dark glass with a lit edge and a deep drop, the material the chat
+ * column and the pinned message use, for a card that stands alone on the blurred ground.
+ *
+ * - `dark` scopes the theme tokens to Dark inside it, and the inks are then **stated** on top
+ *   (`[&_h2]`, `[&_p]`): a token like `--text-subtitle` is resolved where it is declared (`:root`),
+ *   so the scope does not reach it, and the body read at ~2:1 on the glass.
+ * - Motion: the card `RISE`s, the mark pops a beat later (`StudioMark`), then the words at 160ms
+ *   and the actions at 260ms — the shell's own children, staggered from here so the shared shell
+ *   stays still everywhere else.
+ */
+const STUDIO_GLASS = cn(
+    'dark',
+    RISE,
+    'bg-[rgba(20,16,30,0.72)] backdrop-blur-2xl ring-1 ring-inset ring-white/10',
+    'shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_60px_rgba(0,0,0,0.45)]',
+    '[&_h2]:text-white [&_p]:text-white/70',
+    '[&>*:nth-child(2)]:animate-[tevi-rise_240ms_cubic-bezier(0.32,0.72,0,1)_160ms_both]',
+    '[&>*:nth-child(3)]:animate-[tevi-rise_240ms_cubic-bezier(0.32,0.72,0,1)_260ms_both]',
+    'motion-reduce:[&>*:nth-child(2)]:animate-none motion-reduce:[&>*:nth-child(3)]:animate-none',
+)
+
+/**
+ * The card's mark on the studio: it pops in after the card, with a halo of the state's own colour
+ * breathing behind it. Off the studio it is the bare glyph, as before.
+ */
+function StudioMark({ on, glow, children }: { on: boolean; glow: string; children: ReactNode }) {
+    return (
+        <span className={cn('relative flex', on && cn(POP, '[animation-delay:120ms]'))}>
+            {on && (
+                <span
+                    aria-hidden
+                    className={cn(
+                        'pointer-events-none absolute -inset-7 rounded-full blur-lg',
+                        LIVE_BREATH,
+                    )}
+                    style={{ background: `radial-gradient(closest-side, ${glow}, transparent)` }}
+                />
+            )}
+            {children}
+        </span>
+    )
+}
+
+/**
+ * **Not available where you are** — legacy's `GeoRestricted`, raised by the preview endpoint's
+ * `E003`, the one state the event payload cannot tell this client. Legacy's copy and its one way
+ * out (home); drawn on the studio's glass over the blurred ground, never over the stream's art.
+ */
+export function EventGeoRestrictedPanel() {
+    const { t } = useTranslation()
+    return (
+        <EventPanelShell
+            testId="event-geo-restricted"
+            surface="studio"
+            tone="brand"
+            className={STUDIO_GLASS}
+            icon={
+                <StudioMark on glow="rgba(124,77,255,0.7)">
+                    <Icon name="globe-earth" size={24} className="relative" />
+                </StudioMark>
+            }
+            title={t('event_geo_title')}
+            body={t('event_geo_body')}
+        >
+            <Button
+                data-testid="event-geo-home"
+                variant="accent"
+                size="large"
+                fullWidth
+                render={<Link href="/" />}
+                className="group/home relative overflow-hidden"
+            >
+                <Sheen />
+                <Icon name="house" size={20} className="relative flex-none" />
+                <span className="relative min-w-0 truncate">{t('event_geo_home')}</span>
+            </Button>
+        </EventPanelShell>
+    )
+}
+
+/**
  * The website may not play this one. Legacy's copy verbatim, including the 🚫 — which earns its
  * place: this is a refusal, and the glyph says so before the sentence is read.
  *
@@ -248,8 +353,19 @@ function PlatformRestrictedPanel({
             testId="event-platform-restricted"
             surface={surface}
             tone="error"
-            icon={<Icon name="ban" weight="filled" size={24} />}
-            title={`🚫 ${t('channel_live_restricted_title')}`}
+            className={cn(surface === 'studio' && STUDIO_GLASS)}
+            icon={
+                // Red: a refusal, and the one tone on the glass that says so.
+                <StudioMark on={surface === 'studio'} glow="rgba(244,63,94,0.55)">
+                    <Icon name="ban" weight="filled" size={24} className="relative" />
+                </StudioMark>
+            }
+            // The 🚫 is legacy's; on the studio the mark above already says it, larger.
+            title={
+                surface === 'studio'
+                    ? t('channel_live_restricted_title')
+                    : `🚫 ${t('channel_live_restricted_title')}`
+            }
             body={t('channel_live_restricted_body')}
         >
             <EventAppHandoff url={url} testId="event-restricted-get-app" />
@@ -293,6 +409,7 @@ function OffAirPanel({
     const { t } = useTranslation()
     const slug = event.channel?.slug
     const name = event.channel?.name ?? (slug ? `@${slug}` : '')
+    const avatar = event.channel?.images.thumb ?? null
 
     const copy = {
         PAUSED: { title: 'event_paused_title', body: 'event_paused_body' },
@@ -304,12 +421,22 @@ function OffAirPanel({
         <EventPanelShell
             testId="event-off-air"
             surface={surface}
+            // The room's own glass on the studio — see `STUDIO_GLASS`. Still on the details page.
+            tone={surface === 'studio' ? 'brand' : 'neutral'}
+            className={cn(surface === 'studio' && STUDIO_GLASS)}
             icon={
-                <Icon
-                    name={status === 'PAUSED' ? 'stop' : 'history-rectangle-play'}
-                    weight="filled"
-                    size={24}
-                />
+                <StudioMark
+                    on={surface === 'studio'}
+                    // Violet: the room is quiet, not dead.
+                    glow="rgba(124,77,255,0.7)"
+                >
+                    <Icon
+                        name={status === 'PAUSED' ? 'stop' : 'history-rectangle-play'}
+                        weight="filled"
+                        size={24}
+                        className="relative"
+                    />
+                </StudioMark>
             }
             title={t(copy.title)}
             body={t(copy.body)}
@@ -317,12 +444,44 @@ function OffAirPanel({
             {slug && (
                 <Button
                     data-testid="event-visit-space"
-                    variant="secondary"
+                    // The card's one way on, so on the studio it is the accent — with the space's
+                    // face beside its name, so "back to" says *where*, and an arrow saying *go*.
+                    variant={surface === 'studio' ? 'accent' : 'secondary'}
                     size="large"
                     fullWidth
                     render={<Link href={`/@${encodeURIComponent(slug)}`} />}
+                    className={cn(surface === 'studio' && 'group/visit relative overflow-hidden')}
                 >
-                    {t('channel_live_back_to_space', { name })}
+                    {surface === 'studio' && <Sheen />}
+                    {surface === 'studio' && (
+                        <Avatar
+                            size="xs"
+                            type={avatar ? 'image' : 'initials'}
+                            className="size-6 flex-none ring-2 ring-white/30"
+                        >
+                            {avatar ? (
+                                <Image
+                                    src={avatar}
+                                    alt=""
+                                    width={24}
+                                    height={24}
+                                    className="size-full rounded-full object-cover"
+                                />
+                            ) : (
+                                <AvatarInitials>{name.slice(0, 2).toUpperCase()}</AvatarInitials>
+                            )}
+                        </Avatar>
+                    )}
+                    <span className="min-w-0 truncate">
+                        {t('channel_live_back_to_space', { name })}
+                    </span>
+                    {surface === 'studio' && (
+                        <Icon
+                            name="arrow-right"
+                            size={20}
+                            className="flex-none transition-transform group-hover/visit:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover/visit:-translate-x-0.5 motion-reduce:transition-none"
+                        />
+                    )}
                 </Button>
             )}
         </EventPanelShell>
@@ -349,11 +508,13 @@ function LockedPanel({
     state,
     url,
     surface,
+    midStream,
 }: {
     event: EventDetail
     state: Extract<WatchState, { kind: 'locked' }>
     url: string | null
     surface: EventPanelSurface
+    midStream: boolean
 }) {
     const { t, currentLanguage } = useTranslation()
     const { access, requiresMembership, canUnlock } = state
@@ -370,22 +531,51 @@ function LockedPanel({
         ) : (
             <span className="inline-flex flex-wrap items-center justify-center gap-1">
                 {t(access.key, { price: formatStarAmount(access.price, currentLanguage) })}
-                <StarMark size={20} />
+                <span className={cn('flex', GIFT_BOB)}>
+                    <StarMark size={20} />
+                </span>
             </span>
         )
 
-    const body = requiresMembership
-        ? canUnlock
-            ? t('event_locked_body_member_or_star')
-            : t('event_locked_body_member')
-        : t('event_locked_body_star')
+    const priceText = access.price === null ? '' : formatStarAmount(access.price, currentLanguage)
+    /*
+     * Locked **mid-stream**: legacy's `exclusive/title` + `description` under `isLocked` — *Event
+     * is locked*, and the way back in phrased as continuing, not starting. The same three routes
+     * pick the sentence as below.
+     */
+    const body = midStream
+        ? requiresMembership
+            ? canUnlock
+                ? t('event_locked_live_body_member_or_star', { price: priceText })
+                : t('event_locked_live_body_member')
+            : t('event_locked_live_body_star', { price: priceText })
+        : requiresMembership
+          ? canUnlock
+              ? t('event_locked_body_member_or_star')
+              : t('event_locked_body_member')
+          : t('event_locked_body_star')
 
     return (
         <EventPanelShell
             testId="event-locked"
             surface={surface}
-            icon={<Icon name="lock-simple" weight="filled" size={24} />}
-            title={title}
+            /*
+             * An invitation, so the brand pair rather than the neutral grey — the same reading
+             * `WatchablePanel` gives a stream you can watch. The card arrives on `RISE`, the tile
+             * pops in a beat later, and the lock gives a small shake every few seconds
+             * (`LOCK_JIGGLE`) — "this is closed, and here is how to open it", without looping a
+             * motion big enough to compete with the two buttons.
+             */
+            tone="brand"
+            className={RISE}
+            title={midStream ? t('event_locked_live_title') : title}
+            icon={
+                <span className={cn('flex', POP, '[animation-delay:120ms]')}>
+                    <span className={cn('flex', LOCK_JIGGLE)}>
+                        <Icon name="lock-simple" weight="filled" size={24} />
+                    </span>
+                </span>
+            }
             body={body}
         >
             {/*
@@ -437,16 +627,33 @@ function UnknownPanel({ url, surface }: { url: string | null; surface: EventPane
  * Two deliberate differences, both from rules this port already applies to its other refusals:
  * legacy prints the title in `#D00416`, and the DS error ink is under AA as text in Light, so it is
  * the title ink here; and legacy's contained-primary button is `accent`, the DS's call-to-action
- * weight. No disc above it — legacy draws none on this card, and the heading says what happened.
+ * weight.
+ *
+ * Drawn like the studio's other refusals (region, platform, ended): the glass card on the blurred
+ * ground (`blurOnly`), a glowing mark — a door, in the refusal's rose, since the reader has been
+ * shown out rather than kept out — and the CTA with its sheen. Legacy's card was a flat black box
+ * over the sharp art, the one refusal that did not look like the others.
  */
-export function EventKickedOutPanel() {
+export function EventKickedOutPanel({
+    message = null,
+}: {
+    /** The server's own sentence, when the removal came from a refused join. */
+    message?: string | null
+} = {}) {
     const { t } = useTranslation()
     return (
         <EventPanelShell
             testId="event-kicked-out"
             surface="studio"
+            tone="error"
+            className={STUDIO_GLASS}
+            icon={
+                <StudioMark on glow="rgba(244,63,94,0.55)">
+                    <Icon name="door-open" size={24} className="relative" />
+                </StudioMark>
+            }
             title={t('event_kickout_title')}
-            body={t('event_kickout_body')}
+            body={message ?? t('event_kickout_body')}
         >
             <Button
                 data-testid="event-kicked-out-home"
@@ -454,21 +661,126 @@ export function EventKickedOutPanel() {
                 size="large"
                 fullWidth
                 render={<Link href="/" />}
+                className="relative overflow-hidden"
             >
-                {t('event_kickout_home')}
+                <Sheen />
+                <Icon name="house" size={20} className="relative flex-none" />
+                <span className="relative min-w-0 truncate">{t('event_kickout_home')}</span>
             </Button>
         </EventPanelShell>
     )
 }
 
 /**
- * **Sign in to watch** — what a guest gets on the studio, free broadcast or paid.
+ * **Banned from this channel** — the room's `block_user` frame, on the studio's frame.
  *
- * Legacy's branch order settles it: `(isExclusive || !isAuthenticated) → <LivePreview/>`, and the
- * preview's own fetches are gated on `currentUser?.id` — so a guest is routed to the preview and
- * then never asks for one. What renders is the preview's `exclusive` card with nothing behind it:
- * the event's title, its description clamped to two lines (or legacy's sneak-peek sentence when it
- * has none), and one *Sign in* button. No price, no membership route: a guest cannot act on either.
+ * It replaced the whole studio with the details page's wall (`EventBannedState`): a reader went
+ * from a black full-screen stage to a white column mid-broadcast, the one refusal that changed
+ * screens. It is the same kind of fact as a removal, so it is drawn like one — the glass card on
+ * the blurred ground, a rose mark, and the way on: other creators first (this one is closed to
+ * them for good, unlike a removal), home second.
+ */
+export function EventBlockedPanel() {
+    const { t } = useTranslation()
+    return (
+        <EventPanelShell
+            testId="event-blocked"
+            surface="studio"
+            tone="error"
+            className={STUDIO_GLASS}
+            icon={
+                <StudioMark on glow="rgba(244,63,94,0.55)">
+                    <Icon name="ban" weight="filled" size={24} className="relative" />
+                </StudioMark>
+            }
+            title={t('event_banned_notice')}
+            body={t('event_banned_body')}
+        >
+            <div className="grid w-full gap-2">
+                <Button
+                    data-testid="event-blocked-discover"
+                    variant="accent"
+                    size="large"
+                    fullWidth
+                    render={<Link href="/search" />}
+                    className="relative overflow-hidden"
+                >
+                    <Sheen />
+                    <Icon name="search" size={20} className="relative flex-none" />
+                    <span className="relative min-w-0 truncate">
+                        {t('channel_not_found_discover')}
+                    </span>
+                </Button>
+                <Button
+                    data-testid="event-blocked-home"
+                    variant="secondary"
+                    size="large"
+                    fullWidth
+                    render={<Link href="/" />}
+                    className="border-white/15 bg-white/[0.08] text-white hover:bg-white/15"
+                >
+                    <Icon name="house" size={20} className="flex-none" />
+                    <span className="min-w-0 truncate">{t('channel_return_home')}</span>
+                </Button>
+            </div>
+        </EventPanelShell>
+    )
+}
+
+/**
+ * **This account may not be in the room** — the room's `ban` frame.
+ *
+ * Legacy toasts the server's sentence and navigates home, and this port did the same: five seconds
+ * of text in a corner while the page changed under it, so the one explanation the reader got was
+ * the thing most likely to be missed. It is a card now, like every other refusal, and it stays until
+ * the reader leaves. The server's sentence is the body — it is the only party that knows why — with
+ * ours standing in when a frame arrives without one.
+ */
+export function EventAccountBannedPanel({ message }: { message: string | null }) {
+    const { t } = useTranslation()
+    return (
+        <EventPanelShell
+            testId="event-account-banned"
+            surface="studio"
+            tone="error"
+            className={STUDIO_GLASS}
+            icon={
+                <StudioMark on glow="rgba(244,63,94,0.55)">
+                    <Icon
+                        name="exclamation-circle"
+                        weight="filled"
+                        size={24}
+                        className="relative"
+                    />
+                </StudioMark>
+            }
+            title={t('event_account_banned_title')}
+            body={message ?? t('event_account_banned_body')}
+        >
+            <Button
+                data-testid="event-account-banned-home"
+                variant="accent"
+                size="large"
+                fullWidth
+                render={<Link href="/" />}
+                className="relative overflow-hidden"
+            >
+                <Sheen />
+                <Icon name="house" size={20} className="relative flex-none" />
+                <span className="relative min-w-0 truncate">{t('channel_return_home')}</span>
+            </Button>
+        </EventPanelShell>
+    )
+}
+
+/**
+ * **Sign in to watch** — the card a guest's paywall carries, free broadcast or paid.
+ *
+ * Legacy's branch order settles it: `(isExclusive || !isAuthenticated) → <LivePreview/>`. A guest
+ * gets the preview (on the anonymous session's bearer) and then this — the preview's `exclusive`
+ * card: the event's title, its description clamped to two lines (or legacy's sneak-peek sentence
+ * when it has none), and one *Sign in* button. No price, no membership route: a guest cannot act
+ * on either. Drawn by `EventExclusivePaywall`, over the preview or once it is over.
  *
  * ⚠ This port used to send a guest on a free broadcast to `watchable`, which asked for playback
  * with no bearer, got refused, and landed on the app hand-off — telling somebody who only needed to

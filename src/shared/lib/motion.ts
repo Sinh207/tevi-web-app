@@ -199,3 +199,105 @@ export const PREMIUM_ZOOM =
  */
 export const PREMIUM_RIM =
     'animate-[tevi-premium-rim_6000ms_linear_infinite] motion-reduce:animate-none'
+
+/**
+ * An open microphone on a live seat — a red bloom behind the avatar that grows and fades.
+ *
+ * 1800ms `ease-in-out`: a breath, slower than `tevi-mic-pulse` on the badge (1.5s, a voice peak)
+ * so the two do not lock into one throb. On a blurred element behind the disc, so it never covers
+ * a face, and only while the microphone is open. See `tevi-seat-halo`.
+ */
+export const SEAT_HALO =
+    'animate-[tevi-seat-halo_1800ms_ease-in-out_infinite] motion-reduce:animate-none'
+
+/**
+ * The gift banner's entrance — in from the leading edge with a small overshoot. 420ms on a
+ * spring-like curve; see `tevi-gift-in` for the RTL variable it travels along.
+ */
+export const GIFT_IN =
+    'animate-[tevi-gift-in_420ms_cubic-bezier(0.22,1,0.36,1)_both] motion-reduce:animate-none'
+
+/** How long the banner's exit takes — the banner starts it this long before it expires. */
+export const GIFT_OUT_MS = 280
+
+/**
+ * The gift banner's exit. Under reduced motion the banner simply stays until it is removed, a
+ * moment later — the one outcome an exit can have without moving.
+ */
+export const GIFT_OUT =
+    'animate-[tevi-gift-out_280ms_cubic-bezier(0.4,0,1,1)_forwards] motion-reduce:animate-none'
+
+/** The gift picture drifting and tilting while its banner is up. Loops; the plate does not. */
+export const GIFT_BOB =
+    'animate-[tevi-gift-bob_1800ms_ease-in-out_infinite] motion-reduce:animate-none'
+
+/**
+ * The dots between the inviter and the reader in the live invitation — a wave, each dot lifting
+ * and brightening in turn. 1200ms loop; the caller staggers the three by 160ms and starts them
+ * after the two faces have landed. Under reduced motion the dots sit still at full strength.
+ */
+export const INVITE_DOT =
+    'animate-[tevi-invite-dot_1200ms_ease-in-out_infinite_both] motion-reduce:animate-none'
+
+/** How long `PIN_OUT` takes — the caller clears the pin this long after the press. */
+export const PIN_OUT_MS = 200
+
+/**
+ * A dismissed pinned message leaving — up 6px and fading, quicker than it arrived. `forwards`, so
+ * the last frame holds until the caller unmounts it on `PIN_OUT_MS`.
+ */
+export const PIN_OUT =
+    'animate-[tevi-pin-out_200ms_cubic-bezier(0.4,0,1,1)_forwards] motion-reduce:animate-none'
+
+/**
+ * A slow vertical float, for an illustration that is waiting — the empty gift leaderboard's
+ * podium. 3200ms `ease-in-out`, 3px: enough to read as alive, too little to pull the eye off the
+ * stage. Under reduced motion it simply sits.
+ */
+export const FLOAT = 'animate-[tevi-float_3200ms_ease-in-out_infinite] motion-reduce:animate-none'
+
+/**
+ * A sparkle catching the light — grows, turns and fades out once per 2400ms cycle. Callers stagger
+ * siblings with `animation-delay`. Under reduced motion it is hidden (`opacity-0`) rather than
+ * frozen mid-glint — it is pure decoration, so nothing is lost.
+ */
+export const TWINKLE =
+    'animate-[tevi-twinkle_2400ms_ease-in-out_infinite_both] motion-reduce:animate-none motion-reduce:opacity-0'
+
+/**
+ * A podium step rising from the floor — `scale` on the y axis from nothing, `origin-bottom` on the
+ * caller, with a small overshoot. Callers stagger the three so first place lands last.
+ */
+export const PODIUM_RISE =
+    'animate-[tevi-podium-rise_480ms_cubic-bezier(0.22,1,0.36,1)_both] motion-reduce:animate-none'
+
+/**
+ * A locked padlock giving a small shake — a quick ±12° wobble in the first fifth of a 3200ms cycle,
+ * then still for the rest, so it reads as a nudge every few seconds rather than a constant jitter.
+ * `origin-top` would hinge it at the shackle; centred is enough at 24px.
+ */
+export const LOCK_JIGGLE =
+    'animate-[tevi-lock-jiggle_3200ms_ease-in-out_infinite] motion-reduce:animate-none'
+
+/**
+ * A badge announcing something new — one ripple of its own colour out to 1.9× and gone, once per
+ * arrival (the caller keys the element on the count). `forwards`, so it rests invisible.
+ */
+export const PING =
+    'animate-[tevi-ping_700ms_cubic-bezier(0,0,0.2,1)_forwards] motion-reduce:animate-none motion-reduce:opacity-0'
+
+/**
+ * The live ring turning — Figma's linear `#8B5CF6 → #E11D48 → #F97316` stroke rotated a full turn
+ * every 3s, so the colours travel round the face. Linear, like every continuous spin here. Under
+ * reduced motion it rests at 0°, which is exactly the frame Figma draws (violet on the left).
+ */
+export const LIVE_RING_SPIN =
+    'animate-[tevi-live-ring-spin_3000ms_linear_infinite] motion-reduce:animate-none'
+
+/**
+ * A ring leaving a mark and fading — 1 → 1.6× over 2.4s, on a loop. Run two, the second
+ * `[animation-delay:1200ms]`, for a steady pulse. Hidden under reduced motion rather than frozen
+ * half-way out.
+ */
+export const RIPPLE =
+    'animate-[tevi-ripple_2400ms_cubic-bezier(0,0,0.2,1)_infinite_both] motion-reduce:animate-none motion-reduce:opacity-0'

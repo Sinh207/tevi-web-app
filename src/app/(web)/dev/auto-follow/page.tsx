@@ -58,6 +58,23 @@ export default function AutoFollowDevPage() {
                 </button>
             </header>
 
+            {/*
+             * The **stage** placement, on a stand-in stage. It is a different composition (the
+             * gift-banner pill) and only ever renders inside the Live studio, which a developer
+             * reaches only on a real broadcast — so it is drawn here too. The toggle above plays
+             * its exit; toggling back plays its entrance.
+             */}
+            <section className="flex flex-col gap-2">
+                <p className="type-caption-meta text-(--text-placeholder)">
+                    stage placement — over a live picture, above the gift tray
+                </p>
+                <div className="relative h-[220px] overflow-hidden rounded-xl bg-[radial-gradient(circle_at_30%_40%,#3a2470,#1a0f3a_70%)]">
+                    <div className="absolute inset-0 [&>div]:bottom-3">
+                        <ChannelAutoFollow channel={channel} placement="stage" />
+                    </div>
+                </div>
+            </section>
+
             {/* Enough text to scroll under the bar, which is the point of a pinned prompt. */}
             {Array.from({ length: 12 }, (_, i) => (
                 <p

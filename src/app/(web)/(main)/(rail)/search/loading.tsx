@@ -1,4 +1,4 @@
-import { SEARCH_CONTAINER, SEARCH_PANEL } from '@features/search/skeleton'
+import { SEARCH_CONTAINER, SEARCH_PANEL, SEARCH_SCREEN } from '@features/search/skeleton'
 import { getServerT } from '@shared/i18n/server'
 import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
 import { Skeleton } from '@shared/ui/skeleton'
@@ -40,10 +40,10 @@ export default async function Loading() {
     const t = await getServerT()
 
     return (
-        <main className="flex flex-1 flex-col">
+        <main className={`flex flex-1 flex-col ${SEARCH_SCREEN}`}>
             {/* The page's own sticky wrapper, verbatim — a skeleton that scrolls differently from
                 the screen it stands in for is a second layout. */}
-            <div className="sticky top-0 z-20 bg-(--background)">
+            <div className={`sticky top-0 z-20 ${SEARCH_SCREEN}`}>
                 <AppBar className={`md:px-0 ${SEARCH_CONTAINER}`}>
                     <AppBarCluster className="min-w-0">
                         <Skeleton w={40} h={40} circle />

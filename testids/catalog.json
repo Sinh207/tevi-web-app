@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 930,
+        "ids": 977,
         "surfaces": 28
     },
     "surfaces": {
@@ -1669,7 +1669,10 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-auto-follow.tsx:160"
+            "companions": [
+                "data-option-value"
+            ],
+            "source": "src/features/channel/components/channel-auto-follow.tsx:344"
         },
         "channel-auto-follow-skip": {
             "scope": "channel",
@@ -1691,7 +1694,10 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-auto-follow.tsx:150"
+            "companions": [
+                "data-option-value"
+            ],
+            "source": "src/features/channel/components/channel-auto-follow.tsx:328"
         },
         "channel-back": {
             "scope": "channel",
@@ -4772,6 +4778,94 @@
             ],
             "source": "src/features/channel/components/edit-profile/edit-profile-view.tsx:462"
         },
+        "channel-protected": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-protected-notice.tsx:63"
+        },
+        "channel-protected-cancel": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-protected-notice.tsx:191"
+        },
+        "channel-protected-follow": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-protected-notice.tsx:204"
+        },
+        "channel-protected-space": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-protected-notice.tsx:218"
+        },
         "channel-publish": {
             "scope": "channel",
             "routes": [
@@ -5530,13 +5624,29 @@
             ],
             "source": "src/features/earnings/components/earnings-report-view.tsx:123"
         },
+        "event-account-banned": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:738"
+        },
+        "event-account-banned-home": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:756"
+        },
         "event-age-confirm": {
             "scope": "event",
             "routes": [
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-age-gate.tsx:91"
+            "source": "src/features/event/components/event-age-gate.tsx:155"
         },
         "event-age-decline": {
             "scope": "event",
@@ -5544,7 +5654,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-age-gate.tsx:100"
+            "source": "src/features/event/components/event-age-gate.tsx:168"
         },
         "event-age-gate": {
             "scope": "event",
@@ -5552,7 +5662,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-age-gate.tsx:53"
+            "source": "src/features/event/components/event-age-gate.tsx:78"
         },
         "event-analytics": {
             "scope": "event",
@@ -5608,7 +5718,31 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-unlock-actions.tsx:94"
+            "source": "src/features/event/components/event-unlock-actions.tsx:98"
+        },
+        "event-blocked": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:682"
+        },
+        "event-blocked-discover": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:696"
+        },
+        "event-blocked-home": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:710"
         },
         "event-card-retry": {
             "scope": "event",
@@ -5640,7 +5774,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-ended-rail.tsx:39"
+            "source": "src/features/event/components/event-ended-rail.tsx:42"
         },
         "event-ended-rail-home": {
             "scope": "event",
@@ -5648,7 +5782,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-ended-rail.tsx:82"
+            "source": "src/features/event/components/event-ended-rail.tsx:123"
         },
         "event-ended-rail-live": {
             "scope": "event",
@@ -5659,7 +5793,7 @@
             "companions": [
                 "data-channel-slug"
             ],
-            "source": "src/features/event/components/event-ended-rail.tsx:113"
+            "source": "src/features/event/components/event-ended-rail.tsx:161"
         },
         "event-error": {
             "scope": "event",
@@ -5677,6 +5811,41 @@
             ],
             "source": "src/features/event/components/event-state-screens.tsx:131"
         },
+        "event-exclusive-paywall": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "companions": [
+                "data-option-value"
+            ],
+            "source": "src/features/event/components/event-exclusive-overlay.tsx:108"
+        },
+        "event-exclusive-paywall-close": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-exclusive-overlay.tsx:152"
+        },
+        "event-geo-home": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:321"
+        },
+        "event-geo-restricted": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-watch-panel.tsx:308"
+        },
         "event-gift-animation": {
             "scope": "event",
             "routes": [
@@ -5691,7 +5860,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:521"
+            "source": "src/features/event/components/event-studio-screen.tsx:852"
         },
         "event-gift-float-item": {
             "scope": "event",
@@ -5702,7 +5871,7 @@
             "companions": [
                 "data-card-id"
             ],
-            "source": "src/features/event/components/event-gift-float.tsx:56"
+            "source": "src/features/event/components/event-gift-float.tsx:79"
         },
         "event-gift-panel": {
             "scope": "event",
@@ -5710,7 +5879,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:614"
+            "source": "src/features/event/components/event-studio-screen.tsx:964"
         },
         "event-gift-tray": {
             "scope": "event",
@@ -5718,7 +5887,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:590"
+            "source": "src/features/event/components/event-studio-screen.tsx:931"
         },
         "event-host": {
             "scope": "event",
@@ -5766,7 +5935,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-invitation-dialog.tsx:42"
+            "source": "src/features/event/components/event-invitation-dialog.tsx:46"
         },
         "event-invitation-close": {
             "scope": "event",
@@ -5774,7 +5943,15 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-invitation-dialog.tsx:91"
+            "source": "src/features/event/components/event-invitation-dialog.tsx:128"
+        },
+        "event-invitation-faces": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-invitation-dialog.tsx:58"
         },
         "event-invitation-stores": {
             "scope": "event",
@@ -5782,7 +5959,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-invitation-dialog.tsx:85"
+            "source": "src/features/event/components/event-invitation-dialog.tsx:122"
         },
         "event-kicked-out": {
             "scope": "event",
@@ -5790,7 +5967,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:446"
+            "source": "src/features/event/components/event-watch-panel.tsx:641"
         },
         "event-kicked-out-home": {
             "scope": "event",
@@ -5798,7 +5975,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:452"
+            "source": "src/features/event/components/event-watch-panel.tsx:654"
         },
         "event-live-revenue": {
             "scope": "event",
@@ -5814,7 +5991,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:385"
+            "source": "src/features/event/components/event-watch-panel.tsx:560"
         },
         "event-locked-get-app": {
             "scope": "event",
@@ -5822,7 +5999,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:399"
+            "source": "src/features/event/components/event-watch-panel.tsx:589"
         },
         "event-maintenance-fee": {
             "scope": "event",
@@ -5846,7 +6023,39 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-membership-tile.tsx:67"
+            "source": "src/features/event/components/event-membership-tile.tsx:71"
+        },
+        "event-mobile-live": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-mobile-live-notice.tsx:54"
+        },
+        "event-mobile-live-app": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-mobile-live-notice.tsx:154"
+        },
+        "event-mobile-live-back": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-mobile-live-notice.tsx:77"
+        },
+        "event-mobile-live-stores": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-mobile-live-notice.tsx:171"
         },
         "event-new-members": {
             "scope": "event",
@@ -5855,6 +6064,30 @@
                 "/[slug]/event/[code]/report"
             ],
             "source": "src/features/event/components/event-analytics-cards.tsx:300"
+        },
+        "event-not-enough-stars": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-not-enough-stars-dialog.tsx:46"
+        },
+        "event-not-enough-stars-cancel": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-not-enough-stars-dialog.tsx:74"
+        },
+        "event-not-enough-stars-get": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-not-enough-stars-dialog.tsx:63"
         },
         "event-not-found": {
             "scope": "event",
@@ -5870,7 +6103,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:305"
+            "source": "src/features/event/components/event-watch-panel.tsx:422"
         },
         "event-order-link": {
             "scope": "event",
@@ -5886,7 +6119,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-out-of-star-dialog.tsx:55"
+            "source": "src/features/event/components/event-out-of-star-dialog.tsx:75"
         },
         "event-out-of-star-get": {
             "scope": "event",
@@ -5894,7 +6127,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-out-of-star-dialog.tsx:62"
+            "source": "src/features/event/components/event-out-of-star-dialog.tsx:133"
         },
         "event-out-of-star-leave": {
             "scope": "event",
@@ -5902,7 +6135,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-out-of-star-dialog.tsx:81"
+            "source": "src/features/event/components/event-out-of-star-dialog.tsx:147"
         },
         "event-out-of-star-premium": {
             "scope": "event",
@@ -5910,7 +6143,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-out-of-star-dialog.tsx:72"
+            "source": "src/features/event/components/event-out-of-star-dialog.tsx:110"
         },
         "event-platform-restricted": {
             "scope": "event",
@@ -5918,7 +6151,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:248"
+            "source": "src/features/event/components/event-watch-panel.tsx:353"
         },
         "event-premium-nudge": {
             "scope": "event",
@@ -5926,7 +6159,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-premium-nudge.tsx:34"
+            "source": "src/features/event/components/event-premium-nudge.tsx:63"
         },
         "event-premium-nudge-close": {
             "scope": "event",
@@ -5934,7 +6167,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-premium-nudge.tsx:42"
+            "source": "src/features/event/components/event-premium-nudge.tsx:85"
         },
         "event-premium-nudge-dismiss": {
             "scope": "event",
@@ -5942,7 +6175,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-premium-nudge.tsx:72"
+            "source": "src/features/event/components/event-premium-nudge.tsx:116"
         },
         "event-premium-nudge-subscribe": {
             "scope": "event",
@@ -5950,7 +6183,23 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-premium-nudge.tsx:62"
+            "source": "src/features/event/components/event-premium-nudge.tsx:106"
+        },
+        "event-preview-countdown": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-exclusive-overlay.tsx:195"
+        },
+        "event-preview-unlock": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-exclusive-overlay.tsx:244"
         },
         "event-report-back": {
             "scope": "event",
@@ -5993,7 +6242,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:255"
+            "source": "src/features/event/components/event-watch-panel.tsx:371"
         },
         "event-revenue-summary": {
             "scope": "event",
@@ -6002,6 +6251,41 @@
                 "/[slug]/event/[code]/report"
             ],
             "source": "src/features/event/components/event-revenue-summary.tsx:88"
+        },
+        "event-seat-card": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "companions": [
+                "data-publisher-id"
+            ],
+            "source": "src/features/event/components/event-seat-card.tsx:81"
+        },
+        "event-seat-card-close": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-seat-card.tsx:206"
+        },
+        "event-seat-card-gift": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-seat-card.tsx:174"
+        },
+        "event-seat-card-space": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-seat-card.tsx:187"
         },
         "event-share": {
             "scope": "event",
@@ -6025,7 +6309,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:485"
+            "source": "src/features/event/components/event-watch-panel.tsx:792"
         },
         "event-sign-in-action": {
             "scope": "event",
@@ -6033,7 +6317,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:492"
+            "source": "src/features/event/components/event-watch-panel.tsx:799"
         },
         "event-status": {
             "scope": "event",
@@ -6049,7 +6333,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:333"
+            "source": "src/features/event/components/event-studio-screen.tsx:592"
         },
         "event-studio-ad": {
             "scope": "event",
@@ -6065,7 +6349,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chrome.tsx:281"
+            "source": "src/features/event/components/event-studio-chrome.tsx:323"
         },
         "event-studio-app-dialog": {
             "scope": "event",
@@ -6073,7 +6357,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chrome.tsx:294"
+            "source": "src/features/event/components/event-studio-chrome.tsx:336"
         },
         "event-studio-arrival": {
             "scope": "event",
@@ -6081,7 +6365,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:976"
+            "source": "src/features/event/components/event-studio-chat.tsx:1053"
         },
         "event-studio-back": {
             "scope": "event",
@@ -6089,7 +6373,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:374"
+            "source": "src/features/event/components/event-studio-skeleton.tsx:86"
         },
         "event-studio-ccu": {
             "scope": "event",
@@ -6097,7 +6381,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:833"
+            "source": "src/features/event/components/event-studio-chat.tsx:1525"
         },
         "event-studio-channel": {
             "scope": "event",
@@ -6105,7 +6389,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:390"
+            "source": "src/features/event/components/event-studio-skeleton.tsx:98"
         },
         "event-studio-channel-link": {
             "scope": "event",
@@ -6113,7 +6397,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chrome.tsx:150"
+            "source": "src/features/event/components/event-studio-chrome.tsx:164"
         },
         "event-studio-chat": {
             "scope": "event",
@@ -6121,7 +6405,10 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:793"
+            "companions": [
+                "data-option-value"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1468"
         },
         "event-studio-chat-collapse": {
             "scope": "event",
@@ -6129,7 +6416,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:846"
+            "source": "src/features/event/components/event-studio-chat.tsx:1538"
         },
         "event-studio-chat-ended": {
             "scope": "event",
@@ -6137,7 +6424,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:1065"
+            "source": "src/features/event/components/event-studio-chat.tsx:1817"
         },
         "event-studio-chat-error": {
             "scope": "event",
@@ -6145,7 +6432,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:1148"
+            "source": "src/features/event/components/event-studio-chat.tsx:1941"
         },
         "event-studio-chat-expand": {
             "scope": "event",
@@ -6153,7 +6440,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:1201"
+            "source": "src/features/event/components/event-studio-chat.tsx:2019"
         },
         "event-studio-chat-input": {
             "scope": "event",
@@ -6161,7 +6448,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:1089"
+            "source": "src/features/event/components/event-studio-chat.tsx:1872"
         },
         "event-studio-chat-jump": {
             "scope": "event",
@@ -6169,7 +6456,15 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:1041"
+            "source": "src/features/event/components/event-studio-chat.tsx:1751"
+        },
+        "event-studio-chat-latest": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:2079"
         },
         "event-studio-chat-list": {
             "scope": "event",
@@ -6177,7 +6472,23 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:1012"
+            "source": "src/features/event/components/event-studio-chat.tsx:1684"
+        },
+        "event-studio-chat-locked": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:1789"
+        },
+        "event-studio-chat-locked-transcript": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:2326"
         },
         "event-studio-chat-notices": {
             "scope": "event",
@@ -6185,7 +6496,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:361"
+            "source": "src/features/event/components/event-studio-chat.tsx:773"
         },
         "event-studio-chat-send": {
             "scope": "event",
@@ -6193,7 +6504,15 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:1123"
+            "source": "src/features/event/components/event-studio-chat.tsx:1909"
+        },
+        "event-studio-chat-skeleton": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-skeleton.tsx:158"
         },
         "event-studio-chat-strip": {
             "scope": "event",
@@ -6201,7 +6520,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:1192"
+            "source": "src/features/event/components/event-studio-chat.tsx:2003"
         },
         "event-studio-chat-strip-ccu": {
             "scope": "event",
@@ -6209,7 +6528,23 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:1244"
+            "source": "src/features/event/components/event-studio-chat.tsx:2182"
+        },
+        "event-studio-chat-unlock": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:2368"
+        },
+        "event-studio-chat-unread": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:2047"
         },
         "event-studio-copy-link": {
             "scope": "event",
@@ -6217,7 +6552,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-channel-actions.tsx:220"
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:243"
         },
         "event-studio-emoji": {
             "scope": "event",
@@ -6225,7 +6560,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:673"
+            "source": "src/features/event/components/event-studio-chat.tsx:1292"
         },
         "event-studio-emoji-panel": {
             "scope": "event",
@@ -6233,7 +6568,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:649"
+            "source": "src/features/event/components/event-studio-chat.tsx:1257"
         },
         "event-studio-fee-error": {
             "scope": "event",
@@ -6241,7 +6576,15 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:992"
+            "source": "src/features/event/components/event-studio-chat.tsx:1660"
+        },
+        "event-studio-fee-frost": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-screen.tsx:1015"
         },
         "event-studio-fee-notice": {
             "scope": "event",
@@ -6249,7 +6592,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:998"
+            "source": "src/features/event/components/event-studio-chat.tsx:1665"
         },
         "event-studio-follow": {
             "scope": "event",
@@ -6257,7 +6600,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-channel-actions.tsx:292"
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:317"
         },
         "event-studio-get-membership": {
             "scope": "event",
@@ -6265,7 +6608,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-upsell.tsx:80"
+            "source": "src/features/event/components/event-studio-upsell.tsx:81"
         },
         "event-studio-get-premium": {
             "scope": "event",
@@ -6273,7 +6616,15 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-upsell.tsx:91"
+            "source": "src/features/event/components/event-studio-upsell.tsx:92"
+        },
+        "event-studio-gift-trigger": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-compact.tsx:360"
         },
         "event-studio-leaderboard": {
             "scope": "event",
@@ -6281,7 +6632,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:226"
+            "source": "src/features/event/components/event-studio-chat.tsx:339"
         },
         "event-studio-leaderboard-empty": {
             "scope": "event",
@@ -6289,7 +6640,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:207"
+            "source": "src/features/event/components/event-studio-chat.tsx:285"
         },
         "event-studio-leaderboard-loading": {
             "scope": "event",
@@ -6297,7 +6648,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:187"
+            "source": "src/features/event/components/event-studio-chat.tsx:257"
         },
         "event-studio-leaderboard-me": {
             "scope": "event",
@@ -6305,7 +6656,34 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:261"
+            "source": "src/features/event/components/event-studio-chat.tsx:433"
+        },
+        "event-studio-leaderboard-rest": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:388"
+        },
+        "event-studio-leaderboard-spot": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "companions": [
+                "data-option-value"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:496"
+        },
+        "event-studio-leaderboard-toggle": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chat.tsx:408"
         },
         "event-studio-more": {
             "scope": "event",
@@ -6313,7 +6691,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-channel-actions.tsx:129"
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:148"
         },
         "event-studio-more-panel": {
             "scope": "event",
@@ -6321,7 +6699,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-channel-actions.tsx:142"
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:163"
         },
         "event-studio-muted": {
             "scope": "event",
@@ -6329,7 +6707,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:954"
+            "source": "src/features/event/components/event-studio-chat.tsx:1614"
         },
         "event-studio-pinned": {
             "scope": "event",
@@ -6337,7 +6715,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:893"
+            "source": "src/features/event/components/event-studio-chat.tsx:2242"
         },
         "event-studio-pinned-close": {
             "scope": "event",
@@ -6345,7 +6723,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chat.tsx:933"
+            "source": "src/features/event/components/event-studio-chat.tsx:2289"
         },
         "event-studio-report": {
             "scope": "event",
@@ -6353,7 +6731,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-channel-actions.tsx:243"
+            "source": "src/features/event/components/event-studio-channel-actions.tsx:266"
         },
         "event-studio-seat": {
             "scope": "event",
@@ -6364,7 +6742,26 @@
             "companions": [
                 "data-publisher-id"
             ],
-            "source": "src/features/event/components/event-studio-seats.tsx:118"
+            "source": "src/features/event/components/event-studio-seats.tsx:212"
+        },
+        "event-studio-seat-empty": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-seats.tsx:105"
+        },
+        "event-studio-seat-trigger": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "companions": [
+                "data-publisher-id"
+            ],
+            "source": "src/features/event/components/event-studio-seats.tsx:592"
         },
         "event-studio-seats": {
             "scope": "event",
@@ -6372,7 +6769,23 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-seats.tsx:420"
+            "source": "src/features/event/components/event-studio-seats.tsx:669"
+        },
+        "event-studio-shell": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-shell.tsx:58"
+        },
+        "event-studio-skeleton": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-skeleton.tsx:65"
         },
         "event-studio-star": {
             "scope": "event",
@@ -6380,7 +6793,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-chrome.tsx:268"
+            "source": "src/features/event/components/event-studio-chrome.tsx:294"
         },
         "event-studio-toolbar": {
             "scope": "event",
@@ -6388,7 +6801,31 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:425"
+            "source": "src/features/event/components/event-studio-skeleton.tsx:108"
+        },
+        "event-studio-top-app": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chrome.tsx:379"
+        },
+        "event-studio-top-dialog": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chrome.tsx:390"
+        },
+        "event-studio-top-star": {
+            "scope": "event",
+            "routes": [
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report"
+            ],
+            "source": "src/features/event/components/event-studio-chrome.tsx:367"
         },
         "event-studio-unmute": {
             "scope": "event",
@@ -6396,7 +6833,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-player.tsx:238"
+            "source": "src/features/event/components/event-studio-player.tsx:370"
         },
         "event-sustained-viewers-info": {
             "scope": "event",
@@ -6428,7 +6865,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:416"
+            "source": "src/features/event/components/event-watch-panel.tsx:606"
         },
         "event-unknown-get-app": {
             "scope": "event",
@@ -6436,7 +6873,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:422"
+            "source": "src/features/event/components/event-watch-panel.tsx:612"
         },
         "event-unlock": {
             "scope": "event",
@@ -6444,7 +6881,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-unlock-actions.tsx:122"
+            "source": "src/features/event/components/event-unlock-actions.tsx:137"
         },
         "event-unlock-confirm": {
             "scope": "event",
@@ -6452,7 +6889,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-unlock-actions.tsx:150"
+            "source": "src/features/event/components/event-unlock-actions.tsx:169"
         },
         "event-upcoming": {
             "scope": "event",
@@ -6460,7 +6897,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:265"
+            "source": "src/features/event/components/event-watch-panel.tsx:381"
         },
         "event-upcoming-get-app": {
             "scope": "event",
@@ -6468,7 +6905,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:271"
+            "source": "src/features/event/components/event-watch-panel.tsx:387"
         },
         "event-visit-space": {
             "scope": "event",
@@ -6476,7 +6913,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:319"
+            "source": "src/features/event/components/event-watch-panel.tsx:446"
         },
         "event-watch": {
             "scope": "event",
@@ -6484,7 +6921,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:219"
+            "source": "src/features/event/components/event-watch-panel.tsx:243"
         },
         "event-watch-get-app": {
             "scope": "event",
@@ -6492,7 +6929,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-watch-panel.tsx:226"
+            "source": "src/features/event/components/event-watch-panel.tsx:250"
         },
         "gift-code-clear": {
             "scope": "gift-code",
@@ -6722,7 +7159,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:494"
+            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:521"
         },
         "membership-cancel-confirm": {
             "scope": "membership",
@@ -6733,7 +7170,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:533"
+            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:560"
         },
         "membership-checkout-dismiss": {
             "scope": "membership",
@@ -6813,7 +7250,29 @@
             "companions": [
                 "data-currency-code"
             ],
-            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:148"
+            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:152"
+        },
+        "membership-delete": {
+            "scope": "membership",
+            "routes": [
+                "/[slug]/membership/[[...tier]]",
+                "/app/[channelSlug]/membership/[packageId]",
+                "/app/dev-checkout",
+                "/monetization/membership",
+                "/my-membership"
+            ],
+            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:330"
+        },
+        "membership-delete-confirm": {
+            "scope": "membership",
+            "routes": [
+                "/[slug]/membership/[[...tier]]",
+                "/app/[channelSlug]/membership/[packageId]",
+                "/app/dev-checkout",
+                "/monetization/membership",
+                "/my-membership"
+            ],
+            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:578"
         },
         "membership-description-expand": {
             "scope": "membership",
@@ -6824,7 +7283,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:243"
+            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:247"
         },
         "membership-detail-channel-link": {
             "scope": "membership",
@@ -6835,7 +7294,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:333"
+            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:360"
         },
         "membership-detail-close": {
             "scope": "membership",
@@ -6846,7 +7305,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:303"
+            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:317"
         },
         "membership-filter": {
             "scope": "membership",
@@ -6879,7 +7338,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:699"
+            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:743"
         },
         "membership-join": {
             "scope": "membership",
@@ -6901,7 +7360,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:366"
+            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:370"
         },
         "membership-join-close": {
             "scope": "membership",
@@ -6912,7 +7371,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:413"
+            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:417"
         },
         "membership-join-confirm": {
             "scope": "membership",
@@ -6923,7 +7382,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:375"
+            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:379"
         },
         "membership-join-review": {
             "scope": "membership",
@@ -6934,7 +7393,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:303"
+            "source": "src/features/membership/components/join/become-a-member-dialogs.tsx:307"
         },
         "membership-loading": {
             "scope": "membership",
@@ -6978,7 +7437,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:475"
+            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:502"
         },
         "membership-renew-options": {
             "scope": "membership",
@@ -6989,7 +7448,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:442"
+            "source": "src/features/membership/components/holdings/membership-detail-dialog.tsx:469"
         },
         "membership-retry": {
             "scope": "membership",
@@ -8487,7 +8946,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/end-rail/end-rail-pill.tsx:86"
+            "source": "src/features/navigation/components/end-rail/end-rail-pill.tsx:87"
         },
         "navigation-end-rail-premium": {
             "scope": "navigation",
@@ -8561,7 +9020,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/end-rail/end-rail-pill.tsx:122"
+            "source": "src/features/navigation/components/end-rail/end-rail-pill.tsx:123"
         },
         "navigation-end-rail-sign-in": {
             "scope": "navigation",
@@ -8672,7 +9131,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/menu/menu-drawer.tsx:473"
+            "source": "src/features/navigation/components/menu/menu-drawer.tsx:475"
         },
         "navigation-menu-allow-sensitive": {
             "scope": "navigation",
@@ -9005,7 +9464,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/menu/menu-drawer.tsx:546"
+            "source": "src/features/navigation/components/menu/menu-drawer.tsx:548"
         },
         "navigation-menu-get-star": {
             "scope": "navigation",
@@ -9042,7 +9501,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/menu/menu-drawer.tsx:611"
+            "source": "src/features/navigation/components/menu/menu-drawer.tsx:613"
         },
         "navigation-menu-language": {
             "scope": "navigation",
@@ -9116,7 +9575,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/menu/menu-profile-card.tsx:202"
+            "source": "src/features/navigation/components/menu/menu-profile-card.tsx:203"
         },
         "navigation-menu-other-row": {
             "scope": "navigation",
@@ -9156,7 +9615,7 @@
             "companions": [
                 "data-row-key"
             ],
-            "source": "src/features/navigation/components/menu/menu-drawer.tsx:717"
+            "source": "src/features/navigation/components/menu/menu-drawer.tsx:719"
         },
         "navigation-menu-privacy-row": {
             "scope": "navigation",
@@ -9236,7 +9695,7 @@
             "companions": [
                 "data-row-key"
             ],
-            "source": "src/features/navigation/components/menu/menu-drawer.tsx:680"
+            "source": "src/features/navigation/components/menu/menu-drawer.tsx:682"
         },
         "navigation-menu-section": {
             "scope": "navigation",
@@ -9276,7 +9735,7 @@
             "companions": [
                 "data-row-key"
             ],
-            "source": "src/features/navigation/components/menu/menu-drawer.tsx:668"
+            "source": "src/features/navigation/components/menu/menu-drawer.tsx:670"
         },
         "navigation-menu-sign-in": {
             "scope": "navigation",
@@ -9313,7 +9772,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/menu/menu-profile-card.tsx:125"
+            "source": "src/features/navigation/components/menu/menu-profile-card.tsx:126"
         },
         "navigation-menu-sign-out-confirm": {
             "scope": "navigation",
@@ -9427,7 +9886,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/menu/menu-drawer.tsx:619"
+            "source": "src/features/navigation/components/menu/menu-drawer.tsx:621"
         },
         "navigation-navbar": {
             "scope": "navigation",
@@ -9464,7 +9923,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-navbar.tsx:85"
+            "source": "src/features/navigation/components/app-navbar.tsx:86"
         },
         "navigation-navbar-chat": {
             "scope": "navigation",
@@ -9501,7 +9960,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-navbar.tsx:161"
+            "source": "src/features/navigation/components/app-navbar.tsx:162"
         },
         "navigation-navbar-create": {
             "scope": "navigation",
@@ -9689,7 +10148,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-navbar.tsx:113"
+            "source": "src/features/navigation/components/app-navbar.tsx:114"
         },
         "navigation-navbar-home": {
             "scope": "navigation",
@@ -9726,7 +10185,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-navbar.tsx:98"
+            "source": "src/features/navigation/components/app-navbar.tsx:99"
         },
         "navigation-navbar-language": {
             "scope": "navigation",
@@ -9763,7 +10222,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-navbar.tsx:260"
+            "source": "src/features/navigation/components/app-navbar.tsx:278"
         },
         "navigation-navbar-menu": {
             "scope": "navigation",
@@ -9800,7 +10259,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-navbar.tsx:242"
+            "source": "src/features/navigation/components/app-navbar.tsx:260"
         },
         "navigation-navbar-notifications": {
             "scope": "navigation",
@@ -9837,7 +10296,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-navbar.tsx:196"
+            "source": "src/features/navigation/components/app-navbar.tsx:197"
         },
         "navigation-navbar-profile": {
             "scope": "navigation",
@@ -9874,7 +10333,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-navbar.tsx:231"
+            "source": "src/features/navigation/components/app-navbar.tsx:232"
         },
         "navigation-navbar-search": {
             "scope": "navigation",
@@ -9911,7 +10370,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-navbar.tsx:180"
+            "source": "src/features/navigation/components/app-navbar.tsx:181"
         },
         "navigation-page-back": {
             "scope": "navigation",
@@ -9985,7 +10444,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-tab-bar.tsx:38"
+            "source": "src/features/navigation/components/app-tab-bar.tsx:39"
         },
         "navigation-tab-bar-create": {
             "scope": "navigation",
@@ -10247,7 +10706,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-tab-bar.tsx:54"
+            "source": "src/features/navigation/components/app-tab-bar.tsx:55"
         },
         "navigation-tab-bar-home": {
             "scope": "navigation",
@@ -10284,7 +10743,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-tab-bar.tsx:40"
+            "source": "src/features/navigation/components/app-tab-bar.tsx:41"
         },
         "navigation-tab-bar-messages": {
             "scope": "navigation",
@@ -10321,7 +10780,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-tab-bar.tsx:63"
+            "source": "src/features/navigation/components/app-tab-bar.tsx:64"
         },
         "navigation-tab-bar-my-space": {
             "scope": "navigation",
@@ -10358,7 +10817,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-tab-bar.tsx:77"
+            "source": "src/features/navigation/components/app-tab-bar.tsx:78"
         },
         "navigation-top-bar": {
             "scope": "navigation",
@@ -10742,21 +11201,21 @@
             "routes": [
                 "/notification"
             ],
-            "source": "src/features/notification/components/notification-row.tsx:442"
+            "source": "src/features/notification/components/notification-row.tsx:457"
         },
         "notification-row-link": {
             "scope": "notification",
             "routes": [
                 "/notification"
             ],
-            "source": "src/features/notification/components/notification-row.tsx:425"
+            "source": "src/features/notification/components/notification-row.tsx:440"
         },
         "notification-row-press": {
             "scope": "notification",
             "routes": [
                 "/notification"
             ],
-            "source": "src/features/notification/components/notification-row.tsx:457"
+            "source": "src/features/notification/components/notification-row.tsx:472"
         },
         "notification-sign-in": {
             "scope": "notification",
@@ -12688,7 +13147,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-following-strip.tsx:322"
+            "source": "src/features/search/components/search-following-strip.tsx:326"
         },
         "search-form": {
             "scope": "search",
@@ -12744,7 +13203,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-channel-row.tsx:99"
+            "source": "src/features/search/components/search-channel-row.tsx:100"
         },
         "search-retry": {
             "scope": "search",

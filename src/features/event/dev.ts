@@ -52,6 +52,11 @@ export {
 export { EventCardState } from './components/event-card-state'
 export { EventDescriptionCard } from './components/event-description-card'
 export { EventDetailsCard } from './components/event-details-card'
+export { EventEndedRail } from './components/event-ended-rail'
+export {
+    EventExclusivePaywall,
+    EventPreviewCountdown,
+} from './components/event-exclusive-overlay'
 export { EventGiftFloat } from './components/event-gift-float'
 export { EventGiftPanel } from './components/event-gift-panel'
 export { EventGiftTray } from './components/event-gift-tray'
@@ -62,6 +67,9 @@ export {
     MAINTENANCE_FEE_INFO,
     SUSTAINED_VIEWERS_INFO,
 } from './components/event-info-dialog'
+export { EventInvitationDialog } from './components/event-invitation-dialog'
+export { EventMobileLiveNotice } from './components/event-mobile-live-notice'
+export { EventNotEnoughStarsDialog } from './components/event-not-enough-stars-dialog'
 export { EventOrderRow } from './components/event-order-row'
 /**
  * The report's list, against the **real** endpoint. It needs an owner session to answer, so in the
@@ -69,9 +77,12 @@ export { EventOrderRow } from './components/event-order-row'
  * `v1/ecom/event-orders/` to drive it with rows.
  */
 export { EventOrdersPanel } from './components/event-orders-panel'
+export { EventOutOfStarDialog } from './components/event-out-of-star-dialog'
+export { EventPremiumNudge } from './components/event-premium-nudge'
 export { EventReportCard } from './components/event-report-card'
 export { EventRevenueAccordion, RevenueRow } from './components/event-revenue-accordion'
 export { EventRevenueSummary } from './components/event-revenue-summary'
+export { EventSeatCard } from './components/event-seat-card'
 export { EventSkeleton } from './components/event-skeleton'
 export {
     EventBannedState,
@@ -95,6 +106,7 @@ export {
  * with it.
  */
 export { EventStudioChat, EventStudioChatStrip } from './components/event-studio-chat'
+export { EventStudioCompact } from './components/event-studio-compact'
 export { EventStudioScreen } from './components/event-studio-screen'
 /**
  * The seat grid, and the table behind it.
@@ -105,13 +117,21 @@ export { EventStudioScreen } from './components/event-studio-screen'
  * — what is being checked is the geometry and the seat chrome, not the video.
  */
 export { EventStudioSeats } from './components/event-studio-seats'
+/** The studio before anything has arrived — `/dev/event` frames it in a box. */
+export { EventStudioSkeleton } from './components/event-studio-skeleton'
 export { EventTopBar } from './components/event-top-bar'
 /**
  * The watch panel, which is the whole point of the harness: it renders one of six states and
  * `lib/watch-state.ts` picks which from the payload, so driving it is a matter of handing it six
  * fixtures rather than mocking anything.
  */
-export { EventKickedOutPanel, EventWatchPanel } from './components/event-watch-panel'
+export {
+    EventAccountBannedPanel,
+    EventBlockedPanel,
+    EventGeoRestrictedPanel,
+    EventKickedOutPanel,
+    EventWatchPanel,
+} from './components/event-watch-panel'
 /** The block a single-panel screen becomes from `md` — so the harness frames the list as `/report` does. */
 export { EVENT_CARD, EVENT_PANEL } from './lib/container'
 export { billTotal, interactiveBill, liveBill } from './lib/event-revenue'

@@ -3,7 +3,7 @@ import { act, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { eventDetailSchema } from '../api/types'
 import { RECENTLY_ENDED_MS } from '../lib/event-status'
-import { useLiveStudio } from './use-live-studio'
+import { useCompactStudio, useLiveStudio } from './use-live-studio'
 
 /**
  * **The two halves `isStudioEligible` cannot hold** — the viewport, and the passage of time.
@@ -93,23 +93,41 @@ describe('the first render', () => {
         expect(seen.at(-1)).toBe(true)
     })
 
+    /**
+     * While the phone studio is switched off (`COMPACT_STUDIO_ENABLED`), a narrow screen is not a
+     * studio — it gets `EventMobileLiveNotice` — and the answer stays no.
+     */
     it('says no on a narrow viewport and keeps saying it', () => {
         mockViewport(false)
         const seen = track(event('LIVE'))
         expect(seen.every(v => v === false)).toBe(true)
     })
-})
 
-describe('a viewport that changes while the page is open', () => {
-    /*
-     * A window dragged narrower must hand the reader back to the details page. The listener is the
-     * only thing that can notice — the event payload has not changed and nothing else re-renders.
-     */
     it('closes the studio when the window is dragged below the breakpoint', () => {
         mockViewport(true)
         const seen = track(event('LIVE'))
         expect(seen.at(-1)).toBe(true)
+        resizeTo(false)
+        expect(seen.at(-1)).toBe(false)
+    })
+})
 
+describe('useCompactStudio', () => {
+    function compact() {
+        const seen: boolean[] = []
+        function Probe() {
+            seen.push(useCompactStudio())
+            return null
+        }
+        render(<Probe />)
+        return seen
+    }
+
+    it('reports a narrow window, and follows it as it is resized', () => {
+        mockViewport(true)
+        const seen = compact()
+        expect(seen[0]).toBe(false)
+        expect(seen.at(-1)).toBe(true)
         resizeTo(false)
         expect(seen.at(-1)).toBe(false)
     })

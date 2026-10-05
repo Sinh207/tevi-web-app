@@ -67,7 +67,14 @@ export function useLiveStream({
         refetchOnWindowFocus: false,
     })
 
-    const playback = playbackQuery.data ?? null
+    /*
+     * ⚠ **Only while enabled.** A disabled query keeps its last data, so a stream switched off by
+     * a mid-watch lock still reported `isPlaying` from the cache: the stage swapped to the preview
+     * (one remount), and when the preview ran out it fell back to *this* — the real stream, still
+     * "playing" — so the paywall stood over a stream the reader could keep watching, and the player
+     * reloaded on every swap. Off means nothing to play.
+     */
+    const playback = active ? (playbackQuery.data ?? null) : null
 
     const roomQuery = useQuery({
         queryKey: liveKeys.room(code ?? '', activeId),
@@ -78,8 +85,8 @@ export function useLiveStream({
         refetchOnWindowFocus: false,
     })
 
-    const layout = roomQuery.data?.layout ?? null
-    const publishers = roomQuery.data?.publishers ?? []
+    const layout = active ? (roomQuery.data?.layout ?? null) : null
+    const publishers = active ? (roomQuery.data?.publishers ?? []) : []
 
     return {
         isLoading:

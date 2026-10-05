@@ -1,10 +1,15 @@
 'use client'
 
 import { PREMIUM_PATH } from '@features/premium/routes'
+import { Sheen } from '@shared/components/sheen'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { GIFT_IN, GIFT_OUT, GIFT_OUT_MS, POP } from '@shared/lib/motion'
+import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { PREMIUM_NUDGE_SECONDS } from '../hooks/use-premium-nudge'
 import { EVENT_ART } from '../lib/illustrations'
 
 /**
@@ -22,21 +27,59 @@ import { EVENT_ART } from '../lib/illustrations'
  * ours (`lib/studio.ts`).
  */
 export function EventPremiumNudge({
+    open,
     secondsLeft,
     onClose,
 }: {
+    /**
+     * Whether the card should be up. It is mounted on this rather than by the caller so that it can
+     * **leave** — `GIFT_OUT` toward the edge it came from — instead of vanishing in a frame when
+     * ✕, *Close* or the countdown ends it.
+     */
+    open: boolean
     secondsLeft: number
     onClose: () => void
 }) {
     const { t } = useTranslation()
+    const [mounted, setMounted] = useState(open)
+    const [entered, setEntered] = useState(false)
+    useEffect(() => {
+        if (open) {
+            setMounted(true)
+            return
+        }
+        const timer = setTimeout(() => {
+            setMounted(false)
+            setEntered(false)
+        }, GIFT_OUT_MS)
+        return () => clearTimeout(timer)
+    }, [open])
+
+    if (!mounted) return null
+    const leaving = !open
+
     return (
         <aside
             data-testid="event-premium-nudge"
-            className="relative w-[140px] rounded-lg motion-safe:animate-[tevi-rise_300ms_ease-out]"
+            onAnimationEnd={e => {
+                if (e.target === e.currentTarget) setEntered(true)
+            }}
+            className={cn(
+                'relative w-[140px] overflow-hidden rounded-lg shadow-[0_8px_24px_rgba(75,0,224,0.35)]',
+                /*
+                 * In from — and out toward — the **trailing** edge it is pinned to: the gift
+                 * banner's motion with the direction flipped (`--gift-dir: -1` is "from the end"),
+                 * and flipped back in Arabic, where the end is the left.
+                 */
+                '[--gift-dir:-1] rtl:[--gift-dir:1]',
+                leaving ? cn(GIFT_OUT, 'pointer-events-none') : !entered && GIFT_IN,
+            )}
             style={{
                 background: 'linear-gradient(180deg, #040013 0.48%, #4B00E0 68.49%, #C096FF 100%)',
             }}
         >
+            {/* The glare every Premium surface in the app carries, on its own timing. */}
+            <Sheen />
             <button
                 type="button"
                 data-testid="event-premium-nudge-close"
@@ -53,7 +96,8 @@ export function EventPremiumNudge({
                     aria-hidden
                     width={EVENT_ART.premiumLogo.width}
                     height={EVENT_ART.premiumLogo.height}
-                    className="size-[52px]"
+                    // Pops a beat after the card lands.
+                    className={cn('size-[52px]', POP, '[animation-delay:160ms]')}
                 />
                 <p className="type-micro-overline text-white">
                     {t('event_studio_premium_nudge_body')}
@@ -71,9 +115,22 @@ export function EventPremiumNudge({
                     type="button"
                     data-testid="event-premium-nudge-dismiss"
                     onClick={onClose}
-                    className="type-micro-overline flex h-7 w-full items-center justify-center rounded-md bg-black/15 text-white"
+                    className="type-micro-overline relative flex h-7 w-full items-center justify-center overflow-hidden rounded-md bg-black/15 text-white"
                 >
-                    {t('event_studio_premium_nudge_close', { seconds: `${secondsLeft}s` })}
+                    {/*
+                     * The countdown, drawn: a fill that drains a second at a time, eased over the
+                     * second so it moves continuously rather than in ten jumps.
+                     */}
+                    <span
+                        aria-hidden
+                        className="absolute inset-y-0 start-0 bg-white/15 transition-[width] duration-1000 ease-linear motion-reduce:transition-none"
+                        style={{
+                            width: `${Math.max(0, Math.min(1, secondsLeft / PREMIUM_NUDGE_SECONDS)) * 100}%`,
+                        }}
+                    />
+                    <span className="relative">
+                        {t('event_studio_premium_nudge_close', { seconds: `${secondsLeft}s` })}
+                    </span>
                 </button>
             </div>
         </aside>

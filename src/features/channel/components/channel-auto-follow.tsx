@@ -1,9 +1,14 @@
 'use client'
 
+import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { GIFT_IN, GIFT_OUT, GIFT_OUT_MS, RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
+import { Avatar, AvatarInitials } from '@shared/ui/avatar'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
+import Image from 'next/image'
+import { useEffect, useState } from 'react'
 import type { Channel } from '../api/types'
 import { useAutoFollow } from '../hooks/use-auto-follow'
 import { CHANNEL_CONTAINER } from '../lib/container'
@@ -84,6 +89,9 @@ import { CHANNEL_CONTAINER } from '../lib/container'
  * `/`, `/my-space` and *your own* channel — never on somebody else's. The safe-area inset is still
  * honoured, because a phone's home indicator does not care whose page it is.
  */
+/** How long the bar takes to leave once the space is followed — see `gone`. */
+const LEAVE_MS = 260
+
 export function ChannelAutoFollow({
     channel,
     placement = 'page',
@@ -104,18 +112,49 @@ export function ChannelAutoFollow({
     const { remaining, isCountingDown, skipped, isPending, skip, followNow } =
         useAutoFollow(channel)
 
-    // Nothing left to offer. Also covers the moment after any of the three paths lands.
-    if (channel.is_followed) return null
+    /*
+     * **Out, not gone.** Following (any of the three paths) flips `is_followed`, and the bar used
+     * to vanish in that frame. Now it slides down and fades for `LEAVE_MS` first, then unmounts.
+     * A space already followed on arrival is `gone` from the first render — nothing to animate
+     * out of what was never shown.
+     */
+    const isStage = placement === 'stage'
+    const followed = Boolean(channel.is_followed)
+    const [gone, setGone] = useState(followed)
+    // On the stage the exit is the gift banner's, so it is timed to that animation.
+    const leaveMs = isStage ? GIFT_OUT_MS : LEAVE_MS
+    useEffect(() => {
+        if (!followed) {
+            setGone(false)
+            return
+        }
+        const timer = setTimeout(() => setGone(true), leaveMs)
+        return () => clearTimeout(timer)
+    }, [followed, leaveMs])
+
+    if (gone) return null
+    if (isStage) {
+        return (
+            <StageAutoFollow
+                channel={channel}
+                followed={followed}
+                remaining={remaining}
+                isCountingDown={isCountingDown}
+                skipped={skipped}
+                isPending={isPending}
+                skip={skip}
+                followNow={followNow}
+            />
+        )
+    }
 
     return (
         <div
             className={cn(
-                placement === 'page'
-                    ? cn(
-                          CHANNEL_CONTAINER,
-                          'fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(12px,env(safe-area-inset-bottom))]',
-                      )
-                    : 'absolute start-0 bottom-[100px] z-20 w-full max-w-[600px] px-3',
+                CHANNEL_CONTAINER,
+                'fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(12px,env(safe-area-inset-bottom))]',
+                // In: the app's entrance, on mount.
+                RISE,
             )}
         >
             {/*
@@ -126,8 +165,15 @@ export function ChannelAutoFollow({
             <section
                 aria-label={t('channel_auto_follow_region')}
                 className={cn(
-                    'dark flex min-w-0 items-center justify-between gap-3',
-                    'rounded-[var(--radius-xl)] bg-(--opacity-black-50) p-4 shadow-sm backdrop-blur-[var(--blur-sm)]',
+                    'dark flex min-w-0 items-center justify-between',
+                    /*
+                     * Out: a transition on this inner box rather than another animation on the
+                     * outer one — `RISE` holds `translate` once it has played, so a second motion
+                     * on the same element would be overridden by it.
+                     */
+                    'transition-[opacity,translate] duration-[260ms] ease-in motion-reduce:transition-none',
+                    followed && 'pointer-events-none translate-y-2 opacity-0',
+                    'gap-3 rounded-[var(--radius-xl)] bg-(--opacity-black-50) p-4 shadow-sm backdrop-blur-[var(--blur-sm)]',
                     // See the note above: these four are declared once at `:root` against Light's
                     // ramp, so the local dark scope cannot reach them without a re-declaration.
                     '[--button-secondary-bg:var(--zinc-100)] [--button-secondary-bg-hover:var(--zinc-200)]',
@@ -148,6 +194,9 @@ export function ChannelAutoFollow({
                     {!skipped && (
                         <Button
                             data-testid="channel-auto-follow-skip"
+                            // The page bar and the stage pill are one control drawn twice; QC tells
+                            // them apart by placement.
+                            data-option-value="page"
                             variant="secondary"
                             size="small"
                             disabled={isPending}
@@ -158,6 +207,7 @@ export function ChannelAutoFollow({
                     )}
                     <Button
                         data-testid="channel-auto-follow-now"
+                        data-option-value="page"
                         variant="accent"
                         size="small"
                         disabled={isPending}
@@ -172,6 +222,136 @@ export function ChannelAutoFollow({
                          * reader was actually listening to. The countdown is a visual affordance;
                          * what a non-visual reader needs is the Skip button, which is right there.
                          */}
+                        {isCountingDown && (
+                            <span aria-hidden className="type-caption-meta opacity-80 tabular-nums">
+                                ({remaining}s)
+                            </span>
+                        )}
+                    </Button>
+                </div>
+            </section>
+        </div>
+    )
+}
+
+/**
+ * **The stage's follow prompt — drawn and moving like a gift banner.**
+ *
+ * Legacy mounts the page's own 600px bar over the stream. Here it borrows the vocabulary of the
+ * other thing that flies in over a live picture, the gift banner (`event-gift-float.tsx`): a 48px
+ * pill with the space's face at its leading edge, its name (and tick) over the one-line ask, on a
+ * dark glass that fades toward the trailing end — and the banner's own motion, `GIFT_IN` thrown in
+ * from the leading edge on arrival and `GIFT_OUT` back toward it once the space is followed. Two
+ * things that arrive over the stream now arrive the same way.
+ *
+ * The motion travels along `--gift-dir`, flipped in RTL, for the reason `tevi-gift-in` gives.
+ */
+function StageAutoFollow({
+    channel,
+    followed,
+    remaining,
+    isCountingDown,
+    skipped,
+    isPending,
+    skip,
+    followNow,
+}: {
+    channel: Channel
+    followed: boolean
+    remaining: number
+    isCountingDown: boolean
+    skipped: boolean
+    isPending: boolean
+    skip: () => void
+    followNow: () => void
+}) {
+    const { t } = useTranslation()
+    const [entered, setEntered] = useState(false)
+    const name = channel.name ?? channel.slug
+    const thumb = channel.images?.thumb ?? null
+    const tick = channel.verified_tick_badge?.image ?? null
+
+    return (
+        <div
+            onAnimationEnd={e => {
+                if (e.target === e.currentTarget) setEntered(true)
+            }}
+            className={cn(
+                'absolute start-3 bottom-[100px] z-20 w-fit max-w-[calc(100%-24px)]',
+                '[--gift-dir:1] rtl:[--gift-dir:-1]',
+                followed ? cn(GIFT_OUT, 'pointer-events-none') : !entered && GIFT_IN,
+            )}
+        >
+            <section
+                aria-label={t('channel_auto_follow_region')}
+                className={cn(
+                    'dark flex h-12 min-w-0 items-center gap-2.5 rounded-full ps-1 pe-1.5',
+                    'bg-linear-to-r from-black/75 via-black/60 to-black/45 rtl:bg-linear-to-l',
+                    'shadow-lg ring-1 ring-inset ring-white/10 backdrop-blur-[var(--blur-sm)]',
+                )}
+            >
+                <Avatar
+                    size="small"
+                    type={thumb ? 'image' : 'initials'}
+                    className="size-10 flex-none shadow-[0_2px_8px_rgba(0,0,0,0.35)] ring-2 ring-white/80"
+                >
+                    {thumb ? (
+                        <Image
+                            src={thumb}
+                            alt=""
+                            width={40}
+                            height={40}
+                            className="size-full rounded-full object-cover"
+                        />
+                    ) : (
+                        <AvatarInitials>
+                            {name.replace('@', '').slice(0, 2).toUpperCase()}
+                        </AvatarInitials>
+                    )}
+                </Avatar>
+
+                <div className="flex min-w-0 flex-col justify-center pe-1">
+                    <p className="flex min-w-0 items-center gap-1">
+                        <span className="type-dense-strong truncate text-white">{name}</span>
+                        {tick && <VerifiedBadge image={tick} size={14} />}
+                    </p>
+                    <p className="type-caption-meta truncate text-white/75">
+                        {t('channel_auto_follow_prompt')}
+                    </p>
+                </div>
+
+                <div className="flex flex-none items-center gap-1">
+                    {/* Skip goes away once pressed and the offer stays — see the page bar. */}
+                    {!skipped && (
+                        <button
+                            type="button"
+                            data-testid="channel-auto-follow-skip"
+                            // The page bar and the stage pill are one control drawn twice; QC tells
+                            // them apart by placement.
+                            data-option-value="stage"
+                            disabled={isPending}
+                            onClick={skip}
+                            className={cn(
+                                'type-caption-label-strong h-8 rounded-full px-3 text-white/70',
+                                'transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50',
+                                'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white',
+                            )}
+                        >
+                            {t('channel_auto_follow_skip')}
+                        </button>
+                    )}
+                    <Button
+                        data-testid="channel-auto-follow-now"
+                        data-option-value="stage"
+                        variant="accent"
+                        size="small"
+                        disabled={isPending}
+                        onClick={followNow}
+                        className="rounded-full"
+                    >
+                        <Icon name="user-plus" weight="filled" size={16} />
+                        {t('channel_action_follow')}
+                        {/* `aria-hidden` for the reason the page bar gives. */}
                         {isCountingDown && (
                             <span aria-hidden className="type-caption-meta opacity-80 tabular-nums">
                                 ({remaining}s)

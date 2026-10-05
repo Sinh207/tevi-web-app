@@ -78,6 +78,14 @@ export interface UseMembershipDetailResult {
     /** Put a cancelled renewal back. No confirm and no cost: it is the *un*-doing of one press. */
     renew: () => void
     /**
+     * **Development only** — delete this account's subscription to the space
+     * (`openConfirm('delete')` is the gate). The dialog decides whether the control exists at all;
+     * this only performs it.
+     */
+    remove: () => void
+    /** The row names a space — the endpoint is keyed on `channel_id`, so without one there is nothing to send. */
+    canRemove: boolean
+    /**
      * What buying this expired membership again would be — the space, the creator and the tier with
      * both its price lines. `null` when it cannot be bought here: a live row, a cash-only tier, or a
      * space that is gone. The dialog hands it to the join flow; nothing in this hook writes it.
@@ -88,15 +96,21 @@ export interface UseMembershipDetailResult {
 }
 
 /**
- * The one action consequential enough to ask about here. A union of one, deliberately: it is the
- * field's shape that stops two confirms from being stacked, and buying a tier again — the second
- * member this used to have — now asks inside the join flow's own confirm step.
+ * The actions consequential enough to ask about here. One field for all of them: it is the field's
+ * shape that stops two confirms from being stacked, and buying a tier again — a member this used to
+ * have — now asks inside the join flow's own confirm step. `delete` is the dev-only reset.
  */
-export type ConfirmKind = 'cancel'
+export type ConfirmKind = 'cancel' | 'delete'
 
 export function useMembershipDetail(
     /** The open membership, or `null` when the dialog is closed. Gates the query. */
     membership: Membership | null,
+    {
+        onDeleted,
+    }: {
+        /** The record is gone — the dialog has nothing left to show and should close. */
+        onDeleted?: () => void
+    } = {},
 ): UseMembershipDetailResult {
     const { activeId } = useAuth()
     const { t } = useTranslation()
@@ -104,6 +118,7 @@ export function useMembershipDetail(
     const [confirm, setConfirm] = useState<ConfirmKind | null>(null)
 
     const id = membership?.id ?? ''
+    const channelId = membership?.channel?.id ?? ''
 
     const query = useQuery({
         queryKey: membershipKeys.history(activeId, id),
@@ -163,7 +178,21 @@ export function useMembershipDetail(
         onError: () => toast.error(t('my_membership_detail_renew_failed')),
     })
 
-    const isPending = cancelMutation.isPending || renewMutation.isPending
+    const removeMutation = useMutation({
+        mutationFn: (input: { channelId: string; accountId: string | null }) =>
+            membershipApi.remove({ channelId: input.channelId, accountId: input.accountId }),
+        onSuccess: (_data, input) => {
+            void invalidate(input.accountId)
+            setConfirm(null)
+            toast.success(t('my_membership_detail_deleted'))
+            onDeleted?.()
+        },
+        // Confirm stays open, as for `cancel`: nothing happened.
+        onError: () => toast.error(t('my_membership_detail_delete_failed')),
+    })
+
+    const isPending =
+        cancelMutation.isPending || renewMutation.isPending || removeMutation.isPending
 
     return {
         history: query.data ?? [],
@@ -186,6 +215,11 @@ export function useMembershipDetail(
             if (!id || isPending) return
             renewMutation.mutate({ id, accountId: activeId })
         },
+        remove: () => {
+            if (!channelId || isPending) return
+            removeMutation.mutate({ channelId, accountId: activeId })
+        },
+        canRemove: channelId !== '',
         renewalOffer: offer,
         isPending,
     }

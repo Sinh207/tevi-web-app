@@ -55,7 +55,7 @@ import type { LiveRoomState } from './use-live-room'
 export const MAX_LINES = 300
 
 /** How long an arrival toast stays up. Legacy's `NOTIFICATION_DURATION`. */
-const ARRIVAL_MS = 3_000
+export const ARRIVAL_MS = 3_000
 
 /**
  * How many arrivals may wait their turn.
@@ -77,8 +77,20 @@ export interface LiveChatState {
     lines: LiveChatLine[]
     /** Concurrent viewers, or `null` before the first frame — never `0`, which is a real number. */
     ccu: number | null
-    /** The reader may type. False for a guest, a blocked reader, or a wire that is down. */
+    /**
+     * The reader may type. False for a guest, a blocked reader, or a wire that is down — and
+     * **not** for a short balance in a paid chat: the reader types freely, and the balance is
+     * checked when they press send (`mustTopUp`).
+     */
     canSend: boolean
+    /**
+     * A paid chat whose next message this balance cannot cover. The composer checks it on send and
+     * opens *Out of Star* instead of posting — keeping the draft, which a refused send must not
+     * throw away.
+     */
+    mustTopUp: boolean
+    /** The paid chat's *Out of Star* dialog — legacy's `OutOfStar`, raised on send. */
+    outOfStar: { open: boolean; show: () => void; close: () => void }
     /**
      * The wire is up.
      *
@@ -390,22 +402,30 @@ export function useLiveChat({
     const canSend = isAuthenticated && isConnected && !isBlocked && !isSending && !isChatOff
 
     /*
-     * ⚠ **Not enough Star opens the purchase sheet, it does not print a sentence.**
+     * ⚠ **Not enough Star opens *Out of Star*, on send — the reader can always type.**
      *
-     * This shipped setting an `errorKey` and stopping — a dead end: the reader is told they
-     * cannot afford a message and given nothing to do about it. `useRequireStars` is the app's
-     * existing answer (it composes `useRequireAuth` and raises
-     * `payment:star-purchase-requested`), so paid chat now behaves like every other Star spend
-     * in the app rather than inventing a worse one. Legacy opens its own `OutOfStar` dialog at
-     * the same point.
+     * It used to disable the field outright (`canSend && canAfford`), so a reader short of one Star
+     * could not even compose. Legacy lets them type and checks `balanceTVS < ACTION_FEE` on send,
+     * raising its own `OutOfStar` dialog with the chat sentence — and that is what this does
+     * (`mustTopUp`, `outOfStar`). A balance not yet known still goes through `useRequireStars`,
+     * which refreshes it and says so.
      */
     const requireStars = useRequireStars()
+    const [outOfStarOpen, setOutOfStarOpen] = useState(false)
+    const mustTopUp = isPaidChat && isKnown && star < LIVE_CHAT_FEE
 
     const send = useCallback(
         async (text: string) => {
             const body = text.trim()
             if (!body || !code || !canSend) return
 
+            if (mustTopUp) {
+                // Legacy's `balanceTVS < ACTION_FEE` → `OutOfStar`. The composer normally catches
+                // this first (it keeps the draft); this is the backstop for any other caller.
+                setOutOfStarOpen(true)
+                return
+            }
+            // A balance not known yet: the guard refreshes it and says so.
             if (isPaidChat && !canAfford) {
                 /*
                  * ⚠ **The trailing `()` is load-bearing.** `useRequireStars` follows
@@ -461,7 +481,16 @@ export function useLiveChat({
                 setIsSending(false)
             }
         },
-        [code, canSend, canAfford, isPaidChat, event.channel?.id, activeId, requireStars],
+        [
+            code,
+            canSend,
+            canAfford,
+            mustTopUp,
+            isPaidChat,
+            event.channel?.id,
+            activeId,
+            requireStars,
+        ],
     )
 
     /* Cleared on unmount, so leaving inside three seconds is not a write to a dead tree. */
@@ -478,10 +507,21 @@ export function useLiveChat({
     return {
         lines,
         ccu,
-        canSend: canSend && canAfford,
+        canSend,
+        mustTopUp,
+        outOfStar: {
+            open: outOfStarOpen,
+            show: () => setOutOfStarOpen(true),
+            close: () => setOutOfStarOpen(false),
+        },
         isConnected,
         isSending,
-        isBlocked,
+        /*
+         * A room that refused this reader on the way in says the same as a mute — *you can't
+         * send messages here* — rather than *Connecting…*, which would promise a wire that is
+         * already up and will not take them.
+         */
+        isBlocked: isBlocked || room.isRefused,
         arrival,
         topStars: board,
         /*

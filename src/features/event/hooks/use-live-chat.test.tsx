@@ -55,11 +55,13 @@ const event = (fields: Record<string, unknown> = {}) =>
     })
 
 /** A room whose `subscribe` hands every channel's handler back to the test. */
-function makeRoom(isConnected = true) {
+function makeRoom(isConnected = true, isRefused = false) {
     const handlers = new Map<string, (payload: unknown) => void>()
     const room: LiveRoomState = {
-        status: isConnected ? 'connected' : 'idle',
-        isConnected,
+        status: isRefused ? 'refused' : isConnected ? 'connected' : 'idle',
+        isConnected: isConnected && !isRefused,
+        isRefused,
+        refusalMessage: null,
         subscribe: (channel, handler) => {
             handlers.set(channel, handler)
             return () => handlers.delete(channel)
@@ -68,8 +70,15 @@ function makeRoom(isConnected = true) {
     return { room, handlers }
 }
 
-function mount(opts: { paidChat?: boolean; isConnected?: boolean; allowChat?: boolean } = {}) {
-    const { room, handlers } = makeRoom(opts.isConnected ?? true)
+function mount(
+    opts: {
+        paidChat?: boolean
+        isConnected?: boolean
+        allowChat?: boolean
+        isRefused?: boolean
+    } = {},
+) {
+    const { room, handlers } = makeRoom(opts.isConnected ?? true, opts.isRefused ?? false)
     const seen: { current: LiveChatState | null } = { current: null }
     function Probe() {
         seen.current = useLiveChat({
@@ -389,28 +398,27 @@ describe('paid chat', () => {
      * get right on its own. Posting first and failing to bill is the alternative.
      */
     /**
-     * ⚠ **Not a dead end.** This shipped printing "you don't have enough Star" and stopping,
-     * which tells the reader they cannot act and offers no way to change that.
-     * `useRequireStars` is the app's existing answer everywhere else money is short.
+     * ⚠ **Not a dead end, and not a locked field.** This shipped printing "you don't have enough
+     * Star" and stopping, then disabled the field outright. Legacy lets the reader type and raises
+     * `OutOfStar` on send; so does this.
      */
-    it('opens the Star purchase sheet instead of refusing with a sentence', async () => {
-        let diverted = false
-        requireStars.mockImplementation(() => () => {
-            diverted = true
-        })
+    it('lets a reader short of Star type, and raises Out of Star on send', async () => {
         balance.state = { star: 0, isKnown: true }
         const { seen } = mount({ paidChat: true })
         await waitFor(() => expect(request).toHaveBeenCalled())
         request.mockClear()
 
+        expect(seen.current?.canSend).toBe(true)
+        expect(seen.current?.mustTopUp).toBe(true)
+
         await act(async () => {
             await seen.current?.send('hi')
         })
         expect(request).not.toHaveBeenCalled()
-        expect(requireStars).toHaveBeenCalledWith(1, expect.any(Function))
-        // …and the guard it built was **run**. Asserting only the arguments above is what let the
-        // sheet quietly never open: the handler was constructed and thrown away.
-        expect(diverted).toBe(true)
+        expect(seen.current?.outOfStar.open).toBe(true)
+
+        act(() => seen.current?.outOfStar.close())
+        expect(seen.current?.outOfStar.open).toBe(false)
     })
 
     /* A free chat never consults the balance at all. */
@@ -427,11 +435,24 @@ describe('paid chat', () => {
     })
 
     /* An unknown balance is not a zero one, but it is not permission to spend either. */
-    it('refuses while the balance is still unknown', async () => {
+    /* Unknown is not short: the guard refreshes the balance rather than raising a wall. */
+    it('hands an unknown balance to the guard instead of raising Out of Star', async () => {
+        let diverted = false
+        requireStars.mockImplementation(() => () => {
+            diverted = true
+        })
         balance.state = { star: 0, isKnown: false }
         const { seen } = mount({ paidChat: true })
         await waitFor(() => expect(request).toHaveBeenCalled())
-        expect(seen.current?.canSend).toBe(false)
+        request.mockClear()
+        expect(seen.current?.mustTopUp).toBe(false)
+
+        await act(async () => {
+            await seen.current?.send('hi')
+        })
+        expect(request).not.toHaveBeenCalled()
+        expect(diverted).toBe(true)
+        expect(seen.current?.outOfStar.open).toBe(false)
     })
 
     /**
@@ -581,5 +602,14 @@ describe('the gift leaderboard', () => {
             }),
         )
         expect(seen.current?.topStars).toHaveLength(2)
+    })
+})
+
+describe('a room that refused the join', () => {
+    /** A removed reader coming back: the room is up and will not take them — legacy's `!isJoinEvent`. */
+    it('cannot send, and says so as a mute rather than as Connecting…', () => {
+        const { seen } = mount({ isRefused: true })
+        expect(seen.current?.canSend).toBe(false)
+        expect(seen.current?.isBlocked).toBe(true)
     })
 })

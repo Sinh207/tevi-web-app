@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { appendChatLine, giftThumb, parseChatHistory, parseChatLine } from './live-message'
+import {
+    appendChatLine,
+    giftThumb,
+    parseChatHistory,
+    parseChatLine,
+    parseTopStars,
+} from './live-message'
 
 /**
  * **The chat transcript, which has no second copy.**
@@ -260,5 +266,50 @@ describe('collapsing a gift burst', () => {
             isMember: false,
         })
         expect(lines).toHaveLength(2)
+    })
+})
+
+describe('premium_badge', () => {
+    const lineFor = (premium_badge: unknown) => {
+        const line = parseChatLine({ type: 'msg', msg: 'hi', user: { ...user, premium_badge } })
+        return line?.kind === 'comment' ? line : null
+    }
+
+    it('reads the object legacy reads — `{ image, title }`, not a URL', () => {
+        const line = lineFor({ image: 'https://cdn/premium.png', title: 'Premium' })
+        expect(line?.user?.premium_badge).toEqual(
+            expect.objectContaining({ image: 'https://cdn/premium.png' }),
+        )
+    })
+
+    it('still accepts a bare URL, as the image', () => {
+        expect(lineFor('https://cdn/premium.png')?.user?.premium_badge).toEqual({
+            image: 'https://cdn/premium.png',
+        })
+    })
+
+    it('reads no image, or nothing, as not Premium', () => {
+        expect(lineFor({ image: null })?.user?.premium_badge).toBeNull()
+        expect(lineFor(null)?.user?.premium_badge).toBeNull()
+        expect(lineFor('')?.user?.premium_badge).toBeNull()
+    })
+})
+
+describe('the gift board’s Premium mark', () => {
+    const row = (user: Record<string, unknown>) =>
+        parseTopStars([{ score: 10, user: { id: 'u1', display_name: 'Ada', ...user } }])[0]
+
+    it('reads the badge object the chat reads, or a plain is_premium', () => {
+        expect(row({ premium_badge: { image: 'https://cdn/p.png' } })?.user?.premium_badge).toEqual(
+            { image: 'https://cdn/p.png' },
+        )
+        expect(row({ is_premium: true })?.user?.is_premium).toBe(true)
+    })
+
+    it('reads neither as not Premium, and never fails the row', () => {
+        const plain = row({})
+        expect(plain?.user?.premium_badge).toBeNull()
+        expect(plain?.user?.is_premium).toBeFalsy()
+        expect(row({ is_premium: 'yes' })?.user?.display_name).toBe('Ada')
     })
 })

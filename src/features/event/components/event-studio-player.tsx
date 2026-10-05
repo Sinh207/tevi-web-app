@@ -25,9 +25,15 @@ import { env } from '@shared/config/env'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { LivePlayback, LivePublisher } from '../api/live-types'
 import { preferredRendition } from '../api/live-types'
+import {
+    createPictureTracker,
+    measureSample,
+    PICTURE_SAMPLE_MS,
+    PICTURE_SAMPLE_SIZE,
+} from '../lib/picture-activity'
 import { EVENT_STUDIO_PILL } from '../lib/studio'
 
 /**
@@ -94,6 +100,7 @@ export function EventStudioPlayer({
     playback,
     publisher,
     mountId,
+    onPictureAliveChange,
     className,
 }: {
     playback: LivePlayback
@@ -109,6 +116,11 @@ export function EventStudioPlayer({
      * why its `Player` box is empty and carries only chrome.
      */
     mountId: string
+    /**
+     * Whether the picture on screen is moving — `null` while unknown or unreadable. Called only on
+     * a change. The stage reconciles it with the payload's camera flag; see `lib/picture-activity.ts`.
+     */
+    onPictureAliveChange?: (alive: boolean | null) => void
     className?: string
 }) {
     const { t } = useTranslation()
@@ -118,20 +130,89 @@ export function EventStudioPlayer({
 
     const rendition = preferredRendition(playback)
     const url = rendition?.url ?? null
+    /*
+     * ⚠ **The effect below must depend on values, never on a fresh object.** It destroys the player
+     * and builds a new one — a black frame, a re-buffer, a muted restart — so every dependency that
+     * changes identity without changing meaning is a reload the reader sees.
+     *
+     * - `fallbacks` is a new array on every render (`preferredRendition` sorts a copy), and this
+     *   component re-renders on every chat line, CCU tick and gift. It was in the list, which
+     *   rebuilt the player continuously. The joined string is the same list, compared by value.
+     * - `poster` is read only when the player is built, and it is the publisher's avatar — a field
+     *   of the room payload, which the socket invalidates on every seat change. A new avatar URL is
+     *   not a new stream, so it is read through a ref rather than listed.
+     */
+    const fallbackKey = rendition?.fallbacks.join('\n') ?? ''
     const poster = publisher?.avatar ?? null
+    const posterRef = useRef(poster)
+    // Read through a ref so a new callback identity is never a reason to rebuild the player.
+    const onAliveRef = useRef(onPictureAliveChange)
+    useEffect(() => {
+        onAliveRef.current = onPictureAliveChange
+    }, [onPictureAliveChange])
+    useEffect(() => {
+        posterRef.current = poster
+    }, [poster])
+
+    /*
+     * ⚠ **The player lives in a `host` of its own, and the host is moved — never rebuilt — when the
+     * seat it sits in is replaced.**
+     *
+     * A layout switch (`P1` → `P4`, a co-host joining, spotlight on/off) gives the seats new grid
+     * areas, and `EventStudioSeats` keys a seat on its area, so the `#player-{id}` node is a *new*
+     * element after the switch. The player had been created straight into the old one and kept
+     * painting into it, detached — the picture simply vanished. Legacy's answer is to destroy and
+     * recreate the player on every `layout` change, which reconnects the stream and costs the
+     * reader a second or two of black and re-buffer each time.
+     *
+     * Here the SDK is handed a `div` this component owns, and a layout effect re-parents it into
+     * whichever node now carries the id. Moving a playing `<video>` keeps it playing: the
+     * removal and the re-insertion happen in the same task (the commit and its layout effects),
+     * so the media element's "removed from the document" pause never fires. No reconnect, no
+     * re-buffer, and nothing for the reader to notice.
+     */
+    const hostRef = useRef<HTMLDivElement | null>(null)
+    if (hostRef.current === null && typeof document !== 'undefined') {
+        const host = document.createElement('div')
+        host.style.width = '100%'
+        host.style.height = '100%'
+        hostRef.current = host
+    }
+
+    /*
+     * After **every** commit: a lookup by id and a parent comparison
+     * cost nothing, and the seat grid is not the only thing that can replace the node. Keying
+     * this on a derived key is exactly how it missed a `P3` ↔ `L2` switch, whose key did not change.
+     * The seats now key on the publisher, so the node normally survives a switch; this is what
+     * covers it when it does not.
+     */
+    useLayoutEffect(() => {
+        const host = hostRef.current
+        const node = document.getElementById(mountId)
+        if (host && node && host.parentNode !== node) node.appendChild(host)
+    })
 
     useEffect(() => {
-        if (!url) return
+        const host = hostRef.current
+        if (!url || !host) return
         /*
-         * One lookup, no polling. The seat grid is rendered by an ancestor in this same tree, so
-         * its nodes are in the document before any effect runs — React commits the DOM first.
-         * Legacy polls with a 100ms `setInterval` because *its* mount node is in a sibling tree
-         * it does not control, and that interval is never cleared on the success path.
+         * One lookup, no polling: the seat grid is rendered by an ancestor in this same tree, so
+         * its nodes are committed before any effect runs. Legacy polls with a 100ms
+         * `setInterval` because *its* mount node is in a sibling tree it does not control.
          */
-        const node = document.getElementById(mountId)
-        if (!node) return
+        const mount = document.getElementById(mountId)
+        if (!mount) return
+        if (host.parentNode !== mount) mount.appendChild(host)
+        const node = host
 
         let cancelled = false
+        let sampler: ReturnType<typeof setInterval> | null = null
+        let reported: boolean | null | undefined
+        const report = (alive: boolean | null) => {
+            if (alive === reported) return
+            reported = alive
+            onAliveRef.current?.(alive)
+        }
 
         void (async () => {
             const [sdk, plugins] = await Promise.all([
@@ -146,13 +227,13 @@ export function EventStudioPlayer({
 
             try {
                 const player = await sdk.createLivePlayer({
-                    // `el`, not `id` — the node is this component's, so there is nothing to look
-                    // up and nothing to poll for. See the note above.
+                    // `el`, not `id` — the host is this component's, so there is nothing to look
+                    // up, nothing to poll for, and it can follow the seat. See `hostRef`.
                     el: node,
                     url,
-                    fallbackUrls: rendition?.fallbacks,
+                    fallbackUrls: fallbackKey ? fallbackKey.split('\n') : undefined,
                     maxFallbackRound: 10,
-                    poster: poster ?? undefined,
+                    poster: posterRef.current ?? undefined,
                     defaultDefinition: 'auto',
                     width: '100%',
                     height: '100%',
@@ -179,13 +260,20 @@ export function EventStudioPlayer({
                     closeVideoClick: true,
                     closeVideoDblclick: true,
                     /*
-                     * ⚠ Legacy passes `'contain'`, which **is not in the SDK's enum**
-                     * (`fill | auto | fillHeight | fillWidth | cover`) — so it has been silently
-                     * ignored there and the player has always used its default. `'auto'` is the
-                     * member that means what legacy was reaching for: fit the whole frame in,
-                     * letterboxed, rather than cropping a portrait stream to a landscape stage.
+                     * **`cover` — the picture fills its seat, whatever shape the seat is.** The
+                     * arrangement gives every seat its own box (a 9:16 solo stage, a square in a
+                     * 3×3, a wide rail tile), and letterboxing into each left black bars of a
+                     * different thickness on every tile. Cover crops the overflow instead, the way
+                     * the Agora path already plays (`fit: 'cover'` in `use-agora-room.ts`), so the
+                     * two transports frame a person the same way.
+                     *
+                     * Legacy passes `'contain'`, which is not in the SDK's enum
+                     * (`fill | auto | fillHeight | fillWidth | cover`) and so was silently ignored.
+                     * The mount node also forces `object-fit: cover` on the `<video>` — see
+                     * `EventStudioSeats` — because the SDK's own sheet would otherwise have the
+                     * last word.
                      */
-                    videoFillMode: 'auto',
+                    videoFillMode: 'cover',
                     error: { showRefresh: true },
                     ...(env.NEXT_PUBLIC_BYTEPLUS_APP_ID
                         ? { logger: { appId: env.NEXT_PUBLIC_BYTEPLUS_APP_ID } }
@@ -205,6 +293,46 @@ export function EventStudioPlayer({
                  */
                 player.on('volumechange', (e: { muted: boolean }) => setIsMuted(e.muted))
                 player.on('error', () => setHasFailed(true))
+
+                /*
+                 * **The picture, sampled.** A 24×24 downscale every 150ms, read back and handed to
+                 * the tracker — what tells the stage the viewer's frame has *actually* gone still,
+                 * which the payload's camera flag cannot (it is seconds ahead of the rendition).
+                 *
+                 * The `<video>` is looked up each tick: VePlayer may replace it on a fallback.
+                 * Paused or not yet decoding is `null`, not dead — a frame that cannot move proves
+                 * nothing. A `SecurityError` from `getImageData` (a rendition served without CORS)
+                 * also ends in `null`, for good: the stage then falls back to a timed delay.
+                 */
+                const canvas = document.createElement('canvas')
+                canvas.width = PICTURE_SAMPLE_SIZE
+                canvas.height = PICTURE_SAMPLE_SIZE
+                const ctx = canvas.getContext('2d', { willReadFrequently: true })
+                const track = createPictureTracker()
+                let previous: Uint8ClampedArray | null = null
+                sampler = setInterval(() => {
+                    const video = node.querySelector('video')
+                    if (!ctx || !video || video.paused || video.readyState < 2) {
+                        previous = null
+                        report(null)
+                        return
+                    }
+                    try {
+                        ctx.drawImage(video, 0, 0, PICTURE_SAMPLE_SIZE, PICTURE_SAMPLE_SIZE)
+                        const rgba = ctx.getImageData(
+                            0,
+                            0,
+                            PICTURE_SAMPLE_SIZE,
+                            PICTURE_SAMPLE_SIZE,
+                        ).data
+                        const alive = track(measureSample(rgba, previous))
+                        previous = rgba
+                        if (alive !== null) report(alive)
+                    } catch {
+                        if (sampler) clearInterval(sampler)
+                        report(null)
+                    }
+                }, PICTURE_SAMPLE_MS)
             } catch {
                 if (!cancelled) setHasFailed(true)
             }
@@ -212,11 +340,15 @@ export function EventStudioPlayer({
 
         return () => {
             cancelled = true
+            if (sampler) clearInterval(sampler)
+            onAliveRef.current?.(null)
             playerRef.current?.destroy()
             playerRef.current = null
+            host.replaceChildren()
+            host.remove()
         }
-        // `rendition.fallbacks` is a fresh array each render; `url` is the identity that matters.
-    }, [url, poster, mountId, rendition?.fallbacks])
+        // Values only — see the note on `fallbackKey`.
+    }, [url, fallbackKey, mountId])
 
     if (!url) return null
 

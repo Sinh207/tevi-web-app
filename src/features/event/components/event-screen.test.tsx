@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { EventDetail } from '../api/types'
 import { eventDetailSchema } from '../api/types'
@@ -34,6 +34,8 @@ const state = vi.hoisted(() => ({
      * the one thing it pins. `use-live-studio.test.tsx` pins when the hook itself says yes.
      */
     inStudio: false,
+    /** A narrow screen — the phone studio is switched off, so a live stream gets the notice. */
+    compact: false,
 }))
 
 vi.mock('../hooks/use-event', () => ({
@@ -46,9 +48,18 @@ vi.mock('../hooks/use-event', () => ({
     }),
 }))
 vi.mock('../hooks/use-event-ownership', () => ({ useEventOwnership: () => state.ownership }))
-vi.mock('../hooks/use-age-gate', () => ({ useAgeGate: () => state.age }))
+const ageArgs = vi.hoisted(() => ({ last: null as { required: boolean } | null }))
+vi.mock('../hooks/use-age-gate', () => ({
+    useAgeGate: (args: { required: boolean }) => {
+        ageArgs.last = args
+        return state.age
+    },
+}))
 vi.mock('../hooks/use-canonical-event-slug', () => ({ useCanonicalEventSlug: () => {} }))
-vi.mock('../hooks/use-live-studio', () => ({ useLiveStudio: () => state.inStudio }))
+vi.mock('../hooks/use-live-studio', () => ({
+    useLiveStudio: () => state.inStudio,
+    useCompactStudio: () => state.compact,
+}))
 
 /*
  * The two branch bodies are stubbed to a marker apiece. What is under test is *which* one the chain
@@ -71,8 +82,19 @@ vi.mock('./event-description-card', () => ({ EventDescriptionCard: () => null })
 vi.mock('./event-details-auto-follow', () => ({ EventDetailsAutoFollow: () => null }))
 vi.mock('./event-top-bar', () => ({ EventTopBar: () => null }))
 vi.mock('./event-skeleton', () => ({ EventSkeleton: () => <div data-testid="stub-skeleton" /> }))
+vi.mock('./event-studio-skeleton', () => ({
+    EventStudioSkeleton: () => <div data-testid="stub-studio-skeleton" />,
+}))
 vi.mock('./event-studio-screen', () => ({
     EventStudioScreen: () => <div data-testid="stub-studio" />,
+}))
+vi.mock('./event-mobile-live-notice', () => ({
+    EventMobileLiveNotice: () => <div data-testid="stub-mobile-notice" />,
+}))
+vi.mock('./event-studio-shell', () => ({
+    EventStudioShell: ({ children }: { children?: unknown }) => (
+        <div data-testid="stub-studio-shell">{children as never}</div>
+    ),
 }))
 vi.mock('./event-state-screens', () => ({
     EventNotFoundState: () => null,
@@ -88,19 +110,21 @@ const { EventScreen } = await import('./event-screen')
  * the app hand-off — so a live fixture would exercise that instead of the report and quietly stop
  * testing the thing these cases are about. The live host gets its own case below.
  */
-const RESTRICTED = eventDetailSchema.parse({
+const RESTRICTED_INPUT = {
     code: 'evt-1',
     title: 'A stream',
     status: 'ENDED',
     age_restriction: true,
     channel: { id: 'ch-1', slug: 'ada' },
-})
+}
+const RESTRICTED = eventDetailSchema.parse(RESTRICTED_INPUT)
 
 function show() {
     render(<EventScreen code="evt-1" slug="ada" initialEvent={undefined} />)
 }
 
 beforeEach(() => {
+    state.compact = false
     state.event = RESTRICTED
     state.isLoading = false
     state.ownership = 'viewer'
@@ -247,17 +271,24 @@ describe('the Live studio', () => {
      * backdrop, so a studio in front of an unanswered 18+ prompt shows the material the prompt is
      * asking permission for.
      */
-    it('is withheld until the 18+ confirmation is in hand', () => {
+    /**
+     * The question is asked **in the studio's frame** (legacy's `AgeRestricted` inside `LiveView`),
+     * but in the shell — the frame with nothing running — never in front of the studio itself,
+     * which would already have spent a preview and joined the room.
+     */
+    it('is withheld until the 18+ confirmation is in hand, asked in the studio frame', () => {
         state.age = { isResolving: false, isAllowed: false, required: true, confirm: vi.fn() }
         show()
+        expect(screen.getByTestId('stub-studio-shell')).toBeTruthy()
         expect(screen.getByTestId('stub-age-gate')).toBeTruthy()
         expect(screen.queryByTestId('stub-studio')).toBeNull()
     })
 
-    it('is withheld while the consent lookup is still out', () => {
+    it('is withheld while the consent lookup is still out — the frame stands alone', () => {
         state.age = { isResolving: true, isAllowed: false, required: true, confirm: vi.fn() }
         show()
-        expect(screen.getByTestId('stub-skeleton')).toBeTruthy()
+        expect(screen.getByTestId('stub-studio-shell')).toBeTruthy()
+        expect(screen.queryByTestId('stub-age-gate')).toBeNull()
         expect(screen.queryByTestId('stub-studio')).toBeNull()
     })
 
@@ -265,6 +296,22 @@ describe('the Live studio', () => {
         state.ownership = 'unknown'
         show()
         expect(screen.queryByTestId('stub-studio')).toBeNull()
+    })
+
+    it('holds the studio’s own frame while the screen is undecided — details skeleton below md', () => {
+        state.ownership = 'unknown'
+        show()
+        // Both are in the tree; CSS (`md:hidden` / `hidden md:block`) shows one.
+        expect(screen.queryByTestId('stub-studio-skeleton')).not.toBeNull()
+        expect(screen.queryByTestId('stub-skeleton')).not.toBeNull()
+    })
+
+    it('keeps the plain details skeleton for a stream that is not live', () => {
+        state.ownership = 'unknown'
+        state.event = { ...state.event, status: 'ENDED' } as typeof state.event
+        show()
+        expect(screen.queryByTestId('stub-studio-skeleton')).toBeNull()
+        expect(screen.queryByTestId('stub-skeleton')).not.toBeNull()
     })
 
     /**
@@ -288,5 +335,46 @@ describe('the Live studio', () => {
         show()
         expect(screen.getByTestId('stub-studio')).toBeTruthy()
         expect(screen.queryByTestId('stub-viewer')).toBeNull()
+    })
+})
+
+/**
+ * `age_restriction` gates the **broadcast**, not the page about it — legacy reads it in `LiveView`
+ * alone, after its ended branch. An 18+ event that is upcoming or over shows its details freely.
+ */
+describe('the 18+ question', () => {
+    it('is asked only while the event is live', () => {
+        for (const status of ['UPCOMING', 'ENDED', 'CANCELLED', 'PAUSED']) {
+            state.event = eventDetailSchema.parse({ ...RESTRICTED_INPUT, status })
+            show()
+            expect(ageArgs.last?.required).toBe(false)
+            cleanup()
+        }
+        state.event = eventDetailSchema.parse({ ...RESTRICTED_INPUT, status: 'LIVE' })
+        show()
+        expect(ageArgs.last?.required).toBe(true)
+    })
+})
+
+/**
+ * A phone on a live stream gets one clear screen — "Live isn't available on mobile web", with the
+ * way into the app — while the phone studio is switched off. Not on any other status, and never
+ * for the host, whose live screen is the app hand-off already.
+ */
+describe('a narrow screen on a live stream', () => {
+    it('shows the mobile notice to a viewer', () => {
+        state.compact = true
+        state.age = { isResolving: false, isAllowed: true, required: false, confirm: vi.fn() }
+        state.event = eventDetailSchema.parse({ ...RESTRICTED_INPUT, status: 'LIVE' })
+        show()
+        expect(screen.getByTestId('stub-mobile-notice')).toBeTruthy()
+    })
+
+    it('keeps the details page for a stream that is not live', () => {
+        state.compact = true
+        state.age = { isResolving: false, isAllowed: true, required: false, confirm: vi.fn() }
+        state.event = eventDetailSchema.parse({ ...RESTRICTED_INPUT, status: 'ENDED' })
+        show()
+        expect(screen.queryByTestId('stub-mobile-notice')).toBeNull()
     })
 })

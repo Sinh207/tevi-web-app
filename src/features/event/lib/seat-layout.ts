@@ -64,9 +64,9 @@ export interface SeatArrangement {
     /**
      * A container ratio this layout measures out for itself, overriding its family's.
      *
-     * Two layouts do, and both are real measurements off legacy rather than preferences:
-     * `L2` puts two 16:9 tiles side by side (`32 / 9`) and `L3` two 9:16 ones (`18 / 16`).
-     * Everything else takes `BOX_ASPECT[box]`.
+     * Three layouts do. `L2` and `L3` are real measurements off legacy — two 16:9 tiles side by
+     * side (`32 / 9`) and two 9:16 ones (`18 / 16`). `P2` is a deliberate divergence, stated at
+     * its row. Everything else takes `BOX_ASPECT[box]`.
      */
     boxAspect?: string
     /** One `grid-area` per seat, in publisher order. */
@@ -113,7 +113,16 @@ function uniform(cols: number, count: number, box: SeatBox, aspect?: string): Se
  */
 const ARRANGEMENTS: Record<string, SeatArrangement> = {
     P1: { box: 'portrait', rows: 1, areas: ['1 / 1 / 2 / 7'] },
-    P2: uniform(2, 2, 'portrait-grid'),
+    /*
+     * ⚠ **A deliberate divergence: two 3:4 tiles, not legacy's two 1:2 ones.** Legacy draws `P2`
+     * in a *square* (`width = height = min(…)`) split down the middle, so each co-host is a strip
+     * twice as tall as it is wide — on a desktop stage that is a pair of floor-to-ceiling columns
+     * with a face lost in the middle of each. Every other portrait-grid layout already lands near
+     * square tiles (`P3` 1:1, `P4` 1:1, `P6` 2:3); `P2` was the one outlier. A 3:2 box gives 3:4
+     * tiles, the proportion a two-up video call uses, and `cover` crops a phone's 9:16 feed to it
+     * from the top and bottom rather than the sides.
+     */
+    P2: { ...uniform(2, 2, 'portrait-grid'), boxAspect: '3 / 2' },
     P3: { box: 'portrait-narrow', rows: 2, areas: ['1 / 1 / 2 / 7', '2 / 1 / 3 / 7'] },
     P4: uniform(2, 4, 'portrait-grid'),
     /** Main over a row of three — legacy's `(height / 3) * 2` then three thirds. */
@@ -271,9 +280,16 @@ export function seatBoxStyle(arrangement: SeatArrangement): {
     width: string
 } {
     const aspectRatio = seatBoxAspect(arrangement)
-    const [w, h] = aspectRatio.split('/').map(part => Number(part.trim()))
-    const ratio = h > 0 ? w / h : 1
+    const ratio = seatBoxRatio(arrangement)
     return { aspectRatio, width: `min(100cqw, calc(100cqh * ${ratio}))` }
+}
+
+/** The box's width over its height, as a number — what the chrome-clearance check measures with. */
+export function seatBoxRatio(arrangement: SeatArrangement): number {
+    const [w, h] = seatBoxAspect(arrangement)
+        .split('/')
+        .map(part => Number(part.trim()))
+    return h > 0 ? w / h : 1
 }
 
 /** Every code this client knows, for the harness. */

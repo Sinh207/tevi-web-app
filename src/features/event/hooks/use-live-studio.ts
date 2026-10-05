@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { EventDetail } from '../api/types'
 import { isOffAir, RECENTLY_ENDED_MS } from '../lib/event-status'
-import { isStudioEligible, STUDIO_MIN_WIDTH } from '../lib/studio'
+import { COMPACT_STUDIO_ENABLED, isStudioEligible, STUDIO_MIN_WIDTH } from '../lib/studio'
 
 /**
  * **Should this reader be in the Live studio rather than on the Live details page?**
@@ -35,14 +35,18 @@ import { isStudioEligible, STUDIO_MIN_WIDTH } from '../lib/studio'
  * window. A live stream has no expiry to wait for, and a long-ended one has nothing left to expire.
  */
 export function useLiveStudio(event: EventDetail | null): boolean {
-    const [wideEnough, setWideEnough] = useState(false)
     /*
-     * Bumped by the timer below, and read as the `now` every eligibility check uses. State rather
-     * than a `Date.now()` in the render body so the value is stable across a pass — two components
-     * reading the clock a millisecond apart can land on opposite sides of the window.
+     * Mounted, not "wide enough". The studio used to open only from 900px (legacy's `matchUpMd`,
+     * and Figma's *"Live isn't available on mobile web"*); it now opens on every width — a narrow
+     * screen gets its own portrait layout (`useCompactStudio`) — so width no longer decides
+     * *whether*. The first render still says `false`, for the hydration reason above.
      */
-    const [now, setNow] = useState(() => Date.now())
-
+    const [mounted, setMounted] = useState(false)
+    /*
+     * And wide enough — while the phone studio is switched off (`COMPACT_STUDIO_ENABLED`), a
+     * narrow screen is not a studio at all, as on legacy, and follows the window as it resizes.
+     */
+    const [wideEnough, setWideEnough] = useState(false)
     useEffect(() => {
         const mq = window.matchMedia(`(min-width: ${STUDIO_MIN_WIDTH}px)`)
         const update = () => setWideEnough(mq.matches)
@@ -50,6 +54,14 @@ export function useLiveStudio(event: EventDetail | null): boolean {
         mq.addEventListener('change', update)
         return () => mq.removeEventListener('change', update)
     }, [])
+    /*
+     * Bumped by the timer below, and read as the `now` every eligibility check uses. State rather
+     * than a `Date.now()` in the render body so the value is stable across a pass — two components
+     * reading the clock a millisecond apart can land on opposite sides of the window.
+     */
+    const [now, setNow] = useState(() => Date.now())
+
+    useEffect(() => setMounted(true), [])
 
     const endedAt = event?.ended_at ?? null
     const offAir = isOffAir(event?.status ?? null)
@@ -88,5 +100,23 @@ export function useLiveStudio(event: EventDetail | null): boolean {
         return () => window.clearTimeout(timer)
     }, [offAir, endedAt])
 
-    return wideEnough && isStudioEligible(event, now)
+    return mounted && (COMPACT_STUDIO_ENABLED || wideEnough) && isStudioEligible(event, now)
+}
+
+/**
+ * **The portrait studio** — `true` below `STUDIO_MIN_WIDTH`, where there is no room for a chat
+ * column beside the stage and the studio lays itself out as a full-screen vertical player with the
+ * chat over it. `false` on the first render (the server cannot read `matchMedia`), and it follows
+ * the window as it is resized.
+ */
+export function useCompactStudio(): boolean {
+    const [compact, setCompact] = useState(false)
+    useEffect(() => {
+        const mq = window.matchMedia(`(max-width: ${STUDIO_MIN_WIDTH - 0.02}px)`)
+        const update = () => setCompact(mq.matches)
+        update()
+        mq.addEventListener('change', update)
+        return () => mq.removeEventListener('change', update)
+    }, [])
+    return compact
 }

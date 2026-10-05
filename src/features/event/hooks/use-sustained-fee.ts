@@ -2,6 +2,7 @@
 
 import { useAuth } from '@features/auth'
 import { useBalance } from '@features/balance'
+import { useMyChannel } from '@features/channel'
 import { useCountry } from '@shared/lib/geo-provider'
 import { resolveSustainedFeeRule, useRemoteConfig } from '@shared/lib/remote-config'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -80,6 +81,18 @@ export function useSustainedFee({
 }): SustainedFeeState {
     const { activeId } = useAuth()
     const { star } = useBalance()
+    /*
+     * ⚠ **Premium is never walled.** The wall's own sentence is "keep watching without the
+     * Sustained Fee with Tevi Premium" — and a reader who took that offer in another tab came back
+     * to the same wall, because nothing here knew. So a Premium reader is not stopped: a period
+     * the balance cannot cover is skipped rather than blocked, and an open wall closes the moment
+     * `isPremium` turns true. What is *not* changed is charging a Premium reader who **can** pay —
+     * legacy does, and whether it should is **B109**'s open question; stopping it here would stop
+     * money reaching streamers on a guess.
+     */
+    const { isPremium } = useMyChannel()
+    const premiumRef = useRef(isPremium)
+    premiumRef.current = isPremium
     const { country } = useCountry()
     const remote = useRemoteConfig()
 
@@ -143,7 +156,8 @@ export function useSustainedFee({
          */
         const collect = (force = false) => {
             if (!force && starRef.current < fee) {
-                setIsOutOfStar(true)
+                // A Premium reader is not walled for a period they cannot cover — see above.
+                if (!premiumRef.current) setIsOutOfStar(true)
                 return
             }
             setIsOutOfStar(false)
@@ -188,6 +202,11 @@ export function useSustainedFee({
          */
         collectRef.current?.(true)
     }, [isOutOfStar, star, fee])
+
+    /* Premium taken — in this tab or another — lifts an open wall at once. */
+    useEffect(() => {
+        if (isPremium) setIsOutOfStar(false)
+    }, [isPremium])
 
     return { charge, isOutOfStar, notice, hasFailed }
 }

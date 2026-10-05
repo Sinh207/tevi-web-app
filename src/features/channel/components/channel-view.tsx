@@ -14,7 +14,7 @@ import {
     showsChannelTabs,
 } from '../lib/channel-flags'
 import type { ChannelFetchStatus } from '../lib/channel-seo'
-import { CHANNEL_CONTAINER } from '../lib/container'
+import { CHANNEL_COLUMN, CHANNEL_CONTAINER } from '../lib/container'
 import { ChannelAutoFollow } from './channel-auto-follow'
 import { ChannelCampaignBanners } from './channel-campaign-banners'
 import { ChannelError } from './channel-error'
@@ -252,7 +252,7 @@ export function ChannelView({
         <>
             <ChannelTopBar channel={channel} isOwner={isOwner} />
 
-            <div className={cn(CHANNEL_CONTAINER, 'flex flex-1 flex-col pb-16')}>
+            <div className={cn(CHANNEL_CONTAINER, CHANNEL_COLUMN)}>
                 {/*
                  * A terminal state renders identity and an explanation and **nothing else** — no
                  * cover, no stats, no tabs, no action row. `channelVisibility` decided that once,
@@ -409,7 +409,7 @@ export function ChannelSkeleton() {
     return (
         <>
             <ChannelTopBarSkeleton />
-            <div className={cn(CHANNEL_CONTAINER, 'flex flex-1 flex-col pb-16')}>
+            <div className={cn(CHANNEL_CONTAINER, CHANNEL_COLUMN)}>
                 <ChannelHeaderSkeleton />
                 {/*
                  * The tab strip and a panel's worth of rows. Without them the skeleton ended at the

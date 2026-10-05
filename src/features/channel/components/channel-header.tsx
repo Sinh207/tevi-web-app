@@ -1,6 +1,8 @@
 'use client'
 
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { LiveRing } from '@shared/components/live-ring'
+import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import type { ReactNode } from 'react'
 import type { Channel, ChannelStats as Stats } from '../api/types'
@@ -9,7 +11,6 @@ import { CHANNEL_PADDING } from '../lib/container'
 import { ChannelBio } from './channel-bio'
 import { ChannelCover } from './channel-cover'
 import { ChannelIdentity } from './channel-identity'
-import { ChannelLiveBadge } from './channel-live-badge'
 import { ChannelStats } from './channel-stats'
 
 /**
@@ -87,9 +88,77 @@ export function ChannelHeader({
     blurred?: false | 'soft' | 'strong'
     className?: string
 }) {
+    const { t } = useTranslation()
     const hasCover = Boolean(channel.images.cover)
     /** One of the space's events is on air — see `isChannelLive` for what legacy gets wrong here. */
     const isLive = isChannelLive(channel)
+
+    const avatar = (
+        <AnimatedAvatar
+            size="2xl"
+            /**
+             * 80 on a phone, **120 from `md`** — and this is the DS value at both widths,
+             * not a compromise between the DS and legacy.
+             *
+             * The two looked like they disagreed: Figma's Space Detail draws `2xl` (80)
+             * while legacy draws 120 on desktop. But the Figma frame is **402 wide** — the
+             * mobile one — and 80/402 is 19.9% of it. Scaled to this column's 612 that is
+             * 80 × 612/402 = **121.8**, i.e. legacy's 120. Same design, measured at two
+             * frame widths; there was never a conflict to resolve, only a frame width to
+             * notice.
+             *
+             * Set through `className` rather than a new `3xl` on `Avatar`: 120 is not a
+             * size the DS ships, so inventing one there would put a number in `shared/ui`
+             * that Figma does not contain. What the override does not scale is the
+             * placeholder's 76px clip and 1.5px ring — visible only on an account with no
+             * picture at all, which is why it is an acceptable trade here and would not be
+             * inside the primitive.
+             */
+            /*
+             * Legacy's `border: 4px solid white`, which is not decoration: the avatar
+             * straddles the cover, so without it a photo with a light corner and a
+             * light-shirted portrait run into each other.
+             *
+             * A **ring**, not a border, because a border would be inside the box
+             * (`box-sizing: border-box` everywhere) and eat 8px of a size the DS
+             * measured — 80 would draw a 72px portrait. The ring paints outside and
+             * takes no layout, so the avatar stays 80/120 and the stats keep the
+             * alignment set above.
+             *
+             * Not literally white: it reads as a cut-out of the header the avatar
+             * sits on, which paints `--background-surface` at every width (full-bleed
+             * below `md`, a card from it). One token, which inverts for dark mode
+             * where legacy's literal white would glare. It read `--background` below
+             * `md` from when the phone header sat on the page ground — a grey disc
+             * round the face once the header was painted.
+             */
+            className={cn(
+                'md:size-[120px]',
+                // Live, `LiveRing` draws the cut-out itself — its gap is this ring.
+                !isLive && 'ring-4 ring-(--background-surface)',
+                /*
+                 * The portrait, not the box: `[&_img]` / `[&_video]` reach inside so
+                 * the ring, the Premium mark and the live badge stay sharp. Blurring
+                 * the element itself would smear the cut-out ring into the cover
+                 * behind it and read as a rendering fault rather than as withheld
+                 * art. Cosmetic, as on the cover — `thumb` is already a thumbnail,
+                 * so there is no full-size original on the page to recover.
+                 */
+                blurred === 'strong' && '[&_img]:blur-md [&_video]:blur-md',
+                // Half the cover's, because the avatar is a fifth of its size — the
+                // same radius on a 80px circle erases it entirely.
+                blurred === 'soft' && '[&_img]:blur-[3px] [&_video]:blur-[3px]',
+            )}
+            thumb={channel.images.thumb}
+            avatarVideo={channel.images.avatar_video}
+            isPremium={channel.is_premium}
+            alt={channel.name ?? channel.slug}
+            initials={(channel.name ?? channel.slug).slice(0, 2).toUpperCase()}
+            // With no cover art the avatar is the largest image on screen, so it becomes
+            // the LCP candidate and has to be eager.
+            priority={!hasCover}
+        />
+    )
 
     return (
         <section
@@ -144,100 +213,32 @@ export function ChannelHeader({
                  */}
                 <div className="-mt-9 flex min-w-0 items-end gap-3 md:-mt-[76px]">
                     {/*
-                     * `relative` and nothing else — the wrapper exists only so the Live badge can
-                     * hang off the avatar's bottom edge, and it must not become a layout box of its
+                     * `relative` and nothing else — the wrapper exists only so the live ring and
+                     * its pill can hang off the avatar, and it must not become a layout box of its
                      * own: `flex` keeps it at the avatar's exact size so `items-end` above still
                      * aligns the stats to the portrait rather than to a taller container.
                      */}
                     <div className="relative flex shrink-0">
-                        <AnimatedAvatar
-                            size="2xl"
-                            /**
-                             * 80 on a phone, **120 from `md`** — and this is the DS value at both widths,
-                             * not a compromise between the DS and legacy.
-                             *
-                             * The two looked like they disagreed: Figma's Space Detail draws `2xl` (80)
-                             * while legacy draws 120 on desktop. But the Figma frame is **402 wide** — the
-                             * mobile one — and 80/402 is 19.9% of it. Scaled to this column's 612 that is
-                             * 80 × 612/402 = **121.8**, i.e. legacy's 120. Same design, measured at two
-                             * frame widths; there was never a conflict to resolve, only a frame width to
-                             * notice.
-                             *
-                             * Set through `className` rather than a new `3xl` on `Avatar`: 120 is not a
-                             * size the DS ships, so inventing one there would put a number in `shared/ui`
-                             * that Figma does not contain. What the override does not scale is the
-                             * placeholder's 76px clip and 1.5px ring — visible only on an account with no
-                             * picture at all, which is why it is an acceptable trade here and would not be
-                             * inside the primitive.
-                             */
-                            /*
-                             * Legacy's `border: 4px solid white`, which is not decoration: the avatar
-                             * straddles the cover, so without it a photo with a light corner and a
-                             * light-shirted portrait run into each other.
-                             *
-                             * A **ring**, not a border, because a border would be inside the box
-                             * (`box-sizing: border-box` everywhere) and eat 8px of a size the DS
-                             * measured — 80 would draw a 72px portrait. The ring paints outside and
-                             * takes no layout, so the avatar stays 80/120 and the stats keep the
-                             * alignment set above.
-                             *
-                             * Not literally white: it reads as a cut-out of whatever the avatar sits
-                             * on, and this header is deliberately **not** a card below `md` — it is
-                             * full-bleed on the page ground and only becomes a surface from `md` up.
-                             * White at both would be a pale disc against the phone's background. Two
-                             * tokens, matching the two backdrops, and both invert for dark mode where
-                             * legacy's literal white would glare.
-                             */
-                            className={cn(
-                                'ring-4 md:size-[120px]',
-                                isLive
-                                    ? 'ring-(--accents-error-active)'
-                                    : 'ring-(--background) md:ring-(--background-surface)',
-                                /*
-                                 * The portrait, not the box: `[&_img]` / `[&_video]` reach inside so
-                                 * the ring, the Premium mark and the live badge stay sharp. Blurring
-                                 * the element itself would smear the cut-out ring into the cover
-                                 * behind it and read as a rendering fault rather than as withheld
-                                 * art. Cosmetic, as on the cover — `thumb` is already a thumbnail,
-                                 * so there is no full-size original on the page to recover.
-                                 */
-                                blurred === 'strong' && '[&_img]:blur-md [&_video]:blur-md',
-                                // Half the cover's, because the avatar is a fifth of its size — the
-                                // same radius on a 80px circle erases it entirely.
-                                blurred === 'soft' && '[&_img]:blur-[3px] [&_video]:blur-[3px]',
-                            )}
-                            thumb={channel.images.thumb}
-                            avatarVideo={channel.images.avatar_video}
-                            isPremium={channel.is_premium}
-                            alt={channel.name ?? channel.slug}
-                            initials={(channel.name ?? channel.slug).slice(0, 2).toUpperCase()}
-                            // With no cover art the avatar is the largest image on screen, so it becomes
-                            // the LCP candidate and has to be eager.
-                            priority={!hasCover}
-                        />
                         {isLive ? (
                             /*
-                             * Legacy hangs a Lottie animation here (`icon_live_main`, anchored bottom
-                             * centre and lifted 8%). Not ported as an animation: it would add
-                             * `lottie-react` and a JSON asset for one badge, and the DS answers the same
-                             * question with `Badge/Live Status` — which this app already draws for a live
-                             * *event* (`channel-event-card.tsx`, `status: 'error'`). Same fact, same
-                             * badge, so the two surfaces cannot drift apart.
+                             * Live: Figma's live ring (`LiveRing`, shared with the live studio's
+                             * phone notice) in place of legacy's red border and Lottie flag — the
+                             * gradient ring turning, its gap the same cut-out as the plain ring, and
+                             * the `Live` pill on its foot. Thicker from `md`, where the face is 120.
                              *
-                             * Centred on the avatar's bottom edge — a full-width row with
-                             * `justify-center`, not `start-1/2` plus a negative translate: that pair
-                             * needs its sign flipped under RTL and this does not.
-                             * `pointer-events-none` because it is a label, not a control: the avatar
-                             * behind it stays clickable.
-                             *
-                             * The label is `channel_event_live`, reused rather than duplicated. The badge
-                             * says the space is live *because an event is*, so a second key would be the
-                             * same word translated twice into nine locales and free to drift.
+                             * The label is `channel_event_live`, reused rather than duplicated: the
+                             * space is live *because an event is*, so a second key would be the same
+                             * word translated twice into nine locales and free to drift.
                              */
-                            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-1/2 justify-center">
-                                <ChannelLiveBadge />
-                            </div>
-                        ) : null}
+                            <LiveRing
+                                label={t('channel_event_live')}
+                                className="md:[--live-gap:4px] md:[--live-ring:4px]"
+                            >
+                                {avatar}
+                            </LiveRing>
+                        ) : (
+                            avatar
+                        )}
                     </div>
                     <ChannelStats channel={channel} stats={stats} />
                 </div>

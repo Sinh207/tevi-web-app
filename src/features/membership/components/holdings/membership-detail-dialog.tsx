@@ -4,6 +4,7 @@ import { toChannelPath } from '@features/channel'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { StarMark } from '@shared/components/star-mark'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { env } from '@shared/config/env'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { DEFAULT_CURRENCY, formatFiatAmount, formatStarAmount } from '@shared/lib/money'
 import { cn } from '@shared/lib/utils'
@@ -152,6 +153,19 @@ import { BecomeAMemberDialogs } from '../join/become-a-member-dialogs'
  * The hover is `--primary-100` (`#ede4fd` / `#210b52`) — MUI's outlined hover is a tint of the primary,
  * and that is the DS's own pale step of the same ramp rather than a hand-mixed alpha.
  */
+/**
+ * The header's **Delete** — a test reset, not a product action (see `membershipApi.remove`).
+ *
+ * Gated on the *deployment* (`NEXT_PUBLIC_ENV`), not on `NODE_ENV`: the point is that QC on the dev
+ * environment can put an account back to "not a member", and a staging or production build — local
+ * or not — never offers it. Read at module scope because Next inlines the value at build time.
+ */
+const CAN_DELETE = env.NEXT_PUBLIC_ENV === 'development'
+
+/** The header's two discs share everything but their edge. */
+const HEADER_BUTTON =
+    'absolute flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent outline-none hover:bg-(--background-segment) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring) disabled:cursor-default disabled:opacity-50'
+
 const RENEW_BUTTON = cn(
     'w-full border-(--primary-600) bg-transparent text-(--primary-600)',
     'hover:not-disabled:bg-(--primary-100)',
@@ -166,7 +180,7 @@ export function MembershipDetailDialog({
     onOpenChange: (open: boolean) => void
 }) {
     const { t, currentLanguage } = useTranslation()
-    const detail = useMembershipDetail(membership)
+    const detail = useMembershipDetail(membership, { onDeleted: () => onOpenChange(false) })
 
     /**
      * Buying an expired tier again goes through the **join** dialogs, so the reader chooses Star or
@@ -302,13 +316,26 @@ export function MembershipDetailDialog({
                         <DialogClose
                             data-testid="membership-detail-close"
                             aria-label={t('common_close')}
-                            className="absolute start-2 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-(--text-title) outline-none hover:bg-(--background-segment) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)"
+                            className={cn(HEADER_BUTTON, 'start-2 text-(--text-title)')}
                         >
                             <Icon name="xmark" size={20} />
                         </DialogClose>
                         <DialogTitle className="truncate">
                             {t('my_membership_detail_title')}
                         </DialogTitle>
+                        {/* Dev-only — see `CAN_DELETE`. Trailing, opposite the dismiss. */}
+                        {CAN_DELETE && (
+                            <button
+                                type="button"
+                                data-testid="membership-delete"
+                                aria-label={t('my_membership_detail_delete')}
+                                disabled={detail.isPending || !detail.canRemove}
+                                onClick={() => detail.openConfirm('delete')}
+                                className={cn(HEADER_BUTTON, 'end-2 text-(--text-error)')}
+                            >
+                                <Icon name="trash" size={20} />
+                            </button>
+                        )}
                     </div>
 
                     {/*
@@ -545,6 +572,23 @@ export function MembershipDetailDialog({
                 cancelLabel={t('common_close')}
                 onConfirm={detail.cancel}
             />
+
+            {CAN_DELETE && (
+                <ConfirmDialog
+                    testId="membership-delete-confirm"
+                    open={detail.confirm === 'delete'}
+                    onOpenChange={open =>
+                        open ? detail.openConfirm('delete') : detail.closeConfirm()
+                    }
+                    destructive
+                    pending={detail.isPending}
+                    title={t('my_membership_detail_delete_confirm_title')}
+                    description={t('my_membership_detail_delete_confirm_body')}
+                    confirmLabel={t('common_delete')}
+                    cancelLabel={t('common_close')}
+                    onConfirm={detail.remove}
+                />
+            )}
 
             {/*
              * The purchase, in the join lane's own dialogs. Rendered here rather than by this

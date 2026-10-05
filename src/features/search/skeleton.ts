@@ -21,4 +21,4 @@
  * list rather than a list of results. See `loading.tsx` and the note on `SearchSkeleton` itself.
  */
 
-export { SEARCH_CONTAINER, SEARCH_PANEL } from './lib/container'
+export { SEARCH_CONTAINER, SEARCH_PANEL, SEARCH_SCREEN } from './lib/container'

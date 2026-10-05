@@ -56,6 +56,11 @@
  */
 
 export { ShareDialog } from './components/share-dialog'
+/*
+ * The sheet's copy link for a control that is not the sheet — the studio's ⋯ panel. Reads the
+ * sheet's own query, so it is not the "second caller" the note above guards against.
+ */
+export { useShareCopyLink } from './hooks/use-share-copy-link'
 export {
     liveShareContext,
     type ShareContentType,

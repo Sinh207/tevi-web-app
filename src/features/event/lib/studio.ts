@@ -80,7 +80,23 @@ export function isStudioEligible(event: EventDetail | null, now: number): boolea
  * a player and a socket room, and a CSS-hidden one would still do both on a phone. Same argument as
  * `useRailVisible`, which is why that hook's shape is the one `useLiveStudio` copies.
  */
+/**
+ * **The Host badge's gold** — legacy's `common/hostBadge`, verbatim: three stops at 102.78°. One
+ * value for every Host mark in the live room (the seat plate, the pinned message, the recipient
+ * picker, the seat card), so they cannot drift a shade apart again.
+ */
+export const EVENT_HOST_GRADIENT =
+    'linear-gradient(102.78deg, #FF9900 -4.78%, #FFC700 52.5%, #FF6B00 113.18%)'
+
 export const STUDIO_MIN_WIDTH = 900
+
+/**
+ * **The portrait studio, switched off.** `EventStudioCompact` (the phone layout) is built but not
+ * shipped — the product asked for it to be withdrawn for now. With this `false` the studio opens
+ * from `STUDIO_MIN_WIDTH` only, as legacy's does, and a narrow screen on a live stream gets
+ * `EventMobileLiveNotice` instead. Flip it to bring the phone studio back; nothing else changes.
+ */
+export const COMPACT_STUDIO_ENABLED = false
 
 /**
  * The stage — **the whole viewport, over the site's shell.**
@@ -128,36 +144,24 @@ export const EVENT_STUDIO_SCRIM = 'absolute inset-0 bg-black/60'
 /**
  * The smoked-glass plate every piece of floating chrome sits on — back disc, channel pill, toolbar.
  *
- * Legacy's `#00000033` with `backdrop-filter: blur(4px)`, i.e. black at 20%. One constant because
- * there are four call sites and in legacy they had already drifted: the back button carries the
- * fill with **no** blur, so it reads as a different material from the pill 8px to its right.
+ * Legacy's `#00000033` with `backdrop-filter: blur(4px)`, i.e. black at 20%. **One material for the
+ * whole chrome band** — back disc, channel pill, the trailing toolbar and the folded chat strip —
+ * and every plate is 40px tall, so the band reads as one row from edge to edge.
+ *
+ * The toolbar used to be its own plate (`black/50`, a shadow, no blur), after the comps' `Top menu`;
+ * the strip beside it had no blur. Side by side at the trailing edge that was three materials and
+ * two heights in one row, which is what the review flagged. Legacy itself is 20% on all of them
+ * (`getStarAndApp` and `ExpandDrawer` are both `#00000033`), and the blur is what keeps white ink
+ * legible over a bright frame at that fill.
+ *
+ * Nothing *inside* a plate takes this again: a second 20% on top of the first is a darker dot,
+ * not a control (the ⋯ disc was one).
  *
  * `rounded-(--radius-fill)` is the DS token the access pill uses, so the studio's chrome and the
  * page's badges round the same way.
  */
 export const EVENT_STUDIO_PILL = cn(
     'bg-black/20 text-white backdrop-blur-sm',
-    'rounded-(--radius-fill)',
-)
-
-/**
- * The **trailing** plate — darker, unblurred, and carrying a shadow, which is not the material the
- * other two are.
- *
- * That reads as an inconsistency and is the opposite: legacy and the comps arrive at it
- * independently. `getStarAndApp` is `#00000033` with `0 2px 10px #0000001A` and **no**
- * `backdrop-filter` — the one plate legacy never blurred — and the comps' `Top menu` is black at
- * **50%** with a 10px drop shadow and no background blur either. `EVENT_STUDIO_PILL` exists to stop
- * the back disc drifting from the channel pill *8px to its right*; this plate sits a thousand pixels
- * away across the stage, where nothing reads the two as one material.
- *
- * The comps' 50% is what ships rather than legacy's 20%: with no blur behind it, 20% is barely
- * there over a bright frame, and the darker fill is what stands in for the blur neither source
- * gives it. `shadow-md` is the DS ramp's nearest member to both sources' `10px` blur — the raw
- * value is not written here, per `CLAUDE.md`'s styling rules.
- */
-export const EVENT_STUDIO_TOOLBAR_PLATE = cn(
-    'bg-black/50 text-white shadow-md',
     'rounded-(--radius-fill)',
 )
 
@@ -261,6 +265,17 @@ export const EVENT_STUDIO_PLAY_AREA =
 export const EVENT_STUDIO_TRAY_BAND = 'relative z-10 flex h-[95px] flex-none gap-3 px-2 py-1'
 
 /**
+ * **The chat column's width — a share of the screen, not legacy's fixed 390px.**
+ *
+ * 390 was right at legacy's ~1500px reference and wrong either side of it: on a 1920 screen it is
+ * a strip the transcript wraps inside, and at 1280 it takes almost a third of the stage. `26vw`
+ * reproduces 390 at 1500, and the clamp keeps it legible (320) and from growing past what a line
+ * of chat wants (460). One constant, because the fold animation in `EventStudioScreen` has to
+ * open to exactly the width the panel draws at.
+ */
+export const EVENT_STUDIO_CHAT_WIDTH = 'w-[clamp(320px,26vw,460px)]'
+
+/**
  * The chat column — **390px of room furniture down the trailing edge.**
  *
  * Legacy's `DRAWER_WIDTH = 390` on a hardcoded `#292532`.
@@ -280,20 +295,28 @@ export const EVENT_STUDIO_TRAY_BAND = 'relative z-10 flex h-[95px] flex-none gap
  * That is the whole rule. If a new piece of the studio is unsure which it is, ask whether it has
  * a gap around it.
  *
- * ⚠ **Opaque, and not a `--zinc-*` token.** Two constraints that pull in opposite directions:
+ * ⚠ **Dark glass — heavy, never light — and not a `--zinc-*` token.**
  *
  * - The Zinc ramp **inverts** between modes — `--zinc-900` is `#18181b` in Light and `#f4f4f5` in
  *   Dark — so reaching for it produces a near-white column welded to a black stage in Dark, which
  *   is the trap `CLAUDE.md` warns about in its styling rules.
- * - But a translucent plate is worse. This shipped as `bg-white/10` over the stage — theme-proof,
- *   and **you could read the creator's blurred banner straight through the chat**. Caught on a
- *   real broadcast, not in the harness, because the harness fixtures carry no art.
+ * - A **light** translucent plate is wrong. This once shipped as `bg-white/10` over the stage, and
+ *   **you could read the creator's blurred banner straight through the chat** — caught on a real
+ *   broadcast, not in the harness, whose fixtures carry no art.
  *
- * So: an opaque literal, matching legacy's `#292532` in intent. `--black` does not invert (it is
- * the one anchor in the palette that does not), and 88% of white over it lands in the same place
- * legacy's grey does while staying expressible without a raw hex.
+ * So the column is the stage's own material at reading strength: 82% of a near-black violet over
+ * a 24px blur (`--live-chat-panel` + `backdrop-blur-xl`). 78% was tried first and, over an
+ * *unblurred* banner in the harness, still let a ghost of its lettering through; 82% does not. The art behind it survives only as a
+ * tint — each broadcast's chat takes a little of its channel's colour, which is what makes it the
+ * same object as the chrome, the tray and the seats around it — while lettering in the art is
+ * gone twice over (already blurred on the stage, blurred again here, under 82%). It was the only
+ * opaque slab on a stage of glass. A hairline on its leading edge, the tray's own, keeps the edge.
  */
-export const EVENT_STUDIO_PANEL = cn('w-[390px] flex-none text-white', 'bg-(--live-chat-panel)')
+export const EVENT_STUDIO_PANEL = cn(
+    EVENT_STUDIO_CHAT_WIDTH,
+    'flex-none text-white',
+    'border-white/10 border-s bg-(--live-chat-panel) backdrop-blur-xl',
+)
 
 /**
  * **The chat column's palette, measured off the comps** — `Right menu` on `↳ View Live`.
@@ -314,12 +337,24 @@ export const EVENT_STUDIO_PANEL = cn('w-[390px] flex-none text-white', 'bg-(--li
  * `bg-[#501BC0]/50`.
  */
 export const EVENT_STUDIO_CHAT_VARS = {
-    '--live-chat-panel': '#292532',
+    /**
+     * A member's row — **legacy's gradient** (`comment`, `giveGift`, `newSubscriber`): red to
+     * legacy's `#FF9900`, both at 60%, at `90.92deg`. Legacy's plate stops at the end of its text;
+     * this one is full width like the gift row beside it, so instead of ending in a hard edge the
+     * orange reaches full strength by the middle and **fades out to the column's end**.
+     */
+    '--live-chat-member-row':
+        'linear-gradient(90.92deg, rgba(255, 0, 0, 0.6) 1.04%, rgba(255, 153, 0, 0.6) 55%, rgba(255, 153, 0, 0) 100%)',
+    /** The same gradient running the other way, so in Arabic it still starts behind the avatar. */
+    '--live-chat-member-row-rtl':
+        'linear-gradient(269.08deg, rgba(255, 0, 0, 0.6) 1.04%, rgba(255, 153, 0, 0.6) 55%, rgba(255, 153, 0, 0) 100%)',
+    '--live-chat-panel': 'rgba(20, 16, 30, 0.82)',
     /** The header block — title, host badges and the leaderboard all sit on this wash. */
     '--live-chat-header': 'rgba(155, 141, 188, 0.2)',
     '--live-chat-divider': '#E0E0E0',
     /** The host's pinned message. */
-    '--live-chat-pinned': 'rgba(80, 27, 192, 0.5)',
+    '--live-chat-pinned':
+        'linear-gradient(135deg, rgba(110, 52, 232, 0.55) 0%, rgba(80, 27, 192, 0.38) 100%)',
     /** The "somebody arrived" pill. */
     '--live-chat-arrival': 'rgba(164, 103, 239, 0.7)',
     /** A host badge, and the leaderboard's own heading chip. */
@@ -361,6 +396,11 @@ export const EVENT_STUDIO_CHAT_VARS = {
     '--live-chat-self': '#37343E',
     /** A gift's quantity and its Star figure — the only yellow in the transcript. */
     '--live-chat-gift': '#FFE600',
+    /**
+     * The pinned message's `Host` badge — legacy's `common/hostBadge`, its gradient verbatim. Not
+     * the transcript's black host chip: the pin is the one place legacy draws this one.
+     */
+    '--live-chat-host': EVENT_HOST_GRADIENT,
     /** The `MEM` badge. A crown and `MEM` in white ride on it. */
     '--live-chat-member': 'linear-gradient(90deg, #FF7360 0%, #C6451D 50%, #FF6B00 100%)',
     /**
@@ -402,6 +442,29 @@ export const EVENT_STUDIO_SEAT_VARS = {
 export const EVENT_STUDIO_RANK_INK = ['#E41F37', '#FF6174', '#FF7C00'] as const
 
 /**
+ * The podium's medals — gold, silver, bronze — for the top three of the gift board: the ring and
+ * the place number (`ink`), the soft glow off the face (`glow`), and the step's own wash (`step`).
+ * The list rows below keep `EVENT_STUDIO_RANK_INK`; the podium is where medals belong.
+ */
+export const EVENT_STUDIO_MEDAL = [
+    {
+        ink: '#FFD54A',
+        glow: 'rgba(255, 213, 74, 0.45)',
+        step: 'linear-gradient(180deg, rgba(255, 213, 74, 0.38) 0%, rgba(255, 213, 74, 0.06) 100%)',
+    },
+    {
+        ink: '#D9E1EA',
+        glow: 'rgba(217, 225, 234, 0.35)',
+        step: 'linear-gradient(180deg, rgba(217, 225, 234, 0.3) 0%, rgba(217, 225, 234, 0.05) 100%)',
+    },
+    {
+        ink: '#F0A46B',
+        glow: 'rgba(240, 164, 107, 0.35)',
+        step: 'linear-gradient(180deg, rgba(240, 164, 107, 0.32) 0%, rgba(240, 164, 107, 0.05) 100%)',
+    },
+] as const
+
+/**
  * The refusal card itself — 390px, 24px of padding, a 20px radius, 12px between rows.
  *
  * Legacy's geometry, and the one place its numbers are taken verbatim rather than mapped onto the
@@ -439,15 +502,23 @@ export const EVENT_STUDIO_NOTICE = cn(
  * app rather than the design, which is exactly what `docs/EVENT.md` records as still open.
  */
 export const EVENT_STUDIO_GIFT_VARS = {
-    /** The strip the tiles scroll inside — legacy's `#78787880`. */
-    '--live-gift-tray': 'rgba(120, 120, 120, 0.5)',
+    /**
+     * The strip the tiles scroll inside, and the Membership tile beside it. Legacy's `#78787880`
+     * was a flat mid-grey — the only grey plate on a stage whose chrome is smoked glass, so the
+     * band read as a different product from the bar above it. Black at 30% under the same blur is
+     * that glass one step heavier, which a 87px plate carrying twelve labels needs.
+     */
+    '--live-gift-tray': 'rgba(0, 0, 0, 0.3)',
     /** A tile under the pointer, and the *View more* plate. */
     '--live-gift-tile-hover': 'rgba(0, 0, 0, 0.2)',
     /** The *Send* bar that slides up inside a hovered tile. */
     '--live-gift-send': '#501BC0',
     '--live-gift-send-hover': '#6B2FE0',
-    /** A price at rest. It goes white when the tile is hovered. */
-    '--live-gift-price': '#858585',
+    /**
+     * A price at rest. It goes white when the tile is hovered. White at 60% rather than legacy's
+     * `#858585`, which was a grey that only read on legacy's grey plate.
+     */
+    '--live-gift-price': 'rgba(255, 255, 255, 0.6)',
     /** The catalogue panel's ground — the same grey the chat column takes. */
     '--live-gift-panel': '#292532',
     /** Its header wash, and the recipient picker's. */
@@ -483,7 +554,13 @@ export const EVENT_STUDIO_GIFT_VARS = {
  * needs the scrollport to follow them.
  */
 export const EVENT_STUDIO_GIFT_TRAY = cn(
-    'flex items-stretch gap-3 overflow-x-auto overscroll-x-contain',
+    'flex items-stretch gap-1 overflow-x-auto overscroll-x-contain px-3',
+    /*
+     * Both ends fade out over the 12px of padding, so a tile half-scrolled out of view dissolves
+     * into the plate instead of being sliced at a hard edge. Symmetric on purpose: one mask serves
+     * both directions, and at rest only the padding — never a whole tile — sits under the fade.
+     */
+    '[mask-image:linear-gradient(to_right,transparent,black_12px,black_calc(100%-12px),transparent)]',
     // No visible bar: the strip is 90px tall and a scrollbar inside it eats a third of a tile.
     // Legacy hides Swiper's the same way. The row is still reachable by wheel, drag and keyboard.
     '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',

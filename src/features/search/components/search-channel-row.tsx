@@ -2,6 +2,7 @@
 
 import { toChannelPath } from '@features/channel'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
+import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Icon } from '@shared/ui/icon'
@@ -161,6 +162,19 @@ export function SearchChannelRow({
                                         an ordinary unverified account, so there is nothing to
                                         draw without art — no sprite fallback. */}
                                     <VerifiedBadge image={verifiedImage} size={24} />
+                                    {/*
+                                     * Legacy's `BadgePremium`, after the tick — the same placement
+                                     * `FollowingChannelRow` uses. The plain badge, not the `href`
+                                     * one: the whole row is already a `<Link>` to the space, and an
+                                     * `<a>` inside an `<a>` is invalid.
+                                     */}
+                                    {channel.is_premium && (
+                                        <PremiumBadge
+                                            size={18}
+                                            label={t('channel_premium')}
+                                            className="flex-none"
+                                        />
+                                    )}
                                     {/*
                                      * Legacy overlays a hand-drawn pink diamond on the avatar for
                                      * this. Two reasons it is a labelled sprite glyph beside the

@@ -279,7 +279,16 @@ export function NotificationRow({
                     // The Surface override every list in a card has to make: `ListUserItem` paints
                     // `--background-listing`, which is `--black` in Dark and would repaint the page
                     // colour over the card. See the warning on `ListUserItem`.
-                    unread ? 'bg-(--primary-50)' : 'bg-(--background-surface)',
+                    /*
+                     * Unread tint. In Light `--primary-50` (#f6f2fe) is a full lavender: with a
+                     * page of unread rows the whole card reads purple against the grey page, so
+                     * Light mixes it 60% into the surface — ≈ #f9f7fe, which is legacy's
+                     * `BACKGROUND_UNREAD`. Dark keeps the full step: there the surface is near-black
+                     * and the mix would wash the tint out.
+                     */
+                    unread
+                        ? 'bg-[color-mix(in_srgb,var(--primary-50)_60%,var(--background-surface))] dark:bg-(--primary-50)'
+                        : 'bg-(--background-surface)',
                     'transition-colors duration-[160ms] ease-out',
                     /*
                      * Hover on the whole row, since the whole row is the target — and **one step
@@ -287,15 +296,17 @@ export function NotificationRow({
                      *
                      * A shared `--background-segment` hover repainted an unread row grey, so
                      * pointing at an unread notification made it look read: the tint that is the
-                     * unread signal was replaced by the hover. `--primary-100` is the next step up
-                     * from `--primary-50` and inverts with it (`#ede4fd` Light, `#210b52` Dark), so
-                     * the row gets darker without changing what it is saying.
+                     * unread signal was replaced by the hover. The hover is one step up the ramp from
+                     * the rest tint — the full `--primary-50` over the Light mix, `--primary-100`
+                     * (`#210b52`) in Dark — so the row gets darker without changing what it says.
                      *
                      * For a read row `--background-segment` is the right step, because
                      * `--background-subtle` and `--background-surface` are the same value in Dark
                      * and a hover in that token would be invisible in exactly one mode.
                      */
-                    unread ? 'hover:bg-(--primary-100)' : 'hover:bg-(--background-segment)',
+                    unread
+                        ? 'hover:bg-(--primary-50) dark:hover:bg-(--primary-100)'
+                        : 'hover:bg-(--background-segment)',
                 )}
             >
                 <ListUserItemAvatar>
@@ -362,7 +373,11 @@ export function NotificationRow({
                         className={cn(
                             'absolute top-2 start-[50px] z-10 size-[14px] rounded-full',
                             'border-2 bg-(--badge-bg)',
-                            unread ? 'border-(--primary-50)' : 'border-(--background-surface)',
+                            // The ring is cut out of the row's own fill, so it follows the
+                            // unread tint above, Light mix included.
+                            unread
+                                ? 'border-[color-mix(in_srgb,var(--primary-50)_60%,var(--background-surface))] dark:border-(--primary-50)'
+                                : 'border-(--background-surface)',
                             // 160ms, matching the row tint fading beside it — the two are one
                             // change and must not arrive at different times. No `motion-reduce:`
                             // guard: reduced motion is about *movement*, and an opacity fade moves

@@ -1,5 +1,6 @@
 'use client'
 
+import { inAppReferrer } from '@shared/lib/in-app-referrer'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import type { Channel } from '../api/types'
@@ -30,6 +31,17 @@ import { parseChannelIntent } from '../routes'
  * The ref guard is for React's development double-effect, which would otherwise fire the navigation
  * twice.
  *
+ * ## The referrer is the app's, not the document's
+ *
+ * `document.referrer` is set by the page **load** and never by a client-side navigation, so on its
+ * own it says "outside" for every in-app arrival after the first page — Following → live → back
+ * to the space read as an outside arrival and forwarded straight into the live again, a loop with
+ * no way out. `inAppReferrer` is the route the app itself was on; `document.referrer` only answers
+ * when this space is the document's first page.
+ *
+ * And a space is forwarded **at most once per document** (`forwarded`): whatever a referrer says,
+ * a second forward into the same live is a reader being sent somewhere they have already left.
+ *
  * ## A deep link outranks it
  *
  * `/@ada/direct-donation` is a stated intent; being on air is a fact about the space. Sending
@@ -41,6 +53,9 @@ import { parseChannelIntent } from '../routes'
  * ordinary arrival. The intent is only **read** here, never consumed — the control that owns the
  * dialog is the one that spends it.
  */
+/** Spaces this document has already forwarded into their live — see "at most once" above. */
+const forwarded = new Set<string>()
+
 export function ChannelLiveRedirect({ channel }: { channel: Channel }) {
     const router = useRouter()
     const pathname = usePathname()
@@ -52,18 +67,23 @@ export function ChannelLiveRedirect({ channel }: { channel: Channel }) {
         if (fired.current || deepLinked) return
         const live = liveEvents(channel)[0]
         if (!live?.code) return
+        const key = channel.slug.toLowerCase()
+        if (forwarded.has(key)) return
+        const origin = window.location.origin
+        const fromApp = inAppReferrer(pathname)
         if (
             !isExternalArrival({
-                referrer: document.referrer,
-                origin: window.location.origin,
+                referrer: fromApp ? `${origin}${fromApp}` : document.referrer,
+                origin,
                 slug: channel.slug,
             })
         ) {
             return
         }
         fired.current = true
+        forwarded.add(key)
         router.replace(`/@${channel.slug}/event/${encodeURIComponent(live.code)}`)
-    }, [channel, deepLinked, router])
+    }, [channel, deepLinked, pathname, router])
 
     return null
 }

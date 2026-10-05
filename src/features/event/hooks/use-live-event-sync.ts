@@ -1,7 +1,7 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { eventKeys } from '../api/event-api'
 import { liveKeys } from '../api/live-api'
 import type { LiveRoomState } from './use-live-room'
@@ -29,11 +29,14 @@ import type { LiveRoomState } from './use-live-room'
  * than in state: it decides whether to fetch, it is never rendered, and as state it would re-run
  * this effect on every frame it just handled.
  *
- * ## Why `lock` is not its own branch
+ * ## `lock` refetches **and** raises `onLocked`
  *
- * Legacy sets an `isLocked` flag *and* refetches. The flag is redundant here: `watchState` derives
- * the refusal from the event's own fields, so the refetched payload draws the paywall on its own.
- * One less piece of state that can disagree with the body it was derived from.
+ * Legacy sets an `isLocked` flag *and* refetches. This once dropped the flag as redundant —
+ * `watchState` derives the refusal from the refetched fields — and that was wrong in one way that
+ * mattered: the refetch says `locked`, which is also what a reader arriving at a gated stream sees,
+ * so the studio offered the mid-stream reader the **ten-second preview**, spent one of the device's
+ * three looks on it, and pitched the stream as if they had never watched it. The fields still
+ * decide *whether* the reader is outside the gate; the flag says *how they got there*.
  *
  * ## `live_status`, and the three that move the stage
  *
@@ -51,16 +54,37 @@ import type { LiveRoomState } from './use-live-room'
  * HTTP one is `result.layout`, so the two shapes are only equal if the server wraps them identically.
  * Re-reading the endpoint means there is one shape.
  */
-export function useLiveEventSync({ code, room }: { code: string | null; room: LiveRoomState }) {
+export function useLiveEventSync({
+    code,
+    room,
+    onLocked,
+}: {
+    code: string | null
+    room: LiveRoomState
+    /**
+     * The room locked the broadcast — legacy's `setIsLocked(true)`. Raised **as well as** the
+     * refetch, because the refetched payload alone cannot tell "locked mid-stream" from "arrived at
+     * a gated stream": both are `locked`, and only the second may be offered a preview.
+     */
+    onLocked?: () => void
+}) {
     const queryClient = useQueryClient()
     const { isConnected, subscribe } = room
+    // Latest callback without re-subscribing the room every render.
+    const onLockedRef = useRef(onLocked)
+    onLockedRef.current = onLocked
 
     useEffect(() => {
         if (!isConnected || !code) return
 
-        let lastUpdatedAt: string | null = null
+        /*
+         * ⚠ **One stamp per channel, not one for all three.** A single shared `lastUpdatedAt` let a
+         * `lock` carrying the same `updated_at` as the `data_change` just before it — one edit, two
+         * frames — be dropped as a repeat, and the lock was never seen as a lock.
+         */
+        const lastUpdatedAt = new Map<string, string>()
 
-        const onChange = (payload: unknown) => {
+        const onChange = (channel: string) => (payload: unknown) => {
             const updatedAt = (payload as { updated_at?: unknown } | null)?.updated_at
             /*
              * A frame with no `updated_at` is honoured rather than dropped: the field is legacy's
@@ -69,9 +93,10 @@ export function useLiveEventSync({ code, room }: { code: string | null; room: Li
              * the *same* stamp is skipped.
              */
             if (typeof updatedAt === 'string') {
-                if (updatedAt === lastUpdatedAt) return
-                lastUpdatedAt = updatedAt
+                if (updatedAt === lastUpdatedAt.get(channel)) return
+                lastUpdatedAt.set(channel, updatedAt)
             }
+            if (channel === 'lock') onLockedRef.current?.()
             void queryClient.invalidateQueries({ queryKey: eventKeys.all })
         }
 
@@ -85,9 +110,9 @@ export function useLiveEventSync({ code, room }: { code: string | null; room: Li
         }
 
         const offs = [
-            subscribe('data_change', onChange),
-            subscribe('lock', onChange),
-            subscribe('live_status', onChange),
+            subscribe('data_change', onChange('data_change')),
+            subscribe('lock', onChange('lock')),
+            subscribe('live_status', onChange('live_status')),
             subscribe('layout', onRoom),
             subscribe('publishers_change', onRoom),
             subscribe('publisher_state_change', onRoom),

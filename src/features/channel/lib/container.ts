@@ -26,6 +26,17 @@ import { cn } from '@shared/lib/utils'
 export const CHANNEL_CONTAINER = 'mx-auto w-full md:max-w-[612px]'
 
 /**
+ * The page column under the bar — and, **below `md`, the space's surface itself.** The header, the
+ * tab strip and the walls each paint `--background-surface`, but the column did not, so a phone
+ * showed the app's grey ground wherever those stopped: under a short wall, under a thin tab panel,
+ * and through the `pb-16` that clears the tab bar. Painting the column makes the page one surface
+ * edge to edge and top to bottom (the single-panel rule, `docs/DESIGN_SYSTEM.md` §6); from `md` it
+ * is a card on the page again, so the paint goes. `flex-1` is what carries it to the bottom.
+ */
+export const CHANNEL_COLUMN =
+    'flex flex-1 flex-col bg-(--background-surface) pb-16 md:bg-transparent'
+
+/**
  * Horizontal padding inside the header card and the tab panels — 12px, 24px from `md`.
  *
  * From legacy's `CardContent` (`p: { xs: 1.5, md: 3 }`, MUI's 8px unit). Note **`p-6`, not `p-5`**:

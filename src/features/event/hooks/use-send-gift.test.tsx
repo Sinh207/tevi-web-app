@@ -23,16 +23,23 @@ const requestLiveRoom = vi.hoisted(() => vi.fn())
 const invalidateQueries = vi.hoisted(() => vi.fn())
 /** Stands in for the shortfall guard: by default it lets the press through. */
 const requireStars = vi.hoisted(() => vi.fn())
+/** The balance the hook sees: known and enough, unless a test says otherwise. */
+const balance = vi.hoisted(() => ({ isKnown: true, enough: true }))
 
 vi.mock('@features/auth', () => ({
     useAuth: () => ({
+        isAuthenticated: true,
         activeId: 'acc-1',
         currentUser: { id: 'acc-1', display_name: 'Ada Lovelace' },
     }),
 }))
 vi.mock('@features/balance', async () => {
     const actual = await vi.importActual<typeof import('@features/balance')>('@features/balance')
-    return { ...actual, useRequireStars: () => requireStars }
+    return {
+        ...actual,
+        useRequireStars: () => requireStars,
+        useBalance: () => ({ isKnown: balance.isKnown, hasEnoughStars: () => balance.enough }),
+    }
 })
 vi.mock('@features/channel', () => ({
     useMyChannel: () => ({
@@ -100,6 +107,8 @@ beforeEach(() => {
     invalidateQueries.mockReset()
     // The default guard runs the press: `useRequireStars` returns a handler, which the hook calls.
     requireStars.mockReset().mockImplementation((_cost: number, cb: () => void) => () => cb())
+    balance.isKnown = true
+    balance.enough = true
 })
 
 describe('canSend', () => {
@@ -246,16 +255,14 @@ describe('sending', () => {
 })
 
 describe('a balance that ran out between the press and the charge', () => {
-    it('opens the purchase sheet rather than printing a dead end', async () => {
+    it('raises Not enough Stars rather than printing a dead end', async () => {
         send.mockRejectedValue(
             new ApiError({ message: 'no', status: 422, data: { code: 'EC0001' } }),
         )
         const seen = mount()
         act(() => seen.current?.send(pkg()))
 
-        // The guard is re-run with this gift's price, which is what raises the sheet.
-        await waitFor(() => expect(requireStars).toHaveBeenCalledTimes(2))
-        expect(requireStars.mock.calls[1][0]).toBe(99)
+        await waitFor(() => expect(seen.current?.notEnough.open).toBe(true))
         expect(seen.current?.errorKey).toBeNull()
     })
 
@@ -266,6 +273,36 @@ describe('a balance that ran out between the press and the charge', () => {
         const seen = mount()
         act(() => seen.current?.send(pkg()))
         await waitFor(() => expect(seen.current?.errorKey).toBe('event_gift_send_failed'))
+    })
+})
+
+describe('Not enough Stars', () => {
+    /* Legacy's `notEnoughStars`: a known short balance is told so before anything is sent. */
+    it('opens the dialog instead of charging when the balance cannot cover the gift', () => {
+        balance.enough = false
+        const seen = mount()
+        act(() => seen.current?.send(pkg()))
+        expect(seen.current?.notEnough.open).toBe(true)
+        expect(send).not.toHaveBeenCalled()
+        // Straight past the sheet no longer: the guard is not even asked.
+        expect(requireStars).not.toHaveBeenCalled()
+    })
+
+    it('closes', () => {
+        balance.enough = false
+        const seen = mount()
+        act(() => seen.current?.send(pkg()))
+        act(() => seen.current?.notEnough.close())
+        expect(seen.current?.notEnough.open).toBe(false)
+    })
+
+    it('leaves a balance that is not known yet to the guard', () => {
+        balance.isKnown = false
+        balance.enough = false
+        const seen = mount()
+        act(() => seen.current?.send(pkg()))
+        expect(seen.current?.notEnough.open).toBe(false)
+        expect(requireStars).toHaveBeenCalled()
     })
 })
 

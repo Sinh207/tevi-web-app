@@ -8,6 +8,7 @@ import {
     configureLiveRoom,
     connectLiveRoom,
     disconnectLiveRoom,
+    liveRoomRefusalMessage,
     liveRoomStatus,
     onLiveRoomEvent,
     subscribeLiveRoomStatus,
@@ -43,6 +44,13 @@ export interface LiveRoomState {
     status: LiveRoomStatus
     /** The wire is up and this reader is in the room. */
     isConnected: boolean
+    /**
+     * The wire is up and the room **refused** this reader (`join_event` → non-zero `err_code`) —
+     * see `LiveRoomStatus`. Nothing that needs the room is offered: not the chat, not a gift.
+     */
+    isRefused: boolean
+    /** The server's sentence for that refusal, when it sent one. */
+    refusalMessage: string | null
     /**
      * Subscribe to one of the room's channels for the life of the component.
      *
@@ -126,6 +134,12 @@ export function useLiveRoom({
         // render, so nothing flashes.
         () => 'idle' as LiveRoomStatus,
     )
+    // Changes only alongside the status (`refused` is the one status that carries it).
+    const refusalMessage = useSyncExternalStore(
+        subscribeLiveRoomStatus,
+        liveRoomRefusalMessage,
+        () => null,
+    )
 
     const subscribe = useCallback(
         (event: LiveRoomEvent, handler: (payload: unknown) => void) =>
@@ -136,6 +150,8 @@ export function useLiveRoom({
     return {
         status,
         isConnected: status === 'connected',
+        isRefused: status === 'refused',
+        refusalMessage,
         subscribe,
     }
 }

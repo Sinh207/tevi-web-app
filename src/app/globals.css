@@ -1681,6 +1681,207 @@
 }
 
 /* ====================================================================
+ * `tevi-gift-in` / `tevi-gift-out` / `tevi-gift-bob` — the gift banner.
+ *
+ * **In:** slides in from the leading edge 40px out, overshoots 6px and
+ * settles — a thrown card landing, on a spring-like curve. **Out:** the
+ * reverse, shorter and accelerating away (an exit wants `ease-in`). Both
+ * travel along `--gift-dir`, which the banner sets to `-1` in RTL so the
+ * card still comes from — and leaves toward — the edge it is pinned to;
+ * a positive `translate` would not flip with the direction on its own.
+ *
+ * **Bob:** the gift drifting 3px and tilting 4° on a slow loop, so the
+ * picture is alive for the second and a half the banner is up. It sits on
+ * the image only; the plate itself never loops.
+ *
+ * `translate` / `rotate` rather than `transform`, for `tevi-rise`'s reason.
+ * ==================================================================== */
+@keyframes tevi-gift-in {
+    from {
+        opacity: 0;
+        translate: calc(var(--gift-dir, 1) * -40px) 0;
+    }
+    60% {
+        opacity: 1;
+        translate: calc(var(--gift-dir, 1) * 6px) 0;
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+@keyframes tevi-gift-out {
+    to {
+        opacity: 0;
+        translate: calc(var(--gift-dir, 1) * -24px) 0;
+    }
+}
+
+@keyframes tevi-gift-bob {
+    0%,
+    100% {
+        translate: 0 0;
+        rotate: -4deg;
+    }
+    50% {
+        translate: 0 -3px;
+        rotate: 4deg;
+    }
+}
+
+/* ====================================================================
+ * `tevi-ping` — a new-message badge's one ripple: its own colour,
+ * growing to 1.9× and fading out, then resting invisible (`forwards`).
+ * `scale` rather than `transform`, for the reason `tevi-rise` gives.
+ * ==================================================================== */
+@keyframes tevi-ping {
+    from {
+        opacity: 0.6;
+        scale: 1;
+    }
+    to {
+        opacity: 0;
+        scale: 1.9;
+    }
+}
+
+/* ====================================================================
+ * `tevi-lock-jiggle` — the paywall's padlock nudging: a ±12° wobble that
+ * settles within the first 20% of the cycle and rests for the rest.
+ * `rotate` rather than `transform`, for the reason `tevi-rise` gives.
+ * `LOCK_JIGGLE` pairs it with `motion-reduce`.
+ * ==================================================================== */
+@keyframes tevi-lock-jiggle {
+    0%,
+    20%,
+    100% {
+        rotate: 0deg;
+    }
+    4% {
+        rotate: -12deg;
+    }
+    8% {
+        rotate: 10deg;
+    }
+    12% {
+        rotate: -6deg;
+    }
+    16% {
+        rotate: 3deg;
+    }
+}
+
+/* ====================================================================
+ * `tevi-podium-rise` — a step of the gift board's podium growing up from
+ * the floor, overshooting 6% and settling. `scale` on y only, rather
+ * than `transform`, for the reason `tevi-rise` gives; the caller sets
+ * `origin-bottom`. `PODIUM_RISE` pairs it with `motion-reduce`.
+ * ==================================================================== */
+@keyframes tevi-podium-rise {
+    0% {
+        scale: 1 0;
+        opacity: 0;
+    }
+    70% {
+        scale: 1 1.06;
+        opacity: 1;
+    }
+    100% {
+        scale: 1 1;
+        opacity: 1;
+    }
+}
+
+/* ====================================================================
+ * `tevi-float` — a waiting illustration drifting up 3px and back.
+ * `tevi-twinkle` — a sparkle catching the light: from nothing, to full
+ * size turned 45°, and back to nothing by mid-cycle, resting invisible
+ * for the rest so staggered siblings take turns. `translate`/`scale`/
+ * `rotate` rather than `transform`, for the reason `tevi-rise` gives.
+ * ==================================================================== */
+@keyframes tevi-float {
+    0%,
+    100% {
+        translate: 0 0;
+    }
+    50% {
+        translate: 0 -3px;
+    }
+}
+
+@keyframes tevi-twinkle {
+    0%,
+    60%,
+    100% {
+        opacity: 0;
+        scale: 0.3;
+        rotate: 0deg;
+    }
+    30% {
+        opacity: 1;
+        scale: 1;
+        rotate: 45deg;
+    }
+}
+
+/* ====================================================================
+ * `tevi-pin-out` — the live chat's pinned message, dismissed: the
+ * reverse of `tevi-rise`, shorter, and with a hair of scale so it reads
+ * as lifted away rather than slid. `translate`/`scale` rather than
+ * `transform`, for the reason `tevi-rise` gives. `PIN_OUT` pairs it with
+ * `motion-reduce`, and the caller skips the delay under reduced motion.
+ * ==================================================================== */
+@keyframes tevi-pin-out {
+    to {
+        opacity: 0;
+        translate: 0 -6px;
+        scale: 0.98;
+    }
+}
+
+/* ====================================================================
+ * `tevi-invite-dot` — the call going out, between the inviter's face and
+ * the reader's in the live invitation. Each dot lifts 3px and brightens
+ * in the first 40% of the cycle and rests for the rest, so three dots
+ * staggered 160ms read as one wave travelling toward the reader rather
+ * than three blinks. `translate` rather than `transform`, for the reason
+ * `tevi-rise` gives. `INVITE_DOT` pairs it with `motion-reduce`.
+ * ==================================================================== */
+@keyframes tevi-invite-dot {
+    0%,
+    40%,
+    100% {
+        opacity: 0.35;
+        translate: 0 0;
+    }
+    20% {
+        opacity: 1;
+        translate: 0 -3px;
+    }
+}
+
+/* ====================================================================
+ * `tevi-seat-halo` — the bloom behind an open microphone's avatar.
+ *
+ * Grows 14% and peaks at full opacity mid-cycle, then settles out. `scale`
+ * rather than `transform`, for the reason `tevi-rise` gives. Paired with
+ * `motion-reduce:animate-none` by `SEAT_HALO`, which leaves the bloom at its
+ * resting state — still there, still red, not moving.
+ * ==================================================================== */
+@keyframes tevi-seat-halo {
+    0%,
+    100% {
+        opacity: 0.45;
+        scale: 1;
+    }
+    50% {
+        opacity: 1;
+        scale: 1.14;
+    }
+}
+
+/* ====================================================================
  * `tevi-mic-pulse` — an open microphone on a seat tile.
  *
  * Legacy's `pulseMic`, ported at its own numbers (`seats/components/
@@ -1714,5 +1915,31 @@
     100% {
         scale: 1;
         box-shadow: 0 0 0 0 rgba(255, 104, 104, 0);
+    }
+}
+
+/* ====================================================================
+ * `tevi-live-ring-spin` — the live avatar ring
+ * (Figma `.❖ Main / Avatar`, Live): the gradient ring turning. `rotate`,
+ * not `transform`, for the reason `tevi-pop` gives. It writes an explicit `from`.
+ * ==================================================================== */
+@keyframes tevi-live-ring-spin {
+    from {
+        rotate: 0deg;
+    }
+    to {
+        rotate: 360deg;
+    }
+}
+
+/* `tevi-ripple` — a ring leaving a mark and fading (`RIPPLE`). `scale`, not `transform`. */
+@keyframes tevi-ripple {
+    from {
+        opacity: 0.55;
+        scale: 1;
+    }
+    to {
+        opacity: 0;
+        scale: 1.6;
     }
 }

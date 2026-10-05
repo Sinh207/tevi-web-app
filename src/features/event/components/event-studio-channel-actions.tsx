@@ -2,6 +2,7 @@
 
 import { Menu } from '@base-ui/react/menu'
 import { ChannelReportDialog, useChannel, useChannelActions } from '@features/channel'
+import { type ShareContext, useShareCopyLink } from '@features/share'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { qrImageUrl } from '@shared/lib/qr-image'
@@ -11,7 +12,6 @@ import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import { useState } from 'react'
 import type { EventChannel } from '../api/types'
-import { EVENT_STUDIO_PILL } from '../lib/studio'
 import { EventStudioUpsell } from './event-studio-upsell'
 
 /**
@@ -63,7 +63,8 @@ import { EventStudioUpsell } from './event-studio-upsell'
  * What is **not** kept is its colour. Legacy hard-codes `#292532` with white text; this app has a
  * dark mode, and a popup is a surface of ours rather than something drawn on the video, so it wears
  * the DS's elevated background. `lib/studio.ts`'s literal-ink rule is about the plates floating *on
- * the stream* — the trigger is one of those and stays on `EVENT_STUDIO_PILL`.
+ * the stream* — the trigger is one of those, and it sits on the channel pill's plate rather than
+ * carrying one of its own.
  *
  * Report opens `features/channel`'s own dialog, which already carries the nine reasons, the
  * description field and *Report and Block*. It needs a full `Channel`, so it is the one thing in
@@ -73,6 +74,8 @@ export function EventStudioChannelActions({
     channel,
     eventTitle,
     getShareUrl,
+    shareContext = null,
+    compact = false,
 }: {
     /** The event payload's channel — everything the panel draws. */
     channel: EventChannel
@@ -87,6 +90,15 @@ export function EventStudioChannelActions({
      * throws the server's tree away over a difference nothing else makes visible.
      */
     getShareUrl: () => string | null
+    /**
+     * Who is sharing what — `liveShareContext` for this broadcast. With it, *Copy link* and the QR
+     * use a link **minted by the link service** (`POST shortlink/api/v1/links`, which records the
+     * share and emits `share_link_created_v2`) instead of the raw URL, exactly as the Live details
+     * share sheet does — this panel was the one share surface that never called it.
+     */
+    shareContext?: ShareContext | null
+    /** The portrait studio's bar: Follow and ⋯ only — the upsell pill has no room on a phone. */
+    compact?: boolean
 }) {
     const { t } = useTranslation()
     const { channel: space, isViewerKnown } = useChannel(channel.slug)
@@ -94,23 +106,27 @@ export function EventStudioChannelActions({
     const [shareUrl, setShareUrl] = useState<string | null>(null)
     const [reportOpen, setReportOpen] = useState(false)
     const [copied, setCopied] = useState(false)
+    /*
+     * Minted as soon as the menu opens (`shareUrl` is set on open), so the link is ready before
+     * the press — Safari drops a clipboard write that awaits a request. Falls back to the raw URL
+     * if the link service refuses.
+     */
+    const minted = useShareCopyLink({
+        url: shareUrl,
+        context: shareContext,
+        enabled: Boolean(shareUrl),
+    })
 
     const name = channel.name ?? channel.slug
     const thumb = channel.images.thumb
 
     async function copyLink() {
         if (!shareUrl) return
-        try {
-            await navigator.clipboard.writeText(shareUrl)
-            setCopied(true)
-            window.setTimeout(() => setCopied(false), 2000)
-        } catch {
-            /*
-             * `navigator.clipboard` is absent on an insecure origin and can be refused outright —
-             * the same failure `channel-copy-link.tsx` handles. Nothing is announced: the menu
-             * stays open and the label simply does not change to *Link copied*.
-             */
-        }
+        // The share feature writes the minted link and announces the result (a toast, or the
+        // URL to select by hand when the clipboard is refused).
+        await minted.copyLink()
+        setCopied(true)
+        window.setTimeout(() => setCopied(false), 2000)
     }
 
     return (
@@ -121,17 +137,22 @@ export function EventStudioChannelActions({
                     isViewerKnown={isViewerKnown}
                     reportOpen={reportOpen}
                     onReportOpenChange={setReportOpen}
+                    showUpsell={!compact}
                 />
             )}
+
+            <span aria-hidden className="h-4 w-px flex-none bg-white/20" />
 
             <Menu.Root onOpenChange={open => open && setShareUrl(getShareUrl())}>
                 <Menu.Trigger
                     data-testid="event-studio-more"
                     aria-label={t('channel_menu_actions')}
                     className={cn(
-                        EVENT_STUDIO_PILL,
-                        'flex size-7 flex-none items-center justify-center',
-                        'transition-colors hover:bg-white/20',
+                        // No plate of its own: it sits on the channel pill already, and a second
+                        // smoked fill there read as a dark dot — see `EVENT_STUDIO_PILL`.
+                        'flex size-8 flex-none items-center justify-center rounded-full text-white',
+                        'transition-colors hover:bg-white/10 data-[popup-open]:bg-white/20',
+                        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white',
                     )}
                 >
                     <Icon name="more-horizontal" size={16} />
@@ -199,7 +220,9 @@ export function EventStudioChannelActions({
                                          */}
                                         <span className="rounded-(--radius-lg) bg-white p-5">
                                             <Image
-                                                src={qrImageUrl(shareUrl)}
+                                                // The minted link once it is in, so a scan and a
+                                                // paste land on the same tracked URL.
+                                                src={qrImageUrl(minted.url ?? shareUrl)}
                                                 alt=""
                                                 width={108}
                                                 height={108}
@@ -273,11 +296,13 @@ function SpaceControls({
     isViewerKnown,
     reportOpen,
     onReportOpenChange,
+    showUpsell,
 }: {
     channel: NonNullable<ReturnType<typeof useChannel>['channel']>
     isViewerKnown: boolean
     reportOpen: boolean
     onReportOpenChange: (open: boolean) => void
+    showUpsell: boolean
 }) {
     const { t } = useTranslation()
     const { follow, block } = useChannelActions(channel)
@@ -304,7 +329,7 @@ function SpaceControls({
             )}
 
             {/* Legacy's `BtnPremiumOrMembership`, between Follow and ⋯ — see its own note. */}
-            <EventStudioUpsell channel={channel} isViewerKnown={isViewerKnown} />
+            {showUpsell && <EventStudioUpsell channel={channel} isViewerKnown={isViewerKnown} />}
 
             <ChannelReportDialog
                 channel={channel}

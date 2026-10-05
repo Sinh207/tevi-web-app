@@ -1,34 +1,50 @@
 'use client'
 
+import { type Channel, ChannelProtectedNotice, type FollowedLive } from '@features/channel'
+
 import { EVENT_CONTAINER } from '@features/event'
 import {
     billTotal,
     EVENT_PANEL,
+    EventAccountBannedPanel,
     EventAgeGate,
     EventBannedState,
+    EventBlockedPanel,
     EventCardState,
     EventDescriptionCard,
     EventDetailsCard,
+    EventEndedRail,
     EventErrorState,
+    EventExclusivePaywall,
+    EventGeoRestrictedPanel,
     EventGiftFloat,
     EventGiftPanel,
     EventGiftTray,
     EventHostCard,
     EventHostInfoCard,
     EventInfoDialog,
+    EventInvitationDialog,
     EventKickedOutPanel,
     EventLiveAnalyticsCard,
     EventMaintenanceFeeCard,
+    EventMobileLiveNotice,
     EventNewMembersCard,
+    EventNotEnoughStarsDialog,
     EventNotFoundState,
     EventOrderRow,
     EventOrdersPanel,
+    EventOutOfStarDialog,
+    EventPremiumNudge,
+    EventPreviewCountdown,
     EventRevenueSummary,
+    EventSeatCard,
     EventSkeleton,
     EventStudioChat,
     EventStudioChatStrip,
+    EventStudioCompact,
     EventStudioScreen,
     EventStudioSeats,
+    EventStudioSkeleton,
     EventTopBar,
     EventTotalRevenueCard,
     EventWatchPanel,
@@ -64,6 +80,8 @@ const CHANNEL = {
     name: 'Ada Lovelace',
     images: { thumb: null, cover: null },
     verified_tick_badge: null,
+    // A Premium host, so the pinned message's crown has something to show.
+    is_premium: true,
 }
 
 const base = (fields: Record<string, unknown>) =>
@@ -272,7 +290,12 @@ const STUDIO_FIXTURES = [
 const SEAT_PUBLISHERS = Array.from({ length: 9 }, (_, i) => ({
     id: `u${i + 1}`,
     name: ['Ada', 'Grace', 'Alan', 'Katherine', 'Edsger', 'Barbara', 'Linus', 'Radia', 'Tim'][i],
-    avatar: null,
+    /*
+     * Two of the camera-off seats carry a real picture, so the blurred-avatar ground is in the
+     * gallery at all — with every avatar `null` it never rendered, and only initials did. A
+     * committed asset rather than a CDN URL, per the no-CDN rule.
+     */
+    avatar: i === 0 || i === 3 ? '/illustrations/channel/invitation-banner.webp' : null,
     audio: i % 2 === 0,
     video: i % 3 !== 0,
     is_host: i === 0,
@@ -386,6 +409,8 @@ const CHAT_BASE = {
     errorKey: null,
     chargedAt: null,
     send: async () => {},
+    mustTopUp: false,
+    outOfStar: { open: false, show: () => {}, close: () => {} },
 } as const
 
 const CHAT_FIXTURES = [
@@ -445,7 +470,10 @@ const CHAT_FIXTURES = [
         chat: {
             ...CHAT_BASE,
             topStars: [
-                { score: 4200, user: { id: '1', display_name: 'Athena Green', avatar: null } },
+                {
+                    score: 4200,
+                    user: { id: '1', display_name: 'Athena Green', avatar: null, is_premium: true },
+                },
                 { score: 1800, user: { id: '2', display_name: 'Liam Chen', avatar: null } },
                 { score: 400, user: { id: '3', display_name: 'Test app', avatar: null } },
             ],
@@ -469,7 +497,10 @@ const CHAT_FIXTURES = [
         chat: {
             ...CHAT_BASE,
             topStars: [
-                { score: 4200, user: { id: '1', display_name: 'Athena Green', avatar: null } },
+                {
+                    score: 4200,
+                    user: { id: '1', display_name: 'Athena Green', avatar: null, is_premium: true },
+                },
                 { score: 1800, user: { id: '2', display_name: 'Liam Chen', avatar: null } },
                 { score: 900, user: { id: '3', display_name: 'Noah Patel', avatar: null } },
                 { score: 400, user: { id: '9', display_name: 'Test app', avatar: null } },
@@ -524,9 +555,95 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     )
 }
 
+/** Followed lives for the ended rail — dev only, so the projection is cast rather than parsed. */
+const ENDED_LIVES = [1, 2, 3, 4].map(i => ({
+    code: `live-${i}`,
+    title: ['Friday listening party', 'Late-night lo-fi', 'Q&A with Ada', 'Studio session'][i - 1],
+    images: { banner: '/illustrations/channel/invitation-banner.webp' },
+    // Free and ungated, but every field `liveAccess` reads must be there.
+    price: i === 2 ? 50 : null,
+    required_packages: [],
+    purchased: false,
+    channel: {
+        slug: `creator-${i}`,
+        name: ['Ada Lovelace', 'Liam Chen', 'Noah Patel', 'Athena Green'][i - 1],
+        images: { thumb: null, cover: null },
+        verified_tick_badge: null,
+        is_premium: false,
+    },
+})) as unknown as FollowedLive[]
+
+/** A hand-built model for the compact studio frame — dev only, typed loosely on purpose. */
+function compactModel(mode: 'solo' | 'session' | 'preview') {
+    const feed = {
+        playback: null,
+        layout: { layout: 'P3', spotlight: false, spotlight_uid: null, spotlightUid: null },
+        publishers: SEAT_PUBLISHERS.slice(0, mode === 'solo' ? 1 : 2),
+    }
+    const event = base({ paid_chat: true })
+    const noop = () => {}
+    return {
+        art: '/illustrations/channel/invitation-banner.webp',
+        backdropUrl: null,
+        onStage: true,
+        blurOnly: false,
+        stageFeed: feed,
+        scores: new Map(),
+        isPlaying: false,
+        setSeatCardId: noop,
+        seatCardId: null,
+        isExclusive: mode === 'preview',
+        phase: mode === 'preview' ? 'preview' : null,
+        isStreamPending: false,
+        isGeoRestricted: false,
+        isKickedOut: false,
+        kickMessage: null,
+        showEndedRail: false,
+        event,
+        isLockedByRoom: false,
+        room: { status: 'idle', isConnected: false, subscribe: () => noop },
+        canGift: false,
+        channel: event.channel,
+        stats: { follower_count: 1280 },
+        getShareUrl: () => null,
+        chat: { ...CHAT_FIXTURES[1]?.chat, ccu: 7520 },
+        preview: { secondsLeft: 7, totalSeconds: 10 },
+        setPaywallReason: noop,
+        isGuest: false,
+        bursts: [],
+        showChat: true,
+        fee: undefined,
+        hasEnded: false,
+        showTray: true,
+        setIsCatalogOpen: noop,
+        seatCardLayer: null,
+        isCatalogOpen: false,
+        catalog: { packages: [], exclusive: [], isLoading: false },
+        live: feed,
+        recipient: null,
+        setPickedRecipient: noop,
+        gift: {
+            notEnough: { open: false, close: noop },
+            pendingId: null,
+            canSend: true,
+            send: noop,
+        },
+        endedLives: { visible: [] },
+        currentLanguage: 'en',
+        paywallLayer: null,
+        invite: { invitation: null, dismiss: noop },
+        isWalled: false,
+    }
+}
+
 export function EventStates() {
     const [ageConfirmed, setAgeConfirmed] = useState(false)
     const [info, setInfo] = useState<'sustained' | 'maintenance' | null>(null)
+    const [outOfStar, setOutOfStar] = useState(false)
+    const [notEnough, setNotEnough] = useState(false)
+    const [nudgeOpen, setNudgeOpen] = useState(false)
+    const [invited, setInvited] = useState(false)
+    const [exclusivePrompt, setExclusivePrompt] = useState<'chat' | 'gift' | null>('chat')
 
     return (
         // The page's own surface pair, so the blocks are seen on the plane they actually sit on —
@@ -587,6 +704,7 @@ export function EventStates() {
                                     <EventStudioScreen
                                         event={event}
                                         onBlocked={() => {}}
+                                        onBanned={() => {}}
                                         contained
                                     />
                                 </div>
@@ -693,6 +811,65 @@ export function EventStates() {
                     </div>
                 </Section>
 
+                <Section title="Exclusive — the session's layout around the preview">
+                    {/*
+                     * The studio itself only reaches this for a signed-in reader with a real
+                     * preview, so the pieces are composed by hand: the stage with its countdown,
+                     * the paywall, and the chat column locked. Left: the preview with a prompt
+                     * raised from the chat (✕ or the frost dismisses it; the composer reopens it).
+                     * Right: the wall once the preview is over — nothing to dismiss.
+                     */}
+                    <div className="relative start-1/2 flex w-[min(1100px,calc(100vw-48px))] -translate-x-1/2 flex-col gap-4 rtl:translate-x-1/2">
+                        {(['preview', 'closed'] as const).map(mode => (
+                            <div
+                                key={mode}
+                                className="relative flex h-[560px] overflow-hidden rounded-xl bg-[#14101e]"
+                            >
+                                <div className="relative flex min-w-0 flex-1 flex-col">
+                                    <div className="relative flex-1 bg-[radial-gradient(circle_at_40%_35%,#6b3fd6,#2a0f6e_60%,#14101e)]">
+                                        {mode === 'preview' && (
+                                            <div className="absolute inset-x-3 bottom-3 flex justify-center">
+                                                <EventPreviewCountdown
+                                                    secondsLeft={exclusivePrompt ? 7 : 2}
+                                                    totalSeconds={10}
+                                                    onUnlock={() => setExclusivePrompt('chat')}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    {(mode === 'closed' || exclusivePrompt) && (
+                                        <EventExclusivePaywall
+                                            event={base({
+                                                price: '250.00',
+                                                price_currency: 'TVS',
+                                                product_id: 'prod-1',
+                                            })}
+                                            reason={
+                                                mode === 'closed'
+                                                    ? 'preview-ended'
+                                                    : exclusivePrompt
+                                            }
+                                            lockedMidStream={false}
+                                            onClose={
+                                                mode === 'preview'
+                                                    ? () => setExclusivePrompt(null)
+                                                    : undefined
+                                            }
+                                        />
+                                    )}
+                                </div>
+                                <div className="w-[340px] flex-none">
+                                    <EventStudioChat
+                                        event={base({})}
+                                        chat={CHAT_FIXTURES[0]?.chat as never}
+                                        onLocked={() => setExclusivePrompt('chat')}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Section>
+
                 <Section title="Live studio — the chat column, every state">
                     {/*
                      * The panel is 390 wide and full height on the real stage; here each preview
@@ -751,6 +928,8 @@ export function EventStates() {
                                                 { score: 8, user: { id: '2', display_name: 'Bo' } },
                                                 { score: 7, user: { id: '3', display_name: 'Cy' } },
                                             ],
+                                            // Said while folded — the badge and the preview.
+                                            lines: CHAT_FIXTURES[1]?.chat.lines ?? [],
                                         } as never
                                     }
                                     onExpand={() => {}}
@@ -822,6 +1001,109 @@ export function EventStates() {
                             )
                         })}
                     </div>
+
+                    {/*
+                     * The open seat — `P9` with four co-hosts, so five of the nine tiles have
+                     * nobody in them. Every grid above is filled to its tile count, so without
+                     * this the empty-seat state is in no gallery at all.
+                     */}
+                    {(() => {
+                        const arrangement = seatArrangement({ layout: 'P9', publisherCount: 4 })
+                        return (
+                            <div className="mt-4 flex flex-col gap-1">
+                                <p className="type-caption-meta text-(--text-placeholder)">
+                                    <code>P9</code> · four co-hosts · five open seats
+                                </p>
+                                <div className="flex h-[360px] items-center justify-center rounded-xl bg-(--background-segment) p-2 [container-type:size]">
+                                    <div className="relative" style={seatBoxStyle(arrangement)}>
+                                        <EventStudioSeats
+                                            arrangement={arrangement}
+                                            publishers={SEAT_PUBLISHERS.slice(0, 4)}
+                                            videoUids={null}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    })()}
+                </Section>
+
+                <Section title="Ended — followed lives to discover">
+                    {/* On a dark stage stand-in, the way the studio draws it over the poster. */}
+                    <div className="relative flex min-h-[520px] items-center overflow-hidden rounded-xl bg-[#2a0f6e]">
+                        <div className="absolute inset-0 z-10 flex items-center bg-black/55 px-3 backdrop-blur-2xl">
+                            <EventEndedRail lives={ENDED_LIVES} locale="en" />
+                        </div>
+                    </div>
+                </Section>
+
+                <Section title="Invitation — the host asks this reader on camera">
+                    {/* Raised only by a socket frame on a real broadcast, so opened by hand. */}
+                    <button
+                        type="button"
+                        className="type-dense-emphasis w-fit rounded-[var(--radius-md)] bg-(--background-segment) px-3 py-2 text-(--text-title)"
+                        onClick={() => setInvited(true)}
+                    >
+                        Open the invitation dialog
+                    </button>
+                    <EventInvitationDialog
+                        invitation={
+                            invited
+                                ? {
+                                      name: 'Ada',
+                                      avatar: '/illustrations/channel/invitation-banner.webp',
+                                  }
+                                : null
+                        }
+                        shareUrl="https://tevi.com/@ada/live"
+                        onClose={() => setInvited(false)}
+                    />
+                </Section>
+
+                <Section title="Out of Star — the sustained fee's wall">
+                    {/*
+                     * Only ever raised by a failed fee charge on a real broadcast, so it is opened
+                     * by hand here. It cannot be dismissed (that is the point of it), so the
+                     * harness reloads to close it.
+                     */}
+                    <button
+                        type="button"
+                        className="type-dense-emphasis w-fit rounded-[var(--radius-md)] bg-(--background-segment) px-3 py-2 text-(--text-title)"
+                        onClick={() => setOutOfStar(true)}
+                    >
+                        Open the Out of Star dialog
+                    </button>
+                    <EventOutOfStarDialog open={outOfStar} />
+                    {/* A gift the balance cannot cover — dismissable, unlike the wall above. */}
+                    <button
+                        type="button"
+                        className="type-dense-emphasis w-fit rounded-[var(--radius-md)] bg-(--background-segment) px-3 py-2 text-(--text-title)"
+                        onClick={() => setNotEnough(true)}
+                    >
+                        Open the Not enough Stars dialog
+                    </button>
+                    <EventNotEnoughStarsDialog
+                        open={notEnough}
+                        onClose={() => setNotEnough(false)}
+                    />
+                </Section>
+
+                <Section title="Premium nudge — after a sustained-fee charge">
+                    {/* Toggle it to watch it come in from the trailing edge and go back out. */}
+                    <button
+                        type="button"
+                        className="type-dense-emphasis w-fit rounded-[var(--radius-md)] bg-(--background-segment) px-3 py-2 text-(--text-title)"
+                        onClick={() => setNudgeOpen(o => !o)}
+                    >
+                        {nudgeOpen ? 'Hide the Premium nudge' : 'Show the Premium nudge'}
+                    </button>
+                    <div className="relative flex h-[300px] items-end justify-end overflow-hidden rounded-xl bg-[radial-gradient(circle_at_30%_40%,#3a2470,#1a0f3a_70%)] p-3">
+                        <EventPremiumNudge
+                            open={nudgeOpen}
+                            secondsLeft={7}
+                            onClose={() => setNudgeOpen(false)}
+                        />
+                    </div>
                 </Section>
 
                 <Section title="Age gate — the wall over an 18+ broadcast">
@@ -842,6 +1124,171 @@ export function EventStates() {
                     ) : (
                         <EventAgeGate onConfirm={() => setAgeConfirmed(true)} slug="ada" />
                     )}
+                </Section>
+
+                <Section title="Protected space — a non-follower's 422 CHN0009 (new · request pending)">
+                    {/*
+                     * `dev-protected-*` slugs 404 upstream, so `useChannel` stays empty and the
+                     * wall draws the refusal's own copy — what this harness is here to show.
+                     */}
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {[false, true].map(requested => (
+                            <div
+                                key={String(requested)}
+                                className={cn('flex min-h-[560px] flex-col', EVENT_PANEL)}
+                            >
+                                <ChannelProtectedNotice
+                                    channel={
+                                        {
+                                            id: 'dev',
+                                            name: 'Ada Lovelace',
+                                            slug: requested
+                                                ? 'dev-protected-pending'
+                                                : 'dev-protected',
+                                            images: { cover: null, thumb: null },
+                                            privacy: 'protected',
+                                            is_followed: false,
+                                            follow_requested: requested,
+                                            verified_tick_badge: {
+                                                image: 'https://static.tevicdn.com/Images/Channel/VerifiedTick/verified.png',
+                                            },
+                                        } as unknown as Channel
+                                    }
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </Section>
+
+                <Section title="Studio skeleton — a live stream before the studio is decided (md and up)">
+                    {/* `transform` makes the box the containing block, so `fixed` stays inside it. */}
+                    <div className="relative h-[640px] overflow-hidden rounded-xl [transform:translateZ(0)]">
+                        <EventStudioSkeleton
+                            event={base({
+                                status: 'LIVE',
+                                title: 'Friday night listening party',
+                                images: { banner: '/illustrations/channel/invitation-banner.webp' },
+                            })}
+                            className="absolute"
+                        />
+                    </div>
+                </Section>
+
+                <Section title="Phone on a live stream — the notice (the phone studio is switched off)">
+                    <div className="mx-auto h-[844px] w-[390px] overflow-hidden rounded-[44px] ring-8 ring-black">
+                        <EventMobileLiveNotice
+                            contained
+                            event={base({
+                                status: 'LIVE',
+                                title: 'Friday night listening party',
+                                public_url: 'https://tevi.com/@ada/event/evt-1',
+                                images: { banner: '/illustrations/channel/invitation-banner.webp' },
+                            })}
+                        />
+                    </div>
+                </Section>
+
+                <Section title="Portrait studio — a phone, assembled (session · preview)">
+                    {/*
+                     * The real compact layout, contained in a 390×844 frame and fed a hand-built
+                     * model: the seats (faces, no SDK here), the chat over them, the rail, the
+                     * composer. Left is a session; right is a preview with its clock and the
+                     * locked chat.
+                     */}
+                    <div className="relative start-1/2 flex w-[min(1240px,calc(100vw-32px))] -translate-x-1/2 flex-wrap justify-center gap-6 rtl:translate-x-1/2">
+                        {(['solo', 'session', 'preview'] as const).map(mode => (
+                            <div
+                                key={mode}
+                                className="h-[844px] w-[390px] overflow-hidden rounded-[44px] ring-8 ring-black"
+                            >
+                                <EventStudioCompact contained model={compactModel(mode) as never} />
+                            </div>
+                        ))}
+                    </div>
+                </Section>
+
+                <Section title="Portrait studio — the chat over the picture (phones)">
+                    <div className="relative mx-auto flex h-[720px] w-[390px] max-w-full flex-col justify-end overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_50%_30%,#6b3fd6,#2a0f6e_55%,#100820)]">
+                        <div className="bg-[linear-gradient(to_top,rgba(0,0,0,0.7),rgba(0,0,0,0.35)_60%,transparent)] pt-10">
+                            <EventStudioChat
+                                variant="overlay"
+                                event={base({ paid_chat: true })}
+                                chat={CHAT_FIXTURES[1]?.chat as never}
+                                accessory={
+                                    <span className="grid size-11 flex-none place-items-center rounded-full bg-[linear-gradient(135deg,#7C4DFF,#501BC0)] text-white">
+                                        ★
+                                    </span>
+                                }
+                            />
+                        </div>
+                    </div>
+                </Section>
+
+                <Section title="Seat card — what pressing a publisher's seat opens">
+                    <div className="flex flex-col gap-4 rounded-xl bg-[radial-gradient(circle_at_30%_30%,#4b2a8a,#1a1033_55%,#3d3410)] p-6">
+                        <EventSeatCard
+                            publisher={{
+                                ...SEAT_PUBLISHERS[0],
+                                audio: true,
+                                video: true,
+                                is_host: true,
+                            }}
+                            score={4200}
+                            hostSlug="ada"
+                            onSendGift={() => {}}
+                            onClose={() => {}}
+                        />
+                        <EventSeatCard
+                            publisher={{
+                                ...SEAT_PUBLISHERS[1],
+                                audio: false,
+                                video: false,
+                                is_host: false,
+                            }}
+                            score={0}
+                            hostSlug="ada"
+                            onSendGift={() => {}}
+                            onClose={() => {}}
+                        />
+                    </div>
+                </Section>
+
+                <Section title="Studio refusals on the blurred ground — ended, platform, region, removed, blocked, banned">
+                    <div className="flex flex-col gap-4">
+                        {[
+                            <EventWatchPanel
+                                key="ended"
+                                event={base({ status: 'ENDED' })}
+                                surface="studio"
+                            />,
+                            <EventWatchPanel
+                                key="platform"
+                                event={base({ restricted_platforms: ['Website'] })}
+                                surface="studio"
+                            />,
+                            <EventGeoRestrictedPanel key="geo" />,
+                            <EventKickedOutPanel key="kicked" />,
+                            <EventBlockedPanel key="blocked" />,
+                            <EventAccountBannedPanel
+                                key="banned"
+                                message="Your account has been suspended for violating our Community Guidelines."
+                            />,
+                        ].map(card => (
+                            <div
+                                key={card.key}
+                                className="flex min-h-[380px] items-center justify-center rounded-xl bg-[radial-gradient(circle_at_30%_30%,#4b2a8a,#1a1033_55%,#3d3410)] p-6"
+                            >
+                                {card}
+                            </div>
+                        ))}
+                    </div>
+                </Section>
+
+                <Section title="Age gate — on the studio frame (a live 18+ stream, wide screens)">
+                    {/* The studio's blurred ground stood in by a gradient; the card is the real one. */}
+                    <div className="flex min-h-[460px] items-center justify-center rounded-xl bg-[radial-gradient(circle_at_30%_30%,#4b2a8a,#1a1033_55%,#3d3410)] p-6">
+                        <EventAgeGate onConfirm={() => {}} slug="ada" surface="studio" />
+                    </div>
                 </Section>
 
                 <Section title="Host — the revenue report, assembled">

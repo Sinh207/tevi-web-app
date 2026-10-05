@@ -30,7 +30,7 @@ import { CHANNEL_CONTAINER } from '../lib/container'
  */
 export function ChannelTopBarSkeleton() {
     return (
-        <div className="sticky top-0 z-20 bg-(--background) print:hidden">
+        <div className="sticky top-0 z-20 bg-(--background-surface) md:bg-(--background) print:hidden">
             {/*
              * `px-4 md:px-0` — **copied from `ChannelTopBar`, and it has to stay copied.** This
              * used to be `px-2`, which put the placeholder circle 8px from the column edge while

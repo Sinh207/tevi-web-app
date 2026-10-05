@@ -84,6 +84,14 @@ export const liveApi = {
             undefined,
             { signal, ...(accountId ? { accountId } : {}) },
         )
+        // TEMP(B111): the raw room payload, to see what a publisher carries. Remove after.
+        console.log('[layout/] raw', body)
+        console.log(
+            '[layout/] publisher keys',
+            ((body as { publishers?: unknown[] } | null)?.publishers ?? []).map(p =>
+                Object.keys((p ?? {}) as object),
+            ),
+        )
         const parsed = liveRoomSchema.safeParse(body)
         return parsed.success ? parsed.data : null
     },

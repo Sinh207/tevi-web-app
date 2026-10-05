@@ -590,10 +590,11 @@ liveTransport(playback, publishers)
   neither                       → 'none' the app hand-off
 ```
 
-**Built:** the free ten-second preview end to end — `live/v1/streaming-events/{code}/preview/` →
-`core/v4/live/event/{code}/layout/` → a muted, blurred FLV/HLS pull with the paywall pinned to the
-bottom of the column, and the quota that makes it three per device per event
-(`shared/lib/preview-quota.ts`).
+**Built:** the free preview end to end — `live/v1/streaming-events/{code}/preview/` →
+`core/v4/live/event/{code}/layout/` → a muted, blurred FLV/HLS pull inside **the session's own
+layout** (chat column and tray, every action opening the paywall — `lib/exclusive-phase.ts`), ten
+seconds a look and three looks per device per event (`shared/lib/preview-quota.ts`), with *Unlock* on
+the countdown so the stream can be bought mid-preview. No room is joined during it.
 
 **Also built:** the Agora path — join as an `audience` at `level: 1`, subscribe per co-host, play
 each track into its own seat — and all eighteen seat arrangements, as a table

@@ -1,5 +1,5 @@
 import { PageBackBar } from '@features/navigation'
-import { CreatorPickerView, SEARCH_CONTAINER } from '@features/search'
+import { CreatorPickerView, SEARCH_CONTAINER, SEARCH_SCREEN } from '@features/search'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -63,11 +63,11 @@ export default async function GiftStarPage() {
     const t = await getServerT()
 
     return (
-        <main className="flex flex-1 flex-col">
+        <main className={`flex flex-1 flex-col ${SEARCH_SCREEN}`}>
             {/* No hairline under the bar, matching `/search`: the panel below brings its own edge
                 from `md` up, and a full-bleed rule across a screen whose content is already a
                 bounded surface only draws a second one. */}
-            <div className="sticky top-0 z-20 bg-(--background)">
+            <div className={`sticky top-0 z-20 ${SEARCH_SCREEN}`}>
                 <PageBackBar title={t('balance_action_gift_star')} className={SEARCH_CONTAINER} />
             </div>
             <div className={`${SEARCH_CONTAINER} flex flex-1 flex-col md:pb-6`}>

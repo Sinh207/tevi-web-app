@@ -30,7 +30,7 @@ export { SearchFollowingStrip } from './components/search-following-strip'
 export { SearchRecentsList } from './components/search-recents-list'
 export { SearchFollowingSkeleton, SearchSkeleton } from './components/search-skeleton'
 export { SearchView } from './components/search-view'
-export { SEARCH_CONTAINER } from './lib/container'
+export { SEARCH_CONTAINER, SEARCH_SCREEN } from './lib/container'
 /** Exported for `/dev/search`, so the no-results state can be seen with its art in place. */
 export { SEARCH_ART } from './lib/illustrations'
 /**

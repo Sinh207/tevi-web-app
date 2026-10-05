@@ -93,9 +93,69 @@ describe('connecting', () => {
         expect(r.status()).toBe('connecting')
 
         sockets[0].fire('connect')
-        expect(r.status()).toBe('connected')
         expect(sockets[0].emits.map(e => e.event)).toContain('join_event')
         expect(sockets[0].emits[0].args[0]).toBe('evt-1')
+    })
+
+    /**
+     * ⚠ **Connected means joined.** Flipping on the transport's `connect` let the chat ask for its
+     * history and pin before the server had the socket in the room — both came back empty on
+     * every reload.
+     */
+    it('reports connected only once the room acknowledges the join', () => {
+        const r = room()
+        r.connect('evt-1')
+        sockets[0].fire('connect')
+        expect(r.status()).toBe('connecting')
+
+        sockets[0].ack({ err_code: 0 })
+        expect(r.status()).toBe('connected')
+    })
+
+    /**
+     * ⚠ **A refused join is not a join.** A reader the creator removed, coming back: the room
+     * answers `join_event` with a non-zero code. Marked `connected` anyway, the composer took a
+     * message the room then refused with a 403, and gifts stayed on — legacy gates both on this ack.
+     */
+    it('reports refused when the room answers the join with an error', () => {
+        const r = room()
+        r.connect('evt-1')
+        sockets[0].fire('connect')
+        sockets[0].ack({ err_code: 403, message: 'You were removed' })
+        expect(r.status()).toBe('refused')
+        expect(r.refusalMessage()).toBe('You were removed')
+
+        // A later reconnect that the room does accept is a join like any other.
+        sockets[0].fire('disconnect')
+        sockets[0].fire('connect')
+        sockets[0].ack({ err_code: 0 })
+        expect(r.status()).toBe('connected')
+        expect(r.refusalMessage()).toBeNull()
+    })
+
+    it('ignores the answer to a join sent before a reconnect', () => {
+        const r = room()
+        r.connect('evt-1')
+        sockets[0].fire('connect')
+        const firstJoin = sockets[0].emits.length - 1
+        sockets[0].fire('disconnect')
+        sockets[0].fire('connect')
+
+        sockets[0].ack({ err_code: 0 }, firstJoin)
+        expect(r.status()).toBe('connecting')
+        sockets[0].ack({ err_code: 0 })
+        expect(r.status()).toBe('connected')
+    })
+
+    it('stops waiting for a join that never answers', () => {
+        vi.useFakeTimers()
+        const r = room()
+        r.connect('evt-1')
+        sockets[0].fire('connect')
+        expect(r.status()).toBe('connecting')
+
+        vi.advanceTimersByTime(10_000)
+        expect(r.status()).toBe('connected')
     })
 
     /**

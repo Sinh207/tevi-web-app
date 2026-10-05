@@ -65,13 +65,22 @@ const boolish = z.coerce.boolean().catch(false)
  * their camera off, and the seat draws their avatar with a mic ring instead of a black rectangle.
  * Defaulting either to `true` would leave an empty box where a person should be.
  */
-export const livePublisherSchema = z.looseObject({
+const livePublisherBase = z.looseObject({
     id: nullableId,
     name: nullableText,
     avatar: nullableText,
     audio: boolish,
     video: boolish,
     is_host: boolish,
+    /** Premium, as the chat's people carry it (`{ image }`) — legacy reads `publisher.premium_badge`. */
+    premium_badge: z
+        .unknown()
+        .transform(v => {
+            if (typeof v === 'string') return v.trim() ? { image: v.trim() } : null
+            const p = z.looseObject({ image: nullableText }).safeParse(v)
+            return p.success && p.data.image ? p.data : null
+        })
+        .catch(null),
     verified_tick_badge: z
         .unknown()
         .transform(v => {
@@ -80,7 +89,35 @@ export const livePublisherSchema = z.looseObject({
         })
         .catch(null),
 })
-export type LivePublisher = z.infer<typeof livePublisherSchema>
+/**
+ * The publisher's channel slug, **if the room payload carries one** — legacy reads none, so the
+ * spelling is unconfirmed (**B111**). The three a Tevi payload uses elsewhere are tried in turn,
+ * off the raw object `looseObject` keeps; absent, only the host (whose channel is the event's) can
+ * be linked to.
+ */
+function slugOf(raw: Record<string, unknown>): string | null {
+    for (const key of ['channel_slug', 'slug', 'username']) {
+        const v = raw[key]
+        if (typeof v === 'string' && v.trim()) return v.trim()
+    }
+    return null
+}
+
+export const livePublisherSchema = livePublisherBase.transform(p => ({
+    ...p,
+    channel_slug: slugOf(p as Record<string, unknown>),
+}))
+/**
+ * The two additions are **optional on the type**: both are "if the payload carries it", and a
+ * publisher assembled elsewhere (a fixture, a socket frame) is complete without them.
+ */
+export type LivePublisher = Omit<
+    z.infer<typeof livePublisherSchema>,
+    'channel_slug' | 'premium_badge'
+> & {
+    channel_slug?: string | null
+    premium_badge?: { image: string | null } | null
+}
 
 /**
  * One pullable rendition of the stream — the CDN path, as opposed to the Agora path.
@@ -128,6 +165,23 @@ export const livePlaybackSchema = z.looseObject({
                 : [],
         )
         .catch([]),
+    /**
+     * The preview's window, in seconds — the backend's, not legacy's hard-coded ten. Present on a
+     * preview answer only; `null` on the real stream or an older payload.
+     */
+    preview_duration: z
+        .unknown()
+        .transform(v => {
+            const n = typeof v === 'string' ? Number(v) : v
+            return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null
+        })
+        .catch(null),
+    /**
+     * When the preview window closes, as an ISO timestamp. **The same value on every call within
+     * one window**, which is what makes a reload resume the look instead of restarting it — see
+     * `previewDeadline`.
+     */
+    preview_expires_at: nullableText,
 })
 export type LivePlayback = z.infer<typeof livePlaybackSchema>
 
