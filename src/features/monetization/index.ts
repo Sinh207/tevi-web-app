@@ -33,6 +33,14 @@ export { RevenueCard } from './components/revenue-card'
 export { RevenueCardSkeleton } from './components/revenue-card-skeleton'
 export { RevenueInfoDialog } from './components/revenue-info-dialog'
 export { StartEarningBanner } from './components/start-earning-banner'
+/**
+ * The creator's own membership tier.
+ *
+ * Exported because the **post composer** offers a members-only route and needs a tier id to
+ * require. It is read by the host that mounts the composer, not by `features/post` — that feature
+ * is reached through `features/channel`, so it cannot ask.
+ */
+export { useMyMembershipTier } from './hooks/use-my-membership-tier'
 export {
     MEMBERSHIP_LIST_PANEL,
     MEMBERSHIP_PANEL,

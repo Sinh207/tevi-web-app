@@ -17,7 +17,7 @@ import { eventPath } from '../routes'
  *   sheet instead, which is the same upgrade `channel-top-bar.tsx` made for a space: seven channels,
  *   a QR step, and a minted link that attributes the share. `features/share`'s own barrel doc lists
  *   the six surfaces it opens from; this is the seventh, and the first to name a **live**
- *   (`liveShareContext` — no legacy twin, see its note and **B106**).
+ *   (`liveShareContext` — no legacy twin, see its note and **B115**).
  * - **Preview** — an eye button that, on a desktop, opened a QR dialog and on a phone bounced to the
  *   app. **Not ported, deliberately**: the watch panel below this card *is* that hand-off, with the
  *   same QR and the same store links, and it is there unconditionally rather than behind a control

@@ -6,40 +6,16 @@
  * so Arabic's six plural forms never come up.
  */
 
-/**
- * `1.2K`, `241K`, `1.4M` — locale-aware, because compact notation is not universal (`1.2K` is
- * `1,2 mil` in Portuguese and `1.2万` in Japanese, and `Intl` knows that; a hand-rolled
- * `n / 1000 + 'K'` does not).
- *
- * Guards, each for a real payload: a count below 1000 stays exact (a creator with 999
- * followers should see 999, not `1K`); a negative or non-finite value floors to `0` rather
- * than rendering `NaN` or `-5`.
+/*
+ * `formatCompactCount` and `formatExactCount` moved to `@shared/lib/format-count` when a second
+ * feature needed to render a tally and could not import this one — see that file's header. They are
+ * re-exported here so this feature's call sites are unchanged. Everything else below stays: it
+ * knows a product fact (the figure is USD, the description's limit, how a space says "2 days ago")
+ * rather than being a formatting primitive.
  */
-export function formatCompactCount(value: number | null | undefined, locale = 'en'): string {
-    const count = typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : 0
-    try {
-        return new Intl.NumberFormat(locale, {
-            notation: 'compact',
-            maximumFractionDigits: 1,
-        }).format(count)
-    } catch {
-        // An unrecognised locale tag must not take the header down.
-        return new Intl.NumberFormat('en', {
-            notation: 'compact',
-            maximumFractionDigits: 1,
-        }).format(count)
-    }
-}
+import { formatCompactCount, formatExactCount } from '@shared/lib/format-count'
 
-/** The exact count, for the `title`/`aria-label` behind the compact one — `241K` is lossy. */
-export function formatExactCount(value: number | null | undefined, locale = 'en'): string {
-    const count = typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : 0
-    try {
-        return new Intl.NumberFormat(locale).format(count)
-    } catch {
-        return new Intl.NumberFormat('en').format(count)
-    }
-}
+export { formatCompactCount, formatExactCount }
 
 /**
  * The joined date, or `''`.

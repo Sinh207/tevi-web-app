@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-977 ids across 28 surfaces.
+1079 ids across 30 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -64,7 +64,7 @@ Also present on every route it is mounted under — `src/app/error.tsx`.
 
 ## `auth` — Sign in, sign up, password — and the global sign-in dialog and splash
 
-Routes: `/app/privacy-settings`, `/login`, `/settings/password`, `/settings/two-step-verification`, `/signup`
+Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/app/privacy-settings`, `/login`, `/settings/password`, `/settings/two-step-verification`, `/signup`
 
 Also present on every route it is mounted under — `src/app/session-providers.tsx`.
 
@@ -181,7 +181,7 @@ Also present on every route it is mounted under — `src/features/navigation/com
 
 ## `channel` — Channel / space, following, profile settings
 
-Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/event/[code]/report`, `/[slug]/membership/[[...tier]]`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
+Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/event/[code]`, `/[slug]/event/[code]/report`, `/[slug]/membership/[[...tier]]`, `/[slug]/messages`, `/[slug]/post/[code]`, `/bookmarks`, `/follow-requests`, `/following`, `/invitation/verify`, `/mcn-partnership`, `/mcn-user-invitation/verify`, `/my-space`, `/settings/blocked-accounts`, `/settings/custom-profile`, `/settings/space-visibility`
 
 | testid | companions | source |
 |---|---|---|
@@ -224,7 +224,7 @@ Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug
 | `channel-event-link` | — | `src/features/channel/components/channel-event-card.tsx:109` |
 | `channel-event-qr` | — | `src/features/channel/components/channel-event-menu.tsx:98` |
 | `channel-event-share` | — | `src/features/channel/components/channel-event-menu.tsx:90` |
-| `channel-follow` | — | `src/features/channel/components/channel-viewer-actions.tsx:250` |
+| `channel-follow` | — | `src/features/channel/components/channel-viewer-actions.tsx:251` |
 | `channel-follow-request-action` | `data-row-key` | `src/features/channel/components/follow-request-row.tsx:226` |
 | `channel-follow-request-link` | `data-channel-slug` | `src/features/channel/components/follow-request-row.tsx:204` |
 | `channel-follow-requests-accept` | — | `src/features/channel/components/follow-requests-view.tsx:391` |
@@ -234,19 +234,19 @@ Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug
 | `channel-follow-requests-loading` | — | `src/features/channel/components/follow-requests-skeleton.tsx:32` |
 | `channel-follow-requests-retry` | — | `src/features/channel/components/follow-requests-view.tsx:182` |
 | `channel-follow-requests-sign-in` | — | `src/features/channel/components/follow-requests-view.tsx:162` |
-| `channel-following-filter` | — | `src/features/channel/components/following-view.tsx:422` |
-| `channel-following-find-people` | — | `src/features/channel/components/following-view.tsx:300` |
+| `channel-following-filter` | — | `src/features/channel/components/following-view.tsx:429` |
+| `channel-following-find-people` | — | `src/features/channel/components/following-view.tsx:307` |
 | `channel-following-live` | — | `src/features/channel/components/following-view.tsx:208` |
 | `channel-following-live-link` | — | `src/features/channel/components/following-live-row.tsx:451` |
 | `channel-following-live-restricted` | — | `src/features/channel/components/following-live-row.tsx:461` |
-| `channel-following-lives-toggle` | — | `src/features/channel/components/following-view.tsx:225` |
+| `channel-following-lives-toggle` | — | `src/features/channel/components/following-view.tsx:232` |
 | `channel-following-loading` | — | `src/features/channel/components/following-skeleton.tsx:36` |
 | `channel-following-menu-item` | `data-row-key` | `src/features/channel/components/following-row-menu.tsx:135` |
-| `channel-following-retry` | — | `src/features/channel/components/following-view.tsx:274` |
-| `channel-following-row` | — | `src/features/channel/components/following-view.tsx:352` |
+| `channel-following-retry` | — | `src/features/channel/components/following-view.tsx:281` |
+| `channel-following-row` | — | `src/features/channel/components/following-view.tsx:359` |
 | `channel-following-row-link` | `data-channel-slug` | `src/features/channel/components/following-channel-row.tsx:282` |
-| `channel-following-sign-in` | — | `src/features/channel/components/following-view.tsx:254` |
-| `channel-following-sort` | — | `src/features/channel/components/following-view.tsx:447` |
+| `channel-following-sign-in` | — | `src/features/channel/components/following-view.tsx:261` |
+| `channel-following-sort` | — | `src/features/channel/components/following-view.tsx:454` |
 | `channel-header-loading` | — | `src/features/channel/components/channel-header-skeleton.tsx:26` |
 | `channel-invitation-accept` | — | `src/features/channel/components/mcn-invitation-view.tsx:616` |
 | `channel-invitation-error` | — | `src/features/channel/components/mcn-invitation-view.tsx:96` |
@@ -292,8 +292,9 @@ Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug
 | `channel-mcn-partnership-sign-in` | — | `src/features/channel/components/mcn-partnership-view.tsx:105` |
 | `channel-mcn-partnership-signed-out` | — | `src/features/channel/components/mcn-partnership-view.tsx:95` |
 | `channel-mcn-partnership-space` | — | `src/features/channel/components/mcn-partnership-view.tsx:423` |
+| `channel-media` | — | `src/features/channel/components/channel-thread-list.tsx:172` |
 | `channel-menu-follow` | — | `src/features/channel/components/channel-viewer-menu.tsx:143` |
-| `channel-message` | — | `src/features/channel/components/channel-viewer-actions.tsx:293` |
+| `channel-message` | — | `src/features/channel/components/channel-viewer-actions.tsx:294` |
 | `channel-my-space-no-channel` | — | `src/features/channel/components/my-space-redirect.tsx:157` |
 | `channel-my-space-retry` | — | `src/features/channel/components/my-space-redirect.tsx:165` |
 | `channel-my-space-sign-in` | — | `src/features/channel/components/my-space-redirect.tsx:133` |
@@ -350,6 +351,7 @@ Routes: `/[slug]`, `/[slug]/direct-donation`, `/[slug]/earnings-report`, `/[slug
 | `channel-suspended-guidelines` | — | `src/features/channel/components/channel-state-screens.tsx:117` |
 | `channel-tabs` | — | `src/features/channel/components/channel-tabs.tsx:86` |
 | `channel-tabs-loading` | — | `src/features/channel/components/channel-tabs-skeleton.tsx:35` |
+| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:226` |
 | `channel-top-bar-loading` | — | `src/features/channel/components/channel-top-bar-skeleton.tsx:43` |
 | `channel-unblock` | — | `src/features/channel/components/blocked-account-row.tsx:205` |
 | `channel-verified-badge` | — | `src/features/channel/components/channel-identity.tsx:94` |
@@ -404,8 +406,8 @@ Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
 
 | testid | companions | source |
 |---|---|---|
-| `event-account-banned` | — | `src/features/event/components/event-watch-panel.tsx:738` |
-| `event-account-banned-home` | — | `src/features/event/components/event-watch-panel.tsx:756` |
+| `event-account-banned` | — | `src/features/event/components/event-watch-panel.tsx:743` |
+| `event-account-banned-home` | — | `src/features/event/components/event-watch-panel.tsx:761` |
 | `event-age-confirm` | — | `src/features/event/components/event-age-gate.tsx:155` |
 | `event-age-decline` | — | `src/features/event/components/event-age-gate.tsx:168` |
 | `event-age-gate` | — | `src/features/event/components/event-age-gate.tsx:78` |
@@ -416,9 +418,9 @@ Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
 | `event-banned-home` | — | `src/features/event/components/event-state-screens.tsx:203` |
 | `event-banned-notice` | — | `src/features/event/components/event-state-screens.tsx:174` |
 | `event-become-member` | — | `src/features/event/components/event-unlock-actions.tsx:98` |
-| `event-blocked` | — | `src/features/event/components/event-watch-panel.tsx:682` |
-| `event-blocked-discover` | — | `src/features/event/components/event-watch-panel.tsx:696` |
-| `event-blocked-home` | — | `src/features/event/components/event-watch-panel.tsx:710` |
+| `event-blocked` | — | `src/features/event/components/event-watch-panel.tsx:687` |
+| `event-blocked-discover` | — | `src/features/event/components/event-watch-panel.tsx:701` |
+| `event-blocked-home` | — | `src/features/event/components/event-watch-panel.tsx:715` |
 | `event-card-retry` | — | `src/features/event/components/event-card-state.tsx:120` |
 | `event-copy-code` | — | `src/features/event/components/event-analytics-cards.tsx:182` |
 | `event-description-toggle` | — | `src/features/event/components/event-description-card.tsx:56` |
@@ -432,10 +434,10 @@ Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
 | `event-geo-home` | — | `src/features/event/components/event-watch-panel.tsx:321` |
 | `event-geo-restricted` | — | `src/features/event/components/event-watch-panel.tsx:308` |
 | `event-gift-animation` | — | `src/features/event/components/event-gift-animation.tsx:105` |
-| `event-gift-float` | — | `src/features/event/components/event-studio-screen.tsx:852` |
+| `event-gift-float` | — | `src/features/event/components/event-studio-screen.tsx:868` |
 | `event-gift-float-item` | `data-card-id` | `src/features/event/components/event-gift-float.tsx:79` |
-| `event-gift-panel` | — | `src/features/event/components/event-studio-screen.tsx:964` |
-| `event-gift-tray` | — | `src/features/event/components/event-studio-screen.tsx:931` |
+| `event-gift-panel` | — | `src/features/event/components/event-studio-screen.tsx:980` |
+| `event-gift-tray` | — | `src/features/event/components/event-studio-screen.tsx:947` |
 | `event-host` | — | `src/features/event/components/event-host-card.tsx:52` |
 | `event-host-info` | — | `src/features/event/components/event-host-info-card.tsx:47` |
 | `event-host-live` | — | `src/features/event/components/event-host-live-screen.tsx:127` |
@@ -445,8 +447,8 @@ Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
 | `event-invitation-close` | — | `src/features/event/components/event-invitation-dialog.tsx:128` |
 | `event-invitation-faces` | — | `src/features/event/components/event-invitation-dialog.tsx:58` |
 | `event-invitation-stores` | — | `src/features/event/components/event-invitation-dialog.tsx:122` |
-| `event-kicked-out` | — | `src/features/event/components/event-watch-panel.tsx:641` |
-| `event-kicked-out-home` | — | `src/features/event/components/event-watch-panel.tsx:654` |
+| `event-kicked-out` | — | `src/features/event/components/event-watch-panel.tsx:646` |
+| `event-kicked-out-home` | — | `src/features/event/components/event-watch-panel.tsx:659` |
 | `event-live-revenue` | — | `src/features/event/components/event-revenue-summary.tsx:115` |
 | `event-locked` | — | `src/features/event/components/event-watch-panel.tsx:560` |
 | `event-locked-get-app` | — | `src/features/event/components/event-watch-panel.tsx:589` |
@@ -487,10 +489,10 @@ Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
 | `event-seat-card-space` | — | `src/features/event/components/event-seat-card.tsx:187` |
 | `event-share` | — | `src/features/event/components/event-actions.tsx:69` |
 | `event-share-bar` | — | `src/features/event/components/event-share-button.tsx:45` |
-| `event-sign-in` | — | `src/features/event/components/event-watch-panel.tsx:792` |
-| `event-sign-in-action` | — | `src/features/event/components/event-watch-panel.tsx:799` |
+| `event-sign-in` | — | `src/features/event/components/event-watch-panel.tsx:797` |
+| `event-sign-in-action` | — | `src/features/event/components/event-watch-panel.tsx:804` |
 | `event-status` | — | `src/features/event/components/event-details-card.tsx:50` |
-| `event-studio` | — | `src/features/event/components/event-studio-screen.tsx:592` |
+| `event-studio` | — | `src/features/event/components/event-studio-screen.tsx:608` |
 | `event-studio-ad` | — | `src/features/event/components/event-studio-ad.tsx:55` |
 | `event-studio-app` | — | `src/features/event/components/event-studio-chrome.tsx:323` |
 | `event-studio-app-dialog` | — | `src/features/event/components/event-studio-chrome.tsx:336` |
@@ -521,12 +523,12 @@ Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
 | `event-studio-emoji` | — | `src/features/event/components/event-studio-chat.tsx:1292` |
 | `event-studio-emoji-panel` | — | `src/features/event/components/event-studio-chat.tsx:1257` |
 | `event-studio-fee-error` | — | `src/features/event/components/event-studio-chat.tsx:1660` |
-| `event-studio-fee-frost` | — | `src/features/event/components/event-studio-screen.tsx:1015` |
+| `event-studio-fee-frost` | — | `src/features/event/components/event-studio-screen.tsx:1031` |
 | `event-studio-fee-notice` | — | `src/features/event/components/event-studio-chat.tsx:1665` |
 | `event-studio-follow` | — | `src/features/event/components/event-studio-channel-actions.tsx:317` |
 | `event-studio-get-membership` | — | `src/features/event/components/event-studio-upsell.tsx:81` |
 | `event-studio-get-premium` | — | `src/features/event/components/event-studio-upsell.tsx:92` |
-| `event-studio-gift-trigger` | — | `src/features/event/components/event-studio-compact.tsx:360` |
+| `event-studio-gift-trigger` | — | `src/features/event/components/event-studio-compact.tsx:362` |
 | `event-studio-leaderboard` | — | `src/features/event/components/event-studio-chat.tsx:339` |
 | `event-studio-leaderboard-empty` | — | `src/features/event/components/event-studio-chat.tsx:285` |
 | `event-studio-leaderboard-loading` | — | `src/features/event/components/event-studio-chat.tsx:257` |
@@ -642,6 +644,105 @@ Routes: `/[slug]/membership/[[...tier]]`, `/app/[channelSlug]/membership/[packag
 | `membership-tabs` | — | `src/features/membership/components/holdings/my-membership-view.tsx:519` |
 | `membership-view-detail` | — | `src/features/membership/components/join/become-a-member-button.tsx:126` |
 
+## `message` — Direct messages — the conversation list
+
+Routes: `/[slug]/messages`, `/messages`
+
+| testid | companions | source |
+|---|---|---|
+| `message-block-confirm` | — | `src/features/message/components/chat-room-menu.tsx:99` |
+| `message-bubble` | `data-message-id` | `src/features/message/components/message-bubble.tsx:111` |
+| `message-bubble-copy` | — | `src/features/message/components/message-bubble.tsx:306` |
+| `message-bubble-delete` | — | `src/features/message/components/message-bubble.tsx:346` |
+| `message-bubble-delete-all` | — | `src/features/message/components/message-bubble.tsx:361` |
+| `message-bubble-edit` | — | `src/features/message/components/message-bubble.tsx:333` |
+| `message-bubble-menu-reply` | — | `src/features/message/components/message-bubble.tsx:318` |
+| `message-bubble-menu-trigger` | — | `src/features/message/components/message-bubble.tsx:293` |
+| `message-bubble-option` | `data-option-value` | `src/features/message/components/message-bubble.tsx:242` |
+| `message-bubble-remove` | — | `src/features/message/components/message-bubble.tsx:215` |
+| `message-bubble-reply` | — | `src/features/message/components/message-bubble.tsx:277` |
+| `message-bubble-retry` | — | `src/features/message/components/message-bubble.tsx:207` |
+| `message-composer-attach` | — | `src/features/message/components/message-composer.tsx:181` |
+| `message-composer-cancel` | — | `src/features/message/components/message-composer.tsx:164` |
+| `message-composer-input` | — | `src/features/message/components/message-composer.tsx:194` |
+| `message-composer-submit` | — | `src/features/message/components/message-composer.tsx:230` |
+| `message-delete-confirm` | — | `src/features/message/components/conversation-pane.tsx:334` |
+| `message-delete-conversation-confirm` | — | `src/features/message/components/chat-room.tsx:469` |
+| `message-delete-message-confirm` | — | `src/features/message/components/chat-room.tsx:450` |
+| `message-embed-collection` | — | `src/features/message/components/message-embed.tsx:444` |
+| `message-embed-live` | — | `src/features/message/components/message-embed.tsx:480` |
+| `message-embed-mini-app` | — | `src/features/message/components/message-embed.tsx:250` |
+| `message-embed-post` | — | `src/features/message/components/message-embed.tsx:371` |
+| `message-embed-space` | — | `src/features/message/components/message-embed.tsx:285` |
+| `message-error` | — | `src/features/message/components/conversation-pane.tsx:128` |
+| `message-intro` | — | `src/features/message/components/chat-walls.tsx:340` |
+| `message-list-scroller` | — | `src/features/message/components/conversation-pane.tsx:318` |
+| `message-loading` | — | `src/features/message/components/conversation-skeleton.tsx:19` |
+| `message-no-chat` | — | `src/features/message/components/messages-shell.tsx:89` |
+| `message-photo-viewer` | — | `src/features/message/components/message-photo-viewer.tsx:65` |
+| `message-photo-viewer-close` | — | `src/features/message/components/message-photo-viewer.tsx:153` |
+| `message-photo-viewer-delete` | — | `src/features/message/components/message-photo-viewer.tsx:82` |
+| `message-photo-viewer-next` | — | `src/features/message/components/message-photo-viewer.tsx:133` |
+| `message-photo-viewer-prev` | — | `src/features/message/components/message-photo-viewer.tsx:122` |
+| `message-photo-viewer-reply` | — | `src/features/message/components/message-photo-viewer.tsx:95` |
+| `message-photos` | — | `src/features/message/components/photo-attach-dialog.tsx:115` |
+| `message-photos-caption` | — | `src/features/message/components/photo-attach-dialog.tsx:232` |
+| `message-photos-close` | — | `src/features/message/components/photo-attach-dialog.tsx:122` |
+| `message-photos-pick` | — | `src/features/message/components/photo-attach-dialog.tsx:185` |
+| `message-photos-remove` | — | `src/features/message/components/photo-attach-dialog.tsx:167` |
+| `message-photos-submit` | — | `src/features/message/components/photo-attach-dialog.tsx:256` |
+| `message-popup` | — | `src/features/message/components/chat-popup-window.tsx:68` |
+| `message-popup-bar` | — | `src/features/message/components/conversation-pane.tsx:223` |
+| `message-popup-full` | — | `src/features/message/components/chat-popup-window.tsx:141` |
+| `message-popup-see-all` | — | `src/features/message/components/chat-popup-window.tsx:181` |
+| `message-popup-toggle` | — | `src/features/message/components/chat-popup-window.tsx:154` |
+| `message-retry` | — | `src/features/message/components/conversation-pane.tsx:136` |
+| `message-room` | — | `src/features/message/components/chat-room.tsx:501` |
+| `message-room-back` | — | `src/features/message/components/chat-header.tsx:136` |
+| `message-room-connection` | — | `src/features/message/components/connection-banner.tsx:58` |
+| `message-room-error` | — | `src/features/message/components/chat-room.tsx:347` |
+| `message-room-menu-block` | — | `src/features/message/components/chat-room-menu.tsx:81` |
+| `message-room-menu-delete` | — | `src/features/message/components/chat-room-menu.tsx:89` |
+| `message-room-menu-mute` | — | `src/features/message/components/chat-room-menu.tsx:69` |
+| `message-room-menu-space` | — | `src/features/message/components/chat-room-menu.tsx:62` |
+| `message-room-menu-trigger` | — | `src/features/message/components/chat-room-menu.tsx:54` |
+| `message-room-missing` | — | `src/features/message/components/chat-room.tsx:306` |
+| `message-room-sign-in` | — | `src/features/message/components/chat-room.tsx:291` |
+| `message-room-signed-out` | — | `src/features/message/components/chat-room.tsx:284` |
+| `message-room-space` | — | `src/features/message/components/chat-header.tsx:149` |
+| `message-row` | — | `src/features/message/components/conversation-list.tsx:90` |
+| `message-row-link` | — | `src/features/message/components/conversation-row.tsx:209` |
+| `message-row-menu-delete` | — | `src/features/message/components/conversation-row-menu.tsx:71` |
+| `message-row-menu-space` | — | `src/features/message/components/conversation-row-menu.tsx:61` |
+| `message-row-menu-trigger` | — | `src/features/message/components/conversation-row-menu.tsx:49` |
+| `message-row-online` | — | `src/features/message/components/conversation-row.tsx:194` |
+| `message-search-empty` | — | `src/features/message/components/conversation-pane.tsx:180` |
+| `message-search-input` | — | `src/features/message/components/conversation-pane.tsx:260` |
+| `message-search-list` | — | `src/features/message/components/conversation-pane.tsx:172` |
+| `message-settings` | — | `src/features/message/components/message-settings-dialog.tsx:96` |
+| `message-settings-close` | — | `src/features/message/components/message-settings-dialog.tsx:168` |
+| `message-settings-copy` | — | `src/features/message/components/message-settings-dialog.tsx:144` |
+| `message-settings-sender` | — | `src/features/message/components/message-settings-dialog.tsx:106` |
+| `message-settings-share` | — | `src/features/message/components/message-settings-dialog.tsx:126` |
+| `message-settings-submit` | — | `src/features/message/components/message-settings-dialog.tsx:157` |
+| `message-settings-trigger` | — | `src/features/message/components/conversation-pane.tsx:240` |
+| `message-sign-in` | — | `src/features/message/components/conversation-pane.tsx:160` |
+| `message-signed-out` | — | `src/features/message/components/conversation-pane.tsx:151` |
+| `message-tab` | `data-tab-id` | `src/features/message/components/conversation-pane.tsx:277` |
+| `message-thread` | — | `src/features/message/components/message-thread-view.tsx:195` |
+| `message-thread-error` | — | `src/features/message/components/chat-room.tsx:384` |
+| `message-thread-jump` | — | `src/features/message/components/message-thread-view.tsx:308` |
+| `message-thread-loading` | — | `src/features/message/components/chat-room.tsx:521` |
+| `message-thread-unread` | — | `src/features/message/components/message-thread-view.tsx:228` |
+| `message-wall` | — | `src/features/message/components/chat-walls.tsx:309` |
+| `message-wall-delete` | — | `src/features/message/components/chat-walls.tsx:187` |
+| `message-wall-first-wave` | — | `src/features/message/components/chat-walls.tsx:92` |
+| `message-wall-follow-submit` | — | `src/features/message/components/chat-walls.tsx:234` |
+| `message-wall-member-join` | — | `src/features/message/components/chat-walls.tsx:68` |
+| `message-wall-request-cancel` | — | `src/features/message/components/chat-walls.tsx:261` |
+| `message-wall-request-submit` | — | `src/features/message/components/chat-walls.tsx:273` |
+| `message-wall-unblock` | — | `src/features/message/components/chat-walls.tsx:200` |
+
 ## `mini-app` — Mini-app player — window, tabs, top-up
 
 Routes: `/app/privacy/mini-app`, `/app/tos/mini-app`, `/privacy/mini-app`, `/tos/mini-app`
@@ -654,16 +755,16 @@ Also present on every route it is mounted under — `src/app/session-providers.t
 | `mini-app-back` | — | `src/features/mini-app/components/mini-app-tab-bar.tsx:90` |
 | `mini-app-close` | — | `src/features/mini-app/components/mini-app-tab-bar.tsx:98` |
 | `mini-app-close-all` | — | `src/features/mini-app/components/mini-app-tab-bar.tsx:151` |
-| `mini-app-launch` | — | `src/features/mini-app/components/open-mini-app-button.tsx:75` |
+| `mini-app-launch` | — | `src/features/mini-app/components/open-mini-app-button.tsx:81` |
 | `mini-app-maximize` | — | `src/features/mini-app/components/mini-app-tab-bar.tsx:143` |
-| `mini-app-menu` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:67` |
-| `mini-app-menu-messages` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:100` |
-| `mini-app-menu-open-space` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:85` |
-| `mini-app-menu-privacy` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:135` |
-| `mini-app-menu-reload` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:121` |
-| `mini-app-menu-settings` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:76` |
-| `mini-app-menu-share` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:114` |
-| `mini-app-menu-terms` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:128` |
+| `mini-app-menu` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:74` |
+| `mini-app-menu-messages` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:107` |
+| `mini-app-menu-open-space` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:92` |
+| `mini-app-menu-privacy` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:139` |
+| `mini-app-menu-reload` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:125` |
+| `mini-app-menu-settings` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:83` |
+| `mini-app-menu-share` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:118` |
+| `mini-app-menu-terms` | — | `src/features/mini-app/components/mini-app-tab-menu.tsx:132` |
 | `mini-app-minimize` | — | `src/features/mini-app/components/mini-app-tab-bar.tsx:137` |
 | `mini-app-pill-close` | — | `src/features/mini-app/components/mini-app-minimized-pill.tsx:73` |
 | `mini-app-pill-restore` | — | `src/features/mini-app/components/mini-app-minimized-pill.tsx:50` |
@@ -797,7 +898,7 @@ Routes: `/my-wallet`, `/my-wallet/payout-method`, `/my-wallet/payout-request`, `
 
 ## `navigation` — Shell — rail, top bar, tab bar, account drawer, end rail
 
-Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
+Routes: `/[slug]/earnings-report`, `/[slug]/earnings-report/[dateTs]`, `/[slug]/post/[code]`, `/bookmarks`, `/brand-assets`, `/card-management`, `/community-guidelines`, `/dashboard-analytics`, `/follow-requests`, `/following`, `/get-star`, `/get-star/transaction-history`, `/gift-star`, `/identification`, `/letter`, `/moderation`, `/monetization`, `/my-space`, `/my-star`, `/my-wallet`, `/notification`, `/privacy`, `/privacy/mini-app`, `/privacy/tevi-premium`, `/redeem-gift-code`, `/safety`, `/search`, `/settings/blocked-accounts`, `/settings/password`, `/settings/space-visibility`, `/terms`, `/terms/tevi-premium`, `/tos/mini-app`
 
 Also present on every route it is mounted under — `src/app/(web)/(main)/layout.tsx`.
 
@@ -834,31 +935,31 @@ Also present on every route it is mounted under — `src/app/(web)/(main)/layout
 | `navigation-menu-sign-out-confirm` | — | `src/features/navigation/components/menu/menu-drawer.tsx:880` |
 | `navigation-menu-storage-row` | `data-row-key` | `src/features/navigation/components/menu/data-storage-screen.tsx:129` |
 | `navigation-menu-withdraw` | — | `src/features/navigation/components/menu/menu-drawer.tsx:621` |
-| `navigation-navbar` | — | `src/features/navigation/components/app-navbar.tsx:86` |
-| `navigation-navbar-chat` | — | `src/features/navigation/components/app-navbar.tsx:162` |
+| `navigation-navbar` | — | `src/features/navigation/components/app-navbar.tsx:64` |
+| `navigation-navbar-chat` | — | `src/features/navigation/components/app-navbar.tsx:145` |
 | `navigation-navbar-create` | — | `src/features/navigation/components/create-rail-entry.tsx:69` |
 | `navigation-navbar-create-menu` | — | `src/features/navigation/components/create-rail-entry.tsx:106` |
 | `navigation-navbar-create-menu-item` | `data-option-value` | `src/features/navigation/components/create-rail-entry.tsx:111` |
 | `navigation-navbar-create-prompt` | — | `src/features/navigation/components/create-rail-entry.tsx:134` |
-| `navigation-navbar-following` | — | `src/features/navigation/components/app-navbar.tsx:114` |
-| `navigation-navbar-home` | — | `src/features/navigation/components/app-navbar.tsx:99` |
-| `navigation-navbar-language` | — | `src/features/navigation/components/app-navbar.tsx:278` |
-| `navigation-navbar-menu` | — | `src/features/navigation/components/app-navbar.tsx:260` |
-| `navigation-navbar-notifications` | — | `src/features/navigation/components/app-navbar.tsx:197` |
-| `navigation-navbar-profile` | — | `src/features/navigation/components/app-navbar.tsx:232` |
-| `navigation-navbar-search` | — | `src/features/navigation/components/app-navbar.tsx:181` |
+| `navigation-navbar-following` | — | `src/features/navigation/components/app-navbar.tsx:92` |
+| `navigation-navbar-home` | — | `src/features/navigation/components/app-navbar.tsx:77` |
+| `navigation-navbar-language` | — | `src/features/navigation/components/app-navbar.tsx:269` |
+| `navigation-navbar-menu` | — | `src/features/navigation/components/app-navbar.tsx:251` |
+| `navigation-navbar-notifications` | — | `src/features/navigation/components/app-navbar.tsx:188` |
+| `navigation-navbar-profile` | — | `src/features/navigation/components/app-navbar.tsx:223` |
+| `navigation-navbar-search` | — | `src/features/navigation/components/app-navbar.tsx:172` |
 | `navigation-page-back` | — | `src/features/navigation/components/page-back-bar.tsx:131` |
-| `navigation-tab-bar` | — | `src/features/navigation/components/app-tab-bar.tsx:39` |
-| `navigation-tab-bar-create` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:51` |
-| `navigation-tab-bar-create-dialog` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:58` |
-| `navigation-tab-bar-create-dialog-close` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:102` |
-| `navigation-tab-bar-create-list` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:64` |
-| `navigation-tab-bar-create-list-row` | `data-row-key` | `src/features/navigation/components/create-tab-bar-fab.tsx:74` |
-| `navigation-tab-bar-create-prompt` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:109` |
-| `navigation-tab-bar-following` | — | `src/features/navigation/components/app-tab-bar.tsx:55` |
-| `navigation-tab-bar-home` | — | `src/features/navigation/components/app-tab-bar.tsx:41` |
-| `navigation-tab-bar-messages` | — | `src/features/navigation/components/app-tab-bar.tsx:64` |
-| `navigation-tab-bar-my-space` | — | `src/features/navigation/components/app-tab-bar.tsx:78` |
+| `navigation-tab-bar` | — | `src/features/navigation/components/app-tab-bar.tsx:33` |
+| `navigation-tab-bar-create` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:57` |
+| `navigation-tab-bar-create-dialog` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:64` |
+| `navigation-tab-bar-create-dialog-close` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:108` |
+| `navigation-tab-bar-create-list` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:70` |
+| `navigation-tab-bar-create-list-row` | `data-row-key` | `src/features/navigation/components/create-tab-bar-fab.tsx:80` |
+| `navigation-tab-bar-create-prompt` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:115` |
+| `navigation-tab-bar-following` | — | `src/features/navigation/components/app-tab-bar.tsx:49` |
+| `navigation-tab-bar-home` | — | `src/features/navigation/components/app-tab-bar.tsx:35` |
+| `navigation-tab-bar-messages` | — | `src/features/navigation/components/app-tab-bar.tsx:63` |
+| `navigation-tab-bar-my-space` | — | `src/features/navigation/components/app-tab-bar.tsx:77` |
 | `navigation-top-bar` | — | `src/features/navigation/components/app-top-bar.tsx:62` |
 | `navigation-top-bar-menu` | — | `src/features/navigation/components/app-top-bar.tsx:65` |
 | `navigation-top-bar-notifications` | — | `src/features/navigation/components/app-top-bar.tsx:151` |
@@ -876,12 +977,12 @@ Routes: `/notification`
 | `notification-actions` | — | `src/features/notification/components/notification-bar-actions.tsx:117` |
 | `notification-delete` | — | `src/features/notification/components/notification-row-menu.tsx:95` |
 | `notification-delete-confirm` | — | `src/features/notification/components/notification-view.tsx:290` |
-| `notification-filter-all` | — | `src/features/notification/components/notification-filter-dialog.tsx:121` |
-| `notification-filter-close` | — | `src/features/notification/components/notification-filter-dialog.tsx:315` |
-| `notification-filter-retry` | — | `src/features/notification/components/notification-filter-dialog.tsx:174` |
-| `notification-filter-row` | `data-option-value` | `src/features/notification/components/notification-filter-dialog.tsx:203` |
-| `notification-filter-save` | — | `src/features/notification/components/notification-filter-dialog.tsx:287` |
-| `notification-filter-type` | `data-option-value` | `src/features/notification/components/notification-filter-dialog.tsx:247` |
+| `notification-filter-all` | — | `src/features/notification/components/notification-filter-dialog.tsx:127` |
+| `notification-filter-close` | — | `src/features/notification/components/notification-filter-dialog.tsx:321` |
+| `notification-filter-retry` | — | `src/features/notification/components/notification-filter-dialog.tsx:180` |
+| `notification-filter-row` | `data-option-value` | `src/features/notification/components/notification-filter-dialog.tsx:209` |
+| `notification-filter-save` | — | `src/features/notification/components/notification-filter-dialog.tsx:293` |
+| `notification-filter-type` | `data-option-value` | `src/features/notification/components/notification-filter-dialog.tsx:253` |
 | `notification-get-app` | — | `src/features/notification/components/notification-view.tsx:317` |
 | `notification-loading` | — | `src/features/notification/components/notification-skeleton.tsx:35` |
 | `notification-mark-all` | — | `src/features/notification/components/notification-bar-actions.tsx:130` |
@@ -918,12 +1019,12 @@ Routes: `/app/dev-checkout`, `/card-management`, `/get-star`, `/get-star/transac
 
 | testid | companions | source |
 |---|---|---|
-| `payment-add-card-cancel` | — | `src/features/payment/components/add-card-dialog.tsx:306` |
-| `payment-add-card-close` | — | `src/features/payment/components/add-card-dialog.tsx:146` |
-| `payment-add-card-close-x` | — | `src/features/payment/components/add-card-dialog.tsx:125` |
-| `payment-add-card-default` | — | `src/features/payment/components/add-card-dialog.tsx:273` |
-| `payment-add-card-form` | — | `src/features/payment/components/add-card-dialog.tsx:245` |
-| `payment-add-card-submit` | — | `src/features/payment/components/add-card-dialog.tsx:318` |
+| `payment-add-card-cancel` | — | `src/features/payment/components/add-card-dialog.tsx:312` |
+| `payment-add-card-close` | — | `src/features/payment/components/add-card-dialog.tsx:152` |
+| `payment-add-card-close-x` | — | `src/features/payment/components/add-card-dialog.tsx:131` |
+| `payment-add-card-default` | — | `src/features/payment/components/add-card-dialog.tsx:279` |
+| `payment-add-card-form` | — | `src/features/payment/components/add-card-dialog.tsx:251` |
+| `payment-add-card-submit` | — | `src/features/payment/components/add-card-dialog.tsx:324` |
 | `payment-card-add` | — | `src/features/payment/components/card-management-view.tsx:378` |
 | `payment-card-add-empty` | — | `src/features/payment/components/card-management-view.tsx:414` |
 | `payment-card-checkout-close` | — | `src/features/payment/components/card-checkout-dialog.tsx:71` |
@@ -963,13 +1064,13 @@ Routes: `/app/dev-checkout`, `/card-management`, `/get-star`, `/get-star/transac
 | `payment-history-retry` | — | `src/features/payment/components/transaction-history-view.tsx:156` |
 | `payment-history-sign-in` | — | `src/features/payment/components/transaction-history-view.tsx:133` |
 | `payment-purchase-back` | — | `src/features/payment/components/star-purchase-dialog.tsx:93` |
-| `payment-purchase-back-error` | — | `src/features/payment/components/star-purchase-dialog.tsx:329` |
+| `payment-purchase-back-error` | — | `src/features/payment/components/star-purchase-dialog.tsx:335` |
 | `payment-purchase-close` | — | `src/features/payment/components/star-purchase-dialog.tsx:104` |
-| `payment-purchase-pay` | — | `src/features/payment/components/star-purchase-dialog.tsx:275` |
+| `payment-purchase-pay` | — | `src/features/payment/components/star-purchase-dialog.tsx:281` |
 | `payment-purchase-retry` | — | `src/features/payment/components/star-purchase-dialog.tsx:155` |
 | `payment-purchase-review` | — | `src/features/payment/components/star-purchase-dialog.tsx:204` |
 | `payment-star-package` | `data-package-id` | `src/features/payment/components/star-package-grid.tsx:105` |
-| `payment-stripe-element` | — | `src/features/payment/components/add-card-dialog.tsx:258` |
+| `payment-stripe-element` | — | `src/features/payment/components/add-card-dialog.tsx:264` |
 
 ## `payout` — Payout tracking
 
@@ -1054,6 +1155,20 @@ Routes: `/my-wallet/payout-method`, `/my-wallet/payout-request`, `/my-wallet/pay
 | `payout-setup-variant` | `data-option-value` | `src/features/payout/components/payout-config-form.tsx:138` |
 | `payout-sign-in` | — | `src/features/payout/components/payout-tracking-view.tsx:107` |
 | `payout-stripe-terms` | — | `src/features/payout/components/payout-config-form.tsx:186` |
+
+## `post` — Post card
+
+Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/post/[code]`, `/bookmarks`
+
+| testid | companions | source |
+|---|---|---|
+| `post-collection-add-posts` | — | `src/features/post/components/collection-detail.tsx:220` |
+| `post-collection-browse` | — | `src/features/post/components/collection-detail.tsx:237` |
+| `post-collection-create-post` | — | `src/features/post/components/collection-detail.tsx:212` |
+| `post-collection-menu` | — | `src/features/post/components/collection-detail.tsx:130` |
+| `post-collections-header` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:31` |
+| `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:46` |
+| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:448` |
 
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone
 
@@ -1146,13 +1261,14 @@ Also present on every route it is mounted under — `src/features/channel/compon
 
 | testid | companions | source |
 |---|---|---|
-| `share-channel` | `data-option-value` | `src/features/share/components/share-dialog.tsx:190` |
-| `share-channels-next` | — | `src/features/share/components/share-dialog.tsx:442` |
-| `share-channels-prev` | — | `src/features/share/components/share-dialog.tsx:435` |
-| `share-preview` | — | `src/features/share/components/share-dialog.tsx:574` |
-| `share-qr-code` | — | `src/features/share/components/share-dialog.tsx:169` |
-| `share-sheet` | — | `src/features/share/components/share-dialog.tsx:146` |
-| `share-sheet-header` | — | `src/features/share/components/share-dialog.tsx:162` |
+| `share-channel` | `data-option-value` | `src/features/share/components/share-dialog.tsx:222` |
+| `share-channels-next` | — | `src/features/share/components/share-dialog.tsx:476` |
+| `share-channels-prev` | — | `src/features/share/components/share-dialog.tsx:469` |
+| `share-dm` | — | `src/features/share/components/share-dialog.tsx:202` |
+| `share-preview` | — | `src/features/share/components/share-dialog.tsx:608` |
+| `share-qr-code` | — | `src/features/share/components/share-dialog.tsx:181` |
+| `share-sheet` | — | `src/features/share/components/share-dialog.tsx:152` |
+| `share-sheet-header` | — | `src/features/share/components/share-dialog.tsx:174` |
 
 ## `star-transfer` — Star transfer
 
@@ -1207,8 +1323,49 @@ name; you need it to know the element exists.
 | `EventGiftPanel` | `src/features/event/components/event-gift-panel.tsx` | `-close` `-empty` `-item` `-list` `-option` `-tab` `-trigger` |
 | `EventGiftTray` | `src/features/event/components/event-gift-tray.tsx` | `-item` `-trigger` |
 | `EventReportCard` | `src/features/event/components/event-report-card.tsx` | `-hint` `-trigger` |
+| `HomeEmptyState` | `src/features/home/components/home-empty-state.tsx` | `-retry` `-title` `-trigger` |
+| `HomeLiveFeed` | `src/features/home/components/home-live-feed.tsx` | `-row` |
+| `HomePostFeed` | `src/features/home/components/home-post-feed.tsx` | `-item` |
+| `ShareInMessage` | `src/features/message/components/share-in-message.tsx` | `-input` `-item` `-list` `-message` `-option` `-panel` `-retry` `-search` `-submit` |
 | `TotalBalanceCard` | `src/features/my-wallet/components/total-balance-card.tsx` | `-count` |
 | `PayoutPickerField` | `src/features/payout/components/payout-picker-field.tsx` | `-close` `-group` `-list` `-option` `-panel` `-search` |
+| `BookmarkBarActions` | `src/features/post/components/bookmark-bar-actions.tsx` | `-clear` `-confirm` |
+| `BookmarkList` | `src/features/post/components/bookmark-list.tsx` | `-item` `-list` `-message` `-retry` |
+| `CollectionAddPostsDialog`, `CollectionPostRow` | `src/features/post/components/collection-add-posts-dialog.tsx` | `-empty` `-header` `-list` `-option` `-retry` `-row` `-search` `-submit` `-tab` |
+| `CollectionCard`, `CollectionScreenHeader` | `src/features/post/components/collection-card.tsx` | `-prev` `-trigger` |
+| `CollectionCreateDialog`, `CollectionCreateButton` | `src/features/post/components/collection-create.tsx` | `-panel` `-trigger` |
+| `CollectionDetail` | `src/features/post/components/collection-detail.tsx` | `-header` `-item` `-list` `-message` `-retry` `-title` |
+| `CollectionEditDialog` | `src/features/post/components/collection-edit-dialog.tsx` | `-count` `-empty` `-header` `-input` `-list` `-submit` |
+| `CollectionList` | `src/features/post/components/collection-list.tsx` | `-empty` `-item` `-list` `-message` `-panel` `-retry` `-row` `-start` |
+| `CollectionNameDialog` | `src/features/post/components/collection-name-dialog.tsx` | `-count` `-header` `-input` `-submit` |
+| `CollectionOwnerMenu` | `src/features/post/components/collection-owner-menu.tsx` | `-apply` `-confirm` `-option` `-panel` `-remove` `-start` `-trigger` |
+| `PostActions` | `src/features/post/components/post-actions.tsx` | `-footer` `-item` `-next` `-reveal` `-trigger` |
+| `PostMiniAppBanner`, `PostAffiliateCard`, `PostInsights` | `src/features/post/components/post-attachments.tsx` | `-label-data` `-trigger` |
+| `PostCard`, `PostMediaBlock` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
+| `PostCollectionPicker` | `src/features/post/components/post-collection-picker.tsx` | `-cancel` `-input` `-message` `-option` `-panel` `-retry` `-submit` `-trigger` |
+| `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-error` `-field` `-input` `-list` `-trigger` |
+| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-header` `-label-data` `-panel` `-prefix` `-reveal` `-submit` `-suffix` `-trigger` |
+| `PostComposerDialogs` | `src/features/post/components/post-composer-dialogs.tsx` | `-group` `-header` `-list` `-row` `-tab` |
+| `PostComposerVideo` | `src/features/post/components/post-composer-video.tsx` | `-apply` `-clear` `-field` `-item` `-remove` `-reveal` `-slide` `-trigger` |
+| `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
+| `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` `-label` |
+| `PostImageGallery` | `src/features/post/components/post-image-gallery.tsx` | `-next` `-prev` `-remove` |
+| `PostLockPanel` | `src/features/post/components/post-lock-panel.tsx` | `-label` `-title` |
+| `PostMediaLightbox` | `src/features/post/components/post-media-lightbox.tsx` | `-close` `-label` `-next` `-overlay` `-prev` `-slide` |
+| `PostMediaTile` | `src/features/post/components/post-media-tile.tsx` | `-count` `-label` `-overlay` `-panel` `-slide` `-suffix` |
+| `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-panel` `-remove` `-trigger` |
+| `PostNsfwGuard` | `src/features/post/components/post-nsfw-guard.tsx` | `-close` `-reveal` `-title` `-trigger` |
+| `PostPreviewDialog` | `src/features/post/components/post-preview-dialog.tsx` | `-description` `-header` `-item` `-overlay` `-panel` `-slide` |
+| `PostReportDialog` | `src/features/post/components/post-report-dialog.tsx` | `-close` `-confirm` `-description` `-input` `-option` `-retry` `-submit` `-title` |
+| `PostAudienceScreen`, `PostReplyAudienceScreen`, `PostSettingsScreen` | `src/features/post/components/post-settings-panel.tsx` | `-affix` `-error` `-field` `-input` `-item` `-message` `-option` `-reveal` |
+| `PostSlider` | `src/features/post/components/post-slider.tsx` | `-apply` `-clear` `-close` `-confirm` `-copy` `-description` `-footer` `-group` `-label-data` `-list` `-next` `-prev` `-reveal` `-slide` |
+| `PostUnlockDialogs` | `src/features/post/components/post-unlock-dialogs.tsx` | `-cancel` `-confirm` `-description` `-next` `-option` `-title` |
+| `ReplyAudienceNotice` | `src/features/post/components/reply-audience-notice.tsx` | `-description` `-panel` `-title` `-trigger` |
+| `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-list` `-submit` `-trigger` |
+| `ReplyDialog` | `src/features/post/components/reply-dialog.tsx` | `-apply` `-description` `-footer` `-item` `-panel` |
+| `ReplyRow` | `src/features/post/components/reply-row.tsx` | `-description` `-header` `-label-data` `-message` `-next` `-overlay` `-panel` `-remove` `-reveal` `-slide` `-trigger` |
+| `ReplyThread` | `src/features/post/components/reply-thread.tsx` | `-item` `-next` `-panel` `-retry` `-row` |
+| `SpaceCollectionsRow` | `src/features/post/components/space-collections-row.tsx` | `-item` `-trigger` |
 | `CreatorPickerView` | `src/features/search/components/creator-picker-view.tsx` | `-field` `-item` `-retry` |
 | `ShareQrPanel` | `src/features/share/components/share-qr-panel.tsx` | `-copy` `-qr` `-submit` |
 | `ActionRows`, `ActionRowsSkeleton` | `src/shared/components/action-rows.tsx` | `-row` |
@@ -1225,6 +1382,8 @@ name; you need it to know the element exists.
 | `PickerList` | `src/shared/components/picker-list.tsx` | `-option` |
 | `StickyTabs` | `src/shared/components/sticky-tabs.tsx` | `-panel` `-tab` |
 | `VerifiedBadgeDialog` | `src/shared/components/verified-badge-dialog.tsx` | `-close` `-panel` `-title` |
+| `VideoTrimmer` | `src/shared/components/video-trimmer.tsx` | `-error` `-header` `-label-data` `-list` `-next` `-prev` `-reveal` `-slide` `-submit` |
 | `ConfirmDialog` | `src/shared/ui/confirm-dialog.tsx` | `-cancel` `-confirm` `-description` `-title` |
 | `DialogOverlay`, `DialogContent` | `src/shared/ui/dialog.tsx` | `-overlay` |
 | `SearchBar` | `src/shared/ui/search-bar.tsx` | `-clear` |
+| `SheetContent` | `src/shared/ui/sheet.tsx` | `-overlay` |

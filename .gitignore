@@ -59,3 +59,8 @@ next-env.d.ts
 # claude code — `settings.json` and `agents/` are the team's and belong in the repo;
 # `settings.local.json` is one developer's permission grants.
 .claude/settings.local.json
+
+# The ffmpeg.wasm core, copied out of node_modules by `scripts/copy-ffmpeg-core.mjs` in front of
+# `dev` and `build`. 24 MB of WebAssembly whose version is already pinned by the lockfile — that
+# script's header explains why this one generated artefact is not committed like the others.
+/public/ffmpeg/

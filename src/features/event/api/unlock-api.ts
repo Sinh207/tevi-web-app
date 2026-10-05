@@ -73,7 +73,7 @@ export const unlockApi = {
      * calls this posts for free. Legacy also fires it without awaiting or checking the result, so
      * a *failed* charge is invisible on both sides. This at least returns the promise, which is
      * what lets `useLiveChat` tell the reader their balance did not move. Whether the server
-     * should be charging instead is **B109**.
+     * should be charging instead is **B118**.
      */
     /** One interval of the sustained fee. See `LIVE_SUSTAINED_FEE_PRODUCT` for the `quality` trap. */
     async purchaseSustainedFee({
@@ -129,7 +129,7 @@ export const unlockApi = {
  * nobody has noticed: if the service reads `quantity`, then every sustained-fee charge ever made
  * has billed whatever the default is rather than the configured `fee`, and a console set to 2
  * Star has been taking 1. Sent as legacy spells it, because a payload this client "corrects"
- * against a service that really does read `quality` would start billing double. **B109** asks.
+ * against a service that really does read `quality` would start billing double. **B118** asks.
  */
 export const LIVE_SUSTAINED_FEE_PRODUCT = {
     productId: '397970d1-2940-47b1-8674-d13cf711f191',

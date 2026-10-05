@@ -33,7 +33,7 @@ import { type SustainedFee, sustainedFee } from '../lib/sustained-fee'
  *
  * Legacy's `catch (e) {}` is empty. A declined charge means the reader keeps watching for free
  * and the streamer is not paid, and nobody on either side is told. Same class of silence as paid
- * chat — see **B109**.
+ * chat — see **B118**.
  *
  * ## 3. The notice clears itself without leaking
  *
@@ -46,7 +46,7 @@ import { type SustainedFee, sustainedFee } from '../lib/sustained-fee'
  * "you just paid" notice when `myChannel.is_premium` — so a Premium subscriber pays the sustained
  * fee silently while everybody else is told. That reads like an exemption that was half
  * implemented, but inventing one here would stop money reaching streamers, so it is ported as
- * written and asked about in **B109**.
+ * written and asked about in **B118**.
  */
 export interface SustainedFeeState {
     /** The charge that applies, or `null` when none does. */
@@ -87,7 +87,7 @@ export function useSustainedFee({
      * to the same wall, because nothing here knew. So a Premium reader is not stopped: a period
      * the balance cannot cover is skipped rather than blocked, and an open wall closes the moment
      * `isPremium` turns true. What is *not* changed is charging a Premium reader who **can** pay —
-     * legacy does, and whether it should is **B109**'s open question; stopping it here would stop
+     * legacy does, and whether it should is **B118**'s open question; stopping it here would stop
      * money reaching streamers on a guess.
      */
     const { isPremium } = useMyChannel()

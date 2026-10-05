@@ -44,6 +44,12 @@ import { useInboxTypes } from '../hooks/use-inbox-types'
  * short viewport. **When a Sheet is ported, this is a call site to revisit** — flagged rather than
  * silently settled for.
  *
+ * ⚠ **A sheet exists now** — `shared/ui/sheet.tsx`, Base UI's `Drawer` behind this app's tokens,
+ * wired to the post composer's popups through `ResponsiveDialog`. It is a **trailing-edge,
+ * full-screen** panel (legacy's composer geometry); the DS's own `.tevi-bottom-sheet` is still
+ * unreadable, so a *bottom* variant does not exist yet. This screen is deliberately not switched:
+ * the composer was the agreed first cut, and moving anything else is a product call rather than a
+ * refactor. Switching it is `ResponsiveDialog` plus the `className` already here.
  * ## Draft-then-Apply, and closing discards
  *
  * The endpoint takes the whole list in one `POST`, so a switch that wrote immediately would send

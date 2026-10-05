@@ -65,6 +65,10 @@ const CDN = 'https://static.tevi.dev'
  * ceiling worth paying for: 2 for anything with a fixed box, 3 for the small square icons where a
  * phone at DPR 3 is the realistic worst case and 3× still lands under 5 KB.
  *
+ * `crop` is a rectangle **in source pixels** to encode instead of the whole image — for art that is
+ * a repeating tile the source happens to ship three of side by side. The ceiling is then the crop's
+ * width, not the file's.
+ *
  * `mode: 'copy'` is for a genuine vector that only needs to stop being cross-origin — no re-encode,
  * byte-for-byte, because rasterising a scheme-logo strip would make it soft at exactly the DPR it is
  * read on.
@@ -270,6 +274,64 @@ const SOURCES = [
         out: 'notification/theo-empty-inbox.svg',
         url: `${CDN}/web/web-app/images/theo-empty-inbox.svg`,
         mode: 'copy',
+    },
+    /*
+     * Direct messages' two empty states — "Welcome to your chat!" (no conversations, and the empty
+     * Unread folder) and "No results found" (a search). Both are real vectors of 8–9 KB with no
+     * embedded raster, so `copy`, for the reason the row above gives.
+     */
+    /*
+     * The collections list's empty state — legacy's `IMAGES_STATIC.collection.imgCollection`, drawn
+     * at 225×255. A 2.5 MB SVG wrapping a raster, so it is encoded rather than copied.
+     */
+    {
+        name: 'collection-empty',
+        out: 'collection/empty.webp',
+        url: `${CDN}/web/web-app/collection/img-collection-nothing.svg`,
+        box: { width: 225, height: 255 },
+        scale: 2,
+    },
+    /*
+     * An empty collection — legacy's `IMAGES_STATIC.post.isolation` (`noPost`), 100×100. A plain
+     * 9 KB vector, so `copy`. Not the DM's "no results" art: same name upstream, different file.
+     */
+    {
+        name: 'collection-no-posts',
+        out: 'collection/no-posts.svg',
+        url: `${CDN}/web/web-app/post/isolation.svg`,
+        mode: 'copy',
+    },
+    {
+        name: 'message-empty',
+        out: 'message/empty-conversation.svg',
+        url: `${CDN}/web/web-app/direct-message/empty-conversation.svg`,
+        mode: 'copy',
+    },
+    {
+        name: 'message-no-results',
+        out: 'message/no-results.svg',
+        url: `${CDN}/web/web-app/direct-message/isolation.svg`,
+        mode: 'copy',
+    },
+    /*
+     * The doodle pattern behind a conversation — white line art at ≤20% alpha on nothing, drawn over
+     * `--gradient-message-thread`. The source is a 1.4 MB PNG at 2548×1592 that is **one tile three
+     * times**: it repeats horizontally every 849px (measured — the alpha difference between the image
+     * and itself shifted 849px is 0.9/255, against ~7 for any other shift) and not vertically. So only
+     * the tile is committed and CSS repeats it, which is how `cover` over the full image looks anyway
+     * on a pane taller than 1.6:1. `box` is the tile at the height a desktop pane draws it (≈800px);
+     * the alpha survives because the canvas paints no ground.
+     *
+     * **`scale: 1`, deliberately.** 2× is 390 KB and 1.5× 294 KB; 1× is 131 KB, and at 20% alpha the
+     * difference between them is not something a reader can see behind a conversation.
+     */
+    {
+        name: 'message-thread-pattern',
+        out: 'message/thread-pattern.webp',
+        url: `${CDN}/web/web-app/direct-message/background-dm.png`,
+        crop: { x: 0, y: 0, width: 849, height: 1592 },
+        box: { width: 425, height: 797 },
+        scale: 1,
     },
     {
         name: 'no-cards',
@@ -789,7 +851,11 @@ async function main() {
         throw new Error(`no source named ${only.join(', ')} — have: ${SOURCES.map(s => s.name).join(', ')}`)
     }
 
-    const browser = await chromium.launch()
+    // `ART_BROWSER_CHANNEL=chrome` encodes with the installed Chrome instead of Playwright's own
+    // download — the same canvas encoder, for a machine that has not run `playwright install`.
+    const browser = await chromium.launch(
+        process.env.ART_BROWSER_CHANNEL ? { channel: process.env.ART_BROWSER_CHANNEL } : undefined,
+    )
     const page = await browser.newPage()
     await page.goto('about:blank')
 
@@ -807,8 +873,8 @@ async function main() {
             continue
         }
 
-        const ceiling = rasterWidth(input)
-        const requested = source.box.width * source.scale
+        const ceiling = source.crop ? source.crop.width : rasterWidth(input)
+        const requested = Math.round(source.box.width * source.scale)
         const width = ceiling === null ? requested : Math.min(requested, ceiling)
         const height = Math.round((width * source.box.height) / source.box.width)
         if (width < requested) {
@@ -816,7 +882,7 @@ async function main() {
         }
 
         const dataUrl = await page.evaluate(
-            async ({ src, width, height, quality }) => {
+            async ({ src, width, height, quality, crop }) => {
                 const img = new Image()
                 img.width = width
                 img.height = height
@@ -831,7 +897,9 @@ async function main() {
                 canvas.height = height
                 // No ground painted under it: every one of these is art on nothing, and a white
                 // rectangle is exactly what would show up on the dark theme.
-                canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+                const ctx = canvas.getContext('2d')
+                if (crop) ctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height)
+                else ctx.drawImage(img, 0, 0, width, height)
                 return canvas.toDataURL('image/webp', quality)
             },
             {
@@ -839,6 +907,7 @@ async function main() {
                 width,
                 height,
                 quality: QUALITY,
+                crop: source.crop ?? null,
             },
         )
 

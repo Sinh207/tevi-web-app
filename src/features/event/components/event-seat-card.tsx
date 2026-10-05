@@ -30,7 +30,7 @@ import { EventHostBadge } from './event-host-badge'
  * - **Send a gift** — opens the catalogue with this person already chosen as the recipient, the
  *   one decision the picker would otherwise ask for again. Outside an exclusive stream's gate it
  *   opens the paywall instead, as every gift there does.
- * - **View space** — the publisher's own space when the room payload names it (B111), otherwise
+ * - **View space** — the publisher's own space when the room payload names it (B120), otherwise
  *   the host only, through the event's channel. A new tab, so the broadcast keeps playing.
  *
  * Docked to the foot of the stage box rather than floated beside a seat: tiles go down to ~80px in
@@ -69,7 +69,7 @@ export function EventSeatCard({
     }, [onClose])
 
     /*
-     * The publisher's own space when the room payload names it (**B111** — unconfirmed, legacy
+     * The publisher's own space when the room payload names it (**B120** — unconfirmed, legacy
      * reads no slug), else the event's channel for the host. A co-host without one gets no link
      * rather than a wrong one.
      */

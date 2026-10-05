@@ -46,6 +46,22 @@ export const CHANNEL_COLUMN =
 export const CHANNEL_PADDING = 'p-3 md:p-6'
 
 /**
+ * Cancels `CHANNEL_PADDING`'s **horizontal** half, for a block inside a tab panel that has to run
+ * edge to edge.
+ *
+ * One block needs it: the posts list. `PostCard` carries its own `px-3 md:px-6` — it is built as a
+ * full-bleed band, which is how home mounts it — so inside a padded panel its content was indented
+ * twice and, worse, the 1px page-coloured strip that separates two posts stopped short of both
+ * edges. A separator that does not reach the edge does not read as a separator; it reads as a card
+ * with a notch in it.
+ *
+ * Kept here beside the padding it undoes, and expressed as the same two steps, so the pair cannot
+ * drift: change `CHANNEL_PADDING` and this is the line the change has to be made in too. It cancels
+ * only the sides — the panel's top and bottom padding is what keeps the first post off the tab bar.
+ */
+export const CHANNEL_PADDING_BLEED = '-mx-3 md:-mx-6'
+
+/**
  * The content column for the channel's **settings** sub-pages — `/settings/space-visibility`
  * and `/settings/blocked-accounts`.
  *

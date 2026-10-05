@@ -62,7 +62,7 @@ export const giftApi = {
      * `page_size` on this path; `channel_id` and `include_exclusive` are what legacy has always
      * sent and what a per-space catalogue evidently needs. Sent as legacy spells them — an
      * undocumented param the service ignores costs nothing, while dropping one that it reads would
-     * quietly serve every space the same gifts. **B110** asks.
+     * quietly serve every space the same gifts. **B119** asks.
      *
      * `include_exclusive` is `true`, also legacy's value, and it is what makes the *Exclusive* tab
      * possible at all: the flag asks the service to include member-only products, and the client

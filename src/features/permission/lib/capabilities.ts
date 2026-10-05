@@ -55,6 +55,34 @@ export function rawGrant(
 }
 
 /**
+ * Read a **number** out of a grant's `meta`.
+ *
+ * ## Why this exists beside `rawGrant`
+ *
+ * Not every grant is a yes/no. `post.meta.minimum_price_tvs` is the floor under a paid post's price
+ * — legacy reads exactly that (`channelPermission?.post?.meta?.minimum_price_tvs || 1`) and the
+ * composer needs it before it can validate what the author typed. `rawGrant` answers booleans and
+ * would report this one as `false`, which is not wrong so much as unable to say anything.
+ *
+ * `null` when the path is absent or not a finite number, so the caller supplies its own floor rather
+ * than inheriting a `0` that would let a post be priced at nothing. Strict for the same reason
+ * `rawGrant` is: a numeric string is a value somebody typed into a console, and coercing it is how a
+ * price ends up being decided by accident.
+ */
+export function rawGrantNumber(
+    permission: ChannelPermission,
+    feature: string,
+    key: string,
+): number | null {
+    const grant = permission.raw[feature]
+    if (!grant || typeof grant !== 'object') return null
+    const meta = (grant as Record<string, unknown>).meta
+    if (!meta || typeof meta !== 'object') return null
+    const value = (meta as Record<string, unknown>)[key]
+    return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+/**
  * Every gated capability in the app.
  *
  * Two today, because two is what legacy actually gates on — both of them money-moving surfaces, which

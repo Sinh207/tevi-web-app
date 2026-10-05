@@ -202,7 +202,7 @@ export function EventStudioScreen({
     const { t, currentLanguage } = useTranslation()
     /** Below `STUDIO_MIN_WIDTH`: the portrait layout (`mobileStage`). */
     const isCompact = useCompactStudio()
-    const endedLives = useFollowedLives({ expanded: true, enabled: state.kind === 'off-air' })
+    const endedLives = useFollowedLives({ collapsible: false, enabled: state.kind === 'off-air' })
     const showEndedRail = state.kind === 'off-air' && endedLives.visible.length > 0
 
     /*
@@ -413,7 +413,7 @@ export function EventStudioScreen({
      * gifts dead and nothing saying why; legacy has the same hole (its kick is page state, so a
      * reload undoes it). Any refusal is read as "not allowed in this room": the card says so in
      * the server's own words when it sent some, the stream stops and the room is left (a latch,
-     * as the frame's is). Which `err_code` means *removed* specifically is **B112**.
+     * as the frame's is). Which `err_code` means *removed* specifically is **B121**.
      */
     useEffect(() => {
         if (!room.isRefused) return

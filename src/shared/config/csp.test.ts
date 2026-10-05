@@ -9,6 +9,17 @@ function directive(csp: string, name: string): string | undefined {
     return found === name ? '' : found.slice(name.length + 1)
 }
 
+/**
+ * One directive's sources, as a list — a substring check on the whole header proves too little.
+ *
+ * `directive` already strips the name, so there is nothing to slice off. The existing `script-src`
+ * loop above does slice, which is harmless only because the token it drops is `'self'` and the
+ * thing it asserts is true of `'self'` too.
+ */
+function tokens(policy: string, name: string): string[] {
+    return (directive(policy, name) ?? '').split(' ').filter(Boolean)
+}
+
 describe('generateNonce', () => {
     it('is base64 and 128 bits wide', () => {
         const nonce = generateNonce()
@@ -44,8 +55,37 @@ describe('buildCsp', () => {
     })
 
     it('never allows unsafe-eval outside dev', () => {
-        expect(csp).not.toContain("'unsafe-eval'")
-        expect(buildCsp({ nonce: 'x', isDev: true })).toContain("'unsafe-eval'")
+        /*
+         * ⚠ Written against the **token list**, not the whole header, because
+         * `'wasm-unsafe-eval'` now sits in the same directive and `not.toContain("'unsafe-eval'")`
+         * only keeps passing by the accident that the quote before it is a `-`. A test that would
+         * go green on a substring is not guarding the thing it names.
+         */
+        expect(tokens(csp, 'script-src')).not.toContain("'unsafe-eval'")
+        expect(tokens(buildCsp({ nonce: 'x', isDev: true }), 'script-src')).toContain(
+            "'unsafe-eval'",
+        )
+    })
+
+    /**
+     * The video trimmer compiles ffmpeg as wasm in the browser, which this policy gates.
+     *
+     * Both halves matter. Without the keyword every trim fails with a console violation and no
+     * other symptom; with the *older* keyword the policy would also permit `eval()` of arbitrary
+     * strings, which is the primitive this file exists to deny.
+     */
+    it('permits wasm compilation and still refuses string eval', () => {
+        const scriptSrc = tokens(csp, 'script-src')
+        expect(scriptSrc).toContain("'wasm-unsafe-eval'")
+        expect(scriptSrc).not.toContain("'unsafe-eval'")
+    })
+
+    /**
+     * `@ffmpeg/ffmpeg` starts its core in a worker created from a `blob:` URL. With no `worker-src`
+     * the check falls through `child-src` to `default-src 'self'`, which refuses it.
+     */
+    it('declares worker-src, because the fallback refuses a blob worker', () => {
+        expect(tokens(csp, 'worker-src')).toEqual(["'self'", 'blob:'])
     })
 
     it("allows Google Identity Services' own stylesheet — the button is unstyled without it", () => {

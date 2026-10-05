@@ -1,15 +1,26 @@
 'use client'
 
+import {
+    type Post,
+    PostCard,
+    PostMediaTile,
+    PostSlider,
+    SpaceCollectionsRow,
+    usePostSlider,
+} from '@features/post'
+import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
+import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Skeleton } from '@shared/ui/skeleton'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ThreadKind } from '../api/channel-api'
 import { useChannelThreads } from '../hooks/use-channel-threads'
+import { CHANNEL_PADDING_BLEED } from '../lib/container'
+import { useMyChannel } from '../providers/my-channel-provider'
 import { ChannelEmptyState } from './channel-empty-state'
 import { ChannelError } from './channel-error'
-import { ChannelMediaPlaceholder, ChannelThreadPlaceholder } from './channel-thread-placeholder'
 
 /**
  * A channel's posts or media as an infinite list — the four states, and the sentinel.
@@ -48,6 +59,33 @@ export function ChannelThreadList({
         hasNextPage,
         isFetchingNextPage,
     } = useChannelThreads({ slug, kind, isOwner })
+
+    /**
+     * Premium readers pay nothing to react or reply, and the flag is the **reader's**, not the
+     * post's — so it is read here and handed down rather than derived inside `features/post`, which
+     * may not import this feature. `replyCost` carries the rule.
+     */
+    const { isPremium } = useMyChannel()
+
+    /*
+     * One share sheet for the whole list, holding whichever post raised it — the same arrangement
+     * the home feed uses, and for the same reason: `ShareDialog` mounts a channel list, a link mint
+     * and a QR canvas, so one per card would mount twenty to show at most one.
+     */
+    const [sharing, setSharing] = useState<Post | null>(null)
+
+    /*
+     * One viewer for the whole list, so it can page between **posts** — `usePostSlider` carries why
+     * the list owns that and the viewer does not. Same arrangement as the share sheet above.
+     */
+    const slider = usePostSlider(threads)
+
+    /* A post's id is the row's identity here, where home's is a whole group's. */
+    const keys = useMemo(() => threads.map(thread => thread.id), [threads])
+    const { observe, heightFor, shouldRender } = useRenderWindow(
+        keys,
+        kind === 'media' ? MEDIA_WINDOW : undefined,
+    )
 
     const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({
         enabled: hasNextPage && !isFetchingNextPage,
@@ -101,15 +139,97 @@ export function ChannelThreadList({
 
     return (
         <div className="flex min-w-0 flex-col gap-3">
+            {/*
+             * Above the posts, and only once there are posts — legacy's `!hasNoData` on both the
+             * creator's and the visitor's tab. Inside the list's state machine for that reason: an
+             * empty space's "no posts yet" is the whole message, and a row of chips over it would
+             * be filing for a space with nothing filed.
+             */}
+            {kind === 'posts' ? <SpaceCollectionsRow slug={slug} isOwner={isOwner} /> : null}
             {kind === 'media' ? (
                 // Three across and gap-1, matching legacy's grid. 21 per page is seven full rows.
                 <div className="grid grid-cols-3 gap-1">
-                    {threads.map(thread => (
-                        <ChannelMediaPlaceholder key={thread.id} />
+                    {threads.map((thread, index) => (
+                        /*
+                         * Windowed like the posts list below, and like legacy's grid
+                         * (`useInView(24)` + `isIndexInRender`). The cell is what stays mounted:
+                         * it is `aspect-square` in a three-column track, so a stood-down tile
+                         * keeps its exact box from the grid alone — no measured height to hold
+                         * open, and the rows below never move.
+                         */
+                        <div
+                            key={thread.id}
+                            ref={observe}
+                            {...windowKeyProps(thread.id)}
+                            className="aspect-square min-w-0"
+                        >
+                            {shouldRender(thread.id) ? (
+                                <PostMediaTile
+                                    post={thread}
+                                    onOpenMedia={target => slider.openAt(index, target)}
+                                    onChanged={() => refetch()}
+                                    className="size-full"
+                                    testId="channel-media"
+                                />
+                            ) : null}
+                        </div>
                     ))}
                 </div>
             ) : (
-                threads.map(thread => <ChannelThreadPlaceholder key={thread.id} thread={thread} />)
+                /*
+                 * ## One hairline between posts, and it is a gap rather than a border
+                 *
+                 * Home's arrangement and legacy's own (`gap: '1px'` over `#f4f4f4`): the rows are
+                 * `--background-surface`, the strip behind them is the page colour, and the page
+                 * colour showing through the 1px gap *is* the line. `PostCard` draws no frame of
+                 * its own, so a border here would be the only edge in the stack and would need
+                 * suppressing on the last row; a gap needs no such exception.
+                 *
+                 * The strip paints `--background` itself rather than relying on what is behind it,
+                 * because here there is nothing behind it: the tab panel is `--background-surface`,
+                 * so card and page were the same colour and two posts ran together with no visible
+                 * boundary at all — which is what this fixes.
+                 *
+                 * And it is `CHANNEL_PADDING_BLEED`-wide, because the strip has to reach both edges
+                 * to read as a separator rather than as a notch. `PostCard` brings its own
+                 * `px-3 md:px-6`, so cancelling the panel's sides also stops the content being
+                 * indented twice — see that constant.
+                 */
+                <div
+                    className={cn(
+                        'flex min-w-0 flex-col gap-px bg-(--background)',
+                        CHANNEL_PADDING_BLEED,
+                    )}
+                >
+                    {/*
+                     * Windowed, for the reason `useRenderWindow` states: a space with a long
+                     * history is the same unbounded list home is, and a `PostCard` is the same
+                     * expensive row.
+                     */}
+                    {threads.map((thread, index) => {
+                        const height = heightFor(thread.id)
+                        return (
+                            <div
+                                key={thread.id}
+                                ref={observe}
+                                {...windowKeyProps(thread.id)}
+                                className="min-w-0 bg-(--background-surface)"
+                                style={height === null ? undefined : { height }}
+                            >
+                                {height === null ? (
+                                    <PostCard
+                                        post={thread}
+                                        isPremiumReader={isPremium}
+                                        onShare={() => setSharing(thread)}
+                                        onOpenMedia={target => slider.openAt(index, target)}
+                                        onChanged={() => refetch()}
+                                        testId="channel-thread"
+                                    />
+                                ) : null}
+                            </div>
+                        )
+                    })}
+                </div>
             )}
 
             {/* Zero-height, so it never adds space to a list that has stopped growing. */}
@@ -118,9 +238,45 @@ export function ChannelThreadList({
             {isFetchingNextPage && (
                 <ThreadListSkeleton kind={kind} rows={kind === 'media' ? 3 : 1} />
             )}
+
+            {slider.open && (
+                <PostSlider
+                    posts={threads}
+                    index={slider.open.index}
+                    onIndexChange={slider.goTo}
+                    onLoadMore={fetchNextPage}
+                    hasMore={hasNextPage}
+                    isPremiumReader={isPremium}
+                    onShare={setSharing}
+                    onClose={slider.close}
+                />
+            )}
+
+            {sharing && (
+                <ShareDialog
+                    open
+                    onOpenChange={open => {
+                        if (!open) setSharing(null)
+                    }}
+                    url={sharing.shareable_url ?? ''}
+                    title={sharing.text}
+                    image={sharing.cover_image?.uri ?? sharing.images?.[0]?.uri ?? null}
+                    context={postShareContext(sharing, 'space')}
+                />
+            )}
         </div>
     )
 }
+
+/**
+ * The render window for the Media grid, counted in **tiles**, not rows.
+ *
+ * The hook's defaults are sized for a feed of cards, one per row: a 10-item floor and 4 items of
+ * overscan. In a three-wide grid that is barely three rows mounted and one row of overscan, so a
+ * flick paints empty cells. Legacy's grid keeps 24 (eight rows); overscan is three rows either
+ * side. Both multiples of three, so the window never cuts a row in half.
+ */
+const MEDIA_WINDOW = { minimum: 24, overscan: 9 }
 
 /**
  * The list's loading shape — the same geometry as the real rows, for the same reason

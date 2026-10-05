@@ -44,7 +44,7 @@ import { useRouter } from 'next/navigation'
  *
  * *Subscribe to Premium* keeps legacy's new tab: `/premium` is a whole screen, and following it in
  * this tab would end the stream. The sentence promises Premium removes the fee, which is legacy's
- * copy verbatim — and **B109** records that legacy in fact charges Premium too.
+ * copy verbatim — and **B118** records that legacy in fact charges Premium too.
  */
 export function EventOutOfStarDialog({
     open,

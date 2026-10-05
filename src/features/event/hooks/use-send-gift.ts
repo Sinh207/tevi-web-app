@@ -40,7 +40,7 @@ import type { EventDetail } from '../api/types'
  *   here: it is awaited, and a failure is reported to the sender (legacy discards the promise);
  * - **a client could announce a gift it never paid for.** Nothing in this flow is a guarantee to
  *   anybody else in the room — the transcript is decoration, the money is billy's record. Worth
- *   knowing before anybody builds a leaderboard out of chat frames. **B110** asks whether the
+ *   knowing before anybody builds a leaderboard out of chat frames. **B119** asks whether the
  *   server should emit instead.
  *
  * The sender's own banner comes from the **echo**: the room broadcasts `post_message` back to

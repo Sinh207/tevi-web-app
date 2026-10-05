@@ -3,6 +3,7 @@
 import { useAuth } from '@features/auth'
 import { DonateButton } from '@features/donation'
 import { BecomeAMemberButton } from '@features/membership'
+import { useOpenConversation } from '@features/message'
 import {
     hasMiniApp as channelHasMiniApp,
     OpenMiniAppButton,
@@ -212,7 +213,7 @@ export function ChannelViewerActions({
                     />
                 </>
             )}
-            <SendMessageButton />
+            <SendMessageButton slug={channel.slug} />
         </div>
     )
 }
@@ -265,11 +266,10 @@ function FollowRequestButton({ channel }: { channel: Channel }) {
 /**
  * "Send message" — legacy's `BtnMessages`.
  *
- * ⚠ **UI only. Pressing it does nothing yet**, and that is deliberate rather than unfinished: the
- * behaviour is two things this app does not have — a `/@{slug}/messages` route, and the
- * start-a-conversation call legacy makes (`handleStartConversation(owner_id, channel)`) before it
- * navigates. Both belong to `features/direct-message`; wiring the press to a route that 404s would
- * be worse than a press that waits.
+ * Opens the conversation through `features/message`'s `useOpenConversation`: in the floating window
+ * from `md` up, on `/@{slug}/messages` below it. The two barrels reference each other — the chat room
+ * reads this feature's channel — which is safe for the reason `features/membership` ⇄ this feature
+ * is: neither touches the other at module scope, only inside a component or a hook.
  *
  * ## Two shapes, and CSS picks between them
  *
@@ -283,9 +283,10 @@ function FollowRequestButton({ channel }: { channel: Channel }) {
  * **Signed-in only**, which is legacy's `isShow = isAuthenticated && slug`: an anonymous visitor has
  * no inbox to open a conversation from.
  */
-function SendMessageButton() {
+function SendMessageButton({ slug }: { slug: string }) {
     const { t } = useTranslation()
     const { isAuthenticated } = useAuth()
+    const openConversation = useOpenConversation()
     if (!isAuthenticated) return null
 
     return (
@@ -295,6 +296,7 @@ function SendMessageButton() {
             size="large"
             className="group/message w-12 flex-none gap-1 only:w-full only:flex-1"
             aria-label={t('channel_action_send_message')}
+            onClick={() => openConversation(slug)}
         >
             <Icon name="send-alt" size={20} />
             <span className="hidden group-[&:only-child]/message:inline">

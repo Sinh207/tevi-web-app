@@ -1,3 +1,11 @@
+import {
+    boolish,
+    id,
+    nullable,
+    nullableId,
+    nullableText,
+    nullableTimestamp,
+} from '@shared/lib/api/wire'
 import { z } from 'zod'
 import { channelEventSchema } from './events-api'
 
@@ -42,104 +50,12 @@ const privacySchema = z.preprocess(
     z.enum(CHANNEL_PRIVACY).catch('protected'),
 )
 
-/** A string that is present and non-blank, else `null`. `''` is not a URL or a name. */
-const nullableText = z
-    .unknown()
-    .transform(value => {
-        if (typeof value !== 'string') return null
-        const trimmed = value.trim()
-        return trimmed === '' ? null : trimmed
-    })
-    .catch(null)
-
-/** Ids arrive as either a string or a number depending on the service. Normalise to string. */
-const id = z.union([z.string(), z.number()]).transform(String).catch('')
-
-/**
- * The same normalisation as `id`, but **absence stays absent**: `null` rather than `''`.
- *
- * `id` is for a field that identifies the object it is on — a channel always has one, so `''` is a
- * body that could not be parsed and the caller has bigger problems. This is for an id *pointing at
- * something else* (`mcn.identifier`), where "not sent" is an ordinary answer and the caller has to
- * be able to see it: `''` would become a request against `…/media-space//`.
+/*
+ * The wire primitives that used to be declared here now live in `@shared/lib/api/wire` — see that
+ * file's header. They moved because a second feature made a hand-copy rather than reaching for
+ * them, and every one of these helpers fails by returning `null`, so a wrong copy discards a field
+ * instead of throwing. `nullableTimestamp`'s own history is the worked example.
  */
-const nullableId = z
-    .unknown()
-    .transform(value => {
-        if (typeof value === 'number') return Number.isFinite(value) ? String(value) : null
-        if (typeof value !== 'string') return null
-        const trimmed = value.trim()
-        return trimmed === '' ? null : trimmed
-    })
-    .catch(null)
-
-/**
- * A moment in time, normalised to an ISO 8601 string — or `null`.
- *
- * ## The backend sends a number, and `nullableText` was throwing it away
- *
- * `GET /core/v3/channel/channels/{slug}/` answers `created_at: 1660516880264` — **epoch
- * milliseconds, as a JSON number.** Every `created_at` in this file was declared `nullableText`,
- * which returns `null` for anything that is not a string, so the field arrived, was discarded, and
- * the header's joined-date row dropped itself because its value was empty. It had **never rendered
- * for any channel**, and nothing surfaced it: `.catch(null)` is exactly the fail-soft the schema
- * wants everywhere else, so the wrong type produced a missing row rather than an error.
- *
- * Found by querying the real endpoint rather than by reading the code, which is the only way this
- * class of bug shows up — the client's own types agree with themselves.
- *
- * ## Why ISO out
- *
- * Callers put the value straight into `<time dateTime={…}>`, which requires a valid datetime string,
- * and into `new Date(value)`. A raw `'1660516880264'` string parses as `Invalid Date` in both. One
- * normalisation here means neither the formatters nor the markup has to know what the wire looked
- * like.
- *
- * Seconds are accepted alongside milliseconds. The threshold is unambiguous for any real date: a
- * millisecond epoch below `1e11` is 1973, and a second epoch above it is the year 5138. This is
- * defensive rather than observed — only `channels/{slug}/` has been checked, and the four endpoints
- * that use this need not agree with each other.
- */
-const nullableTimestamp = z
-    .unknown()
-    .transform(value => {
-        const raw =
-            typeof value === 'number'
-                ? value
-                : typeof value === 'string' && /^\d+$/.test(value.trim())
-                  ? Number(value.trim())
-                  : null
-
-        if (raw !== null) {
-            if (!Number.isFinite(raw) || raw <= 0) return null
-            const date = new Date(raw < 1e11 ? raw * 1000 : raw)
-            return Number.isNaN(date.getTime()) ? null : date.toISOString()
-        }
-
-        // An ISO string (or anything else `Date` understands) passes through as itself.
-        if (typeof value !== 'string') return null
-        const trimmed = value.trim()
-        if (trimmed === '') return null
-        return Number.isNaN(new Date(trimmed).getTime()) ? null : trimmed
-    })
-    .catch(null)
-
-const boolish = z.coerce.boolean().catch(false)
-
-/**
- * Optional and absent both mean `null` — never `undefined`.
- *
- * `.nullish()` alone leaves a *missing* key as `undefined` while an explicit `null` stays
- * `null`, so every consumer would have to test for both. Collapsing them here means
- * `channel.mcn === null` is the only check anyone writes, and a field that starts arriving
- * as `null` instead of being omitted changes nothing downstream.
- */
-function nullable<T extends z.ZodType>(schema: T) {
-    return schema
-        .nullish()
-        .catch(null)
-        .transform(value => value ?? null)
-}
 
 export const avatarVideoSchema = nullable(
     z.object({
@@ -314,9 +230,17 @@ export const channelSchema = z.looseObject({
     blocking_channel: boolish,
     blocked_user: boolish,
     notification_settings: nullable(z.looseObject({ notification: boolish })),
+    /**
+     * Who may **start** a conversation with this space's owner — legacy's message settings.
+     * `subscriber` is members only; anything else, or nothing, is legacy's default, followers.
+     */
+    messaging_settings: nullable(
+        z.looseObject({ sender: z.enum(['follower', 'subscriber']).catch('follower') }),
+    ),
 })
 
 export type Channel = z.infer<typeof channelSchema>
+export type MessagingSender = 'follower' | 'subscriber'
 
 /**
  * `GET /analytics/v2/channel/{slug}/stats/`.
@@ -393,13 +317,15 @@ export function normalizeChannelActivity(body: unknown): ChannelActivity[] {
     )
 }
 
-export const channelThreadSchema = z.looseObject({
-    id,
-    code: nullableText,
-    created_at: nullableTimestamp,
-})
-
-export type ChannelThread = z.infer<typeof channelThreadSchema>
+/*
+ * `channelThreadSchema` / `ChannelThread` lived here — a three-field stub standing in for the post
+ * DTO until `features/post` existed. It does now, so `getThreads` parses its rows with
+ * `normalizePosts` and this schema is **deleted rather than refactored**, which is what
+ * `channel-thread-placeholder.tsx` said would happen.
+ *
+ * The stub is not kept as an alias: a second name for `Post` is a second thing to look up, and the
+ * whole point of the original note was that modelling a post here would guarantee it drifted.
+ */
 
 /**
  * A person as `my-channel/`'s **list** endpoints return them — the blocked list and the

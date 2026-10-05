@@ -70,7 +70,7 @@ export function useEvent({
          * the `notFound`/`isError` split below exists to prevent.
          *
          * Measured against a real upstream: `v4/public/events/{code}/` answers **500** for an
-         * unknown code rather than 404 (B105), so this was not a hypothetical — it was the ordinary
+         * unknown code rather than 404 (B114), so this was not a hypothetical — it was the ordinary
          * path for every dead link.
          *
          * `null` reaching here always means the *server* could not answer: a definitive 404 raises

@@ -2,7 +2,7 @@
 
 Contract questions the web client is currently guessing at, in priority order —
 **B11–B28 channel**, **B29–B33 earnings**, **B34–B39 wallet**, **B40–B42 permission**,
-**B57–B60 dashboard analytics**, **B105–B109 the event page, the live room and paid chat** (see the headings below). **Auth is fully answered** and
+**B57–B60 dashboard analytics**, **B114–B118 the event page, the live room and paid chat** (see the headings below). **Auth is fully answered** and
 lives in [Closed](#closed) — apart from **B92** (passcode management), **B94** (acquisition /
 affiliate attribution) and **B95** (TikTok PKCE); **B88** closed with the auth contract, which
 showed the sign-in half was never a question. What auth has instead of open
@@ -284,13 +284,28 @@ Raised while building `features/channel` (the `/@{slug}` page). Legacy reference
 
 ## B12 — `media_type` on the threads endpoints: what values, and how is it repeated?
 
-Legacy builds a repeated bare key by hand (`media_type=image&media_type=video`); axios 1.x
+Legacy builds a repeated bare key by hand (`media_type=IMAGE&media_type=VIDEO`); axios 1.x
 would serialise an array as `media_type[]=image`, so the client sets
 `paramsSerializer: { indexes: null }` to match legacy's wire format.
 
 **If the server wants brackets or a comma-joined list instead:** the media tab returns
 *unfiltered* results and **looks like it works** — the grid fills with posts, just the wrong
 set. That is the failure mode worth naming: no error, no empty state, only wrong content.
+
+**Answered for the values, 2026-09-28 — measured on staging, `my-channel/threads/`:**
+
+| query | result |
+|---|---|
+| no `media_type` | 200 |
+| `media_type=IMAGE&media_type=VIDEO` | 200, images and videos only |
+| `media_type=IMAGE` | 200, images only |
+| `media_type=image` / `video` / `image&…video` / `image,video` | **500** — `runtime error: invalid memory address or nil pointer dereference` |
+
+The values are **upper case** — legacy's `TYPE_POST_IMAGE_SLIDE.IMAGE` / `.VIDEO`, which is what
+it actually sends; this entry used to quote it in lower case, and the client copied that. The
+repeated bare key is confirmed. Still open, for the backend: an unknown value should be a **400**,
+not a panic — the lower-case spelling took down the Media tab on every space and said only
+"Internal Server Error".
 
 ---
 
@@ -3014,7 +3029,426 @@ Encoded in `features/monetization/api/donation-types.ts`, `api/donation-api.ts`,
 
 ---
 
-## B105 — `v4/public/events/{code}/`: is it really public, what does a **refusal** look like, and is `product_id` always there? · **the event page is built on three assumptions**
+## Auth surface not ported
+
+Not questions — the contract answers all of these — but endpoints the auth service publishes and
+this client has no caller for. Recorded here so the next person to want one does not re-derive its
+shape, and so that "unported" is never mistaken for "unspecified". Ordered by how much a reader
+misses them.
+
+| Endpoint(s) | What it is, and the trap in it |
+|---|---|
+| `GET v1/appeal/` · `POST v1/appeal/` | The screen a `401 suspended` is supposed to open. `toSignInErrorKey` now names the state (`auth_account_suspended`) but can only point at support. ⚠ `GET` answers **404 when nothing is pending**, which is the *normal* state, not an error. |
+| `GET v1/sessions/` · `POST v1/sessions/:id/logout/` · `POST v1/sessions/logout-others/` | Signed-in devices, and signing one (or all others) out. Paginated. ⚠ The per-session logout takes `{ passcode }` when the account has one, `422 2fa_passcode_required` without it — the same per-action pattern as a withdrawal. Note this app sends `device_name: 'web'` and stuffs the UA into `os`, so *other* clients already list this browser as "web": worth fixing whenever the screen is built. |
+| `POST v1/verify-email-request/` · `POST v1/verify-email/` | Verifying the account's primary address. ⚠ `verify-email/` **answers a new token pair**, unlike every other OTP step — the address is in the claims, so a client that ignores the body keeps a stale token. |
+| `GET v1/me/display-name-validation-rule/` | Built, and the only one on this list with a caller: `useDisplayNameRules` applies the published regexes locally so an obviously-invalid name is rejected without a round trip. Listed because it can only ever *reject* — `validate-display-name/` is still the gate. |
+| `GET v1/identification/status/` | `{ level, verified_at }` in one call. ⚠ **Not a replacement for `submissions/`**: it cannot express *pending*, which is one of the three states the KYC screen renders. Useful as a cheap "is this account verified" for a surface that does not need the middle state. |
+| `GET v1/identification/levels/` · `POST …/request/` · `POST …/submissions/` · `POST …/generate-upload-url/` | The **self-submit** KYC path, an alternative to SumSub: `request/` for a `sid`, upload via `generate-upload-url/` (PUT to `upload_url`, then put **`serve_url`** in `proof` — not the upload URL), then `submissions/`. Nothing here is built; the app is SumSub-only. |
+| `POST v1/me/deactivate/` | Self-service account deactivation. Takes `{ reason, passcode }`, passcode required when 2FA is on. |
+| `POST v1/oauth2/pkce/authorize/` · `POST v1/oauth2/pkce/token/` | Opening a session on another device from an already-signed-in one, without a token crossing a URL. ⚠ Anonymous accounts are refused (`403 permission_denied`). Overlaps with QR sign-in in purpose and is a different mechanism — do not fold them. |
+| `GET v1/users/:user_id/` | Public profile by the **numeric alias**, not the UUID. |
+| `GET v1/jwks/` · `GET /auth/ping/` | Infrastructure. `jwks/` publishes only the *active* key, so it cannot verify every token in circulation — not a client concern either way. |
+| `POST v1/turnstile/` | Explicit token verification. This client sends `X-Turnstile-*` headers on the four endpoints that read them (B2) and never calls this. |
+| `POST v1/zendesk/token-request/` · `POST v1/zendesk-token/` | Zendesk SSO, two steps. |
+
+---
+
+## B105 — the **post payload**: nine viewer-relative fields, and a price that can be `0` · **`features/post` parses six fields nothing documents**
+
+`core/v1/posts/…` is the widest payload in the product and no schema covers it. `api/types.ts`
+transcribes legacy's spellings; these are the ones the card's behaviour actually turns on.
+
+1. **Can a gated post carry `price: 0`?** `postUnlockPrice` refuses it — a confirmation reading
+   "unlock for 0" is a charge nobody agreed to — so such a post shows a bare *Unlock* pill and its
+   press falls through to whatever `postIntent` found. If `0` is real and means *free*, the post
+   should not be gated at all and the answer is a backend fix, not a client one. If it is a
+   placeholder for "not set", confirm and we keep refusing.
+2. **Is `viewer` a closed set?** The client tests exactly one value — `'STARGAZERS'` — because that
+   is the only one legacy tests. `isLocked` therefore reads *"gated **and** the backend says
+   STARGAZERS **and** `need_unlock_package`"*, and any other value means **unlocked**. A new value
+   meaning *still locked* opens every paywalled post to everybody. What else can it be?
+3. **`need_unlock_package` describes the post, not the reader** — it stays `true` after a purchase.
+   Confirmed by the payload that produced the `POST_PURCHASED` fixture. Please confirm it is
+   intentional and not a bug being relied on, because the client now depends on it.
+4. **`_insights` is author-only.** Modelled as `{ post_total_revenue }` and nullable; the card hides
+   the strip at `0`. Is the figure in **USD** or in the account's own earnings currency? It is
+   currently multiplied by the reader's exchange rate, which assumes USD.
+5. **`channel.promote`** — `{ referral_url, app_name, app_icon_url }`. Only `referral_url` is treated
+   as required. Are the other two guaranteed when `promote` is present?
+6. **`channel.has_mini_app` / `mini_app_url` / `mini_app_id`** — the client requires all three
+   together (legacy's own gate). Can the flag ever be `true` with either of the others absent, and
+   if so what should the banner do?
+
+Encoded in: `features/post/api/types.ts`, `lib/post-access.ts`, `lib/post-intent.ts`.
+
+---
+
+## B106 — the bookmark `success` flag: can a 2xx mean "did not land"? · **the client treats a 2xx without it as a failure**
+
+`POST v1/posts/bookmark/` answers `201`, `DELETE v1/posts/{id}/bookmark/` answers `200`, and legacy
+flips its local state only when the body *also* carries `success: true`. Ported as-is, which is why
+bookmarking is confirm-then-flip where reacting is optimistic.
+
+Two questions, and the second is the one that costs something:
+
+- **Can `success` be `false` on a 2xx at all?** If not, the flag is decoration and the control can
+  flip optimistically like the reaction does.
+- **Is the flag guaranteed present?** The client treats an **absent** flag as a yes, deliberately —
+  the strict reading (`success === true`) would turn every bookmark into a silent failure the day the
+  backend stopped sending it, and nobody would notice until users did.
+
+Also: the two halves disagree about where the id goes — **body** on the add (`{ post_id }`), **path**
+on the delete. Confirmed as intentional (the add endpoint is the same one that *lists* bookmarks, so
+the path is spoken for), but worth stating so nobody "tidies" them into one shape.
+
+Encoded in: `features/post/api/post-api.ts`, `hooks/use-post-bookmark.ts`.
+
+---
+
+## B107 — the **paid-interaction charge**: what `quantity` means, whether the ids are stable, and who reverses a half-finished charge · **money moves on three guesses**
+
+A space can charge Star to react or to comment. The client now takes that Star — before this it drew
+the price and charged nothing, so readers interacted free on spaces that sell interaction.
+
+The charge is `POST billy/v1/ecom/purchase/` with legacy's body verbatim:
+
+```json
+{ "product_id": "…", "price_id": "…", "quantity": 5, "metadata": { "beneficial_channel_id": "…" } }
+```
+
+1. **`quantity` carries the price, not a count.** Legacy passes `paidInteractionStarCost` into that
+   slot (`handlePurchase(channelId, type, cost)`). Transcribed rather than corrected, because a
+   reading of "quantity means how many" would send `1` and charge the wrong amount. Which is it?
+2. **Are the catalogue ids environment-independent?** `REACT_POST` and `COMMENT_POST` are hard-coded
+   UUID pairs from legacy's `constants/productType.js`; there is no endpoint that lists them. If
+   staging and production mint different ids this breaks as a `422`, not as a type error.
+3. **Is there a reversal when the second request fails?** The client charges **first** and reacts
+   second, bailing out if the charge fails — legacy's ordering, and the only one that cannot react
+   for free. But a charge that succeeds followed by a reaction that fails leaves Star spent on
+   nothing, and no client can refund it. Does the backend reverse it, or should the two be one call?
+4. **Does `422 EC0001` mean "not enough Star" here too?** The client branches on it (the same code
+   `features/mini-app` uses on this endpoint) to offer a top-up rather than a failure toast. Confirm
+   the code is stable for this product, since the alternative is a reader told "it failed" when the
+   fix was one tap away.
+
+Encoded in: `features/post/api/post-api.ts` (`INTERACTION_PRODUCTS`, `chargeInteraction`),
+`hooks/use-post-reaction.ts`, `hooks/use-post-unlock.ts`.
+
+---
+
+## B108 — the **post report** body: is `description` optional, and are the reason ids prefixed? · **two report calls in one product disagree**
+
+`POST core/v1/report/report/posts/{id}/`.
+
+- **`description`**: legacy **omits the key** when the note is empty on the *post* endpoint and
+  **always sends it** on the *channel* one. The client sends it unconditionally on both, on the
+  grounds that an empty string is a valid "no note" and one product should not have two shapes for
+  one field. Confirm the post endpoint accepts `""`.
+- **The reason ids**: `GET …/post/contents/` is assumed to return `POST_`-prefixed types, mirroring
+  the channel list's `CHANNEL_`. The prefix is stripped to build the copy key
+  (`post_report_reason_*`), with the backend's own `text` behind it — so a wrong guess costs English
+  labels, not a broken list. What are the real ids?
+- The list is cached **device-wide** (`shared: true`, 24h): it is assumed not to vary by bearer.
+  Correct?
+
+Encoded in: `features/post/api/post-report-api.ts`.
+
+---
+
+## B109 — **replies**: mostly **answered by a live payload**, and five questions left · **one of which had the reply list printing "0 replies" on every post**
+
+`core/v1/posts/{id}/replies/` and `core/v1/posts/replies/{id}/…`. The web client now reads, writes,
+reacts to and deletes replies from the post-detail page. Like **B104**, most of this one is already
+settled — not by a schema but by **reading a real response** off `wapi.tevi.dev` (a signed GET, one
+post with five replies and one nested thread). Those are recorded here as findings; the questions
+follow.
+
+### Answered by the payload, and acted on
+
+**A reply is not a post, and this client believed it was.** The two DTOs share ten fields and then
+diverge: a reply's author is **`owner_channel`** (plus `owner`, the *user*), the space it sits in is
+**`post_channel`**, and it carries **`post_id`** / **`parent_id`**, **`from_post_owner`** and
+**`from_subscriber`**. It has **no** `channel`, `is_owner`, `shareable_url`, `product_id`,
+`required_packages`, `viewer`, `need_unlock_package`, `detected_nsfw`, `marked_nsfw`,
+`reply_allowed`, `can_reply`, `playback`, `cover_image` or `quoted_post`. Parsed as posts — which is
+what the detail page did — every row rendered with **no author, no avatar and no name**, plus a
+share button, a bookmark button and a *Block* row that could never work. The measured shape is
+`features/post/api/reply-types.ts`.
+
+**The replies envelope carries no `count`.** It is `{ next, previous, results }` — cursor
+pagination. The client read `count ?? 0` and printed **"0 replies"** over every populated list; the
+heading now uses the parent post's own `reply_count`.
+
+**Reacting to a reply is a different endpoint.** `v1/posts/replies/{id}/reaction/` and
+`…/reaction-delete/`, not the post pair — a reply's id sent to `v1/posts/{id}/reaction/` is a 404,
+which is what the reply rows were doing.
+
+**A reply is priced by `post_channel`, not by its author's space.** Both carry
+`paid_interaction_enabled` / `paid_interaction_cost`, and they are different channels whenever the
+reply is not by the post's owner. Crediting the wrong one pays whoever wrote the comment.
+
+**`lang` comes back on every row**, echoing what the write sent.
+
+**`reply_allowed_user` is always present, and there is no "everyone".** 20 consecutive posts carried
+it — 18 `FOLLOWERS`, 2 `PAID_USERS` — and the iOS enum has the same six cases with no open value,
+defaulting an unparseable one to `.followers`. So followers-only is the product's default, not an
+opt-in restriction. `reply_allowed_link` is a real boolean on the wire (`true` on every row), which
+settles the field this client had typed as text.
+
+### Still open
+
+`POST core/v1/posts/{id}/replies/`. Three parts of the body are still transcribed from legacy rather
+than known.
+
+- **`lang`.** Legacy hard-codes **`'en'`** on every comment, from all nine of its locales, and this
+  client does the same. What does the field do — is it the language of the text (in which case
+  legacy has been mislabelling every non-English reply ever written, and the client should send the
+  reader's locale), or something else entirely? If it is the former, what is the accepted set — BCP
+  47 tags (`zh-TW`), or the eight-ish codes the UI switcher uses? Sending the wrong one is a 400 on
+  every reply from a non-English reader, which is why nothing has been changed on a guess.
+- **`html_text`.** Legacy shortens every URL in the text and splices `<a>` tags back in, sending
+  `html_text` **instead of** `text`. This client sends plain `text` only: it never renders
+  `html_text` (creator-authored markup, no sanitiser — `post-card.tsx` states the refusal), so a
+  reply sent that way is one it cannot display. Is `html_text` required for anything server-side —
+  link previews, moderation, the mobile apps' rendering — or is `text` alone a complete reply?
+- **The image ceiling.** Ten, taken from legacy's own error string (`'Maximum 10 images allowed per
+  comment'`) rather than from any documented limit. The client refuses an eleventh before it
+  uploads. What does the endpoint actually enforce, and does it enforce a **size** or a count?
+
+Four smaller ones while the endpoints are open:
+
+- **What does `DELETE v1/posts/replies/{id}/` leave behind?** A post's delete keeps the row and
+  flips `deleted`, and a reply carries the same flag — but this was not measured. The client
+  invalidates and re-reads rather than splicing the row out, which is correct either way;
+  `ReplyRow` draws a tombstone if one comes back.
+- **Does `can_reply` move as soon as the reader qualifies?** The iOS client evidently does not think
+  so: its `isGrantedReplyPermission` computes the two satisfiable audiences from **client** state
+  (`channel.isFollowed`, `isSubscribed`) and consults `can_reply` only for the four that cannot be
+  satisfied. The web client now matches it on the **followers** half — `channel.is_followed` is on
+  the post payload, so a reader who has just followed gets the box rather than a panel telling them
+  to follow — and stays on `can_reply` for the **members** half, because `my-subscriptions/` lives in
+  `features/membership` and the dependency runs membership → channel → post, so reading it from the
+  post feature would close a barrel cycle. iOS fires a second request
+  (`fetchMySubscriptions(channelId:)`) for exactly that value. Two things would let both clients stop
+  second-guessing: say whether `can_reply` is immediate, and if it is not, whether the post payload
+  could carry the members half the way it already carries `is_followed`.
+- **Is `reply_allowed_user` closed at six values?** The client now reads all six of legacy's
+  (`FOLLOWERS`, `PAID_USERS`, `FOLLOWINGS`, `VERIFIED_SPACES`, `MENTIONED_SPACES`, `NONE`) and puts a
+  sentence on screen for each. A seventh would fall through to "no restriction named", so the reader
+  is told nothing rather than something invented — but they are also not told the truth. Is the set
+  fixed, and is there a `code` or an id to switch on rather than these strings?
+- **What does `can_reply: false` with no `reply_allowed_user` mean?** It is reachable — a block, a
+  rate limit, something else — and the client deliberately draws no panel for it, since an empty one
+  says less than none. If there is a reason worth showing, what carries it?
+- **Who may delete a reply?** The client offers it to the reply's author **and** to the owner of
+  the post, both derived from ids since the payload states neither. Legacy renders the row for the
+  same two. Does the endpoint enforce that, or something wider?
+- The reply's images are uploaded through `v3/upload/generate-gcs-upload-url/` with a
+  **client-chosen key**, not through legacy's `v1/posts/image/upload-url/` (which names the object
+  itself). That is **B104**'s question, and the answer decides this too.
+- `reply_allowed_link` is read as a **boolean**. Legacy writes it as `reply_allowed_link || false`,
+  so that is the assumption; the client treats an **absent** field as "links allowed" rather than
+  refusing, since refusing wrongly stops every reply on every post. Is it a boolean, and is it
+  always present on the post payload?
+
+Not a question, but the thing this unblocks: **reporting a reply**
+(`v1/report/report/reply/contents/` + `v1/report/report/replies/{id}/`) is the one control the reply
+row deliberately does not draw yet — the reason-collecting dialog is built around the *post* pair,
+and the row it replaced was submitting a reply's id to the post endpoint.
+
+Encoded in: `features/post/api/reply-types.ts`, `features/post/api/post-api.ts` (`createReply`,
+`getReplies`, `getChildReplies`, the three reply writes), `features/post/lib/reply-access.ts`,
+`features/post/lib/reply-draft.ts`, `features/post/hooks/use-create-reply.ts`,
+`features/post/hooks/use-reply-reaction.ts`.
+
+---
+
+## B110 — **creating a post**: the two shipped clients build the same request six ways apart · **the web client had to pick one of each**
+
+`POST core/v3/channel/my-channel/threads/`. Legacy web's `useCreatePost` and iOS's `PostLocal.swift`
+fill the same form and disagree on six fields. This client reads both and picks per field
+(`features/post/lib/post-draft.ts` carries the table); four of the six are safe either way, two are
+not. Please settle these.
+
+**1. `video`.** Legacy web sends `{ id, thumbnail: <the thumbnail **upload** URL> }` — a signed,
+expiring link to a bucket write, stored on the post. iOS sends `{ id }`. This client follows iOS: a
+poster the backend already received needs no URL handed back, and an expiring write URL is a field
+that is wrong the moment anything reads it. Is `thumbnail` used at all, and if so, what does it
+expect — a serve URL, or nothing?
+
+**2. `paid_interaction`.** Legacy web sends `{ is_enabled, star_cost }` on every create. iOS has the
+line **commented out**, so its posts presumably inherit the channel's setting. Both cannot be right:
+either the field is per-post and iOS is silently publishing with the channel default, or it is
+ignored on create and legacy web has been sending it for nothing. Which?
+
+**3. An empty paywall.** A post with `viewer: 'stargazers'`, no `required_packages` and no `price`
+reaches nobody — not the public, and no member, because it names no tier. iOS rewrites the audience
+to `everyone` before sending; legacy web sends it as-is. This client follows iOS. Does the backend
+reject that shape, or store it?
+
+**4. `hidden_links`.** iOS sends it on every create; legacy web has no such field and no UI for it.
+What is it, and does anything break by omitting it?
+
+**5. `html_text` vs `text`.** Legacy web sends **only** `html_text` for every post, converting
+newlines to `<br/>` even when there is no link. This client sends `text` — it renders no
+creator-authored markup (see B109's note on replies), and iOS's own parser falls back to `text` when
+`html_text` is absent, so plain text displays everywhere. Confirm nothing server-side (link
+previews, search indexing, moderation) depends on `html_text` being present.
+
+**6. `lang`.** Answered by iOS as far as the *shape* goes — it sends the current locale's two-letter
+code, so the field takes one from a shipped client daily. This client now does the same and B109's
+question narrows to what the field actually drives, and what happens to `zh-CN` vs `zh-TW`, which
+both narrow to `zh`.
+
+One more, from the upload side: **`v1/posts/video/upload-url/`** answers
+`{ id, upload_url, thumbnail_upload_url }` and takes `codec` as a **required, nullable** parameter.
+A browser can measure a clip's duration and dimensions without naming its codec, so this client
+sends `null` there, as legacy does. Is `null` genuinely accepted, or does it degrade the transcode?
+
+Encoded in: `features/post/lib/post-draft.ts` (`buildPostBody`, `postLang`),
+`features/post/api/post-api.ts` (`createPost`), `shared/lib/api/upload-api.ts` (`uploadPostVideo`).
+
+---
+
+## B111 — **the conversation list** (`messenger/v2/rpc/…`): no schema, read field by field from legacy · **six guesses behind one screen**
+
+`/messages` reads `get_recent_conversations` and `search_conversation`, and writes `mark_seen_all`
+and `flush_conversation`. None of them is in a schema; every field name is the one legacy's
+`containers/directMessage` reads, and `features/message/api/types.ts` parses each defensively. What
+the client assumes, and what changes if it is wrong:
+
+**1. Paging.** The client replays the **query string** of `next_url` against
+`get_recent_conversations` and ignores its path — legacy's `new URL(origin + next_url).search`. A
+`next_url` with no query is treated as the last page. Is `next_url` always a relative path whose
+query is the complete next request (cursor, `limit`, `filter`)? If the cursor lives in the path, the
+list stops after page one.
+
+**2. `count`.** Read as the folder's total, and used for the Unread tab's badge via a separate
+`limit=1&filter=UNREAD` request. Is `count` present on `filter=UNREAD`, and is it the number of
+*conversations* with something unread (not of messages)? If it is absent the badge falls back to 0
+or 1.
+
+**3. Timestamps.** `latest_message.created_at` goes into `new Date()` in legacy, while
+`recipient.last_online_at` is divided by 1000 — i.e. milliseconds. The client accepts ISO, epoch
+seconds or epoch ms for both. Which is each, really?
+
+**4. `recipient.active`.** Missing is treated as **inactive** (legacy's `active || false`): the row
+shows "Tevi user", no avatar and no link. Is the field always sent? If not, every conversation
+would render anonymised.
+
+**5. `flush_conversation`.** Legacy sends `both_members=false` as a **query parameter** with an empty
+body (its `post(uri, params, data)` puts the object in `params`), and the client does the same. Is
+the query the intended place, and does the conversation come back into this account's list when the
+other side writes again?
+
+**6. The socket frames.** `new_message`, `update_message`, `deleted_message`, `seen_message` and
+`update_conversation` are used as signals only — the list refetches. `change_chat_action` is read:
+`{ conversation_id, action: 'NONE' | 'TYPING' | 'UPLOADING_PHOTO' }`. Does a typing sender repeat
+`TYPING` while typing (the client expires an indicator after 6s without one), and is a frame
+delivered for the reader's own typing in another tab?
+
+Encoded in: `features/message/api/types.ts`, `features/message/api/message-api.ts`,
+`features/message/lib/conversation-page.ts` (`cursorFromNextUrl`),
+`features/message/hooks/use-chat-actions.ts`.
+
+---
+
+## B112 — **the conversation** (`messenger/v2/rpc/…` messages): the chat room is built on legacy's reads of six endpoints · **no schema for any of them**
+
+`/@{slug}/messages` opens the conversation with `start_conversation_with`, pages `get_messages`,
+and writes through `send_message`, `edit_message`, `delete_message`, `send_chat_action` and
+`set_message_callback_data`. Field names are legacy's (`useChatRoom.js`, `itemMessage/*`), parsed
+defensively in `features/message/api/types.ts`. What the client assumes:
+
+**1. `start_conversation_with` refuses with the same codes as `can_start_conversation_with`.** Legacy
+calls `can_start` first and then `start`, and reads `422 { code: 'C001' | 'C002' }` from both. This
+client calls `start` alone and reads the gate from its 422. Is `start`'s refusal guaranteed to carry
+the code? If not, the follow and member walls never show — the room errors instead.
+
+**2. `start_conversation_with` is safe to call on every visit.** It is the screen's read, so it runs
+on each open (and again after a follow). Does it only ever return the existing conversation for the
+same member, never create a second?
+
+**3. `get_messages` pages backwards.** Page one is the latest `limit`, and `next_url`'s query leads
+into the past. Within a page the order is not relied on — the client sorts by `created_at`. Confirm
+the direction; if `next_url` leads forward, older history never loads.
+
+**4. `send_message` and `edit_message` answer with the full message** (id, `created_at`, `sender`,
+`reply_message` for a reply). Legacy follows every send with `get_message/{id}`; this client uses the
+send's own response. If it is partial, a sent bubble lacks its time or its quote until the next read.
+
+**5. `delete_message`'s `both` is a query parameter** with an empty body, as legacy sends it. Is a
+"for everyone" delete delivered to the other side as `deleted_message` with `message_id`?
+
+**6. The frames name ids.** `new_message` / `update_message` carry `{ conversation_id, id }` and the
+client re-reads `get_message/{id}`; `seen_message` carries `{ conversation_id }` and the client
+re-reads the newest page for the ticks. Legacy writes the frames' own payloads instead. Is
+`get_message/{id}` readable by both members immediately after the frame?
+
+**7. A photo message is `send_message` then `upload_images/{id}/{n}/`.** `send_message` with
+`msg_type: 'IMAGE'` and `number_of_media: N` creates the message; each photo is then a multipart
+`POST` with field **`image`**, `n` the 0-based index doubling as the dedup number. All three clients
+agree on that; they disagree on the trailing slash (the apps send it, legacy does not) — this client
+sends it. What does the other side see between the two steps: an `IMAGE` message with no photos,
+or nothing until the last upload? And does `n` really dedupe, i.e. is a retried upload a replace?
+
+**8. Mute is `update_conversation_config/{id}` with `{ muted }`.** Android's body, the one a shipped
+client sends. Legacy's (never rendered) menu wraps it — `{ config: { muted } }`. If the service
+reads the wrapper, the toggle answers 200 and changes nothing.
+
+**9. `stats.last_read_message_id`** is where iOS anchors "Unread messages"; without it the divider
+falls back to `stats.unread_messages`. **`attachments[]`** (iOS) carries the Premium gift as
+`{ type: 'TEVI_PREMIUM_GIFT', preview_data: { product_name } }`, while Android and legacy read the
+same gift out of a `tevi://TEVI_PREMIUM_GIFT?product_name=…` text — both are read. **`recipient.is_bot`**
+hides the attach button, as on iOS.
+
+**10. A short link resolves through `shortlink/api/v1/params/{code}` → `{ original_url }`.** That is
+legacy's `getLongLink`, and legacy applies it to any `/{segment}/s/{code}` path — its `/x/s/…` links
+*and* the share sheet's `/@creator/s/{share_id}`. Does `params/` resolve a `share_id` minted by
+`v1/links`, or does that family need its own read? If not, a shared post arrives as a plain link
+instead of a post card. An event card reads the event off `channel.lives` (the event page's own
+source), so an event that has dropped out of that list shows no card.
+
+Encoded in: `features/message/api/message-api.ts` (`openConversation`, `getMessages`,
+`sendMessage`, `uploadPhoto`, `setMuted`, `deleteMessage`), `features/share/api/share-link-api.ts`
+(`resolveShortLink`), `features/message/hooks/use-thread.ts`,
+`features/message/hooks/use-composer.ts`, `features/message/lib/message-thread.ts`,
+`features/message/lib/message-link.ts`.
+
+---
+
+## B113 — **sharing into a DM** (`send_message` from the share sheet): the three shipped clients send three different messages · **the web client had to pick one**
+
+"Send in message" fans out one `POST messenger/v2/rpc/send_message` per picked conversation on every
+client — body `{ conversation_id, input_text, msg_type: "TEXT" }` — and agrees on nothing else:
+
+| | Legacy web | iOS | Android | **This client** |
+|---|---|---|---|---|
+| Link sent | minted, `share_channel=internal` | **raw** `shareable_url`, nothing minted | minted, `internal` (`source_screen=copy_link`) | minted, `internal`; raw URL if the mint fails |
+| Body | `text + "\n" + link` | `link + "\n\n" + text` | `text + " " + link` | `text + "\n" + link` |
+| `parser` | (none) | (none) | `HTML` — each URL first wrapped via `external-shorten/` | `PLAIN` |
+| Typed-text limit | none | 1,000 | 64 | `directMessage.limitCharacters` (remote config) |
+| Recipients offered | `get_recent_conversations` + `search_conversation`; search drops inactive | same two endpoints; nothing dropped | the local cache (≤100), searched in memory | the two endpoints; inactive **and blocked** dropped |
+| Partial failure | closes, toasts who failed; all-failed keeps them selected | closes before the requests finish, first error only | first HTTP error aborts the batch, no dismiss | legacy web's |
+
+Questions:
+
+1. **Should a DM share mint a link at all?** If `share_link_created_v2` on `internal` is what
+   "shares by channel" counts, iOS's DM shares are missing from it today. If a raw URL is preferred
+   (it is what the message card unfurls from), every client should stop minting.
+2. **Is there one canonical body?** The bubble turns a link into a card wherever it sits, so the order
+   only changes what a reader sees first; but Android's `HTML` parser renders a different message from
+   the same share. Which `parser` should a share use?
+3. **What is the server's limit on `input_text`?** The client counts only the typed part against the
+   chat's limit; a link pushed over it would come back as a 4xx, whose message is shown.
+
+Encoded in: `features/message/hooks/use-share-in-message.ts` (`shareMessageText`, the fan-out),
+`features/share/lib/share-channels.ts` (`DIRECT_MESSAGE_WIRE`), `features/share/hooks/use-share-link.ts`
+(`messageLink`).
+
+---
+
+## B114 — `v4/public/events/{code}/`: is it really public, what does a **refusal** look like, and is `product_id` always there? · **the event page is built on three assumptions**
 
 `/@{slug}/event/{code}` is now a real page (`features/event`), and it reads exactly one endpoint:
 `GET core/v4/public/events/{code}/`. Legacy calls the same one from its event container. Three
@@ -3053,7 +3487,7 @@ Two smaller ones, both currently guessed:
   `priceCurrency`, which schema.org expects to be ISO 4217 — `TVS` is not, and inventing `USD` would
   misstate the price by whatever today's rate is. Is there a fiat equivalent the page should publish
   instead, or should `offers` be dropped for Star-priced streams?
-- **`id` vs `code`** — see B106 below.
+- **`id` vs `code`** — see B115 below.
 
 Encoded in `features/event/api/types.ts`, `api/event-api.ts`, `api/event-server-api.ts`,
 `lib/watch-state.ts`, `lib/event-seo.ts`.
@@ -3076,7 +3510,7 @@ gateway. That is not a theoretical preference for 404 — it decides which scree
 So: please answer 404 for an unknown or deleted code. Until then every broken event link in the wild
 reads as an outage. Encoded in `api/event-server-api.ts` (`isGone`) and `hooks/use-event.ts`.
 
-## B106 — the link service's `content_id` for a **live**: the event's `id`, or its `code`? · **`live` has been in the enum since TEV-1511 and nothing has ever sent it**
+## B115 — the link service's `content_id` for a **live**: the event's `id`, or its `code`? · **`live` has been in the enum since TEV-1511 and nothing has ever sent it**
 
 `POST v1/links` takes `content_type` from a three-value enum — `post | live | space` — and legacy
 builds a context for two of them. There is no `buildLiveShareContext` anywhere in it: its event page
@@ -3101,7 +3535,7 @@ Encoded in `features/share/lib/share-context.ts` (`liveShareContext`), `features
 
 ---
 
-## B107 — the **host's event report**: three endpoints on three services, none of them described · **`/@{slug}/event/{code}` prints a creator's revenue from guessed shapes**
+## B116 — the **host's event report**: three endpoints on three services, none of them described · **`/@{slug}/event/{code}` prints a creator's revenue from guessed shapes**
 
 The event page's host branch is legacy's creator dashboard, ported. It reads three endpoints and
 none of them is in a schema this client has seen:
@@ -3153,31 +3587,7 @@ Encoded in `features/event/api/report-types.ts`, `api/event-report-api.ts`, `lib
 
 ---
 
-## Auth surface not ported
-
-Not questions — the contract answers all of these — but endpoints the auth service publishes and
-this client has no caller for. Recorded here so the next person to want one does not re-derive its
-shape, and so that "unported" is never mistaken for "unspecified". Ordered by how much a reader
-misses them.
-
-| Endpoint(s) | What it is, and the trap in it |
-|---|---|
-| `GET v1/appeal/` · `POST v1/appeal/` | The screen a `401 suspended` is supposed to open. `toSignInErrorKey` now names the state (`auth_account_suspended`) but can only point at support. ⚠ `GET` answers **404 when nothing is pending**, which is the *normal* state, not an error. |
-| `GET v1/sessions/` · `POST v1/sessions/:id/logout/` · `POST v1/sessions/logout-others/` | Signed-in devices, and signing one (or all others) out. Paginated. ⚠ The per-session logout takes `{ passcode }` when the account has one, `422 2fa_passcode_required` without it — the same per-action pattern as a withdrawal. Note this app sends `device_name: 'web'` and stuffs the UA into `os`, so *other* clients already list this browser as "web": worth fixing whenever the screen is built. |
-| `POST v1/verify-email-request/` · `POST v1/verify-email/` | Verifying the account's primary address. ⚠ `verify-email/` **answers a new token pair**, unlike every other OTP step — the address is in the claims, so a client that ignores the body keeps a stale token. |
-| `GET v1/me/display-name-validation-rule/` | Built, and the only one on this list with a caller: `useDisplayNameRules` applies the published regexes locally so an obviously-invalid name is rejected without a round trip. Listed because it can only ever *reject* — `validate-display-name/` is still the gate. |
-| `GET v1/identification/status/` | `{ level, verified_at }` in one call. ⚠ **Not a replacement for `submissions/`**: it cannot express *pending*, which is one of the three states the KYC screen renders. Useful as a cheap "is this account verified" for a surface that does not need the middle state. |
-| `GET v1/identification/levels/` · `POST …/request/` · `POST …/submissions/` · `POST …/generate-upload-url/` | The **self-submit** KYC path, an alternative to SumSub: `request/` for a `sid`, upload via `generate-upload-url/` (PUT to `upload_url`, then put **`serve_url`** in `proof` — not the upload URL), then `submissions/`. Nothing here is built; the app is SumSub-only. |
-| `POST v1/me/deactivate/` | Self-service account deactivation. Takes `{ reason, passcode }`, passcode required when 2FA is on. |
-| `POST v1/oauth2/pkce/authorize/` · `POST v1/oauth2/pkce/token/` | Opening a session on another device from an already-signed-in one, without a token crossing a URL. ⚠ Anonymous accounts are refused (`403 permission_denied`). Overlaps with QR sign-in in purpose and is a different mechanism — do not fold them. |
-| `GET v1/users/:user_id/` | Public profile by the **numeric alias**, not the UUID. |
-| `GET v1/jwks/` · `GET /auth/ping/` | Infrastructure. `jwks/` publishes only the *active* key, so it cannot verify every token in circulation — not a client concern either way. |
-| `POST v1/turnstile/` | Explicit token verification. This client sends `X-Turnstile-*` headers on the four endpoints that read them (B2) and never calls this. |
-| `POST v1/zendesk/token-request/` · `POST v1/zendesk-token/` | Zendesk SSO, two steps. |
-
----
-
-## B108 — the **live room**: three endpoints on two services, no schema, and a field name that looks like a typo · **the studio's player is being built against a payload derived by grep**
+## B117 — the **live room**: three endpoints on two services, no schema, and a field name that looks like a typo · **the studio's player is being built against a payload derived by grep**
 
 `live/` is in no swagger, so `features/event/api/live-types.ts` was written by collecting every
 property legacy dereferences across its ~12,500-line `liveView` tree. That is enough to build
@@ -3255,7 +3665,7 @@ of any kind. Which field, and on the frame or on `user`?
 it on the user object and therefore never once drew the `MEM` badge. Both spellings are accepted
 now, but only one of them should exist.
 
-## B109 — **live interactions are billed by the client**: paid chat, and the sustained fee · **two silent failures and a field name that looks like a typo**
+## B118 — **live interactions are billed by the client**: paid chat, and the sustained fee · **two silent failures and a field name that looks like a typo**
 
 In a broadcast with `paid_chat`, each message costs the reader 1 Star. The sequence legacy
 implements, and this port has copied because there is no other contract to copy:
@@ -3329,7 +3739,7 @@ Premium reader who *can* pay, as legacy does — which is exactly this question:
 meant to be exempt, the client should stop charging it too, and that is a one-line change at
 `collect` in `hooks/use-sustained-fee.ts`.
 
-## B110 — **gifts in a live room**: the client announces its own charge, and three fields the schema and legacy disagree about · **the gift vertical is built on billy's OpenAPI plus one grep**
+## B119 — **gifts in a live room**: the client announces its own charge, and three fields the schema and legacy disagree about · **the gift vertical is built on billy's OpenAPI plus one grep**
 
 Unlike the rest of the live room, gifting **has a published schema**
 (`billy/docs/schema/v1/?format=json` — `product-packages/`, `send/`), and reading it before porting
@@ -3386,7 +3796,7 @@ Encoded in `features/event/api/gift-api.ts`, `features/event/api/gift-types.ts`,
 
 ---
 
-## B111 — the **room's publishers**: is there a channel slug? · **a co-host's card has no way to their space**
+## B120 — the **room's publishers**: is there a channel slug? · **a co-host's card has no way to their space**
 
 Pressing a seat opens the publisher's card (`event-seat-card.tsx`) with *Send a gift* and, for the
 host, *View space*. `core/v4/live/event/{code}/layout/` describes each publisher as
@@ -3401,7 +3811,7 @@ changes. If it does not, the ask is to add it: the card is the one place a viewe
 
 Encoded in `features/event/api/live-types.ts` (`slugOf`), `features/event/components/event-seat-card.tsx`.
 
-## B112 — a **removed** reader coming back: what does the room say, and how long does a kick last? · **the kick is only as strong as the client**
+## B121 — a **removed** reader coming back: what does the room say, and how long does a kick last? · **the kick is only as strong as the client**
 
 A `kickout` frame reaches a reader who is *in* the room. One who reloads is not, so they never hear
 it again — and on the way back in **`join_event` refuses them** (a non-zero `err_code`; the exact

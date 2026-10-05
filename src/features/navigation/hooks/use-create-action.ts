@@ -1,6 +1,7 @@
 'use client'
 
 import { useRequireAuth } from '@features/auth'
+import { openPostComposer } from '@features/post'
 import { useTranslation } from '@shared/i18n/use-translation'
 import type { TeviIconName } from '@shared/ui/icon-names'
 import { useState } from 'react'
@@ -26,20 +27,15 @@ export interface CreateOption {
  *
  * ## The two options are not the same kind of "not on the web"
  *
- * - **Create a post** is something the web can do: legacy has a full composer (`PostForm`, ~8.7k
- *   LOC) and posting has never been app-only. It is simply **not ported yet** — `features/post`
- *   does not exist; `channel-thread-placeholder.tsx` stands in for the post card "until
- *   `features/post` lands". So the row carries no `onSelect` and every surface renders it
- *   `disabled` behind a "Coming soon" badge (`CreateOptionRow`), which is this repo's own rule for
- *   a row whose destination is not built (`shared/components/action-rows.tsx`: a button that
- *   navigates to a 404 is worse than one that is visibly not ready, and a silently inert one is
- *   worse than both). Giving it the app prompt instead would be a *false* statement about where
- *   posting happens.
+ * - **Create a post** opens the composer (`PostComposerDialog`, mounted once by the session stack
+ *   and reached through its store — both navigation shells are in the DOM at once, so a dialog
+ *   rendered from here would be two dialogs). It carried no `onSelect` while the composer did not
+ *   exist, and every surface rendered it `disabled` behind a "Coming soon" badge; that is still
+ *   what `CreateOptionRow` does for a row with no action, and still the right shape for the next
+ *   one that arrives without a destination.
  * - **Create event** is genuinely app-only, permanently as far as this client is concerned: the
  *   web has never been able to broadcast, and legacy's own Go Live row opens a QR saying so. So
  *   this is the one option that raises `GetAppDialog`.
- *
- * When the composer lands, `post` gets an `onSelect` and nothing else here changes.
  *
  * ## Why the options live in a hook and the rendering does not
  *
@@ -80,7 +76,19 @@ export function useCreateAction() {
             hint: t('nav_create_post_hint'),
             icon: 'memo-pen',
             tile: TILE.indigo,
-            // No `onSelect`: see the note above. This is the line that changes when the composer lands.
+            onSelect: () => {
+                /*
+                 * Closes the options surface, then opens the composer — the same ordering the
+                 * `event` row uses below, and for the same reason: two stacked dialogs put the
+                 * composer's backdrop over the list it came from.
+                 *
+                 * The composer itself is mounted **once**, by the session stack, and reached
+                 * through its store rather than rendered here: both navigation shells are in the
+                 * DOM at once, so a dialog rendered by this hook would be two dialogs.
+                 */
+                setOpen(false)
+                openPostComposer()
+            },
         },
         {
             key: 'event',

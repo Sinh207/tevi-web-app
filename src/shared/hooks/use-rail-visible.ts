@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMediaQuery } from './use-media-query'
 
 /**
  * The width below which the end rail has no room — `2 × --end-rail-anchor`. The same number the
@@ -37,15 +37,5 @@ export const END_RAIL_MIN_WIDTH = 1292
  * strip uses it to avoid printing the same campaign twice on one screen.
  */
 export function useRailVisible(): boolean {
-    const [visible, setVisible] = useState(false)
-
-    useEffect(() => {
-        const mq = window.matchMedia(`(min-width: ${END_RAIL_MIN_WIDTH}px)`)
-        const update = () => setVisible(mq.matches)
-        update()
-        mq.addEventListener('change', update)
-        return () => mq.removeEventListener('change', update)
-    }, [])
-
-    return visible
+    return useMediaQuery(`(min-width: ${END_RAIL_MIN_WIDTH}px)`)
 }

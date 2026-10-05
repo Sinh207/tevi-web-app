@@ -154,7 +154,7 @@ export function EventOrdersPanel({ code }: { code: string }) {
                 ) : flow.orders.length > 0 ? (
                     <div className="flex flex-col">
                         {flow.orders.map(row => (
-                            /* The key is composed in the hook — the endpoint sends no order id (B107).
+                            /* The key is composed in the hook — the endpoint sends no order id (B116).
                            See `KeyedOrder`. */
                             <EventOrderRow key={row.key} order={row.order} />
                         ))}

@@ -178,7 +178,7 @@ export const eventChannelSchema = z.looseObject({
      * Kept parsed because legacy does read it on this payload — for **blocking a user**
      * (`blockUser(channel?.owner_id)`), which is the only thing it is known to be good for here, and
      * the surface that needs it lands with the live room. Whether it is reliably present is part of
-     * **B105**.
+     * **B114**.
      */
     owner_id: nullableId,
     /** Never carries the leading `@`. Without it the host card cannot link anywhere. */
@@ -221,7 +221,7 @@ export const eventDetailSchema = z.looseObject({
      *
      * Not what any URL is built from — that is `code` — and read in exactly one place: the share
      * sheet's attribution (`liveShareContext`), where `POST v1/links` wants a `content_id`. Which of
-     * the two that field expects for a live is **B106**: legacy has `live` in the enum and has never
+     * the two that field expects for a live is **B115**: legacy has `live` in the enum and has never
      * built a context for it, so there is no shipped behaviour to copy. `null` is ordinary and the
      * builder falls back to `code`.
      */
@@ -295,7 +295,7 @@ export const eventDetailSchema = z.looseObject({
      * a control *costs money*. `boolish` fails to `false`, which is the right direction: a missing
      * flag means a free chat, and the alternative is refusing to let somebody type because a field
      * was absent. The charge itself is client-side — see `unlockApi.purchaseChatMessage` and
-     * **B109**.
+     * **B118**.
      */
     /**
      * ⚠ **The creator can switch chat off entirely**, and without this the composer stays enabled.
@@ -351,7 +351,7 @@ export const eventDetailSchema = z.looseObject({
      * ⚠ A deliberate divergence: legacy does not read this field at all, so its tray is offered on
      * every stream whatever the console says. Both this and `gift_effect` are on
      * `PublicEventSerializerV4` and both are ignored there — honouring them is a change, which is
-     * why it is stated here and asked as **B110**.
+     * why it is stated here and asked as **B119**.
      *
      * Defaults to **`true`**, the same asymmetry `allow_chat` documents: an older payload that
      * omits the field must not silence a revenue surface, while a creator who explicitly switched

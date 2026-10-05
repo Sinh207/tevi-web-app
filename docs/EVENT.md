@@ -202,7 +202,7 @@ Legacy's live session is ~12,000 lines across ~120 files, and none of it has an 
 
 Three of legacy's states are **unknowable** to this client until parts of that land, and are therefore
 absent by design: **geo-restricted** (code `E003`, from the *preview* endpoint), **kicked out** and
-**banned from the channel** (both socket frames inside a session). **B105** asks whether the public
+**banned from the channel** (both socket frames inside a session). **B114** asks whether the public
 event endpoint can express the first on its own; if it can, the branch is small and
 `lib/watch-state.ts` is where it goes.
 
@@ -621,7 +621,7 @@ Four things about it that are not obvious:
   fetched with XHR before anything reaches a `<video>`, so the CDN needs `connect-src` — and its
   origin is only in the API payload, so it cannot be known at build time. Unset, the directive
   contributes nothing and playback is blocked. That is deliberate: the alternative is `https:` on
-  the one directive that decides where an injected script may send what it has read. **B108** asks
+  the one directive that decides where an injected script may send what it has read. **B117** asks
   the backend to name the origins.
 - **No Agora beauty extension.** Legacy imports `agora-extension-beauty-effect`, registers it and
   creates a processor it never attaches to anything — a processor beautifies a track *you publish*,
@@ -748,7 +748,7 @@ The same omission hid how much was missing. The `Chat` **component set has twelv
 | `Badge/Member`, `Badge/Host` | the gradient `MEM` chip and the black `Host` chip | built |
 | `Header/No data` | the empty leaderboard — 134×74 and a line | built |
 | `Header/Active=True` | the board expanded, 200 → 356 | built, as a CSS `max-height` |
-| `Badge/Lvl Badge`, `Badge/User Badge` | gifted level | **not built** — no frame carries a level (B108) |
+| `Badge/Lvl Badge`, `Badge/User Badge` | gifted level | **not built** — no frame carries a level (B117) |
 | `Chat/Unlock level` | "Send a Gift to activate your gifted level" | **not built** — and it is `visible: false` in the set, so the design had already withdrawn it |
 | `Header/Colapse` | the 303×72 folded strip | built, as `EventStudioChatStrip` |
 | `Right menu/Type=collapse` | the folded column, a `#000000@0.20` pill | built — the stage owns `isChatOpen` |
@@ -798,7 +798,7 @@ first, then `billy/v1/ecom/purchase/`. The message is public before anybody is c
 client that skips the second call posts free. The balance is checked *before* posting, which is
 the only part of the ordering a client can get right on its own, and a failed charge is **told to
 the reader** — legacy fires the purchase and discards the result, so neither side learns that no
-Star moved. **B109** asks whether the server should be charging instead.
+Star moved. **B118** asks whether the server should be charging instead.
 
 ### Gifts
 
@@ -820,7 +820,7 @@ v1/gifting/send/` charges, and then the *sender's browser* emits `post_message
 from — the chat sentence, the banners, and any future leaderboard. So a client that charges and
 then fails to emit has taken the reader's Star and shown the room nothing; this port **awaits** the
 emit and tells the sender when it fails, where legacy discards the promise. It also means nothing
-in a gift frame is a record: the price and the count are the sender's own. **B110** asks whether
+in a gift frame is a record: the price and the count are the sender's own. **B119** asks whether
 the server should emit instead.
 
 **There is no `give_gift` channel, and legacy makes it look as though there is.** Its float panel
@@ -848,7 +848,7 @@ stacks a 45px banner per gifter until they cover the stream.
   press toggles and Escape closes, so the same catalogue is reachable without a pointer; neither
   changes what the pointer does. Pinned in `event-gift-catalog-gesture.test.tsx`;
 - **`exclusive` is parsed rather than tested for truthiness** — it is a *string* on the wire, and
-  `"false"` is truthy. See **B110**.
+  `"false"` is truthy. See **B119**.
 
 **Two things this section used to list as missing:**
 
@@ -890,7 +890,7 @@ Three more things it does not copy:
 
 ⚠ **Premium is charged**, and that is ported rather than decided. Legacy bills everybody and only
 hides the "you just paid" notice from Premium subscribers — so they pay silently. It reads like a
-half-finished exemption; inventing one here would stop money reaching streamers. **B109** asks,
+half-finished exemption; inventing one here would stop money reaching streamers. **B118** asks,
 along with `quality` vs `quantity` on the purchase body.
 
 ### Open items on this screen
@@ -967,7 +967,7 @@ legacy's `isFree` true and its `isExclusive` false.
 - **`layout.spotlightUid` is camelCase in a snake_case API.** If the wire sends `spotlight_uid`,
   legacy's read has been `undefined` since it was written and the spotlight silently falls back to
   `publishers[0]` — invisible whenever the host *is* the spotlight. Both spellings are accepted
-  here; **B108** asks which.
+  here; **B117** asks which.
 - **`videoFillMode: 'contain'` is not in the SDK's enum** (`fill | auto | fillHeight | fillWidth |
   cover`), so it has always been ignored and the player has used its default. `'auto'` is the
   member that means what it was reaching for.

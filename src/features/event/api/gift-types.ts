@@ -12,7 +12,7 @@ import { z } from 'zod'
  *
  * Unlike `live-types.ts` — derived from greps because `live/` has no spec — billy publishes
  * OpenAPI (`billy/docs/schema/v1/?format=json`). Reading it before porting settled two things a
- * grep could not, and both are recorded as **B110**:
+ * grep could not, and both are recorded as **B119**:
  *
  * - **`price` is a decimal *string*** (`"10.00"`), not a number. Legacy compares it against the
  *   balance with `parseFloat` at the call site and formats it with `formatNumber(gift?.price)` —
@@ -45,7 +45,7 @@ const nullableText = z
  * move the entire catalogue into the *Exclusive* tab and empty the ordinary one, with nothing
  * failing.
  *
- * So the false-ish spellings are named. The divergence is deliberate and is **B110** — if the field
+ * So the false-ish spellings are named. The divergence is deliberate and is **B119** — if the field
  * really is only ever `"true"`/`""`, this behaves identically to legacy and costs nothing.
  */
 const stringishFlag = z
@@ -100,7 +100,7 @@ export const giftProductSchema = z.looseObject({
      *
      * **Nothing reads it**, and that is not an oversight: no frame this client receives carries a
      * reader's level, so there is no number to compare it against — the same reason
-     * `docs/EVENT.md` records `Chat/Unlock level` and the level badges as not built (**B108**).
+     * `docs/EVENT.md` records `Chat/Unlock level` and the level badges as not built (**B117**).
      * Carried so the day the level lands, the gate is a predicate rather than a schema change.
      */
     required_level: nullableText,

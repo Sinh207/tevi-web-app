@@ -206,7 +206,14 @@ export function FollowingView({ className }: { className?: string }) {
                     {lives.visible.map(live => (
                         <FollowingLiveRow
                             testId="channel-following-live"
-                            channelSlug={live.code ?? undefined}
+                            /*
+                             * The **channel's** slug, which is what `data-channel-slug` says it is.
+                             * This passed `live.code` — the event's id — so the attribute named one
+                             * thing and carried another, and the home page's Lives tab would have
+                             * had to copy the mistake to stay consistent with it. Found when that
+                             * second caller arrived.
+                             */
+                            channelSlug={live.channel?.slug ?? undefined}
                             key={live.code}
                             live={live}
                             locale={currentLanguage}

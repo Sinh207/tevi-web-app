@@ -24,6 +24,7 @@ import { MY_STAR_PATH } from '@features/my-star/routes'
 import { MY_WALLET_PATH } from '@features/my-wallet/routes'
 import { CARD_MANAGEMENT_PATH, GET_STAR_PATH } from '@features/payment/routes'
 import type { Capability } from '@features/permission'
+import { BOOKMARKS_PATH } from '@features/post/routes'
 import { GIFT_PREMIUM_PATH, PREMIUM_PATH } from '@features/premium/routes'
 import { STAR_TRANSFER_PATH } from '@features/star-transfer/routes'
 import type { IconProps } from '@shared/ui/icon'
@@ -372,6 +373,7 @@ export const MENU_SECTIONS: {
                 authOnly: true,
                 icon: { name: 'bookmark-simple' },
                 tile: TILE.warning,
+                href: BOOKMARKS_PATH,
             },
         ],
     },

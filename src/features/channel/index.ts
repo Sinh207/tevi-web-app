@@ -27,11 +27,15 @@
  * symbols that are deliberately private, `channelApi` among them, which the note at the foot of this
  * file argues against in writing. That is paying with the boundary to buy a directory.
  *
- * **`features/post` is the opposite case and is already committed to** — see `ChannelThread` in
- * `api/types.ts` and `channel-thread-placeholder.tsx`. A post is its own entity, four surfaces will
- * render one (channel, home, search, notifications), and the dependency runs *channel → post*, not
- * the other way. Modelling it here would make home and search reach through this feature to draw a
- * post card.
+ * **`features/post` was the opposite case and has landed.** A post is its own entity, four surfaces
+ * will render one (channel, home, search, notifications), and the dependency runs *channel → post*,
+ * not the other way — modelling it here would make home and search reach through this feature to
+ * draw a post card. The `ChannelThread` stub and its placeholder card are gone; `getThreads` parses
+ * its rows with `normalizePosts` and `ChannelThreadList` renders `PostCard`.
+ *
+ * The prediction in the paragraph above came true as well: **`features/home`** is the second surface
+ * that needed this cluster. What it took was two symbols (`useFollowedLives`, `FollowingLiveRow`),
+ * not the nine-symbol widening this note argues against — see their export below.
  *
  * **When to revisit this one:** the day a second surface needs the follow list — a home feed filtered
  * to followed spaces is the likely one. The seam then is the whole cluster (following +
@@ -41,6 +45,7 @@
  */
 
 export { channelKeys } from './api/channel-api'
+export type { ChannelEvent } from './api/events-api'
 export type {
     BlockedAccount,
     Channel,
@@ -49,12 +54,12 @@ export type {
     ChannelPrivacy,
     ChannelSocialLink,
     ChannelStats,
-    ChannelThread,
     FollowedChannel,
     FollowedLive,
     FollowedOrdering,
     FollowRequest,
     ListUser,
+    MessagingSender,
     Paginated,
 } from './api/types'
 /**
@@ -191,8 +196,32 @@ export { MySpaceRedirect } from './components/my-space-redirect'
  */
 export { SpaceVisibilityOption } from './components/space-visibility-option'
 export { SpaceVisibilityView } from './components/space-visibility-view'
+/**
+ * Exported for **`features/message`**, whose conversation is addressed by the other side's space
+ * (`/@{slug}/messages`): it needs that space's owner id, its privacy and whether this account
+ * follows it — and the follow wall's button is this feature's Follow, not a second copy of it.
+ * Same cache, same key: following from the chat updates the space page and the other way round.
+ *
+ * `app/` still may not use either — for the reason the note at the foot of this file gives.
+ */
 export { useChannel } from './hooks/use-channel'
 export { useChannelActions } from './hooks/use-channel-actions'
+/**
+ * The follower / member / post counts and the owner's `income_usd`, for a slug.
+ *
+ * Exported for **`features/monetization`**, whose hub is legacy's `useChannelStats(myChannel.slug)`
+ * verbatim — the headline figure on `/monetization` is this endpoint's `income_usd` and nothing else.
+ *
+ * It sits above the "deliberately not exported" list below rather than in it, and the distinction is
+ * the one that list is really about: what is withheld is `channelStatsApi`, so nobody calls axios
+ * from a component. A sibling feature reaching for the **hook** gets the query key too, which is the
+ * whole point — `/monetization` and a creator's own space then share one cache entry instead of
+ * asking the same microservice twice under two keys, which is the disagreement the socket note in
+ * `CLAUDE.md` warns about in the other direction.
+ *
+ * `app/` still may not use it: a page mounts a feature's view, and every view that needs these
+ * numbers is inside one.
+ */
 export { useChannelStats } from './hooks/use-channel-stats'
 /**
  * Shared with `features/navigation`, whose Privacy & security screen prints the number in a
@@ -206,7 +235,23 @@ export { useChannelStats } from './hooks/use-channel-stats'
  */
 export { useFollowRequestsCount } from './hooks/use-follow-requests-count'
 /** The reader's followed channels that are live now — `/following` and the studio's ended rail. */
+/*
+ * The home page's Lives tab is the second consumer of this pair, and it is the case the barrel note
+ * above anticipates — "the day a second surface needs the follow list". What moved is **two
+ * symbols**, not the nine-symbol widening that note argues against: the rows are `FollowedLive`,
+ * this feature already fetches and renders them, and home re-implementing either half would be a
+ * second copy of `followed-channels/lives/` and of a live card with its own access rules
+ * (`liveAccess`) that changed once already and had to change in one place.
+ *
+ * `channelApi` itself stays private, which is the line that matters.
+ */
+export type { UseFollowedLivesResult } from './hooks/use-followed-lives'
 export { useFollowedLives } from './hooks/use-followed-lives'
+/**
+ * Who may start a conversation with the reader — the write behind `features/message`'s settings
+ * dialog. The field and the endpoint are this feature's; the dialog is that one's.
+ */
+export { useMessagingSettings } from './hooks/use-messaging-settings'
 export { AUTO_FOLLOW_SECONDS } from './lib/auto-follow'
 export type { ChannelOwnership, ChannelVisibility } from './lib/channel-flags'
 export {

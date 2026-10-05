@@ -159,7 +159,21 @@ function receivers() {
             ) {
                 attribute.add(match[1])
             }
-            if (/\btestId[,?:]/.test(window)) prop.add(match[1])
+            /*
+             * `=` as well as `,?:` — a **defaulted** destructured prop (`testId = 'post-card',`) is
+             * how most components in this repo declare theirs, and it was the one spelling this
+             * missed.
+             *
+             * It mattered because `stripComments` blanks comments **in place** to keep line numbers
+             * honest, so a component whose props carry long doc comments has its `testId?: string`
+             * pushed past the 1400-character window below — `PostCard` by 600 characters. The
+             * destructuring sits at the very top of the function, before any of that, so matching it
+             * there is what makes the window size stop mattering.
+             *
+             * The symptom was a false positive that reads as a real defect: "handed to <PostCard>,
+             * which cannot receive it", on a component that receives it fine.
+             */
+            if (/\btestId\s*[,?:=]/.test(window)) prop.add(match[1])
         }
     }
     return { attribute, prop, local }

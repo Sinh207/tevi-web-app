@@ -129,10 +129,11 @@ describe('getThreads', () => {
         expect(get.mock.calls[0][1]).toEqual({ limit: 20, pinned: 0 })
 
         await channelApi.getThreads({ slug: 'ada', isOwner: false, kind: 'media' })
+        /* Upper case: the lower-case spelling makes the backend panic (B12). */
         expect(get.mock.calls[1][1]).toEqual({
             limit: 21,
             pinned: 0,
-            media_type: ['image', 'video'],
+            media_type: ['IMAGE', 'VIDEO'],
         })
     })
 
@@ -146,11 +147,11 @@ describe('getThreads', () => {
             slug: 'ada',
             isOwner: false,
             kind: 'media',
-            cursor: { created_at_lt: ['17'], media_type: ['image', 'video'] },
+            cursor: { created_at_lt: ['17'], media_type: ['IMAGE', 'VIDEO'] },
         })
         expect(get.mock.calls[0][1]).toEqual({
             created_at_lt: ['17'],
-            media_type: ['image', 'video'],
+            media_type: ['IMAGE', 'VIDEO'],
         })
         expect(get.mock.calls[0][1]).not.toHaveProperty('limit')
     })
@@ -245,18 +246,11 @@ describe('follow / unfollow / mute', () => {
     })
 })
 
+/*
+ * The block/unblock writes themselves are `@shared/lib/api/blocks-api`'s and are tested there. What
+ * stays here is the **list**, which is this feature's.
+ */
 describe('blocks', () => {
-    /** Keyed by **user** id (`channel.owner_id`), not channel id. See B11. */
-    it('blocks and unblocks by user id', async () => {
-        post.mockResolvedValue({})
-        del.mockResolvedValue({})
-        await channelApi.blockUser('user-9')
-        expect(post).toHaveBeenCalledWith('v3/channel/my-channel/blocks/', { user_id: 'user-9' })
-
-        await channelApi.unblockUser('user 9/../x')
-        expect(del).toHaveBeenCalledWith('v3/channel/my-channel/blocks/user%209%2F..%2Fx/')
-    })
-
     it('sends the first page unfiltered, and omits `q` rather than sending an empty one', async () => {
         get.mockResolvedValue({ results: [], count: 0, next: null })
         await channelApi.getBlockedAccounts({})

@@ -26,7 +26,7 @@ import { z } from 'zod'
  * - **nothing here may be trusted to exist.** A missing `live_channel` is a room that cannot be
  *   joined, and the player has to say so rather than joining `''`.
  *
- * The open questions this raised are **B108** in `docs/BACKEND_QUESTIONS.md`.
+ * The open questions this raised are **B117** in `docs/BACKEND_QUESTIONS.md`.
  */
 
 /** A string that is present and non-blank, else `null`. Same rule as `api/types.ts`; see its note
@@ -91,7 +91,7 @@ const livePublisherBase = z.looseObject({
 })
 /**
  * The publisher's channel slug, **if the room payload carries one** — legacy reads none, so the
- * spelling is unconfirmed (**B111**). The three a Tevi payload uses elsewhere are tried in turn,
+ * spelling is unconfirmed (**B120**). The three a Tevi payload uses elsewhere are tried in turn,
  * off the raw object `looseObject` keeps; absent, only the host (whose channel is the event's) can
  * be linked to.
  */
@@ -202,7 +202,7 @@ export type LivePlayback = z.infer<typeof livePlaybackSchema>
  *
  * Both spellings are accepted here, snake first. That fails in the safe direction: if the API sends
  * camelCase after all, nothing is lost, and if it sends snake_case the feature starts working. The
- * question is **B108**.
+ * question is **B117**.
  */
 export const liveLayoutSchema = z.looseObject({
     layout: z

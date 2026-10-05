@@ -150,3 +150,18 @@ export function miniAppFromChannel(
 export function hasMiniApp(channel: MiniAppChannelLike | null | undefined): boolean {
     return miniAppFromChannel(channel, 'mini app') !== null
 }
+
+/**
+ * The space a mini app belongs to, as a handle — read off its `shareableUrl` (`…/@arcade`). `null`
+ * when that URL names no space, which is when the ⋯ menu offers no "Send message".
+ */
+export function spaceSlugFromUrl(url: string | null): string | null {
+    if (!url) return null
+    try {
+        const first = new URL(url).pathname.split('/').filter(Boolean)[0] ?? ''
+        const slug = first.startsWith('@') ? decodeURIComponent(first.slice(1)) : ''
+        return /^[a-zA-Z0-9_.-]+$/.test(slug) ? slug : null
+    } catch {
+        return null
+    }
+}

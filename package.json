@@ -6,8 +6,8 @@
         "icons": "node scripts/generate-icon-names.mjs && node scripts/build-icon-sprite.mjs",
         "brand": "node scripts/generate-brand-assets.mjs",
         "fonts": "node scripts/build-fonts.mjs",
-        "dev": "node scripts/build-icon-sprite.mjs && node scripts/dev-cache.mjs --preflight && next dev --port 4000",
-        "build": "node scripts/build-icon-sprite.mjs && next build --webpack",
+        "dev": "node scripts/copy-ffmpeg-core.mjs && node scripts/build-icon-sprite.mjs && node scripts/dev-cache.mjs --preflight && next dev --port 4000",
+        "build": "node scripts/copy-ffmpeg-core.mjs && node scripts/build-icon-sprite.mjs && next build --webpack",
         "start": "next start",
         "lint": "biome check",
         "lint:fix": "biome check --write",
@@ -27,12 +27,15 @@
         "art:cdn": "node scripts/build-cdn-art.mjs",
         "art:gift-code": "node scripts/build-gift-code-art.mjs",
         "art:payment": "node scripts/build-payment-art.mjs",
-        "art:star-transfer": "node scripts/build-star-transfer-art.mjs"
+        "art:star-transfer": "node scripts/build-star-transfer-art.mjs",
+        "ffmpeg": "node scripts/copy-ffmpeg-core.mjs"
     },
     "dependencies": {
         "@base-ui/react": "^1.6.0",
         "@byteplus/veplayer": "^2.12.1",
         "@byteplus/veplayer-plugin": "^2.12.1",
+        "@ffmpeg/core-st": "0.11.0",
+        "@ffmpeg/ffmpeg": "0.11.6",
         "@fingerprintjs/fingerprintjs": "^5.2.0",
         "@hookform/resolvers": "^5.4.0",
         "@stripe/react-stripe-js": "^6.8.1",

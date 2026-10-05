@@ -49,11 +49,53 @@ export function DialogOverlay({ className, ...props }: BaseDialog.Backdrop.Props
 export function DialogContent({
     className,
     children,
+    nested,
     ...props
-}: BaseDialog.Popup.Props & TestIdProps) {
+}: BaseDialog.Popup.Props &
+    TestIdProps & {
+        /**
+         * This dialog opens **over another dialog**.
+         *
+         * Two effects, and they are one decision: the backdrop is rendered (Base UI omits it when
+         * nested, which is what broke outside-press dismissal) and it is **transparent** (two
+         * `--overlay-default` scrims compound to ~0.94 and the dialog behind all but disappears).
+         * The note on the backdrop below has the measurements.
+         *
+         * A prop rather than something derived, because Base UI publishes no nesting flag on the
+         * backdrop and the caller is the one party that knows for certain.
+         */
+        nested?: boolean
+    }) {
     return (
         <BaseDialog.Portal>
-            <DialogOverlay data-testid={subTestId(props['data-testid'], 'overlay')} />
+            <DialogOverlay
+                /*
+                 * ⚠ **`forceRender`, and without it a nested dialog cannot be dismissed by
+                 * pressing outside it.**
+                 *
+                 * Base UI renders no backdrop for a nested dialog by default — sensible on its own
+                 * terms, since two scrims would double the dimming. But the backdrop is also the
+                 * **hit target** outside-press dismissal needs: with none of its own, the press
+                 * lands on the *parent's* backdrop, which Base UI has marked `inert` and
+                 * `aria-hidden` precisely because a modal is open above it. The press reaches
+                 * nothing and neither dialog closes.
+                 *
+                 * Measured: all five popups over the post composer stayed open on an outside
+                 * press, while the composer itself — not nested, so it has its own backdrop —
+                 * closed.
+                 *
+                 * `modal="trap-focus"` on the child fixes the press and breaks something worse:
+                 * the press then reaches the parent too, so one click outside a settings dialog
+                 * threw the draft behind it away.
+                 *
+                 * `nested` also makes it **transparent**, which is the half Base UI was right
+                 * about: two `--overlay-default` scrims compound to about 0.94 and the dialog
+                 * behind is all but gone. The forced backdrop is a hit target, not a second scrim.
+                 */
+                forceRender
+                className={nested ? 'bg-transparent' : undefined}
+                data-testid={subTestId(props['data-testid'], 'overlay')}
+            />
             <BaseDialog.Popup
                 className={cn(
                     'fixed top-1/2 start-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2',

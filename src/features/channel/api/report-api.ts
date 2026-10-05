@@ -1,7 +1,11 @@
 import { env } from '@shared/config/env'
 import { CACHE_TTL } from '@shared/lib/api/interceptors/etag'
 import { createApiModel } from '@shared/lib/api/model'
-import { z } from 'zod'
+import {
+    normalizeReasons,
+    type ReportReason,
+    reasonLabelKey as sharedReasonLabelKey,
+} from '@shared/lib/api/report-reasons'
 
 /**
  * Reporting a space — `report/v1/report/…`.
@@ -28,32 +32,13 @@ export const reportKeys = {
     channelReasons: ['report', 'channel-reasons'] as const,
 }
 
-/**
- * A reason: a **stable id** and the backend's own wording of it.
- *
- * ```json
- * { "type": "CHANNEL_SEXUAL_CONTENT", "text": "Sexual content" }
- * ```
- *
- * `type` is what gets filed — legacy posts `content?.type`, never the prose — and it is also what
- * makes the list translatable: `reasonLabel` maps the id to this app's own copy and falls back to
- * `text` for an id that ships after this client. Legacy instead loads the whole English resource
- * bundle and reverse-looks-up each row's English string to find its key
- * (`formReport/content`: `Object.keys(bundle).find(k => bundle[k] === text)`), which silently falls
- * back to English the day anyone edits a translation.
- *
- * A row without a `type` is dropped rather than shown: it could be displayed, but it could not be
- * *submitted*, and a radio that cannot be chosen is worse than a shorter list.
+/*
+ * The reason row's shape and the label-key rule moved to `@shared/lib/api/report-reasons` when
+ * `features/post` needed them for its own two lists — this file already said those "land with the
+ * surfaces that open them", and `features/post` cannot import this feature. Re-exported so this
+ * feature's call sites are unchanged.
  */
-const reasonSchema = z.looseObject({
-    type: z.string().min(1),
-    text: z
-        .unknown()
-        .transform(v => (typeof v === 'string' && v.trim() ? v.trim() : ''))
-        .catch(''),
-})
-
-export type ReportReason = z.infer<typeof reasonSchema>
+export type { ReportReason }
 
 export const reportApi = {
     /** The reasons a space can be reported for, in the order the backend lists them. */
@@ -64,15 +49,11 @@ export const reportApi = {
             // A fixed list of reasons, the same for everybody.
             { signal, cache: { persist: true, shared: true, ttlMs: CACHE_TTL.day } },
         )
-        const rows = Array.isArray(body?.results) ? body.results : []
         /*
          * A row that will not parse is dropped, the list is not — the rule every other list in this
          * app follows. One odd reason must not turn into "this space cannot be reported".
          */
-        return rows
-            .map(row => reasonSchema.safeParse(row))
-            .filter(result => result.success)
-            .map(result => result.data)
+        return normalizeReasons(body?.results)
     },
 
     /**
@@ -107,5 +88,8 @@ export const reportApi = {
  * present and selectable, which is the right failure for a moderation list.
  */
 export function reasonLabelKey(type: string): string {
-    return `channel_report_reason_${type.replace(/^CHANNEL_/, '').toLowerCase()}`
+    return sharedReasonLabelKey(type, {
+        keyPrefix: 'channel_report_reason',
+        stripPrefix: ['CHANNEL_'],
+    })
 }

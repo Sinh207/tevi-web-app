@@ -153,7 +153,7 @@ export function eventCanonicalPath(event: EventDetail): string | null {
  *
  * `priceCurrency` is `price_currency` (`TVS`) verbatim. It is **not** an ISO 4217 code, and that is
  * a known limitation rather than an oversight: Star is not a currency, and inventing `USD` for it
- * would misstate the price by whatever today's rate is. **B105** in `docs/BACKEND_QUESTIONS.md`
+ * would misstate the price by whatever today's rate is. **B114** in `docs/BACKEND_QUESTIONS.md`
  * carries whether a fiat equivalent should be published here instead.
  *
  * Returned as an object. **Do not render it with bare `JSON.stringify`** — use

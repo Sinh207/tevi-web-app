@@ -72,7 +72,7 @@ describe('spotlitPublisher', () => {
     })
 
     /**
-     * ⚠ The camelCase spelling is legacy's, in a snake_case API — **B108**. Accepting both fails
+     * ⚠ The camelCase spelling is legacy's, in a snake_case API — **B117**. Accepting both fails
      * in the safe direction: if the wire really sends `spotlight_uid`, the feature starts working;
      * if it sends camelCase after all, nothing is lost.
      */

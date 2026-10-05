@@ -311,8 +311,12 @@ const webConfigSchema = z.looseObject({
     ),
     direct_message: nested(
         z.looseObject({
-            /** Legacy's own fallback, at `containers/directMessage/hooks/useChatRoom.js`. */
-            limit_characters: num(500),
+            /**
+             * **1000**, the mobile apps' number — both hard-code it (Android's `maxLength` on the
+             * field, iOS's `maxTextViewCount`), so it is what a message can actually be. Legacy web
+             * fell back to 500; the console key is what changes it, not this default.
+             */
+            limit_characters: num(1000),
         }),
     ),
     download: nested(

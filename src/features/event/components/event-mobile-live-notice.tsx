@@ -155,6 +155,8 @@ export function EventMobileLiveNotice({
                                     variant="accent"
                                     size="large"
                                     fullWidth
+                                    // internal-link-ok: an app-associated universal link — the OS
+                                    // opens the native app, which `next/link` would prevent.
                                     render={<a href={url} />}
                                     className="relative overflow-hidden"
                                 >

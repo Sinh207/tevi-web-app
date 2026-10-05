@@ -90,6 +90,8 @@ export { BecomeAMemberDialogs } from './components/join/become-a-member-dialogs'
  */
 export { MembershipCheckoutScreen } from './components/webview/membership-checkout-screen'
 export { useJoinFlow } from './hooks/join/use-join-flow'
+/** Whether a space has any tier — `features/message`'s settings dialog offers "members only" on it. */
+export { useOffersMembership } from './hooks/join/use-offers-membership'
 /**
  * The `/app/[channelSlug]/membership/[packageId]` webview checkout — the tier, the card and the
  * verdict, as one controller (plus `CashOffer`, which its header and summary read).

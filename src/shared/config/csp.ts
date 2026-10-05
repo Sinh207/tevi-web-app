@@ -212,7 +212,7 @@ const MINIAPP_FRAME_SOURCES = (() => {
  * existing idiom rather than a new exception.
  *
  * To fill it: read one real `preview/` or `playback/` payload, take the origin off the playlist
- * URLs, and set them here. **B108** asks the backend to name them so this can stop being a
+ * URLs, and set them here. **B117** asks the backend to name them so this can stop being a
  * per-environment discovery.
  */
 function liveCdnSources(isDev: boolean): string[] {
@@ -277,6 +277,21 @@ export function buildCsp({ nonce, isDev = false }: { nonce: string; isDev?: bool
                 "'self'",
                 `'nonce-${nonce}'`,
                 "'strict-dynamic'",
+                /*
+                 * **WebAssembly compilation, and nothing else.** The video trimmer runs ffmpeg as
+                 * wasm in the browser (`shared/lib/ffmpeg.ts`), and `WebAssembly.instantiate` is
+                 * gated by this policy: without the keyword every trim fails with a CSP violation
+                 * and no other symptom.
+                 *
+                 * `'wasm-unsafe-eval'` and **not** `'unsafe-eval'`, which is the distinction worth
+                 * holding on to. The older keyword permits `eval()` of arbitrary strings — the
+                 * exact primitive this file exists to deny, given that one injected script reads
+                 * every account's refresh token out of `localStorage`. This one permits compiling a
+                 * wasm module and nothing more: it cannot turn a string into JavaScript, so the
+                 * injection path stays closed. Browsers that predate the split ignore it and simply
+                 * cannot trim.
+                 */
+                "'wasm-unsafe-eval'",
                 isDev ? "'unsafe-eval'" : undefined,
             ),
         ],
@@ -308,11 +323,34 @@ export function buildCsp({ nonce, isDev = false }: { nonce: string; isDev?: bool
          * result back from a blob URL before anything is sent.
          */
         ['media-src', "'self' blob: https:"],
+        /*
+         * **Declared, because the fallback is wrong for us.** With no `worker-src`, a worker is
+         * checked against `child-src` and then `default-src 'self'` — which refuses a `blob:`
+         * worker, and a `blob:` worker is how `@ffmpeg/ffmpeg` starts its core.
+         *
+         * `blob:` here is narrower than it looks: the blob can only have been created by script
+         * already running on this origin, so it grants nothing an attacker does not already have by
+         * the time they can call `URL.createObjectURL`. The core script it then loads is
+         * `/ffmpeg/ffmpeg-core.js`, served from `'self'`.
+         */
+        ['worker-src', "'self' blob:"],
         ['font-src', "'self' data:"],
         [
             'connect-src',
             sources(
                 "'self'",
+                /*
+                 * The ffmpeg core fetches its own `.wasm` through a **blob URL it created**, so
+                 * `'self'` does not cover it: the request shows up as
+                 * `Fetch API cannot load blob:… Refused to connect`, and the trimmer fails with
+                 * "Failed to fetch" and nothing in the network panel to explain it.
+                 *
+                 * Narrow despite how it reads. A `blob:` URL can only exist because script already
+                 * running on this origin called `URL.createObjectURL`, so this grants nothing to an
+                 * attacker who is not already executing here — unlike a host, which grants an
+                 * exfiltration destination.
+                 */
+                'blob:',
                 W_API,
                 DOORMAN,
                 STATIC,

@@ -49,6 +49,12 @@ import { StripeElementsScope } from './stripe-elements-scope'
  * phone gets a card with 16px either side. When the sheet lands, only the shell around this content
  * changes.
  *
+ * ⚠ **A sheet exists now** — `shared/ui/sheet.tsx`, Base UI's `Drawer` behind this app's tokens,
+ * wired to the post composer's popups through `ResponsiveDialog`. It is a **trailing-edge,
+ * full-screen** panel (legacy's composer geometry); the DS's own `.tevi-bottom-sheet` is still
+ * unreadable, so a *bottom* variant does not exist yet. This screen is deliberately not switched:
+ * the composer was the agreed first cut, and moving anything else is a product call rather than a
+ * refactor. Switching it is `ResponsiveDialog` plus the `className` already here.
  * ## The body scrolls, the title and the footer do not
  *
  * `gap-0 p-0` overrides the DS Dialog's `gap-5 p-6` and the padding moves into the three bands, for

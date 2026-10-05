@@ -120,6 +120,14 @@ export { GiftPremiumView } from './components/gift-premium-view'
 export { PremiumView } from './components/premium-view'
 // ── Hooks ───────────────────────────────────────────────────────────────────────────────────────
 /** Also `features/gift-code`'s, for the receipt it prints after a Premium code is accepted. */
+/**
+ * The benefit table — **platform-wide**, so it answers the same for every signed-in reader.
+ *
+ * Exported because the post composer's upload ceilings live in it (`enhanced-storage-upload`'s
+ * `video-length` and `file-upload-size` rows), and the host that mounts the composer reads it:
+ * `features/post` cannot, since this feature reaches it through `features/channel`.
+ */
+export { usePremiumBenefits } from './hooks/use-premium-benefits'
 export { usePremiumInfo } from './hooks/use-premium-info'
 // ── The column ──────────────────────────────────────────────────────────────────────────────────
 export { GIFT_PREMIUM_SCREEN, PREMIUM_SCREEN } from './lib/container'

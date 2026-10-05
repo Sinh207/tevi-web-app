@@ -4,7 +4,7 @@ import { livePublisherSchema } from './live-types'
 const base = { id: 'u1', name: 'Ada', avatar: null, audio: true, video: true, is_host: false }
 
 /**
- * **B111** — the room's publishers carry no slug that legacy reads, so a co-host's card has no way
+ * **B120** — the room's publishers carry no slug that legacy reads, so a co-host's card has no way
  * to their space. The parser tries the three spellings a Tevi payload uses elsewhere; whichever the
  * service sends lights *View space*, and none of them leaves it off rather than wrong.
  */

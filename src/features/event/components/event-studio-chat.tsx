@@ -103,7 +103,7 @@ import { NAME_SLOT, NameWithTick } from './name-with-tick'
  * The longest message the room takes, and legacy's own number.
  *
  * Neither client asks the backend for it; 250 is what `handleChangeComment` enforces, so a web
- * reader and an app reader hit the same wall. B109's neighbourhood — if the server has a limit of
+ * reader and an app reader hit the same wall. B118's neighbourhood — if the server has a limit of
  * its own, this is the constant that should come from it.
  */
 const CHAT_MAX_LENGTH = 250
@@ -155,7 +155,7 @@ function ChatSystemMark() {
  *
  * `Member` is the gradient one and `Host` the flat black; `Lvl Badge` and `User Badge` are the
  * gifted-level pair and are **not built** — nothing in any frame this client receives carries a
- * level, so they would be a badge with no number in it. B108 asks for the field.
+ * level, so they would be a badge with no number in it. B117 asks for the field.
  */
 function ChatBadge({
     kind,
@@ -2211,7 +2211,7 @@ export function EventStudioChatStrip({
  *
  * ⚠ **The `Host` chip needs no field, so it is drawn.** Only a host can pin, so the chip states
  * something the frame's existence already guarantees. The `@mention` stays out — that one would be
- * invented (`pinned_message` carries only `{ message, user_name }`). B108.
+ * invented (`pinned_message` carries only `{ message, user_name }`). B117.
  */
 function PinnedMessage({
     pinned,

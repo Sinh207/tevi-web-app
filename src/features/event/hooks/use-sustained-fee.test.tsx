@@ -230,7 +230,7 @@ describe('a Premium reader', () => {
         expect(purchaseSustainedFee).not.toHaveBeenCalled()
     })
 
-    /* B109: legacy charges Premium too, and whether it should is the backend's call. */
+    /* B118: legacy charges Premium too, and whether it should is the backend's call. */
     it('is still charged when the balance can pay', async () => {
         me.isPremium = true
         balance.star = 50

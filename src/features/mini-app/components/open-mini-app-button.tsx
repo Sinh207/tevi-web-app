@@ -47,6 +47,7 @@ import { type MiniAppChannelLike, miniAppFromChannel } from '../lib/app-config'
 export function OpenMiniAppButton({
     channel,
     size = 'large',
+    iconOnly = false,
     className,
 }: {
     channel: MiniAppChannelLike | null | undefined
@@ -60,6 +61,11 @@ export function OpenMiniAppButton({
      * would get a 20px glyph in it.
      */
     size?: 'small' | 'medium' | 'large'
+    /**
+     * The glyph alone, the label moving to `aria-label` — iOS's composer button, which drops its
+     * " Open" while the reader is typing so the field keeps its width.
+     */
+    iconOnly?: boolean
     className?: string
 }) {
     const { t } = useTranslation()
@@ -75,11 +81,13 @@ export function OpenMiniAppButton({
             data-testid="mini-app-launch"
             variant="accent"
             size={size}
+            iconOnly={iconOnly}
+            aria-label={iconOnly ? t('miniapp_open') : undefined}
             className={className}
             onClick={() => open(config)}
         >
             <Icon name="grid-category" size={glyph} className={size === 'small' ? '' : 'size-5'} />
-            {t('miniapp_open')}
+            {!iconOnly && t('miniapp_open')}
         </Button>
     )
 }

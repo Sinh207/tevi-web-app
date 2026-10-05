@@ -72,5 +72,5 @@ export type { Capability, CapabilityState } from './lib/capabilities'
  * The vocabulary itself, and the pure gate functions over it. Exported so a capability can be gated
  * outside React — a route guard, a `menu-rows`-style data file — without reaching for a hook.
  */
-export { allows, CAPABILITIES, capabilityState, rawGrant } from './lib/capabilities'
+export { allows, CAPABILITIES, capabilityState, rawGrant, rawGrantNumber } from './lib/capabilities'
 export { PermissionProvider, usePermission } from './providers/permission-provider'

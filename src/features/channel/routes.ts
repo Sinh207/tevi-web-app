@@ -33,11 +33,9 @@ export type ChannelAction = 'direct_donation' | 'become_a_member' | 'custom_prof
  * `membership` and not `membership/{id}`: `useJoinFlow` resolves **one** offer per space, so an id
  * selects nothing. Legacy's links carry one and `parseChannelIntent` accepts them — see there.
  *
- * **Read-only, for now.** There is deliberately no builder beside this table: nothing in the app
- * links *at* these URLs yet, and the one surface that might — the donate card's share button —
- * copies the space's URL under a label that says so in nine locales, which is a product decision
- * rather than a missing helper. Add the builder here, next to the spelling it inverts, on the day
- * something links at them.
+ * The builder is `channelActionPath` below, and it was added the day something finally linked at
+ * one: a **locked post** whose only way in is a membership. That note used to say "read-only, for
+ * now" — it lives next to the spelling it inverts precisely so the two cannot drift.
  */
 const ACTION_SUBPATHS = {
     direct_donation: 'direct-donation',
@@ -118,4 +116,28 @@ export function parseChannelIntent(
     }
 
     return actionParam(search)
+}
+
+/**
+ * The URL that opens one of a space's actions — `('ada', 'become_a_member')` → `/@ada/membership`.
+ *
+ * ## A path, not `?action=`
+ *
+ * The query spelling is legacy's and is only *accepted* (see `parseChannelIntent`); everything this
+ * app mints uses the path, because a path is what gets shared, indexed and linked from here on. A
+ * builder that emitted the legacy form would put new URLs into the world in the shape we are trying
+ * to retire.
+ *
+ * ## `custom_profile` is not buildable and that is a type error, not a runtime `null`
+ *
+ * It has no sub-path under a space — its destination is a settings route — so the parameter is
+ * typed to the two actions `ACTION_SUBPATHS` actually carries. A caller that wants the third is
+ * asking for something that does not exist, and finding that out at build time is the whole point
+ * of the table being `satisfies Partial<…>` rather than a full record.
+ *
+ * The slug is passed **without** its `@` and encoded here: slugs are user-chosen and the one that
+ * contains a character needing escaping is the one nobody tests with.
+ */
+export function channelActionPath(slug: string, action: keyof typeof ACTION_SUBPATHS): string {
+    return `/@${encodeURIComponent(slug)}/${ACTION_SUBPATHS[action]}`
 }

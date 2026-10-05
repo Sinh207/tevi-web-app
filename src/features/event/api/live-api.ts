@@ -84,7 +84,7 @@ export const liveApi = {
             undefined,
             { signal, ...(accountId ? { accountId } : {}) },
         )
-        // TEMP(B111): the raw room payload, to see what a publisher carries. Remove after.
+        // TEMP(B120): the raw room payload, to see what a publisher carries. Remove after.
         console.log('[layout/] raw', body)
         console.log(
             '[layout/] publisher keys',

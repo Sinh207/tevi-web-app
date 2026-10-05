@@ -34,7 +34,7 @@ import { type EventOrder, ORDER_KINDS, type OrderTab } from '../api/report-types
  * do that work: a visited tab is instant, and an empty one stays empty.
  */
 /**
- * A row plus a **composed key**, because the endpoint sends no order id (**B107** asks for one).
+ * A row plus a **composed key**, because the endpoint sends no order id (**B116** asks for one).
  *
  * Composed in the hook rather than at the call site so the component never sees an index: the key is
  * built from the fields that identify the row to a reader — who, when, how much — plus its position

@@ -41,7 +41,12 @@ import { toast } from 'sonner'
  * `SwipeableDrawer` below it. **This one stays a centred dialog on a phone too**, which the product
  * confirmed when it was put to them as a gap. So do not read the missing drawer as a port still
  * owed — it is the same call `star-purchase-dialog.tsx` and `add-card-dialog.tsx` already record,
- * and the app has no bottom-sheet primitive to reach for anyway.
+ * and the app had no bottom-sheet primitive to reach for anyway.
+ *
+ * ⚠ **That last clause is now out of date and the decision is not.** `shared/ui/sheet.tsx` exists
+ * (Base UI's `Drawer`, wired to the post composer's popups). This dialog still stays centred at
+ * every width, because the product was asked about *this screen* and answered — a primitive
+ * arriving does not reopen that. It would take another product call, not a refactor.
  *
  * What the phone case needs instead is a height cap, which is above: measured at 390×640 the sheet
  * is 358 wide, 483 tall and fully on screen, and `max-h` + `overflow-y-auto` is what keeps that true

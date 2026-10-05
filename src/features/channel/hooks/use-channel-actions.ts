@@ -2,6 +2,7 @@
 
 import { useAuth, useRequireAuth } from '@features/auth'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { blocksApi } from '@shared/lib/api/blocks-api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { channelApi, channelKeys } from '../api/channel-api'
 import type { Channel, ChannelStats } from '../api/types'
@@ -160,7 +161,7 @@ export function useChannelActions(channel: Channel) {
      * the stats and the viewer flags together, and guessing all three is how they drift.
      */
     const blockMutation = useMutation({
-        mutationFn: () => channelApi.blockUser(channel.owner_id),
+        mutationFn: () => blocksApi.blockUser(channel.owner_id),
         onSuccess: () => {
             queryClient.setQueryData<Channel>(detailKey, previous =>
                 previous ? { ...previous, blocking_channel: true } : previous,
@@ -179,7 +180,7 @@ export function useChannelActions(channel: Channel) {
      * (that entry point ships with the overflow menu; see the plan).
      */
     const unblockMutation = useMutation({
-        mutationFn: () => channelApi.unblockUser(channel.owner_id),
+        mutationFn: () => blocksApi.unblockUser(channel.owner_id),
         onSuccess: () => {
             queryClient.setQueryData<Channel>(detailKey, previous =>
                 previous ? { ...previous, blocking_channel: false } : previous,

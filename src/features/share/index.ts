@@ -40,9 +40,11 @@
  * component, so wiring the dialog there means the *host* owning the state. One surface behaving two
  * ways is the thing to avoid, so both halves move together or neither does.
  *
- * It is also **not** the DM half of legacy's sheet ("Send in message"). That needs a messenger
- * feature; `components/share-dialog.tsx` states where the block goes back in and which two of its
- * behaviours are worth keeping.
+ * The DM half of legacy's sheet ("Send in message") is **drawn by `features/message`** and comes in
+ * through a slot: `ShareInMessageProvider` takes the component, and `app/session-providers.tsx` is
+ * what passes it. An import would close a barrel cycle (message → channel → share);
+ * `lib/share-in-message.tsx` has the long form. Where no provider is mounted (a webview) the sheet
+ * simply has no middle block.
  *
  * ## Deliberately not exported
  *
@@ -61,9 +63,17 @@ export { ShareDialog } from './components/share-dialog'
  * sheet's own query, so it is not the "second caller" the note above guards against.
  */
 export { useShareCopyLink } from './hooks/use-share-copy-link'
+/** What a short link points at — `features/message` cards a shared post as the post it is. */
+export { useShortLinkTarget } from './hooks/use-short-link-target'
 export {
     liveShareContext,
+    postShareContext,
     type ShareContentType,
     type ShareContext,
     spaceShareContext,
 } from './lib/share-context'
+export {
+    type ShareInMessageProps,
+    ShareInMessageProvider,
+    type ShareInMessageView,
+} from './lib/share-in-message'

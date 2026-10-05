@@ -2,6 +2,7 @@
 
 import { useAuth } from '@features/auth'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { blocksApi } from '@shared/lib/api/blocks-api'
 import type { PageCursor } from '@shared/lib/api/page-cursor'
 import {
     type InfiniteData,
@@ -249,7 +250,7 @@ export function useBlockedAccounts(): UseBlockedAccountsResult {
      * toast, which is the only thing that can still say so.
      */
     const reblockMutation = useMutation({
-        mutationFn: (entry: BlockedAccount) => channelApi.blockUser(entry.user.id),
+        mutationFn: (entry: BlockedAccount) => blocksApi.blockUser(entry.user.id),
         onSuccess: (_data, entry) => {
             // Refetch rather than re-insert: the new block is a new record with a new id, and
             // the server decides where it sits in the order. Every term's list, not just the
@@ -265,7 +266,7 @@ export function useBlockedAccounts(): UseBlockedAccountsResult {
     })
 
     const unblockMutation = useMutation({
-        mutationFn: (entry: BlockedAccount) => channelApi.unblockUser(entry.id),
+        mutationFn: (entry: BlockedAccount) => blocksApi.unblockUser(entry.id),
         onSuccess: (_data, entry) => {
             setExitingIds(previous => new Set(previous).add(entry.id))
             exitTimers.current.set(

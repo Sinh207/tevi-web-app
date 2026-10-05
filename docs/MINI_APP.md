@@ -473,13 +473,12 @@ bridge — `example.com` speaks none. For that, serve a page like this and point
 knowing while debugging: a local test page on `localhost:3000` cannot use its own storage. Serve it
 from a second port.
 
-### One row in the ⋯ menu points at a route that does not exist yet
+### "Send message" in the ⋯ menu opens the conversation, not a new tab
 
-**Send message** opens `${shareableUrl}/messages`, which is legacy's target verbatim. It resolves on
-the legacy app and **404s here** until direct messages are ported. Kept rather than hidden because
-the cutover is same-origin and big-bang, so the URL is the one that will be right — but it is the
-one row in this feature that is knowingly ahead of the app. Whoever ports messaging should check it
-still lands.
+Legacy opens `${shareableUrl}/messages` in a new tab. Here the row reads the space's handle off
+`shareableUrl` (`spaceSlugFromUrl`) and goes through `features/message`'s `useOpenConversation`: the
+floating chat window from `md` up — after minimising the player, which is `z-40` over the window's
+`z-30` — and `/@{slug}/messages` below it. A `shareableUrl` that names no space hides the row.
 
 ### The design-system position
 

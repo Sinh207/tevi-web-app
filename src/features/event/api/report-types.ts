@@ -24,7 +24,7 @@ import { z } from 'zod'
  * is a silently rounded one. `lib/event-revenue.ts` owns the arithmetic and states the precision
  * rule.
  *
- * Contract questions still open on all three: **B107**.
+ * Contract questions still open on all three: **B116**.
  */
 
 const nullableText = z

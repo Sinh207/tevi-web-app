@@ -1,6 +1,6 @@
 'use client'
 
-import { useRequireAuth } from '@features/auth'
+import { isMessagesPath, MESSAGES_PATH } from '@features/message/routes'
 import { NOTIFICATION_PATH, useUnreadInbox } from '@features/notification/shell'
 import { SEARCH_PATH } from '@features/search'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
@@ -19,12 +19,11 @@ import { CreateRailEntry } from './create-rail-entry'
  * routing and i18n. The nine entries and their order are fixed by the DS:
  * Home · Following · Chat · Create · Search · Notifications · Profile · Menu · Language.
  *
- * Home, Following, Search, Notifications and Profile are real links; Create opens a two-option
- * menu (`CreateRailEntry`); Menu and Language drive the drawer. **Chat is the only inert entry
- * left**, rather than pointing at a route that would 404. Give each a `href` as its route lands.
+ * Home, Following, Chat, Search, Notifications and Profile are real links; Create opens a
+ * two-option menu (`CreateRailEntry`); Menu and Language drive the drawer.
  *
- * None of those five is behind `gated`, and Search is the one where that is a statement rather
- * than a consequence: the others render their own signed-out prompt, while Search genuinely
+ * None of the links is behind a sign-in gate, and Search is the one where that is a statement
+ * rather than a consequence: the others render their own signed-out prompt, while Search genuinely
  * *works* without an account. Gating it would put a sign-in dialog in front of the surface a
  * visitor uses to find somebody to sign up for. See the entry itself.
  */
@@ -33,27 +32,6 @@ export function AppNavbar() {
     const { open: menuOpen, toggle: toggleMenu, close: closeMenu, view, openAt } = useMenu()
     const pathname = usePathname()
     const avatar = useAvatarSource()
-    const requireAuth = useRequireAuth()
-
-    /**
-     * Every rail entry that belongs to *your* account, behind the sign-in prompt.
-     *
-     * Home stays open — it is the public feed, and a platform whose front door asks for
-     * credentials has no front door. So do Menu and Language in the bottom group: Menu is
-     * a panel toggle rather than a destination, and it is where a guest reaches the
-     * language switcher and the policies, so gating it would wall off the one surface
-     * they still need.
-     *
-     * The callback is empty because the one destination still using this — **Chat** — does not
-     * exist yet. For a signed-in visitor this changes nothing; what it adds is the prompt
-     * for everyone else, which is the whole point — gate the *action*, never the route.
-     *
-     * Create used to be the second consumer and now has `CreateRailEntry`, which is the shape the
-     * others should take as they land: a gated press that *does* something, not a gated no-op.
-     */
-    const gated = requireAuth(() => {
-        // TODO: navigate here as each destination lands.
-    })
 
     /**
      * Figma's Notifications entry is Type=Badge, and the dot means unread. It was pinned to
@@ -62,7 +40,7 @@ export function AppNavbar() {
      *
      * `useUnreadInbox` is one small query, gated on a real account and kept live by the
      * `inbox_change` socket event rather than by polling. For a guest it never runs, so the bell
-     * renders bare and its press raises the login dialog like every other gated entry.
+     * renders bare and leads to the page's own sign-in prompt.
      */
     const { hasUnread } = useUnreadInbox()
 
@@ -157,12 +135,25 @@ export function AppNavbar() {
                         <Icon name="user-heart-alt" size={24} />
                     )}
                 </NavbarItem>
+                {/* A real link, like Following: `/messages` renders its own sign-in prompt. Lit
+                    inside a conversation too. `comment-dots` has no filled render either, so
+                    Selected takes the duotone to full tint — Following's note says why. */}
                 <NavbarItem
+                    href={MESSAGES_PATH}
+                    selected={isMessagesPath(pathname)}
                     aria-label={t('nav_chat')}
                     data-testid="navigation-navbar-chat"
-                    onClick={gated}
                 >
-                    <Icon name="comment-dots" size={24} />
+                    {isMessagesPath(pathname) ? (
+                        <Icon
+                            name="comment-dots"
+                            weight="duotone"
+                            size={24}
+                            className="[--tevi-icon-tint:1]"
+                        />
+                    ) : (
+                        <Icon name="comment-dots" size={24} />
+                    )}
                 </NavbarItem>
                 {/* The accent `+`, its menu and the app prompt behind the event row — one flex
                     item in this group, everything else portalled. See `CreateRailEntry`. */}
@@ -183,7 +174,7 @@ export function AppNavbar() {
                     <Icon name="search" size={24} />
                 </NavbarItem>
                 {/*
-                 * A real link, and **not** `gated`, unlike the three inert entries above it.
+                 * A real link, and **not** gated.
                  * `/notification` renders its own signed-out prompt (which raises the same login
                  * dialog from a button the reader can read a sentence next to), so gating the rail
                  * entry would put a modal in front of a screen that explains itself — the pattern
