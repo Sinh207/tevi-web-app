@@ -23,7 +23,7 @@ export function SearchSectionHeader({
     className?: string
 }) {
     return (
-        <div className={cn('flex items-center gap-2 px-6 py-3', className)}>
+        <div className={cn('flex items-center gap-2 px-4 py-3 md:px-6', className)}>
             <h2 id={id} className="type-body-strong min-w-0 flex-1 truncate text-(--text-title)">
                 {title}
             </h2>

@@ -353,7 +353,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
     const { t } = useTranslation()
 
     return (
-        <div className="flex flex-col gap-6 px-4 py-3">
+        <div className="flex flex-col gap-4 px-4 py-3 md:gap-6">
             <section className="flex flex-col gap-3">
                 <h2 className="type-body-strong m-0 text-(--text-subtitle)">
                     {t('payment_topup_title')}

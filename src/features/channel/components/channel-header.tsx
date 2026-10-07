@@ -4,13 +4,14 @@ import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { LiveRing } from '@shared/components/live-ring'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import type { Channel, ChannelStats as Stats } from '../api/types'
 import { isChannelLive } from '../lib/channel-live'
 import { CHANNEL_PADDING } from '../lib/container'
 import { ChannelBio } from './channel-bio'
 import { ChannelCover } from './channel-cover'
 import { ChannelIdentity } from './channel-identity'
+import { ChannelImageViewer, type ImageViewerOrigin } from './channel-image-viewer'
 import { ChannelStats } from './channel-stats'
 
 /**
@@ -58,6 +59,9 @@ import { ChannelStats } from './channel-stats'
  * its live indicator. `Avatar/Status` is a status *dot* at four sizes with `online | busy | offline`,
  * which is not a ring and not `live`, so neither is invented here.
  */
+/** Clear of the avatar's 4px cut-out ring (or the live ring's gap), so the focus mark reads. */
+const AVATAR_TRIGGER = 'flex rounded-full focus-visible:outline-offset-4'
+
 export function ChannelHeader({
     channel,
     stats,
@@ -71,14 +75,19 @@ export function ChannelHeader({
      */
     isOwner = false,
     /**
-     * A sensitive space whose gate has not been satisfied: the **art and the creator's
-     * destinations** are withheld — cover, avatar and every link (`ChannelBio`'s `withheld`). What
-     * still renders is the identity — name, handle, the space's own address, the follower count —
-     * **and the description**, which is what tells the reader what they are being asked about.
-     * Those are not the sensitive part, and hiding them was what made the old dialog leave a
-     * visitor unsure they had the right URL.
+     * A sensitive space whose gate has not been satisfied: the **art and the creator's own
+     * content** are withheld — cover, avatar, the description and every link (`ChannelBio`'s
+     * `withheld`). What still renders is the identity — name, handle, the space's own address, the
+     * follower count. Those are not the sensitive part, and hiding them was what made the old dialog
+     * leave a visitor unsure they had the right URL.
      */
     blurred = false,
+    /**
+     * Callback ref for the cover's last pixel — `useBandPassed`'s sentinel. Below `sm` the page's
+     * bar sits over the cover and changes paint once the cover has gone (`ChannelTopBar`); the cover
+     * is here and the bar is not, so the page owns the answer and hands each half its part.
+     */
+    coverEndRef,
     className,
 }: {
     channel: Channel
@@ -86,12 +95,25 @@ export function ChannelHeader({
     actions?: ReactNode
     isOwner?: boolean
     blurred?: false | 'soft' | 'strong'
+    coverEndRef?: (node: HTMLDivElement | null) => void
     className?: string
 }) {
     const { t } = useTranslation()
     const hasCover = Boolean(channel.images.cover)
     /** One of the space's events is on air — see `isChannelLive` for what legacy gets wrong here. */
     const isLive = isChannelLive(channel)
+    /**
+     * Which of the two images is open full screen, if either. Never while `blurred`: a withheld
+     * image opened at full size is the withholding undone — and for `strong` the page holds only a
+     * thumbnail anyway, so the viewer would request the very original the gate is keeping back.
+     */
+    const [viewing, setViewing] = useState<'avatar' | 'cover'>('avatar')
+    /** The pressed art — the viewer grows out of it and flies back into it. `null` is closed. */
+    const [viewerOrigin, setViewerOrigin] = useState<ImageViewerOrigin | null>(null)
+    const viewable = {
+        avatar: !blurred ? channel.images.thumb : null,
+        cover: !blurred ? channel.images.cover : null,
+    }
 
     const avatar = (
         <AnimatedAvatar
@@ -160,6 +182,32 @@ export function ChannelHeader({
         />
     )
 
+    /*
+     * A real `<button>` around the art: it opens something, it does not go anywhere, so not a link
+     * (legacy wraps both in an `<a href={image}>` whose click it then cancels). `zoom-in` says what
+     * a press does before it is pressed.
+     */
+    const viewTrigger = (which: 'avatar' | 'cover', art: ReactNode, className?: string) =>
+        viewable[which] ? (
+            <button
+                type="button"
+                data-testid={which === 'avatar' ? 'channel-avatar' : 'channel-cover'}
+                aria-label={t(which === 'avatar' ? 'channel_view_avatar' : 'channel_view_cover')}
+                onClick={event => {
+                    setViewing(which)
+                    setViewerOrigin({ el: event.currentTarget, round: which === 'avatar' })
+                }}
+                className={cn(
+                    'cursor-zoom-in outline-none focus-visible:outline-2 focus-visible:outline-(--focus-ring)',
+                    className,
+                )}
+            >
+                {art}
+            </button>
+        ) : (
+            art
+        )
+
     return (
         <section
             className={cn(
@@ -187,7 +235,13 @@ export function ChannelHeader({
                 className,
             )}
         >
-            <ChannelCover src={channel.images.cover} blurred={blurred} />
+            {viewTrigger(
+                'cover',
+                <ChannelCover src={channel.images.cover} blurred={blurred} />,
+                // Inset, because the section clips (`overflow-hidden`) and an outer outline would be cut.
+                'block w-full focus-visible:-outline-offset-2',
+            )}
+            <div ref={coverEndRef} aria-hidden="true" className="h-0" />
 
             <div className={cn('flex min-w-0 flex-col gap-3 md:gap-6', CHANNEL_PADDING)}>
                 {/*
@@ -234,10 +288,10 @@ export function ChannelHeader({
                                 label={t('channel_event_live')}
                                 className="md:[--live-gap:4px] md:[--live-ring:4px]"
                             >
-                                {avatar}
+                                {viewTrigger('avatar', avatar, AVATAR_TRIGGER)}
                             </LiveRing>
                         ) : (
-                            avatar
+                            viewTrigger('avatar', avatar, AVATAR_TRIGGER)
                         )}
                     </div>
                     <ChannelStats channel={channel} stats={stats} />
@@ -256,6 +310,13 @@ export function ChannelHeader({
 
                 {actions}
             </div>
+
+            <ChannelImageViewer
+                origin={viewerOrigin}
+                src={viewable[viewing]}
+                label={t(viewing === 'cover' ? 'channel_view_cover' : 'channel_view_avatar')}
+                onClose={() => setViewerOrigin(null)}
+            />
         </section>
     )
 }

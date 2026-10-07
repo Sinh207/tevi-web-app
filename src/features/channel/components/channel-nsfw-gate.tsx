@@ -17,10 +17,10 @@ import { CHANNEL_PADDING } from '../lib/container'
  *
  * Now the space renders: name, handle, stats, the follow button — everything except what the gate is
  * actually about. **The tabs are replaced by this**; the cover and avatar come through blurred and
- * the links do not come through at all (`ChannelHeader`'s `blurred`, `ChannelBio`'s `withheld`).
- * What is withheld is the content, the art and wherever the creator points, which is what
- * "sensitive" refers to; a display name is not sensitive and neither is the line saying what the
- * space is — hiding those only hid the address and the answer to the gate's own question.
+ * the description and links do not come through at all (`ChannelHeader`'s `blurred`, `ChannelBio`'s
+ * `withheld`). What is withheld is the content, the art, the creator's own words and wherever they
+ * point, which is what "sensitive" refers to; a display name is not sensitive — hiding it only hid
+ * the address.
  *
  * Legacy renders the real space behind its dialog and blurs the backdrop, so the same information is
  * on screen — but its content is *there*, merely out of focus, which a blur cannot be trusted to
@@ -50,10 +50,15 @@ export function ChannelNsfwGate({
              * The tab strip's own surface, so the panel continues the card the header starts rather
              * than floating under it: same padding as every other tab body, and the bottom corners
              * that the tabs would have rounded.
+             *
+             * `grow` + `justify-center`: with the description withheld the header is short, and a
+             * panel hugging its 300px left the card ending a third of the way down the screen. The
+             * column is already `flex-1 flex-col`, so growing fills the viewport — never a
+             * `min-height` (`docs/DESIGN_SYSTEM.md` §6) — and the question sits in the middle of it.
              */
             className={cn(
                 CHANNEL_PADDING,
-                'bg-(--background-surface) md:rounded-b-[var(--radius-xl)]',
+                'grow justify-center bg-(--background-surface) md:rounded-b-[var(--radius-xl)]',
             )}
         />
     )

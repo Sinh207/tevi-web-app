@@ -24,24 +24,19 @@ export function ChannelBio({
     /** The reader owns this space — the NSFW row then offers the appeal. See `ChannelNsfwLabel`. */
     isOwner = false,
     /**
-     * A sensitive space whose gate is unanswered: the **destinations** the creator points at are
-     * withheld with the art.
+     * A sensitive space whose gate is unanswered: the creator's **own words and destinations** are
+     * withheld with the art — the description and every link, the named custom one and the platform
+     * marks alike.
      *
-     * What goes is every link — the named custom one and the platform marks alike. A link is a place
-     * the reader has not agreed to be sent yet, and the gate cannot withhold the cover while leaving
-     * a row of taps to somewhere else standing above it.
+     * A link is a place the reader has not agreed to be sent yet, and the gate cannot withhold the
+     * cover while leaving a row of taps to somewhere else standing above it. The description goes
+     * with them (product decision, 2026-10-07): it is free text the creator wrote about a space the
+     * reader has not agreed to see, and the gate panel below already says what is being asked.
      *
-     * **The description stays.** It used to go with the links, on the grounds that it is the
-     * creator's own writing; but the gate's question is whether the reader wants to *see this
-     * space*, and a paragraph saying what the space is is the one thing that helps them answer it.
-     * Withholding it left a page that named the space and then refused to say what it was. Free text
-     * is not the risk the art is: it is rendered as text (`ChannelDescription`), it opens nothing,
-     * and it is already subject to the same moderation as the rest of the profile.
-     *
-     * The rest that stays is ours, not theirs: the joined date is a fact about the account, and the
-     * NSFW label is the gate's own subject — hiding *that* would take away the one line explaining
-     * why the rest is missing. The identity block above (name, handle, the space's own address) is
-     * untouched for the reason in `ChannelNsfwGate` — hiding it only hid the address.
+     * What stays is ours, not theirs: the joined date is a fact about the account, and the NSFW
+     * label is the gate's own subject — hiding *that* would take away the one line explaining why the
+     * rest is missing. The identity block above (name, handle, the space's own address) is untouched
+     * for the reason in `ChannelNsfwGate` — hiding it only hid the address.
      */
     withheld = false,
 }: {
@@ -62,7 +57,7 @@ export function ChannelBio({
 
     return (
         <div className="flex min-w-0 flex-col gap-3">
-            {channel.description && <ChannelDescription text={channel.description} />}
+            {!withheld && channel.description && <ChannelDescription text={channel.description} />}
 
             {!withheld && customLink && <ChannelMetaLink link={customLink} />}
 

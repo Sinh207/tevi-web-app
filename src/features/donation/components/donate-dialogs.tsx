@@ -433,11 +433,11 @@ export function DonateDialogs({ flow, target }: { flow: DonateFlow; target: Dona
                      *
                      * Without it the button looked like the last row of a form that happened to stop
                      * there, and the content scrolling *behind* nothing gave the dialog no bottom
-                     * edge. `-mx-6` bleeds the rule through the dialog's own `p-6`, so it spans the
+                     * edge. `-mx-(--dialog-pad)` bleeds the rule through the dialog's own inset, so it spans the
                      * full width the way a footer rule should rather than floating inside the
                      * padding — the same treatment the DS gives a card's full-bleed divider.
                      */}
-                    <div className="-mx-6 flex flex-col gap-3 border-(--separator-default) border-t px-6 pt-4">
+                    <div className="-mx-(--dialog-pad) flex flex-col gap-3 border-(--separator-default) border-t px-(--dialog-pad) pt-4">
                         {/*
                          * Said once, next to the control it disables. A disabled button with no
                          * explanation is the version of this that generates support tickets.

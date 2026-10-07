@@ -157,7 +157,7 @@ export function AccountSwitcherDialog() {
                     last one draws **square corners over the dialog's rounded bottom** —
                     a 24px radius with a hard rectangle sitting in it. */}
                 <DialogContent className="gap-0 overflow-hidden bg-background-elevated p-0">
-                    <DialogHeader className="border-b border-separator-default px-6 py-4">
+                    <DialogHeader className="border-b border-separator-default px-4 py-4 sm:px-6">
                         <DialogTitle className="type-title-t2-semibold">
                             {t('menu_switch_account')}
                         </DialogTitle>

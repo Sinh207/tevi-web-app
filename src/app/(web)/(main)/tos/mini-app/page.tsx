@@ -40,7 +40,7 @@ export default async function TermsMiniAppPage() {
     const t = await getServerT()
 
     return (
-        <main className="flex flex-1 flex-col pb-16">
+        <main className="flex flex-1 flex-col pb-8 md:pb-16">
             <div className="sticky top-0 z-20 bg-(--background) md:border-b md:border-(--separator-default) print:hidden">
                 <PageBackBar
                     title={t('terms_miniapp_short_title')}

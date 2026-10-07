@@ -53,7 +53,7 @@ export function ErrorScreen({
         <main
             data-testid={testId}
             className={cn(
-                'relative isolate flex min-h-[var(--window-height)] flex-col items-center justify-center gap-10 overflow-hidden px-6 text-center',
+                'relative isolate flex min-h-[var(--window-height)] flex-col items-center justify-center gap-6 overflow-hidden px-4 text-center md:gap-10 md:px-6',
                 /*
                  * The 40px band is legacy's; the insets are **added** to it rather than replacing
                  * it, which is the bug the first cut of this had. Unconditional on purpose: neither

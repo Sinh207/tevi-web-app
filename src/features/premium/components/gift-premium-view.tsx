@@ -1,12 +1,12 @@
 'use client'
 
+import { useBandPassed } from '@shared/hooks/use-band-passed'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { giftRecipientName } from '../api/gift-types'
-import { useBandPassed } from '../hooks/use-band-passed'
 import { useGiftPackages } from '../hooks/use-gift-packages'
 import { useGiftPremium } from '../hooks/use-gift-premium'
 import { usePremiumPrice } from '../hooks/use-premium-price'

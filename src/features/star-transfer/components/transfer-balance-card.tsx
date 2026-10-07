@@ -54,7 +54,7 @@ export function TransferBalanceCard({
 
     return (
         <div
-            className="flex min-h-[120px] w-full items-center justify-between gap-2 bg-center bg-cover bg-no-repeat p-8 md:rounded-t-lg"
+            className="flex min-h-[120px] w-full items-center justify-between gap-2 bg-center bg-cover bg-no-repeat px-4 py-6 md:rounded-t-lg md:p-8"
             style={{ backgroundImage: `url("${STAR_TRANSFER_ART.balance}")` }}
         >
             <div className="flex min-w-0 flex-col">

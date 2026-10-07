@@ -65,6 +65,8 @@ import { SearchSectionHeader } from './search-section-header'
  * `-mx-6 px-6` — the scrollport runs edge to edge so a tile mid-scroll is clipped by the panel rather
  * than by an invisible box inset from it, while the first and last tiles still line up with the 24px
  * column the header and the rows below use. `scroll-px-6` makes snapping respect the same inset.
+ * Below `md` all three are the `-4` twins: the comp's 24 is a card inset, and a phone has no card —
+ * there it is 8px of row taken for nothing, and out of line with the search field's 16.
  * Straight from `share-dialog.tsx`, which solved this first.
  *
  * Rendered only when there is something in it — the caller checks, because an empty strip should
@@ -95,11 +97,11 @@ export function SearchFollowingStrip({
              */}
             <SearchSectionHeader id="search-following-heading" title={t('search_following')} />
 
-            <div className="relative px-6 pb-4">
+            <div className="relative px-4 pb-4 md:px-6">
                 <ul
                     ref={trackRef}
                     className={cn(
-                        '-mx-6 flex list-none snap-x scroll-px-6 items-start gap-2 px-6',
+                        '-mx-4 flex list-none snap-x scroll-px-4 items-start gap-2 px-4 md:-mx-6 md:scroll-px-6 md:px-6',
                         'overflow-x-auto overscroll-x-contain',
                         /*
                          * The scrollbar is chrome the design does not draw, and on the platforms

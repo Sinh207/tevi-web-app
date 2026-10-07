@@ -208,7 +208,7 @@ export default async function PostDetailPage({ params }: PageProps) {
          *   never has anything to scroll.
          */
         <main className="mx-auto flex w-full max-w-[612px] flex-1 flex-col md:h-[var(--window-height)] md:flex-none md:overflow-hidden">
-            <PageBackBar title={heading} className="md:flex-none" />
+            <PageBackBar title={heading} className="md:flex-none" starBalance />
             {/* A client boundary, and only because a hook has to be read. See the file. */}
             <div className="flex min-w-0 flex-1 flex-col md:min-h-0 md:overflow-y-auto">
                 <PostDetailScreen identifier={code} serverPost={serverPost} />

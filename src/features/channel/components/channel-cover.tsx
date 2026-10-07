@@ -54,20 +54,14 @@ export function ChannelCover({
             className={cn(
                 'relative w-full overflow-hidden bg-(--background-segment)',
                 /*
-                 * **A withheld cover is a shorter band.** The DS ratio draws 402:140 because the
-                 * band is *art* — at `strong` it is not: what is fetched is a 64px thumbnail and
-                 * what is painted is a smudge, so 140 of it is 140 of nothing, pushing the name,
-                 * the stats and the gate's own question down the page on the one screen whose whole
-                 * job is to ask that question.
-                 *
-                 * 402:80 rather than "as short as possible": the avatar still straddles the edge and
-                 * its lift is measured off the cover's bottom, so the band has to stay clear of
-                 * `md`'s `-76`. 80/402 is 78px at a 390 phone and 122px at the 612 cap — above the
-                 * lift at both widths, so the header keeps the same shape and only the band loses
-                 * height. `soft` is untouched: that art is the real image and still worth its
-                 * space.
+                 * **The DS ratio for every state, a withheld cover included.** A sensitive space's
+                 * band used to be cut to 402:80, on the grounds that a smudge was not worth 140px.
+                 * It read as a broken header instead (product call, 2026-10-07): the identity block
+                 * looked crushed under a sliver, and since the skeleton cannot know a space is
+                 * sensitive and draws 402:140, the page also jumped 60px when it resolved. The gate
+                 * below now fills the column, so the extra band costs it nothing.
                  */
-                blurred === 'strong' ? 'aspect-[402/80]' : 'aspect-[402/140]',
+                'aspect-[402/140]',
             )}
         >
             {src && (

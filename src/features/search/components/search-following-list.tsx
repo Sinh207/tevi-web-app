@@ -67,7 +67,7 @@ export function SearchFollowingList({
                 }
             />
 
-            <ul className="flex list-none flex-col gap-3 px-6 pb-3">
+            <ul className="flex list-none flex-col gap-3 px-4 pb-3 md:px-6">
                 {channels.map((channel, index) => (
                     <SearchChannelRow
                         key={channel.slug}

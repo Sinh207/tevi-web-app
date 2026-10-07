@@ -104,7 +104,7 @@ export function ChangePasswordForm({
         <form
             data-testid="auth-change-password-form"
             onSubmit={submit}
-            className="flex w-full flex-col gap-6"
+            className="flex w-full flex-col gap-4 md:gap-6"
         >
             <PasswordStepHeader
                 icon={{ name: 'lock-simple', weight: 'filled' }}

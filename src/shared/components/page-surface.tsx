@@ -50,7 +50,7 @@ export function PageSurface({ className, ...props }: ComponentPropsWithoutRef<'d
     return (
         <div
             className={cn(
-                'flex flex-1 flex-col gap-6 p-4',
+                'flex flex-1 flex-col gap-4 p-4 md:gap-6',
                 'md:mb-6 md:flex-none md:rounded-xl md:border md:border-(--separator-default)',
                 'md:bg-(--background-surface) md:p-6',
                 className,

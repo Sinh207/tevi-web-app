@@ -2608,5 +2608,7 @@
     "event_account_banned_title": "Anda tidak boleh menyertai livestream ini",
     "event_account_banned_body": "Akaun anda tidak boleh menyertai livestream buat masa ini.",
     "following_live_happening_now": "Sedang berlaku",
-    "nav_create_event_badge": "Aplikasi"
+    "nav_create_event_badge": "Aplikasi",
+    "channel_view_avatar": "Lihat gambar profil",
+    "channel_view_cover": "Lihat imej muka depan"
 }

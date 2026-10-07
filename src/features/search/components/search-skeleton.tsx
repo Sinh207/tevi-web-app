@@ -5,7 +5,7 @@ import { SearchSectionHeader } from './search-section-header'
  * A search list's loading shape — the same 56px rows `SearchChannelRow` draws, with bars where the
  * text goes, and optionally the section title above them.
  *
- * Geometry by construction rather than by eye: the list is the same `flex-col gap-3 px-6` and each
+ * Geometry by construction rather than by eye: the list is the same `flex-col gap-3 px-4 md:px-6` and each
  * row the same `size-14` avatar slot, `gap-3`, and two lines 4 apart, so nothing moves when the
  * results land. Each bar sits in a box at its line's **real** height (21px for 14px text) rather
  * than the bar's own 12px — the trap `skeleton.tsx` spells out.
@@ -33,7 +33,7 @@ export function SearchSkeleton({
     return (
         <section data-testid={testId} aria-busy="true">
             {title && <SearchSectionHeader title={title} />}
-            <ul className="flex list-none flex-col gap-3 px-6 pb-3">
+            <ul className="flex list-none flex-col gap-3 px-4 pb-3 md:px-6">
                 {Array.from({ length: count }, (_, index) => `search-skeleton-${index}`).map(
                     (key, index) => (
                         <li key={key} className="flex items-center gap-3">
@@ -61,7 +61,7 @@ export function SearchSkeleton({
  *
  * Built from the tile's own numbers (`FollowingTile`: `w-19` pinned, a 48px avatar, a 14/1.5 name
  * over a 12/1.5 handle, `gap-1`, `py-1`) and the track's own box (`-mx-6 px-6` inside `px-6 pb-4`,
- * so the first tile lines up with the 24px column the rows below use). Same construction rule as
+ * `-4` below `md`, so the first tile lines up with the column the rows below use). Same construction rule as
  * `SearchSkeleton`: the placeholder and the real block share their geometry by *reading the same
  * classes*, not by two people measuring the same comp twice.
  *
@@ -92,8 +92,8 @@ export function SearchFollowingSkeleton({ label, tiles = 4 }: { label: string; t
                 block of tiles takes no hairline. */}
             <SearchSectionHeader title={label} />
 
-            <div className="px-6 pb-4">
-                <ul className="-mx-6 flex list-none items-start gap-2 overflow-hidden px-6">
+            <div className="px-4 pb-4 md:px-6">
+                <ul className="-mx-4 flex list-none items-start gap-2 overflow-hidden px-4 md:-mx-6 md:px-6">
                     {Array.from(
                         { length: tiles },
                         (_, index) => `search-tile-skeleton-${index}`,

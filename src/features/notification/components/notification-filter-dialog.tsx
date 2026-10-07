@@ -102,7 +102,7 @@ export function NotificationFilterDialog({
              * scrolling body's edges are the dialog's and a row's hairline runs the full width.
              */}
             <DialogContent className="w-[420px] max-h-[min(90vh,640px)] gap-0 p-0">
-                <DialogHeader className="items-start gap-1 px-6 pt-6 pb-4 text-start">
+                <DialogHeader className="items-start gap-1 px-4 pt-4 pb-4 text-start sm:px-6 sm:pt-6">
                     {/* `pe-8` so a long title wraps *before* it reaches the close, rather than
                         running under it — the X is absolutely positioned and takes no space in
                         flow, so nothing else reserves it. */}
@@ -164,7 +164,7 @@ export function NotificationFilterDialog({
                     ) : isError ? (
                         <div
                             className={cn(
-                                'flex flex-col items-center gap-3 px-6 py-10 text-center',
+                                'flex flex-col items-center gap-3 px-4 py-10 text-center sm:px-6',
                                 RISE,
                             )}
                         >
@@ -191,7 +191,7 @@ export function NotificationFilterDialog({
                            empty scroll area that looks like a broken render. */
                         <p
                             className={cn(
-                                'px-6 py-10 text-center type-dense-default text-(--text-subtitle)',
+                                'px-4 py-10 text-center type-dense-default text-(--text-subtitle) sm:px-6',
                                 RISE,
                             )}
                         >
@@ -288,7 +288,7 @@ export function NotificationFilterDialog({
                  * makes a lone button fill the axis: `DialogFooter`'s own note records that
                  * `fullWidth` on a flex child does the wrong thing here.
                  */}
-                <DialogFooter layout="stacked" className="px-6 pt-4 pb-6">
+                <DialogFooter layout="stacked" className="px-4 pt-4 pb-4 sm:px-6 sm:pb-6">
                     <Button
                         data-testid="notification-filter-save"
                         variant="accent"

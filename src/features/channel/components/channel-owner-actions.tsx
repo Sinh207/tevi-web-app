@@ -52,40 +52,32 @@ export function ChannelOwnerActions({ channel }: { channel: Channel }) {
 
     return (
         /*
-         * `flex-wrap`, and each button keeps its own content width (`min-w-fit`) while still
-         * sharing the line when both fit (`flex-1`).
+         * **One row, always** (product call, 2026-10-07) — it used to `flex-wrap`, which on a phone
+         * stacked the pair into two full-width 48px bars and doubled the header's action block.
          *
-         * The first fix was `min-w-0` + a truncating label, which stopped the overflow and produced
-         * "Custom pr…" / "Earnings r…" on a 390 phone — a row of two controls neither of which says
-         * what it does. Wrapping is the better trade: at 390 the pair needs 394px of a 366px slot,
-         * so the second drops to its own line at full width and both labels stay whole. From 430 up
-         * they fit side by side again, with no breakpoint deciding it — the content does.
+         * What makes one row fit without truncating is three things, measured in a browser across
+         * all nine locales: each button is sized to its **own** label (`flex-auto`, grow from a
+         * content basis) rather than half the row, so a short "Custom profile" lends its slack to a
+         * long "Báo cáo thu nhập" / "Laporan Pendapatan"; the horizontal padding drops from the DS's
+         * 24 to 10; and below `sm` the label is **14/500** — the DS's own `medium` button type —
+         * instead of large's 16. The height stays 48. With all three the widest pair (`id`) fits a
+         * 360 phone; at 16px it truncated even at 390. `min-w-0` + `truncate` remain the backstop
+         * for anything narrower — an ellipsis beats a second row or a page that scrolls sideways.
+         *
+         * Not `grid-cols-2`: equal halves give each label 127px at 390, which truncates Vietnamese,
+         * the content-sized split does not.
          */
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
             {/*
              * `render` rather than wrapping the `Button` in a `Link`: this button is 48 tall and a
              * wrapper would leave the anchor sized to its text, so the top and bottom of the
              * control would not be clickable.
              */}
-            {/*
-             * Without `min-w-fit` and the wrap above, this row **scrolled the page sideways**.
-             * Measured at 390: each label wants ~196px, so the pair plus the gap came to 400 in a
-             * 366px slot and the second button ended 16px past the card's edge.
-             *
-             * `flex-1` alone does not fix it — a flex item's `min-width` is `auto`, so it refuses to
-             * shrink below its content, and `Button` is `whitespace-nowrap` (the DS's rule: every
-             * label node in Figma is one line with truncation disabled). Nowrap is kept and the row
-             * wraps instead.
-             *
-             * `truncate` stays as a backstop for the case wrapping cannot save — a locale whose
-             * label is wider than the whole column — where an ellipsis beats another page-wide
-             * scrollbar.
-             */}
             <Button
                 data-testid="channel-owner-edit"
                 variant="secondary"
                 size="large"
-                className="min-w-fit flex-1"
+                className="min-w-0 flex-auto px-2.5 text-sm sm:text-base"
                 render={<Link href={CUSTOM_PROFILE_PATH} />}
             >
                 <Icon name="pen-line" weight="filled" size={20} />
@@ -115,7 +107,7 @@ export function ChannelOwnerActions({ channel }: { channel: Channel }) {
                 data-testid="channel-owner-share"
                 variant="secondary"
                 size="large"
-                className="min-w-fit flex-1 text-(--text-success)"
+                className="min-w-0 flex-auto px-2.5 text-sm sm:text-base text-(--text-success)"
                 render={<Link href={earningsReportPath(channel.slug)} />}
             >
                 <Icon name="dollar-circle" weight="filled" size={20} />

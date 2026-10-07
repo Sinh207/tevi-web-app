@@ -36,7 +36,7 @@ export function AuthLayout({
     return (
         <main
             className={cn(
-                'relative flex w-full flex-col items-center justify-center gap-8 bg-background px-4 py-10',
+                'relative flex w-full flex-col items-center justify-center gap-6 bg-background px-4 py-6 sm:gap-8 sm:py-10',
                 fill ? 'flex-1' : 'min-h-dvh',
             )}
         >
@@ -80,7 +80,7 @@ export function AuthLayout({
                 <span className="type-title-t1-bold font-brand text-text-title">Tevi</span>
             </div>
 
-            <div className="relative flex w-full max-w-[440px] flex-col items-center gap-5 rounded-2xl border border-separator-default bg-background-elevated/90 p-6 shadow-xl backdrop-blur-md sm:p-8">
+            <div className="relative flex w-full max-w-[440px] flex-col items-center gap-5 rounded-2xl border border-separator-default bg-background-elevated/90 p-6 shadow-xl backdrop-blur-md max-sm:px-4 sm:p-8">
                 {children}
             </div>
         </main>

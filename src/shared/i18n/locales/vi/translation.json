@@ -2608,5 +2608,7 @@
     "event_account_banned_title": "Bạn không thể tham gia buổi live này",
     "event_account_banned_body": "Tài khoản của bạn hiện không thể tham gia các buổi live.",
     "following_live_happening_now": "Đang diễn ra",
-    "nav_create_event_badge": "App"
+    "nav_create_event_badge": "App",
+    "channel_view_avatar": "Xem ảnh đại diện",
+    "channel_view_cover": "Xem ảnh bìa"
 }

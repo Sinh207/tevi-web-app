@@ -2608,5 +2608,7 @@
     "event_account_banned_title": "你無法加入此直播",
     "event_account_banned_body": "你的帳號目前無法參與直播。",
     "following_live_happening_now": "正在進行",
-    "nav_create_event_badge": "App"
+    "nav_create_event_badge": "App",
+    "channel_view_avatar": "查看大頭貼",
+    "channel_view_cover": "查看封面圖片"
 }

@@ -69,7 +69,7 @@ export function TwoFaSetupFlow({ setup }: { setup: TwoFaSetup }) {
             data-testid="auth-two-fa-setup-form"
             key={setup.step}
             onSubmit={submit}
-            className="flex w-full flex-col gap-6"
+            className="flex w-full flex-col gap-4 md:gap-6"
         >
             <StepHeader
                 icon={{ name: MARKS[setup.step], weight: 'filled' }}

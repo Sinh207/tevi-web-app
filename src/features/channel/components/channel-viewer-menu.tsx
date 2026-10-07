@@ -62,7 +62,14 @@ import { ChannelReportDialog } from './channel-report-dialog'
  * cannot express two states. Read that file's header before adding a fourth entry. Nothing here is
  * hand-drawn or adapted.
  */
-export function ChannelViewerMenu({ channel }: { channel: Channel }) {
+export function ChannelViewerMenu({
+    channel,
+    triggerClassName,
+}: {
+    channel: Channel
+    /** The bar's paint for its controls — `ChannelTopBar` hands the same class to all three. */
+    triggerClassName?: string
+}) {
     const { t } = useTranslation()
     const { follow, unfollow, block, setNotification } = useChannelActions(channel)
     const [confirmBlock, setConfirmBlock] = useState(false)
@@ -99,10 +106,9 @@ export function ChannelViewerMenu({ channel }: { channel: Channel }) {
         <>
             <Menu.Root>
                 {/*
-                 * The trigger wears **`BarIconButton`**, the same 40px surface-filled circle the
-                 * Share button beside it wears — not the menu shell's own ghost trigger. Two
-                 * controls sitting in the same cluster have to look like the same kind of thing;
-                 * a ghost square next to a filled circle reads as one of them being broken.
+                 * The trigger wears **`BarIconButton`**, the same control the Share button beside it
+                 * wears (and `triggerClassName`, the same paint) — not the menu shell's own trigger.
+                 * Two controls sitting in the same cluster have to look like the same kind of thing.
                  *
                  * `render` hands base-ui the element to *be*, so the trigger keeps its ARIA wiring
                  * (`aria-haspopup`, `aria-expanded`, the popup's id) and gains the bar's paint. A
@@ -113,7 +119,11 @@ export function ChannelViewerMenu({ channel }: { channel: Channel }) {
                  */}
                 <Menu.Trigger
                     render={
-                        <BarIconButton name="more-horizontal" label={t('channel_menu_actions')} />
+                        <BarIconButton
+                            name="more-horizontal"
+                            label={t('channel_menu_actions')}
+                            className={triggerClassName}
+                        />
                     }
                 />
                 <Menu.Portal>

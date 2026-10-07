@@ -184,7 +184,7 @@ export function NsfwInfoDialog({
                 {step === 'appeal' && canAppeal && Screen ? (
                     <Screen active={open} onClose={() => onOpenChange(false)} />
                 ) : (
-                    <div className="flex min-w-0 flex-col gap-3 p-6">
+                    <div className="flex min-w-0 flex-col gap-3 p-4 sm:p-6">
                         <div className="flex items-start justify-between gap-3">
                             <DialogTitle className="type-body-strong pt-2 text-(--text-title)">
                                 {t('channel_nsfw_info_title')}

@@ -1,8 +1,8 @@
 'use client'
 
 import { useMyChannel } from '@features/channel'
+import { useBandPassed } from '@shared/hooks/use-band-passed'
 import { cn } from '@shared/lib/utils'
-import { useBandPassed } from '../hooks/use-band-passed'
 import { usePremiumPlans } from '../hooks/use-premium-plans'
 import { usePremiumPrice } from '../hooks/use-premium-price'
 import { usePremiumSync } from '../hooks/use-premium-sync'

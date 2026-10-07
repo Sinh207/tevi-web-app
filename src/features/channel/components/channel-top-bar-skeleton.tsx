@@ -1,6 +1,8 @@
-import { BarIconButtonSkeleton } from '@shared/components/bar-icon-button-skeleton'
+import {
+    BarIconButtonSkeleton,
+    StarPillSkeleton,
+} from '@shared/components/bar-icon-button-skeleton'
 import { cn } from '@shared/lib/utils'
-import { Skeleton } from '@shared/ui/skeleton'
 import { CHANNEL_CONTAINER } from '../lib/container'
 
 /**
@@ -22,17 +24,18 @@ import { CHANNEL_CONTAINER } from '../lib/container'
  * per button, on both sides.
  *
  * **Three placeholders, not two.** The real trailing cluster is share **and** the overflow menu,
- * `gap-2` apart, and the bar carries a **centred title**. Both arrived after this file was written,
- * so resolving the load grew a second button out of nothing and dropped a title into an empty middle.
+ * `gap-2` apart. It arrived after this file was written, so resolving the load grew a second button
+ * out of nothing. (The bar used to carry a centred title too; it no longer does, so neither does this.)
  * A space with no `shareable_url` gets one trailing button rather than two — the skeleton draws the
  * common shape, as its stats strip does.
  */
 export function ChannelTopBarSkeleton() {
     return (
-        <div className="sticky top-0 z-20 bg-(--background-surface) md:bg-(--background) print:hidden">
+        <div className="sticky top-0 z-20 bg-(--background-surface) md:bg-(--background) max-sm:h-0 max-sm:bg-transparent print:hidden">
             {/*
-             * `px-0` — **copied from `ChannelTopBar` (`md:px-0` above, `max-md:px-0` below), and it
-             * has to stay copied.** This
+             * `px-0 max-sm:px-4` and `max-sm:h-0` — **copied from `ChannelTopBar`, and they have to
+             * stay copied.** Below `sm` the real bar sits over the cover with no layout height, so a
+             * skeleton that kept its 60px would drop the whole page 60px on arrival. This
              * used to be `px-2`, which put the placeholder circle 8px from the column edge while
              * the real button sat at 16, so the bar's contents slid sideways the moment the
              * channel resolved — the exact class of shift this component exists to prevent, just
@@ -44,34 +47,50 @@ export function ChannelTopBarSkeleton() {
                 aria-busy="true"
                 className={cn(
                     CHANNEL_CONTAINER,
-                    'relative flex h-[60px] items-center justify-between px-0',
+                    'relative flex h-[60px] items-center justify-between px-0 max-sm:px-4',
                 )}
             >
-                {/* `BarIconButton`'s 40px target, holding a glyph-sized mark — see that skeleton. */}
-                <BarIconButtonSkeleton />
-
-                {/*
-                 * The centred title, at the height its text occupies: `AppBarTitleText` is
-                 * `type-body-strong` (16), so the line box is 24 and the DS bar is 12 inside it.
-                 * A fixed 160 rather than a share of the width — a name is a name at any viewport,
-                 * and a percentage would make the placeholder grow into a headline on a desktop.
-                 *
-                 * **Absolutely centred, exactly as `AppBarTitle` is.** In the flow it rides
-                 * `justify-between` between a 40px cluster and an 88px one, which put it 24px left
-                 * of the bar's middle — a placeholder that then slides sideways when the real title
-                 * lands. The RTL flip is the DS component's own: `start-1/2` is logical but the
-                 * translate that pulls the box back onto its centre is not.
-                 */}
-                <div className="absolute start-1/2 top-1/2 flex h-[24px] -translate-x-1/2 -translate-y-1/2 items-center rtl:translate-x-1/2">
-                    <Skeleton w={160} delay={160} />
+                {/* Back + the Star pill, as one cluster with `AppBarCluster`'s `gap-2`. */}
+                <div className="flex items-center gap-2">
+                    {/* `BarIconButton`'s 40px target, holding a glyph-sized mark — see that skeleton. */}
+                    <BarPlaceholder />
+                    {/* The Star pill, below `md` — `ChannelTopBar` carries it there. Below `sm` it sits
+                        on the cover skeleton, so it is the same solid plate as the controls. */}
+                    <span
+                        aria-hidden="true"
+                        className="h-8 w-[104px] flex-none rounded-full bg-black/25 sm:hidden"
+                    />
+                    <span className="contents max-sm:hidden">
+                        <StarPillSkeleton delay={160} />
+                    </span>
                 </div>
 
                 {/* Share + the overflow menu, the cluster's own `gap-2` between them. */}
                 <div className="flex items-center gap-2">
-                    <BarIconButtonSkeleton delay={320} />
-                    <BarIconButtonSkeleton delay={480} />
+                    <BarPlaceholder delay={320} />
+                    <BarPlaceholder delay={480} />
                 </div>
             </div>
         </div>
+    )
+}
+
+/**
+ * One control's placeholder, in the shape the bar will actually have: the glyph-sized mark from `sm`
+ * (ghost controls), and below `sm` the dark 40px plate the real controls wear over the cover. That
+ * plate is drawn **solid rather than shimmering** — a skeleton block on the cover's own skeleton is
+ * the same grey on the same grey, i.e. invisible.
+ */
+function BarPlaceholder({ delay }: { delay?: number }) {
+    return (
+        <>
+            <span
+                aria-hidden="true"
+                className="size-10 flex-none rounded-full bg-black/25 sm:hidden"
+            />
+            <span className="contents max-sm:hidden">
+                <BarIconButtonSkeleton delay={delay} />
+            </span>
+        </>
     )
 }

@@ -37,7 +37,7 @@ export function TwoFaChangeFlow({ change }: { change: TwoFaChange }) {
          * `key` remounts on each step so the entrance animation replays — the values live in the hook,
          * so nothing typed is lost. Same device the setup flow and `PasswordSetupFlow` use.
          */
-        <div key={change.step} className="flex w-full flex-col gap-6">
+        <div key={change.step} className="flex w-full flex-col gap-4 md:gap-6">
             <StepHeader
                 icon={{ name: MARKS[change.step], weight: 'filled' }}
                 // Neutral, which is what the comps draw — see `StepTone`'s `zinc`.

@@ -52,7 +52,7 @@ export function MembershipTierCard({
             data-testid="monetization-membership-tier"
             className={cn(
                 'relative flex min-h-[100px] flex-none flex-col justify-center overflow-hidden rounded-xl',
-                'border border-(--primary-300) bg-(--primary-50) px-6 py-4',
+                'border border-(--primary-300) bg-(--primary-50) px-4 py-4 md:px-6',
                 className,
             )}
         >

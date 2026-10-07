@@ -35,7 +35,7 @@ export default async function PrivacyPage() {
     const t = await getServerT()
 
     return (
-        <main className="flex flex-1 flex-col pb-16">
+        <main className="flex flex-1 flex-col pb-8 md:pb-16">
             {/*
              * The DS bar carries no background of its own, so a sticky host supplies one —
              * the same arrangement `(tabs)/layout.tsx` uses for the global bar. The
