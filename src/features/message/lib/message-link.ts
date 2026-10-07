@@ -1,4 +1,4 @@
-import { BASE_URL } from '@shared/config/env'
+import { OWN_HOST, teviPath } from '@shared/lib/tevi-path'
 import type { ChatMessage } from '../api/types'
 import { messageText, splitLinks } from './message-thread'
 
@@ -11,40 +11,12 @@ import { messageText, splitLinks } from './message-thread'
  * only the Premium gift uses. So the rules live here, pure, where they can be pinned.
  */
 
-/** Hosts that are this app — legacy's four origins, plus whatever this deployment is served from. */
-const TEVI_HOSTS = new Set(['tevi.com', 'web.tevi.com', 'tevi.dev', 'web.tevi.dev'])
-
-function isTeviHost(host: string, extra: string | null): boolean {
-    const bare = host.toLowerCase().replace(/^www\./, '')
-    return TEVI_HOSTS.has(bare) || (!!extra && bare === extra)
-}
-
-const OWN_HOST = (() => {
-    try {
-        return new URL(BASE_URL).hostname.toLowerCase().replace(/^www\./, '')
-    } catch {
-        return null
-    }
-})()
-
 /**
- * The in-app path for a Tevi URL, or `null` for anywhere else.
- *
- * A Tevi link in a message opens **here**, as a client-side navigation — iOS routes every Tevi host
- * through its deep-link handler for the same reason. Legacy sends each one to a new tab, which
- * reloads the whole app to show a page this tab could have shown.
+ * The Tevi-host rule lives in `shared/lib/tevi-path.ts` now — a post's promote card needs the same
+ * answer and `features/post` may not import this feature. Re-exported so every existing caller and
+ * test keeps its import.
  */
-export function teviPath(href: string, ownHost: string | null = OWN_HOST): string | null {
-    let url: URL
-    try {
-        url = new URL(href)
-    } catch {
-        return null
-    }
-    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null
-    if (!isTeviHost(url.hostname, ownHost)) return null
-    return `${url.pathname}${url.search}${url.hash}` || '/'
-}
+export { teviPath }
 
 export type MessageEmbed =
     | { kind: 'gift'; productName: string | null }

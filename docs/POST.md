@@ -282,6 +282,11 @@ snap; its arrows are desktop-only and hide at the ends.
 - **Report** loads its reasons only while open. "Report and block" lets the caller own the block.
   The whole entry is behind the remote-config kill switch `report.post.isActive`, which fails closed.
 - **Zero counts are drawn.** Timestamps are absolute and 24-hour (`post-format.ts`).
+- **The promote card opens the program's mini app in this tab.** A program is a mini app, and its
+  referral link is a Tevi page (the program's space), so `PostAffiliateCard` makes it a client-side
+  `<Link>` (`teviPath`, now in `shared/lib/tevi-path.ts`). The space opens its app on arrival. The
+  link's query must survive: `utm_campaign` is read off the page URL and credits the promoter, which
+  is why the app is not opened in place over the feed. Any other host keeps legacy's vetted new tab.
 
 ---
 

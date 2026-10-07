@@ -6,9 +6,11 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { formatFiatAmount } from '@shared/lib/money'
 import { safeExternalUrl } from '@shared/lib/safe-url'
 import { subTestId } from '@shared/lib/test-id'
+import { teviPath } from '@shared/lib/tevi-path'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { Post } from '../api/types'
 
 /**
@@ -152,60 +154,90 @@ export function PostMiniAppBanner({
  * The affiliate program a space is promoting — legacy's `posts/common/affiliateProgram`.
  *
  * `channel.promote.referral_url` is the only field it cannot render without; the name and icon
- * decorate it. The link is **external and vetted**, opens in a new tab, and carries
- * `rel="noopener noreferrer"` — a referral URL is a third party's and `window.opener` is how a
- * newly opened tab reaches back into this one.
+ * decorate it.
  *
- * No feature import: this is a link, so `features/affiliate` (which owns the dialog and the
- * programs list) has nothing this card needs.
+ * ## A press opens the mini app, here — not a second copy of Tevi in a new tab
+ *
+ * Every program is a **mini app** (`raffi/v1/programs/` answers each with the app's own `url`), and
+ * the referral link is a **Tevi** page: legacy rewrites its origin to the deployment's own
+ * (`handleReplaceOriginUrl`) before opening it, which is only right for a path this app serves. That
+ * page is the program's space, and a space that *is* a mini app opens it on arrival
+ * (`useAutoOpenMiniApp`). Legacy reaches it through `target="_blank"`, so the reader got a whole
+ * second Tevi, booting from scratch, to show an app this tab could have opened.
+ *
+ * So a Tevi referral link is a client-side `<Link>` (`teviPath`, the same rule a message's links
+ * use): one press, the space mounts and its app opens over it. The link's query **must survive** —
+ * `utm_campaign` is read off the page URL that opens the app (`campaignFromUrl` in
+ * `features/mini-app`) and is what credits the promoter, which is also why the app is not opened in
+ * place over this feed: it would carry this page's URL, and the commission with it.
+ *
+ * A link to any other host keeps legacy's behaviour — vetted (`safeExternalUrl`), a new tab,
+ * `rel="noopener noreferrer"`, because `window.opener` is how a newly opened tab reaches back.
+ *
+ * No feature import: `features/mini-app` imports `features/channel`, which imports this one.
  */
 export function PostAffiliateCard({ post, testId }: { post: Post; testId?: string }) {
     const { t } = useTranslation()
     const promote = post.channel?.promote
 
-    const href = promote?.referral_url ? safeExternalUrl(promote.referral_url) : null
-    if (!href) return null
+    const inApp = promote?.referral_url ? teviPath(promote.referral_url) : null
+    const external = !inApp && promote?.referral_url ? safeExternalUrl(promote.referral_url) : null
+    if (!inApp && !external) return null
 
-    return (
+    const card = (
+        <AttachmentCard testId={testId}>
+            {promote?.app_icon_url ? (
+                <Image
+                    src={promote.app_icon_url}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="size-10 flex-none rounded-full object-cover md:size-12"
+                />
+            ) : (
+                <span className="flex size-10 flex-none items-center justify-center rounded-full bg-(--background-segment) md:size-12">
+                    <Icon name="grid-square" size={20} className="text-(--icon-secondary)" />
+                </span>
+            )}
+            <span className="flex min-w-0 flex-1 flex-col justify-center">
+                <span className="type-caption-meta truncate text-(--text-placeholder)">
+                    {t('post_affiliate_recommended')}
+                </span>
+                <span className="type-body-emphasis truncate text-(--text-title)">
+                    {promote?.app_name ?? ''}
+                </span>
+            </span>
+            {/*
+             * A `span` styled as a button, not a `<Button>`: the whole card is already an
+             * anchor, and a button inside an anchor is invalid markup that browsers resolve by
+             * breaking one of the two.
+             */}
+            <span className="type-dense-emphasis flex flex-none items-center gap-1 rounded-[12px] bg-(--button-accent-bg) px-3 py-2 text-(--button-accent-text)">
+                <Icon name="grid-square" size={16} />
+                {t('post_affiliate_visit')}
+            </span>
+        </AttachmentCard>
+    )
+
+    return inApp ? (
+        <Link
+            href={inApp}
+            data-testid={subTestId(testId, 'trigger')}
+            // The card's own click would navigate to the post as well — `shouldNavigate` skips
+            // anchors, but the stop keeps that true however this card is nested.
+            onClick={event => event.stopPropagation()}
+        >
+            {card}
+        </Link>
+    ) : (
         <a
-            href={href}
+            href={external ?? undefined}
             target="_blank"
             rel="noopener noreferrer"
             data-testid={subTestId(testId, 'trigger')}
             onClick={event => event.stopPropagation()}
         >
-            <AttachmentCard testId={testId}>
-                {promote?.app_icon_url ? (
-                    <Image
-                        src={promote.app_icon_url}
-                        alt=""
-                        width={48}
-                        height={48}
-                        className="size-10 flex-none rounded-full object-cover md:size-12"
-                    />
-                ) : (
-                    <span className="flex size-10 flex-none items-center justify-center rounded-full bg-(--background-segment) md:size-12">
-                        <Icon name="grid-square" size={20} className="text-(--icon-secondary)" />
-                    </span>
-                )}
-                <span className="flex min-w-0 flex-1 flex-col justify-center">
-                    <span className="type-caption-meta truncate text-(--text-placeholder)">
-                        {t('post_affiliate_recommended')}
-                    </span>
-                    <span className="type-body-emphasis truncate text-(--text-title)">
-                        {promote?.app_name ?? ''}
-                    </span>
-                </span>
-                {/*
-                 * A `span` styled as a button, not a `<Button>`: the whole card is already an
-                 * anchor, and a button inside an anchor is invalid markup that browsers resolve by
-                 * breaking one of the two.
-                 */}
-                <span className="type-dense-emphasis flex flex-none items-center gap-1 rounded-[12px] bg-(--button-accent-bg) px-3 py-2 text-(--button-accent-text)">
-                    <Icon name="grid-square" size={16} />
-                    {t('post_affiliate_visit')}
-                </span>
-            </AttachmentCard>
+            {card}
         </a>
     )
 }
