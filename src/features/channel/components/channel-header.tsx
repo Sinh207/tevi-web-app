@@ -71,12 +71,11 @@ export function ChannelHeader({
      */
     isOwner = false,
     /**
-     * A sensitive space whose gate has not been satisfied: the **art and the creator's
-     * destinations** are withheld — cover, avatar and every link (`ChannelBio`'s `withheld`). What
-     * still renders is the identity — name, handle, the space's own address, the follower count —
-     * **and the description**, which is what tells the reader what they are being asked about.
-     * Those are not the sensitive part, and hiding them was what made the old dialog leave a
-     * visitor unsure they had the right URL.
+     * A sensitive space whose gate has not been satisfied: the **art and the creator's own
+     * content** are withheld — cover, avatar, the description and every link (`ChannelBio`'s
+     * `withheld`). What still renders is the identity — name, handle, the space's own address, the
+     * follower count. Those are not the sensitive part, and hiding them was what made the old dialog
+     * leave a visitor unsure they had the right URL.
      */
     blurred = false,
     className,

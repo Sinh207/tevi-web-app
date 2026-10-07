@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslation } from '@shared/i18n/use-translation'
+import { POP, RIPPLE, RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
@@ -74,8 +75,27 @@ export function NsfwGatePanel({
              * `aria-live` is deliberately absent: this is not an update to announce, it is the page.
              * The heading below is a real heading, so a screen reader meets it in document order.
              */
-            className={cn('flex min-w-0 flex-col items-center gap-4 py-10 text-center', className)}
+            className={cn(
+                'relative flex min-w-0 flex-col items-center gap-4 overflow-clip py-10 text-center',
+                className,
+            )}
         >
+            {/*
+             * ## Motion — the same entrance the protected-space wall makes
+             *
+             * `channel-protected-notice.tsx` is the other "this space is behind something" state,
+             * and the two now move alike: a soft wash of the hue around the mark, the mark popping
+             * in with two rings pulsing out of it, then the sentence and the control rising in at
+             * 160 / 240ms. Every value is an existing one from `shared/lib/motion.ts` — no new
+             * keyframe, so the gate arrives on the app's one "something arrived" curve.
+             *
+             * The wash is anchored to the **mark**, not to the section's top as the protected wall's
+             * is: this panel grows to fill the column and centres its content, so a wash pinned to
+             * the top lit an empty band above the mark. `overflow-clip`, not `overflow-hidden`: the
+             * wash must not spill past the card's rounded corners, and `hidden` would make this a
+             * scrollport.
+             */}
+
             {/*
              * The mark: a solid **NSFW pink** disc with the glyph knocked out in white, ringed by a
              * wide halo of the same hue at low opacity.
@@ -108,13 +128,50 @@ export function NsfwGatePanel({
              * The halo is a `ring`, not a second element: it takes no layout, so the disc stays 56
              * and the spacing above and below is the disc's, not the halo's.
              */}
-            <span className="flex size-14 flex-none items-center justify-center rounded-(--radius-fill) bg-(--accents-nsfw) text-(--white) ring-8 ring-[color-mix(in_srgb,var(--accents-nsfw)_16%,transparent)]">
-                <Icon name="nsfw" size={32} title={t('channel_nsfw')} />
+            {/* `POP` on a wrapper whose box is the disc's 56px, so the scale moves nothing around
+                it. The rings start at the halo's edge (`-inset-2` = `ring-8`) — from the disc's edge
+                they spent most of their travel hidden under it — and are hidden under reduced
+                motion rather than frozen half-way out. */}
+            <span
+                className={cn(
+                    'relative grid flex-none place-items-center',
+                    POP,
+                    '[animation-delay:80ms]',
+                )}
+            >
+                <span
+                    aria-hidden
+                    className="pointer-events-none absolute -inset-28 bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--accents-nsfw)_14%,transparent),transparent)]"
+                />
+                <span
+                    aria-hidden
+                    className={cn(
+                        'pointer-events-none absolute -inset-2 rounded-(--radius-fill) border-2 border-[color-mix(in_srgb,var(--accents-nsfw)_45%,transparent)]',
+                        RIPPLE,
+                    )}
+                />
+                <span
+                    aria-hidden
+                    className={cn(
+                        'pointer-events-none absolute -inset-2 rounded-(--radius-fill) border-2 border-[color-mix(in_srgb,var(--accents-nsfw)_45%,transparent)]',
+                        RIPPLE,
+                        '[animation-delay:1200ms]',
+                    )}
+                />
+                <span className="relative flex size-14 items-center justify-center rounded-(--radius-fill) bg-(--accents-nsfw) text-(--white) ring-8 ring-[color-mix(in_srgb,var(--accents-nsfw)_16%,transparent)]">
+                    <Icon name="nsfw" size={32} title={t('channel_nsfw')} />
+                </span>
             </span>
 
             {/* Capped at the same 340 as the controls below, so the sentence breaks over the
                 button rather than running the full width of a 612px column above a short one. */}
-            <div className="flex min-w-0 max-w-[340px] flex-col gap-1">
+            <div
+                className={cn(
+                    'relative flex min-w-0 max-w-[340px] flex-col gap-1',
+                    RISE,
+                    '[animation-delay:160ms]',
+                )}
+            >
                 <h2 className="type-title-t2-semibold text-balance text-(--text-title)">
                     {t('channel_nsfw_gate_title')}
                 </h2>
@@ -125,7 +182,13 @@ export function NsfwGatePanel({
 
             {/* Capped rather than full-width: a 612px column would otherwise draw a button as wide
                 as the page for a one-line label. */}
-            <div className="flex w-full min-w-0 max-w-[340px] flex-col gap-2">
+            <div
+                className={cn(
+                    'relative flex w-full min-w-0 max-w-[340px] flex-col gap-2',
+                    RISE,
+                    '[animation-delay:240ms]',
+                )}
+            >
                 {showsSensitive ? (
                     /*
                      * `accent` — the app's CTA, and the product's call.
