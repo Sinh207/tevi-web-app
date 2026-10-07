@@ -115,6 +115,11 @@ export { usePostReaction } from './hooks/use-post-reaction'
 export { usePostSlider } from './hooks/use-post-slider'
 export type { PostUnlockFlow } from './hooks/use-post-unlock'
 export { usePostUnlock } from './hooks/use-post-unlock'
+/**
+ * The card's *Send message* slot. `app/` provides it with `features/message`'s `useOpenConversation`
+ * — this feature cannot import that one (message imports post). See `lib/author-conversation.tsx`.
+ */
+export { type OpenAuthorConversation, PostConversationProvider } from './lib/author-conversation'
 export {
     canReply,
     hasReacted,

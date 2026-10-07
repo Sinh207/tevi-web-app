@@ -12,6 +12,7 @@ import { useState } from 'react'
 import type { Post } from '../api/types'
 import { usePostBookmark } from '../hooks/use-post-bookmark'
 import { usePostReaction } from '../hooks/use-post-reaction'
+import { useOpenAuthorConversation } from '../lib/author-conversation'
 import { postActionVisibility, replyCost } from '../lib/post-access'
 import { mayReply, replyAudience, replyAudienceNotice } from '../lib/who-can-reply'
 import { BookmarkIcon } from './legacy-icons'
@@ -25,10 +26,17 @@ import { BookmarkIcon } from './legacy-icons'
  * first where the channel charges (`usePostReaction`); bookmark confirms then flips
  * (`usePostBookmark`); comment navigates to the post's own page; share is the caller's.
  *
- * **Send message and quote are drawn `disabled`**, because each needs a surface that does not exist:
- * a DM thread and the composer. `use-create-action.ts` sets the rule this follows — a control whose
- * destination is not built is **visibly** not ready, because a button that navigates to a 404 is
- * worse than one that is plainly unavailable and a silently inert one is worse than both.
+ * **Send message opens a conversation with the post's space** — legacy's `BtnSendMain`
+ * (`handleStartConversation(owner_id, channel)`): the floating chat window from `md` up, the
+ * conversation page below it, a sign-in prompt for a guest. It arrives through
+ * `useOpenAuthorConversation` (`lib/author-conversation.tsx`) because `features/message` imports
+ * this feature; where nothing provides it — a webview, the dev harness — the button stays drawn and
+ * `disabled`.
+ *
+ * **Quote is drawn `disabled`**, because its composer does not exist. `use-create-action.ts` sets
+ * the rule both follow — a control whose destination is not available is **visibly** not ready,
+ * because a button that navigates to a 404 is worse than one that is plainly unavailable and a
+ * silently inert one is worse than both.
  *
  * ## Commenting can cost Star, and the charge is **not** made here
  *
@@ -107,6 +115,11 @@ export function PostActions({
      */
     const quoteEnabled = useWebConfig().post.createPost.quote.isActive
     const shows = postActionVisibility(post, { quoteEnabled })
+    const openConversation = useOpenAuthorConversation()
+    // Addressed by the space's slug, as the conversation route is; no slug, nowhere to go.
+    const authorSlug = post.channel?.slug ?? null
+    const sendPress =
+        openConversation && authorSlug ? () => openConversation(authorSlug) : undefined
 
     /**
      * What pressing *Comment* does, in the four cases it has.
@@ -159,7 +172,12 @@ export function PostActions({
 
             <div className="flex items-center gap-0.5">
                 {shows.sendMessage ? (
-                    <ActionButton icon="send" label={t('post_action_send')} />
+                    <ActionButton
+                        icon="send"
+                        label={t('post_action_send')}
+                        onPress={sendPress}
+                        testId={subTestId(testId, 'submit')}
+                    />
                 ) : null}
                 {shows.quote ? (
                     <ActionButton icon="arrows-retweet" label={t('post_action_quote')} />

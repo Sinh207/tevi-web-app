@@ -267,6 +267,11 @@ snap; its arrows are desktop-only and hide at the ends.
 
 - **Comment opens the reply popup** (§5.2), except on the post page, where the composer is already
   on screen.
+- **Send message opens a conversation with the post's space** (legacy's `BtnSendMain`): the
+  floating chat window from `md` up, `/@{slug}/messages` below it, a sign-in prompt for a guest. It
+  is `features/message`'s `useOpenConversation`, handed in through a slot
+  (`lib/author-conversation.tsx`, filled by `app/post-conversation-host.tsx`) because message
+  imports post. With no provider (a webview, `/dev/post`) the button stays drawn and `disabled`.
 - **The reaction is a Lottie star** (`/lotties/icon-star-reactions.json`). Frame 0 means not
   reacted and frame 60 means reacted. A press plays `[0, 60]` or `[60, 0]`, and the first paint
   never animates, so a feed scrolling into view does not play twenty animations at once. The player
@@ -531,7 +536,6 @@ should be updated.
 
 - Editing a post (`canEdit: false`).
 - Quoting a post: the draft has `quotedPostId`, and the control is disabled behind a flag.
-- The *Send message* button on a post (disabled).
 - Reporting a reply.
 - An HLS engine.
 - The quote's inline video in the reply popup.

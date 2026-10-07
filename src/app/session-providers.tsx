@@ -12,6 +12,7 @@ import { ShareInMessageProvider } from '@features/share'
 import { useTrackInAppRoute } from '@shared/lib/in-app-referrer'
 import { FaviconBadgeHost } from './favicon-badge-host'
 import { PostComposerHost } from './post-composer-host'
+import { PostConversationHost } from './post-conversation-host'
 import { ReplyDialogHost } from './reply-dialog-host'
 
 /**
@@ -133,7 +134,10 @@ export function SessionProviders({
                                     sees both. Inside the session because the block reads the inbox,
                                     and a webview — which mounts none — gets a sheet without it. */}
                                 <ShareInMessageProvider component={ShareInMessage}>
-                                    {children}
+                                    {/* The post card's *Send message* — `useOpenConversation`
+                                    handed down as a slot, for the same cycle reason as the block
+                                    above (message → post). See `post-conversation-host.tsx`. */}
+                                    <PostConversationHost>{children}</PostConversationHost>
                                     {/* The mini-app player — third-party apps framed inside Tevi
                                     (`features/mini-app`). An overlay, not a wrapper: it renders
                                     **nothing** until an app is opened, and the window itself is a
