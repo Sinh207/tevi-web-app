@@ -1,6 +1,6 @@
 'use client'
 
-import { useMyChannel } from '@features/channel'
+import { useMyChannel, WhatsNewBar } from '@features/channel'
 import { type Post, PostCard, PostSlider, usePostSlider } from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
@@ -9,9 +9,9 @@ import { RISE, riseDelay } from '@shared/lib/motion'
 import { subTestId } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
 import { Skeleton } from '@shared/ui/skeleton'
-import { useEffect, useMemo, useState } from 'react'
+import { memo, type RefCallback, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useHomeFeed } from '../hooks/use-home-feed'
-import { groupKey, visiblePosts } from '../lib/post-groups'
+import { groupKey, type PostGroup, visiblePosts } from '../lib/post-groups'
 import { HomeEmptyState } from './home-empty-state'
 
 /** Groups past this many arrive together — see `HomeLiveFeed`'s constant of the same name. */
@@ -30,10 +30,10 @@ const STAGGERED = 6
  * The surface is the card's, the page colour is the gap's — which is `docs/DESIGN_SYSTEM.md` §6's
  * "blocks that are full-bleed carry their own edges" read from the other side.
  *
- * **From `md` a group becomes a card**: 16px radius, 12 apart, 24 below the tab row — Figma's
- * `Content` / `Post` frames in `Live Display Improvements`, which float white cards on the page
- * colour exactly as legacy's desktop feed does. Below `md` it stays the band: a 16px radius on a
- * 390px-wide edge-to-edge strip reads as a mistake, not a card.
+ * **The band at every width.** From `md` the groups were briefly cards — 16px radius, 12 apart,
+ * after Figma's `Content` / `Post` frames — and product asked for them back: no radius and no gap,
+ * one hairline between groups as below `md`. What `md` keeps is the 24px under the tab row, which
+ * belongs to the tab pill above rather than to the cards.
  *
  * ## Entrance
  *
@@ -128,84 +128,71 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
         if (needsMore) fetchNextPage()
     }, [needsMore, fetchNextPage])
 
-    if (isSignedOut) return <HomeEmptyState kind="signed-out" />
-    if (isLoading) return <FeedSkeleton />
-    if (isError) return <HomeEmptyState kind="error" onRetry={() => refetch()} />
-    if (isEmpty) return <HomeEmptyState kind="empty" />
+    /*
+     * Stable, because `FeedGroup` is memoised and these are its props. The window moves its span
+     * every time a group crosses the viewport edge — several times a second in a scroll — and each
+     * move re-renders this list. With inline closures every mounted `PostCard` re-rendered with it;
+     * now only the groups whose `height` actually flipped do. Measured on a 160-post feed scrolled
+     * for ten seconds: script time halved.
+     */
+    /*
+     * Through refs, because both change on every append — `openAt` closes over the list — and a
+     * handler that changed with them would re-render every group each time a page lands, which
+     * `reuseGroups` exists to avoid.
+     */
+    const openAt = useRef(slider.openAt)
+    openAt.current = slider.openAt
+    const posts = useRef(flatPosts)
+    posts.current = flatPosts
+    const openMedia = useCallback(
+        (post: Post, target: number | 'video') =>
+            // The index is into the **flat** list, found by identity — a group's own position is
+            // not the viewer's, and a post appears once in either.
+            openAt.current(
+                posts.current.findIndex(candidate => candidate.id === post.id),
+                target,
+            ),
+        [],
+    )
+    const onChanged = useCallback(() => {
+        refetch()
+    }, [refetch])
+
+    /*
+     * *What's new?* heads the tab in **every** state — loading, empty, signed out — as legacy's
+     * `WhatNew` does: it is the feed's own invitation to post, and an empty feed is where it matters
+     * most. One hairline below it, the same 1px gap that separates the groups.
+     */
+    const whatsNew = <WhatsNewBar testId="home-composer" />
+    if (isSignedOut) return withWhatsNew(whatsNew, <HomeEmptyState kind="signed-out" />)
+    if (isLoading) return withWhatsNew(whatsNew, <FeedSkeleton className="md:pt-0" />)
+    if (isError) {
+        return withWhatsNew(whatsNew, <HomeEmptyState kind="error" onRetry={() => refetch()} />)
+    }
+    if (isEmpty) return withWhatsNew(whatsNew, <HomeEmptyState kind="empty" />)
 
     return (
-        <div data-testid={testId} className="flex min-w-0 flex-col gap-px md:gap-3 md:py-6">
+        <div data-testid={testId} className={FEED_LIST}>
+            {whatsNew}
             {groups.map((group, index) => {
                 const key = groupKey(group)
-                const height = heightFor(key)
-                const posts = visiblePosts(group, expanded.has(key))
-                const collapsed = posts.length < group.posts.length
-
-                /*
-                 * The **group** is the wrapper the window observes, not the card, because the group
-                 * is what the key identifies and what collapses as one unit. A collapsed group
-                 * draws one card and an expanded one draws four; observing cards would mean the
-                 * measured height stopped matching the moment the reader pressed *See more*.
-                 */
                 return (
-                    <div
+                    <FeedGroup
                         key={key}
-                        ref={observe}
-                        {...windowKeyProps(key)}
-                        className={cn(
-                            // `overflow-clip`, not `-hidden`: the card must not become a scrollport
-                            // under the sticky tab row (`docs/DESIGN_SYSTEM.md` §6).
-                            'flex min-w-0 flex-col gap-px bg-(--background-surface) md:overflow-clip md:rounded-2xl',
-                            RISE,
-                        )}
-                        /*
-                         * Held open at the height it had, so nothing below it moves. Drawn empty
-                         * rather than as a skeleton: it is off screen by definition, and an
-                         * animating placeholder is paint work in the one place built to avoid it.
-                         */
-                        style={{
-                            ...(index < STAGGERED ? riseDelay(index) : undefined),
-                            ...(height === null ? undefined : { height }),
-                        }}
-                    >
-                        {height === null
-                            ? posts.map((post, positionInGroup) => (
-                                  <PostCard
-                                      key={post.id}
-                                      post={post}
-                                      isPremiumReader={isPremium}
-                                      /*
-                                       * Only the **last drawn card of a collapsed group** offers
-                                       * See more. On a collapsed group that is the only card; the
-                                       * guard is what stops a three-post group — which is drawn
-                                       * whole — from growing a control that would reveal nothing.
-                                       */
-                                      onSeeMore={
-                                          collapsed && positionInGroup === posts.length - 1
-                                              ? () => toggleGroup(key)
-                                              : undefined
-                                      }
-                                      onShare={() => setSharing(post)}
-                                      /*
-                                       * The index is into the **flat** list, found by identity —
-                                       * a group's own position is not the viewer's, and a post
-                                       * appears once in either.
-                                       */
-                                      onOpenMedia={target =>
-                                          slider.openAt(
-                                              flatPosts.findIndex(
-                                                  candidate => candidate.id === post.id,
-                                              ),
-                                              target,
-                                          )
-                                      }
-                                      onChanged={() => refetch()}
-                                      onAuthorBlocked={hideChannel}
-                                      testId={subTestId(testId, 'item')}
-                                  />
-                              ))
-                            : null}
-                    </div>
+                        group={group}
+                        rowKey={key}
+                        index={index}
+                        expanded={expanded.has(key)}
+                        height={heightFor(key)}
+                        observe={observe}
+                        isPremium={isPremium}
+                        onToggle={toggleGroup}
+                        onShare={setSharing}
+                        onOpenMedia={openMedia}
+                        onChanged={onChanged}
+                        onAuthorBlocked={hideChannel}
+                        testId={testId}
+                    />
                 )
             })}
 
@@ -252,6 +239,120 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
 }
 
 /**
+ * The feed's stack, in every state: the *What's new?* bar and the groups as one hairline band,
+ * no radius and no gap between them (see the header), 24px under the tab row from `md`.
+ */
+const FEED_LIST = 'flex min-w-0 flex-col gap-px md:py-6'
+
+/** The bar above one of the feed's non-list states, a hairline apart — the list draws its own. */
+function withWhatsNew(bar: React.ReactNode, state: React.ReactNode) {
+    return (
+        <div className={cn(FEED_LIST, 'md:pb-0')}>
+            {bar}
+            {state}
+        </div>
+    )
+}
+
+/**
+ * One group of the feed: the wrapper the window observes, and its cards when it is mounted.
+ *
+ * Memoised so a window move re-renders only the groups it changes — see the handlers in
+ * `HomePostFeed`. Every prop is a value or a stable callback; an inline closure passed here would
+ * quietly undo that.
+ */
+const FeedGroup = memo(function FeedGroup({
+    group,
+    rowKey,
+    index,
+    expanded,
+    height,
+    observe,
+    isPremium,
+    onToggle,
+    onShare,
+    onOpenMedia,
+    onChanged,
+    onAuthorBlocked,
+    testId,
+}: {
+    group: PostGroup
+    rowKey: string
+    /** Position in the feed — only the first `STAGGERED` rise in sequence. */
+    index: number
+    expanded: boolean
+    height: number | null
+    observe: RefCallback<HTMLElement>
+    isPremium: boolean
+    onToggle: (key: string) => void
+    onShare: (post: Post) => void
+    onOpenMedia: (post: Post, target: number | 'video') => void
+    onChanged: () => void
+    onAuthorBlocked: (channelId: string) => void
+    testId: string
+}) {
+    const posts = visiblePosts(group, expanded)
+    const collapsed = posts.length < group.posts.length
+
+    /*
+     * The **group** is the wrapper the window observes, not the card, because the group
+     * is what the key identifies and what collapses as one unit. A collapsed group
+     * draws one card and an expanded one draws four; observing cards would mean the
+     * measured height stopped matching the moment the reader pressed *See more*.
+     */
+    return (
+        <div
+            ref={observe}
+            {...windowKeyProps(rowKey)}
+            /*
+             * ⚠ **No background on the group — the cards carry it.** The hairline between two
+             * posts is the page colour showing through a 1px gap, and inside a group that gap
+             * is this element's own: painted surface here, it showed white, so two posts from
+             * one space ran together while the line between two *groups* was there. Legacy's
+             * `PostsWrapper` is the same `gap: 1px` with no fill, for the same reason.
+             */
+            className={cn('flex min-w-0 flex-col gap-px', RISE)}
+            /*
+             * Held open at the height it had, so nothing below it moves. Drawn empty
+             * rather than as a skeleton: it is off screen by definition, and an
+             * animating placeholder is paint work in the one place built to avoid it.
+             */
+            style={{
+                ...(index < STAGGERED ? riseDelay(index) : undefined),
+                ...(height === null ? undefined : { height }),
+            }}
+        >
+            {height === null
+                ? posts.map((post, positionInGroup) => (
+                      <PostCard
+                          key={post.id}
+                          post={post}
+                          isPremiumReader={isPremium}
+                          /*
+                           * Only the **last drawn card of a collapsed group** offers
+                           * See more. On a collapsed group that is the only card; the
+                           * guard is what stops a three-post group — which is drawn
+                           * whole — from growing a control that would reveal nothing.
+                           */
+                          onSeeMore={
+                              collapsed && positionInGroup === posts.length - 1
+                                  ? () => onToggle(rowKey)
+                                  : undefined
+                          }
+                          onShare={() => onShare(post)}
+                          onOpenMedia={target => onOpenMedia(post, target)}
+                          onChanged={onChanged}
+                          onAuthorBlocked={onAuthorBlocked}
+                          className="bg-(--background-surface)"
+                          testId={subTestId(testId, 'item')}
+                      />
+                  ))
+                : null}
+        </div>
+    )
+})
+
+/**
  * The loading shape, and it is the **card's** shape rather than a generic block.
  *
  * A skeleton that does not match what replaces it produces a jump at the moment the content lands,
@@ -260,14 +361,14 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
  */
 function FeedSkeleton({ rows = 3, className }: { rows?: number; className?: string }) {
     return (
-        <div className={cn('flex flex-col gap-px md:gap-3 md:py-6', className)} aria-busy="true">
+        <div className={cn('flex flex-col gap-px md:py-6', className)} aria-busy="true">
             {Array.from({ length: rows }, (_, index) => (
                 <div
                     // Skeletons have no identity beyond their position, and this list never
                     // reorders — it is replaced wholesale by the real cards.
                     // biome-ignore lint/suspicious/noArrayIndexKey: position is the only identity a placeholder has.
                     key={index}
-                    className="flex flex-col gap-3 bg-(--background-surface) px-3 py-3 md:rounded-2xl md:px-6 md:py-5"
+                    className="flex flex-col gap-3 bg-(--background-surface) px-3 py-3 md:px-6 md:py-5"
                 >
                     <div className="flex items-center gap-2">
                         <Skeleton className="size-10 rounded-full" />

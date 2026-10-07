@@ -201,6 +201,8 @@ export { MySpaceRedirect } from './components/my-space-redirect'
  */
 export { SpaceVisibilityOption } from './components/space-visibility-option'
 export { SpaceVisibilityView } from './components/space-visibility-view'
+// The *What's new?* bar — home's feed and the owner's Posts tab. Reads `useMyChannel`, so it lives here.
+export { WhatsNewBar } from './components/whats-new-bar'
 /**
  * Exported for **`features/message`**, whose conversation is addressed by the other side's space
  * (`/@{slug}/messages`): it needs that space's owner id, its privacy and whether this account

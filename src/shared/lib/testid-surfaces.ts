@@ -68,6 +68,7 @@ export const TESTID_SURFACES: Record<string, TestIdSurface> = {
      */
     event: { kind: 'screen', label: 'A live event — details, access and the app hand-off' },
     'gift-code': { kind: 'screen', label: 'Redeem gift code' },
+    home: { kind: 'screen', label: 'Home feed' },
     identification: { kind: 'screen', label: 'Identity verification (KYC)' },
     legal: { kind: 'screen', label: 'Legal documents' },
     membership: { kind: 'screen', label: 'Memberships' },

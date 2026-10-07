@@ -5,6 +5,7 @@ import {
     groupKey,
     groupPosts,
     isCollapsible,
+    reuseGroups,
     visibleCount,
     visiblePosts,
     withoutChannel,
@@ -198,5 +199,36 @@ describe('withoutChannel', () => {
         const left = withoutChannel(groups, 'ch-1')
         expect(left).toHaveLength(1)
         expect(left[0].channelId).toBe('ch-2')
+    })
+})
+
+describe('reuseGroups', () => {
+    const a = post({ id: 'a', channel: 'ch-1' })
+    const b = post({ id: 'b', channel: 'ch-1', at: MINUTES(1) })
+    const c = post({ id: 'c', channel: 'ch-2', at: MINUTES(2) })
+    const d = post({ id: 'd', channel: 'ch-2', at: MINUTES(3) })
+    const e = post({ id: 'e', channel: 'ch-3', at: MINUTES(4) })
+
+    it('keeps the object of every group an appended page did not touch', () => {
+        const first = groupPosts([], [a, b, c])
+        const second = reuseGroups(first, groupPosts([], [a, b, c, d, e]))
+
+        // `a, b` is untouched: same object, which is what lets its memoised row skip.
+        expect(second[0]).toBe(first[0])
+        // The page continued `c`'s run, so that group really did change.
+        expect(second[1]).not.toBe(first[1])
+        expect(second[1].posts).toEqual([c, d])
+        expect(second[2].posts).toEqual([e])
+    })
+
+    it('treats a post replaced by a refetch as a change', () => {
+        const first = groupPosts([], [a, b])
+        const edited = post({ id: 'b', channel: 'ch-1', at: MINUTES(1) })
+        expect(reuseGroups(first, groupPosts([], [a, edited]))[0]).not.toBe(first[0])
+    })
+
+    it('returns the new list as it is on the first answer', () => {
+        const next = groupPosts([], [a])
+        expect(reuseGroups([], next)).toBe(next)
     })
 })

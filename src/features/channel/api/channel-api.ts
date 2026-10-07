@@ -1,4 +1,4 @@
-import { normalizePosts } from '@features/post'
+import { normalizePosts, type Post } from '@features/post'
 import { env } from '@shared/config/env'
 import { ApiError } from '@shared/lib/api/errors'
 import { ANON_SCOPE, CACHE_TTL, invalidateETagCache } from '@shared/lib/api/interceptors/etag'
@@ -98,6 +98,9 @@ export const channelKeys = {
         ['channel', 'stats', slug, accountId ?? 'anon'] as const,
     threads: (slug: string, kind: ThreadKind, accountId: string | null) =>
         ['channel', 'threads', slug, kind, accountId ?? 'anon'] as const,
+    /** The space's pinned post(s) — `pinned=1`, the half `threads` excludes. */
+    pinnedThreads: (slug: string, accountId: string | null) =>
+        ['channel', 'threads', slug, 'pinned', accountId ?? 'anon'] as const,
     activity: (slug: string, accountId: string | null) =>
         ['channel', 'activity', slug, accountId ?? 'anon'] as const,
     /**
@@ -215,8 +218,9 @@ export type ThreadKind = 'posts' | 'media'
  *
  * `21` for media is not arbitrary — it is seven rows of a three-wide grid, so the last row is
  * never a ragged one or two tiles. `pinned: 0` excludes pinned posts, which legacy fetches as
- * a separate prepended request; that belongs with `features/post`, since a placeholder card
- * cannot express pinning.
+ * a separate request (`PINNED_PAGE`, `getPinnedThreads`) and draws above the list under a
+ * *Pinned* heading. Excluding them here without fetching them there is what made a pinned post
+ * vanish from its own space.
  */
 const FIRST_PAGE: Record<ThreadKind, Record<string, unknown>> = {
     posts: { limit: 20, pinned: 0 },
@@ -227,6 +231,13 @@ const FIRST_PAGE: Record<ThreadKind, Record<string, unknown>> = {
      */
     media: { limit: 21, pinned: 0, media_type: ['IMAGE', 'VIDEO'] },
 }
+
+/**
+ * The pinned half — legacy's `getPostViewer(slug, 20, 1)` / `getMyPosts(20, 1)`. One page: a space
+ * may have only one pinned post at a time (the pin confirmation says so), so there is no cursor to
+ * follow.
+ */
+const PINNED_PAGE = { limit: 20, pinned: 1 }
 
 /** The slug comes straight off the URL, so it is encoded at every use (DoD §8). */
 const channelPath = (slug: string, suffix = '') =>
@@ -323,6 +334,26 @@ export const channelApi = {
             next: body?.next ?? null,
             previous: body?.previous ?? null,
         }
+    },
+
+    /** The space's pinned posts, from the same endpoint as `getThreads` with `pinned=1`. */
+    async getPinnedThreads({
+        slug,
+        isOwner,
+        accountId,
+        signal,
+    }: {
+        slug: string
+        isOwner: boolean
+        accountId?: string | null
+        signal?: AbortSignal
+    }): Promise<Post[]> {
+        const path = isOwner ? 'v3/channel/my-channel/threads/' : channelPath(slug, 'threads/')
+        const body = await api.get<Partial<Paginated<unknown>>>(path, PINNED_PAGE, {
+            signal,
+            ...(accountId ? { accountId } : {}),
+        })
+        return normalizePosts(body?.results)
     },
 
     /**

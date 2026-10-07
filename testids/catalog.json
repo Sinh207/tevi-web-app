@@ -2,8 +2,8 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 1087,
-        "surfaces": 30
+        "ids": 1091,
+        "surfaces": 31
     },
     "surfaces": {
         "affiliate": {
@@ -122,6 +122,13 @@
             "label": "Redeem gift code",
             "routes": [
                 "/redeem-gift-code"
+            ]
+        },
+        "home": {
+            "kind": "screen",
+            "label": "Home feed",
+            "routes": [
+                "/"
             ]
         },
         "identification": {
@@ -2250,6 +2257,33 @@
             ],
             "source": "src/features/channel/components/channel-campaign-banners.tsx:89"
         },
+        "channel-composer": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/[slug]/messages",
+                "/[slug]/post/[code]",
+                "/bookmarks",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-thread-list.tsx:147"
+        },
         "channel-copy-link": {
             "scope": "channel",
             "routes": [
@@ -2869,7 +2903,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-actions.tsx:251"
+            "source": "src/features/channel/components/channel-viewer-actions.tsx:254"
         },
         "channel-follow-request-action": {
             "scope": "channel",
@@ -4855,7 +4889,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:172"
+            "source": "src/features/channel/components/channel-thread-list.tsx:236"
         },
         "channel-menu-follow": {
             "scope": "channel",
@@ -4909,7 +4943,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-actions.tsx:294"
+            "source": "src/features/channel/components/channel-viewer-actions.tsx:297"
         },
         "channel-my-space-no-channel": {
             "scope": "channel",
@@ -5180,6 +5214,60 @@
                 "/settings/space-visibility"
             ],
             "source": "src/features/channel/components/channel-owner-actions.tsx:115"
+        },
+        "channel-pinned": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/[slug]/messages",
+                "/[slug]/post/[code]",
+                "/bookmarks",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-thread-list.tsx:385"
+        },
+        "channel-pinned-title": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/[slug]/messages",
+                "/[slug]/post/[code]",
+                "/bookmarks",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-thread-list.tsx:371"
         },
         "channel-premium-badge": {
             "scope": "channel",
@@ -6454,7 +6542,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:226"
+            "source": "src/features/channel/components/channel-thread-list.tsx:431"
         },
         "channel-top-bar-loading": {
             "scope": "channel",
@@ -8236,6 +8324,13 @@
             ],
             "source": "src/features/gift-code/components/redeem-gift-code-view.tsx:177"
         },
+        "home-composer": {
+            "scope": "home",
+            "routes": [
+                "/"
+            ],
+            "source": "src/features/home/components/home-post-feed.tsx:166"
+        },
         "identification-back-to-home": {
             "scope": "identification",
             "routes": [
@@ -8612,7 +8707,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/join/become-a-member-button.tsx:155"
+            "source": "src/features/membership/components/join/become-a-member-button.tsx:164"
         },
         "membership-join-back": {
             "scope": "membership",
@@ -8777,7 +8872,7 @@
                 "/monetization/membership",
                 "/my-membership"
             ],
-            "source": "src/features/membership/components/join/become-a-member-button.tsx:126"
+            "source": "src/features/membership/components/join/become-a-member-button.tsx:135"
         },
         "message-block-confirm": {
             "scope": "message",
@@ -15733,6 +15828,15 @@
                 "digit"
             ]
         },
+        "src/features/channel/components/whats-new-bar.tsx": {
+            "accepts": [
+                "WhatsNewBar"
+            ],
+            "parts": [
+                "submit",
+                "trigger"
+            ]
+        },
         "src/features/event/components/event-gift-panel.tsx": {
             "accepts": [
                 "EventGiftPanel"
@@ -16145,6 +16249,7 @@
                 "group",
                 "item",
                 "option",
+                "overlay",
                 "panel",
                 "remove",
                 "trigger"
@@ -16222,6 +16327,8 @@
                 "label-data",
                 "list",
                 "next",
+                "overlay",
+                "panel",
                 "prev",
                 "reveal",
                 "slide"

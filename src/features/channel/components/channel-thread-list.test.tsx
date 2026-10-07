@@ -65,8 +65,19 @@ vi.mock('../hooks/use-channel-threads', () => ({
         isFetchingNextPage: false,
     }),
 }))
+const pinned = { current: [] as { id: string }[] }
+
+vi.mock('../hooks/use-pinned-threads', () => ({
+    usePinnedThreads: () => ({ pinned: pinned.current, isLoading: false, refetch: () => {} }),
+}))
+vi.mock('./whats-new-bar', () => ({
+    WhatsNewBar: ({ testId }: { testId?: string }) => <div data-testid={testId}>whats new</div>,
+}))
 vi.mock('../providers/my-channel-provider', () => ({ useMyChannel: () => ({ isPremium: false }) }))
 vi.mock('@shared/hooks/use-in-view', () => ({ useInView: () => [() => {}, false] }))
+vi.mock('@shared/i18n/use-translation', () => ({
+    useTranslation: () => ({ t: (key: string) => key }),
+}))
 vi.mock('@features/share', () => ({ ShareDialog: () => null, postShareContext: () => null }))
 vi.mock('@features/post', () => ({
     PostCard: ({ testId }: { testId?: string }) => <article data-testid={testId}>post</article>,
@@ -98,6 +109,7 @@ beforeEach(() => {
     observed = []
     vi.stubGlobal('IntersectionObserver', FakeObserver)
     threads.current = Array.from({ length: TOTAL }, (_, index) => ({ id: `m${index}` }))
+    pinned.current = []
 })
 
 afterEach(() => {
@@ -178,5 +190,83 @@ describe('ChannelThreadList — posts', () => {
          */
         expect(strip?.className).toContain('-mx-3')
         expect(strip?.className).toContain('md:-mx-6')
+    })
+})
+
+/**
+ * The pinned post is fetched on its own (`pinned=1`) because the list asks for `pinned: 0` — and
+ * before it was fetched at all, a pinned post simply vanished from its space. Legacy draws it above
+ * the list under a *Pinned* heading; so must this, and it must not be windowed away with the rest.
+ */
+describe('ChannelThreadList — pinned', () => {
+    it('draws the pinned post above the list, under its heading', () => {
+        threads.current = [{ id: 'p1' }, { id: 'p2' }]
+        pinned.current = [{ id: 'pin' }]
+        render(<ChannelThreadList slug="ada" kind="posts" isOwner />)
+
+        const heading = document.querySelector('[data-testid="channel-pinned-title"]')
+        expect(heading?.textContent).toBe('post_pinned')
+
+        const pinnedCard = document.querySelector('[data-testid="channel-pinned"]')
+        const firstRow = document.querySelector('[data-window-key]')
+        expect(pinnedCard).not.toBeNull()
+        // Before the first ordinary row in document order.
+        expect(
+            pinnedCard && firstRow
+                ? pinnedCard.compareDocumentPosition(firstRow) & Node.DOCUMENT_POSITION_FOLLOWING
+                : 0,
+        ).toBeTruthy()
+        // Outside the render window: one post, always mounted.
+        expect(pinnedCard?.closest('[data-window-key]')).toBeNull()
+    })
+
+    it('is not an empty space when the pinned post is its only post', () => {
+        threads.current = []
+        pinned.current = [{ id: 'pin' }]
+        render(<ChannelThreadList slug="ada" kind="posts" isOwner />)
+
+        expect(document.querySelector('[data-testid="channel-pinned"]')).not.toBeNull()
+    })
+
+    it('is not drawn on the media tab', () => {
+        pinned.current = [{ id: 'pin' }]
+        render(<ChannelThreadList slug="ada" kind="media" isOwner={false} />)
+
+        expect(document.querySelector('[data-testid="channel-pinned-title"]')).toBeNull()
+    })
+})
+
+/**
+ * Legacy's creator Posts tab heads with *What's new?* in every state — an empty space included,
+ * which is where it matters — and a visitor never sees it.
+ */
+describe('ChannelThreadList — What’s new', () => {
+    const bar = () => document.querySelector('[data-testid="channel-composer"]')
+
+    it('heads the owner’s Posts tab, above the pinned post', () => {
+        threads.current = [{ id: 'p1' }]
+        pinned.current = [{ id: 'pin' }]
+        render(<ChannelThreadList slug="ada" kind="posts" isOwner />)
+
+        const pinnedCard = document.querySelector('[data-testid="channel-pinned"]')
+        expect(bar()).not.toBeNull()
+        expect(
+            bar() && pinnedCard
+                ? bar()!.compareDocumentPosition(pinnedCard) & Node.DOCUMENT_POSITION_FOLLOWING
+                : 0,
+        ).toBeTruthy()
+    })
+
+    it('stays on an empty space', () => {
+        threads.current = []
+        render(<ChannelThreadList slug="ada" kind="posts" isOwner />)
+        expect(bar()).not.toBeNull()
+    })
+
+    it('is never drawn for a visitor, nor on the media tab', () => {
+        render(<ChannelThreadList slug="ada" kind="posts" isOwner={false} />)
+        expect(bar()).toBeNull()
+        render(<ChannelThreadList slug="ada" kind="media" isOwner />)
+        expect(bar()).toBeNull()
     })
 })

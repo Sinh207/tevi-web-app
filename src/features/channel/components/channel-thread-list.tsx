@@ -13,14 +13,17 @@ import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
+import { Icon } from '@shared/ui/icon'
 import { Skeleton } from '@shared/ui/skeleton'
-import { useEffect, useMemo, useState } from 'react'
+import { memo, type RefCallback, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ThreadKind } from '../api/channel-api'
 import { useChannelThreads } from '../hooks/use-channel-threads'
+import { usePinnedThreads } from '../hooks/use-pinned-threads'
 import { CHANNEL_PADDING_BLEED } from '../lib/container'
 import { useMyChannel } from '../providers/my-channel-provider'
 import { ChannelEmptyState } from './channel-empty-state'
 import { ChannelError } from './channel-error'
+import { WhatsNewBar } from './whats-new-bar'
 
 /**
  * A channel's posts or media as an infinite list — the four states, and the sentinel.
@@ -60,6 +63,17 @@ export function ChannelThreadList({
         isFetchingNextPage,
     } = useChannelThreads({ slug, kind, isOwner })
 
+    /*
+     * The pinned post lives in its own request — the list above asks for `pinned: 0` — and is drawn
+     * above the list under a *Pinned* heading, legacy's `TabPost` / `PostPinned`. Posts tab only:
+     * legacy's media grid does not lift a pin out either.
+     */
+    const {
+        pinned,
+        isLoading: pinnedLoading,
+        refetch: refetchPinned,
+    } = usePinnedThreads({ slug, isOwner, enabled: kind === 'posts' })
+
     /**
      * Premium readers pay nothing to react or reply, and the flag is the **reader's**, not the
      * post's — so it is read here and handed down rather than derived inside `features/post`, which
@@ -95,24 +109,74 @@ export function ChannelThreadList({
         if (sentinelInView && hasNextPage && !isFetchingNextPage) fetchNextPage()
     }, [sentinelInView, hasNextPage, isFetchingNextPage, fetchNextPage])
 
-    if (isLoading) return <ThreadListSkeleton kind={kind} />
+    /*
+     * Stable, because `ThreadRow` is memoised: the window moves its span every time a row crosses
+     * the viewport edge, and with an inline closure here every mounted `PostCard` re-rendered with
+     * it. `HomePostFeed` carries the measurement.
+     */
+    const onChanged = useCallback(() => {
+        /*
+         * Both lists, every time: pinning moves a post from one to the other — and replaces the
+         * space's previous pin, which moves back — so refetching only the list the press came
+         * from leaves the post drawn twice or not at all.
+         */
+        refetch()
+        refetchPinned()
+    }, [refetch, refetchPinned])
+    // Through a ref: `openAt` closes over the list, so it changes on every append — `HomePostFeed`
+    // carries the reasoning.
+    const openAt = useRef(slider.openAt)
+    openAt.current = slider.openAt
+    const openMedia = useCallback(
+        (index: number, target: number | 'video') => openAt.current(index, target),
+        [],
+    )
+
+    /*
+     * The owner's *What's new?* bar, Posts tab only — legacy's creator `TabPost` draws `WhatNew`
+     * after the collections row and before the pinned post, and in **every** state, an empty space
+     * included: that is where an invitation to post matters most. Full-bleed like the post strip it
+     * heads, so it reads as the strip's first row rather than as a card inside the panel.
+     *
+     * **A hairline above it**, and below it before a non-list state. Legacy's tab is a `gap: 1px`
+     * stack over `#f4f4f4`, so the collections row, the bar and the first post are each separated
+     * by a line of page colour; without one, the bar ran into the *Manage collections* row as if
+     * the two were one block. Same mechanism as the strip below — the page colour showing through
+     * a 1px inset — rather than a border, so every separator in the tab is the same line.
+     */
+    const whatsNew = kind === 'posts' && isOwner ? <WhatsNewBar testId="channel-composer" /> : null
+    const withWhatsNew = (state: React.ReactNode) =>
+        whatsNew ? (
+            <div className="flex min-w-0 flex-col gap-3">
+                <div className={cn('bg-(--background) py-px', CHANNEL_PADDING_BLEED)}>
+                    {whatsNew}
+                </div>
+                {state}
+            </div>
+        ) : (
+            state
+        )
+
+    // Both, as legacy's `isLoadingInit` does: a pin landing after the list would push every row down.
+    if (isLoading || (kind === 'posts' && pinnedLoading)) {
+        return withWhatsNew(<ThreadListSkeleton kind={kind} />)
+    }
 
     if (isError) {
-        return (
+        return withWhatsNew(
             <div className="py-6">
                 <ChannelError kind="unavailable" onRetry={() => refetch()} />
-            </div>
+            </div>,
         )
     }
 
-    if (isEmpty) {
+    if (isEmpty && pinned.length === 0) {
         /**
          * The owner and a visitor get different copy, which is legacy's behaviour and worth keeping:
-         * "no posts yet" is information to a visitor and a prompt to the owner. The owner's CTA is
-         * absent rather than disabled — the composer is `features/post`'s, and a dead button under
-         * an encouraging sentence is worse than the sentence alone.
+         * "no posts yet" is information to a visitor and a prompt to the owner. The owner's way to
+         * act on it is the *What's new?* bar above (`withWhatsNew`), not a button in here.
          */
-        return (
+        return withWhatsNew(
             <ChannelEmptyState
                 icon={kind === 'media' ? 'image-gallery' : 'comment-dots'}
                 title={t(
@@ -133,7 +197,7 @@ export function ChannelThreadList({
                 body={
                     !isOwner && kind === 'posts' ? t('channel_empty_posts_viewer_body') : undefined
                 }
-            />
+            />,
         )
     }
 
@@ -199,6 +263,8 @@ export function ChannelThreadList({
                     className={cn(
                         'flex min-w-0 flex-col gap-px bg-(--background)',
                         CHANNEL_PADDING_BLEED,
+                        // The line above the *What's new?* bar — see `whatsNew`.
+                        whatsNew && 'pt-px',
                     )}
                 >
                     {/*
@@ -206,29 +272,28 @@ export function ChannelThreadList({
                      * history is the same unbounded list home is, and a `PostCard` is the same
                      * expensive row.
                      */}
-                    {threads.map((thread, index) => {
-                        const height = heightFor(thread.id)
-                        return (
-                            <div
-                                key={thread.id}
-                                ref={observe}
-                                {...windowKeyProps(thread.id)}
-                                className="min-w-0 bg-(--background-surface)"
-                                style={height === null ? undefined : { height }}
-                            >
-                                {height === null ? (
-                                    <PostCard
-                                        post={thread}
-                                        isPremiumReader={isPremium}
-                                        onShare={() => setSharing(thread)}
-                                        onOpenMedia={target => slider.openAt(index, target)}
-                                        onChanged={() => refetch()}
-                                        testId="channel-thread"
-                                    />
-                                ) : null}
-                            </div>
-                        )
-                    })}
+                    {whatsNew}
+                    {kind === 'posts' && pinned.length > 0 ? (
+                        <PinnedThreads
+                            posts={pinned}
+                            isPremium={isPremium}
+                            onShare={setSharing}
+                            onChanged={onChanged}
+                        />
+                    ) : null}
+                    {threads.map((thread, index) => (
+                        <ThreadRow
+                            key={thread.id}
+                            thread={thread}
+                            index={index}
+                            height={heightFor(thread.id)}
+                            observe={observe}
+                            isPremium={isPremium}
+                            onShare={setSharing}
+                            onOpenMedia={openMedia}
+                            onChanged={onChanged}
+                        />
+                    ))}
                 </div>
             )}
 
@@ -280,10 +345,96 @@ export function ChannelThreadList({
 const MEDIA_WINDOW = { minimum: 24, overscan: 9 }
 
 /**
- * The list's loading shape — the same geometry as the real rows, for the same reason
- * `channel-header-skeleton` reserves its rows: a placeholder shorter than what replaces it makes the
- * page jump.
+ * The space's pinned post, above the list — legacy's `PostPinned`: a thumbtack and *Pinned* in
+ * 14/500 subtitle ink (`12 12 8` / `24 24 8` around it), then the card with **no top padding**
+ * and 24 below, so the heading reads as the card's own first line.
+ *
+ * The heading is what says "pinned"; the card itself draws no marker. Not windowed — it is one
+ * post — and it opens media in the card's **own** lightbox rather than the list's slider, whose
+ * index counts the list below and not this.
  */
+function PinnedThreads({
+    posts,
+    isPremium,
+    onShare,
+    onChanged,
+}: {
+    posts: Post[]
+    isPremium: boolean
+    onShare: (post: Post) => void
+    onChanged: () => void
+}) {
+    const { t } = useTranslation()
+    return (
+        <section className="flex min-w-0 flex-col bg-(--background-surface)">
+            <h3
+                data-testid="channel-pinned-title"
+                className="m-0 flex items-center gap-1 px-3 pt-3 pb-2 type-dense-emphasis text-(--text-subtitle) md:px-6 md:pt-6"
+            >
+                <Icon name="thumbtack" size={16} className="flex-none" />
+                {t('post_pinned')}
+            </h3>
+            {posts.map(post => (
+                <PostCard
+                    key={post.id}
+                    post={post}
+                    isPremiumReader={isPremium}
+                    onShare={() => onShare(post)}
+                    onChanged={onChanged}
+                    className="pt-0 pb-6 md:pt-0 md:pb-6"
+                    testId="channel-pinned"
+                />
+            ))}
+        </section>
+    )
+}
+
+/**
+ * One post of the list: the wrapper the window observes, and the card while it is mounted.
+ *
+ * Memoised so a window move re-renders only the rows whose `height` flipped. Every prop is a value
+ * or a stable callback; an inline closure passed here would quietly undo that.
+ */
+const ThreadRow = memo(function ThreadRow({
+    thread,
+    index,
+    height,
+    observe,
+    isPremium,
+    onShare,
+    onOpenMedia,
+    onChanged,
+}: {
+    thread: Post
+    index: number
+    height: number | null
+    observe: RefCallback<HTMLElement>
+    isPremium: boolean
+    onShare: (post: Post) => void
+    onOpenMedia: (index: number, target: number | 'video') => void
+    onChanged: () => void
+}) {
+    return (
+        <div
+            ref={observe}
+            {...windowKeyProps(thread.id)}
+            className="min-w-0 bg-(--background-surface)"
+            style={height === null ? undefined : { height }}
+        >
+            {height === null ? (
+                <PostCard
+                    post={thread}
+                    isPremiumReader={isPremium}
+                    onShare={() => onShare(thread)}
+                    onOpenMedia={target => onOpenMedia(index, target)}
+                    onChanged={onChanged}
+                    testId="channel-thread"
+                />
+            ) : null}
+        </div>
+    )
+})
+
 /**
  * Stable ids for the placeholder rows.
  *
@@ -292,6 +443,11 @@ const MEDIA_WINDOW = { minimum: 24, overscan: 9 }
  */
 const SKELETON_IDS = Array.from({ length: 24 }, (_, index) => `skeleton-${index}`)
 
+/**
+ * The list's loading shape — the same geometry as the real rows, for the same reason
+ * `channel-header-skeleton` reserves its rows: a placeholder shorter than what replaces it makes the
+ * page jump.
+ */
 function ThreadListSkeleton({ kind, rows = 3 }: { kind: ThreadKind; rows?: number }) {
     if (kind === 'media') {
         return (

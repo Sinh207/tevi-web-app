@@ -3,9 +3,9 @@
 import { useAuth } from '@features/auth'
 import { nextPageParam, type PageCursor } from '@shared/lib/api/page-cursor'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { homeApi, homeKeys } from '../api/home-api'
-import { groupPosts, visibleCount } from '../lib/post-groups'
+import { groupPosts, type PostGroup, reuseGroups, visibleCount } from '../lib/post-groups'
 
 /**
  * The home feed: the posts of every space this account follows, grouped and paginated.
@@ -78,6 +78,8 @@ export function useHomeFeed() {
         enabled: isAuthenticated,
     })
 
+    /* The last answer, so an unchanged group keeps its identity — `reuseGroups` says why. */
+    const previousGroups = useRef<readonly PostGroup[]>([])
     const groups = useMemo(() => {
         const pages = query.data?.pages ?? []
         /*
@@ -89,7 +91,12 @@ export function useHomeFeed() {
             [],
             pages.flatMap(page => page.results),
         )
-        return blocked.size === 0 ? all : all.filter(g => !g.channelId || !blocked.has(g.channelId))
+        const next = reuseGroups(
+            previousGroups.current,
+            blocked.size === 0 ? all : all.filter(g => !g.channelId || !blocked.has(g.channelId)),
+        )
+        previousGroups.current = next
+        return next
     }, [query.data, blocked])
 
     const cards = visibleCount(groups, expanded)

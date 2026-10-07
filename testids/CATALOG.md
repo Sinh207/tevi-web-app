@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-1087 ids across 30 surfaces.
+1091 ids across 31 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -202,6 +202,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-blocked-search` | — | `src/features/channel/components/blocked-accounts-view.tsx:338` |
 | `channel-blocked-sign-in` | — | `src/features/channel/components/blocked-accounts-view.tsx:205` |
 | `channel-campaign` | — | `src/features/channel/components/channel-campaign-banners.tsx:89` |
+| `channel-composer` | — | `src/features/channel/components/channel-thread-list.tsx:147` |
 | `channel-copy-link` | — | `src/features/channel/components/channel-copy-link.tsx:74` |
 | `channel-create-avatar-file` | — | `src/features/channel/components/create-channel-gate.tsx:288` |
 | `channel-create-dob` | — | `src/features/channel/components/create-channel-gate.tsx:350` |
@@ -224,7 +225,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-event-link` | — | `src/features/channel/components/channel-event-card.tsx:109` |
 | `channel-event-qr` | — | `src/features/channel/components/channel-event-menu.tsx:114` |
 | `channel-event-share` | — | `src/features/channel/components/channel-event-menu.tsx:106` |
-| `channel-follow` | — | `src/features/channel/components/channel-viewer-actions.tsx:251` |
+| `channel-follow` | — | `src/features/channel/components/channel-viewer-actions.tsx:254` |
 | `channel-follow-request-action` | `data-row-key` | `src/features/channel/components/follow-request-row.tsx:226` |
 | `channel-follow-request-link` | `data-channel-slug` | `src/features/channel/components/follow-request-row.tsx:204` |
 | `channel-follow-requests-accept` | — | `src/features/channel/components/follow-requests-view.tsx:391` |
@@ -297,9 +298,9 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-mcn-partnership-sign-in` | — | `src/features/channel/components/mcn-partnership-view.tsx:105` |
 | `channel-mcn-partnership-signed-out` | — | `src/features/channel/components/mcn-partnership-view.tsx:95` |
 | `channel-mcn-partnership-space` | — | `src/features/channel/components/mcn-partnership-view.tsx:423` |
-| `channel-media` | — | `src/features/channel/components/channel-thread-list.tsx:172` |
+| `channel-media` | — | `src/features/channel/components/channel-thread-list.tsx:236` |
 | `channel-menu-follow` | — | `src/features/channel/components/channel-viewer-menu.tsx:143` |
-| `channel-message` | — | `src/features/channel/components/channel-viewer-actions.tsx:294` |
+| `channel-message` | — | `src/features/channel/components/channel-viewer-actions.tsx:297` |
 | `channel-my-space-no-channel` | — | `src/features/channel/components/my-space-redirect.tsx:157` |
 | `channel-my-space-retry` | — | `src/features/channel/components/my-space-redirect.tsx:165` |
 | `channel-my-space-sign-in` | — | `src/features/channel/components/my-space-redirect.tsx:133` |
@@ -310,6 +311,8 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-notify` | — | `src/features/channel/components/channel-viewer-menu.tsx:124` |
 | `channel-owner-edit` | — | `src/features/channel/components/channel-owner-actions.tsx:85` |
 | `channel-owner-share` | — | `src/features/channel/components/channel-owner-actions.tsx:115` |
+| `channel-pinned` | — | `src/features/channel/components/channel-thread-list.tsx:385` |
+| `channel-pinned-title` | — | `src/features/channel/components/channel-thread-list.tsx:371` |
 | `channel-premium-badge` | — | `src/features/channel/components/channel-identity.tsx:115` |
 | `channel-profile-about` | — | `src/features/channel/components/edit-profile/edit-profile-view.tsx:505` |
 | `channel-profile-avatar-file` | — | `src/features/channel/components/edit-profile/profile-media-fields.tsx:292` |
@@ -356,7 +359,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-suspended-guidelines` | — | `src/features/channel/components/channel-state-screens.tsx:117` |
 | `channel-tabs` | — | `src/features/channel/components/channel-tabs.tsx:86` |
 | `channel-tabs-loading` | — | `src/features/channel/components/channel-tabs-skeleton.tsx:35` |
-| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:226` |
+| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:431` |
 | `channel-top-bar-loading` | — | `src/features/channel/components/channel-top-bar-skeleton.tsx:43` |
 | `channel-unblock` | — | `src/features/channel/components/blocked-account-row.tsx:205` |
 | `channel-verified-badge` | — | `src/features/channel/components/channel-identity.tsx:94` |
@@ -585,6 +588,14 @@ Routes: `/redeem-gift-code`
 | `gift-code-result-home` | — | `src/features/gift-code/components/redeem-result-dialog.tsx:91` |
 | `gift-code-submit` | — | `src/features/gift-code/components/redeem-gift-code-view.tsx:177` |
 
+## `home` — Home feed
+
+Routes: `/`
+
+| testid | companions | source |
+|---|---|---|
+| `home-composer` | — | `src/features/home/components/home-post-feed.tsx:166` |
+
 ## `identification` — Identity verification (KYC)
 
 Routes: `/identification`
@@ -632,7 +643,7 @@ Routes: `/[slug]/membership/[[...tier]]`, `/app/[channelSlug]/membership/[packag
 | `membership-filter` | — | `src/features/membership/components/holdings/my-membership-view.tsx:218` |
 | `membership-filter-trigger` | — | `src/features/membership/components/holdings/my-membership-view.tsx:232` |
 | `membership-history-retry` | — | `src/features/membership/components/holdings/membership-detail-dialog.tsx:743` |
-| `membership-join` | — | `src/features/membership/components/join/become-a-member-button.tsx:155` |
+| `membership-join` | — | `src/features/membership/components/join/become-a-member-button.tsx:164` |
 | `membership-join-back` | — | `src/features/membership/components/join/become-a-member-dialogs.tsx:370` |
 | `membership-join-close` | — | `src/features/membership/components/join/become-a-member-dialogs.tsx:417` |
 | `membership-join-confirm` | — | `src/features/membership/components/join/become-a-member-dialogs.tsx:379` |
@@ -647,7 +658,7 @@ Routes: `/[slug]/membership/[[...tier]]`, `/app/[channelSlug]/membership/[packag
 | `membership-search` | — | `src/features/membership/components/holdings/my-membership-view.tsx:509` |
 | `membership-sign-in` | — | `src/features/membership/components/holdings/my-membership-view.tsx:333` |
 | `membership-tabs` | — | `src/features/membership/components/holdings/my-membership-view.tsx:519` |
-| `membership-view-detail` | — | `src/features/membership/components/join/become-a-member-button.tsx:126` |
+| `membership-view-detail` | — | `src/features/membership/components/join/become-a-member-button.tsx:135` |
 
 ## `message` — Direct messages — the conversation list
 
@@ -1328,6 +1339,7 @@ name; you need it to know the element exists.
 |---|---|---|
 | `PasswordField` | `src/features/auth/components/auth-fields.tsx` | `-caps` `-reveal` |
 | `OtpInput` | `src/features/auth/components/otp-input.tsx` | `-digit` |
+| `WhatsNewBar` | `src/features/channel/components/whats-new-bar.tsx` | `-submit` `-trigger` |
 | `EventGiftPanel` | `src/features/event/components/event-gift-panel.tsx` | `-close` `-empty` `-item` `-list` `-option` `-tab` `-trigger` |
 | `EventGiftTray` | `src/features/event/components/event-gift-tray.tsx` | `-item` `-trigger` |
 | `EventReportCard` | `src/features/event/components/event-report-card.tsx` | `-hint` `-trigger` |
@@ -1362,12 +1374,12 @@ name; you need it to know the element exists.
 | `PostLockPanel` | `src/features/post/components/post-lock-panel.tsx` | `-label` `-title` |
 | `PostMediaLightbox` | `src/features/post/components/post-media-lightbox.tsx` | `-close` `-label` `-next` `-overlay` `-prev` `-slide` |
 | `PostMediaTile` | `src/features/post/components/post-media-tile.tsx` | `-count` `-label` `-overlay` `-panel` `-slide` `-suffix` |
-| `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-panel` `-remove` `-trigger` |
+| `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-overlay` `-panel` `-remove` `-trigger` |
 | `PostNsfwGuard` | `src/features/post/components/post-nsfw-guard.tsx` | `-close` `-reveal` `-title` `-trigger` |
 | `PostPreviewDialog` | `src/features/post/components/post-preview-dialog.tsx` | `-description` `-header` `-item` `-overlay` `-panel` `-slide` |
 | `PostReportDialog` | `src/features/post/components/post-report-dialog.tsx` | `-close` `-confirm` `-description` `-input` `-option` `-retry` `-submit` `-title` |
 | `PostAudienceScreen`, `PostReplyAudienceScreen`, `PostSettingsScreen` | `src/features/post/components/post-settings-panel.tsx` | `-affix` `-error` `-field` `-input` `-item` `-message` `-option` `-reveal` |
-| `PostSlider` | `src/features/post/components/post-slider.tsx` | `-apply` `-clear` `-close` `-confirm` `-copy` `-description` `-footer` `-group` `-label-data` `-list` `-next` `-prev` `-reveal` `-slide` |
+| `PostSlider` | `src/features/post/components/post-slider.tsx` | `-apply` `-clear` `-close` `-confirm` `-copy` `-description` `-footer` `-group` `-label-data` `-list` `-next` `-overlay` `-panel` `-prev` `-reveal` `-slide` |
 | `PostUnlockDialogs` | `src/features/post/components/post-unlock-dialogs.tsx` | `-cancel` `-confirm` `-description` `-next` `-option` `-title` |
 | `ReplyAudienceNotice` | `src/features/post/components/reply-audience-notice.tsx` | `-description` `-panel` `-title` `-trigger` |
 | `ReplyComposer` | `src/features/post/components/reply-composer.tsx` | `-error` `-field` `-input` `-list` `-submit` `-trigger` |

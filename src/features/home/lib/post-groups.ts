@@ -168,3 +168,33 @@ export function visibleCount(groups: PostGroup[], expanded: ReadonlySet<string>)
 export function withoutChannel(groups: PostGroup[], channelId: string): PostGroup[] {
     return groups.filter(group => group.channelId !== channelId)
 }
+
+/**
+ * `next`, with every group that did not change swapped for the object `previous` already held.
+ *
+ * The feed regroups **all** pages whenever one arrives — it has to, a run can straddle the seam —
+ * so every group is a new object after every page, and every memoised row in `HomePostFeed`
+ * re-rendered on each append: twenty new posts cost the whole mounted feed. TanStack Query already
+ * keeps the old pages' post objects (structural sharing), so a group whose posts are the same
+ * objects in the same order is the same group, and keeping its identity is what lets the row skip.
+ *
+ * The one group that does change on an append is the last one, when the new page continues its
+ * run — that one is new, correctly.
+ */
+export function reuseGroups(previous: readonly PostGroup[], next: PostGroup[]): PostGroup[] {
+    if (previous.length === 0) return next
+    const byKey = new Map(previous.map(group => [groupKey(group), group]))
+    return next.map(group => {
+        const old = byKey.get(groupKey(group))
+        return old && sameGroup(old, group) ? old : group
+    })
+}
+
+function sameGroup(a: PostGroup, b: PostGroup): boolean {
+    return (
+        a.channelId === b.channelId &&
+        a.createdAt === b.createdAt &&
+        a.posts.length === b.posts.length &&
+        a.posts.every((post, index) => post === b.posts[index])
+    )
+}
