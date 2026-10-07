@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 1089,
+        "ids": 1091,
         "surfaces": 30
     },
     "surfaces": {
@@ -3638,6 +3638,60 @@
                 "/settings/space-visibility"
             ],
             "source": "src/features/channel/components/channel-header-skeleton.tsx:26"
+        },
+        "channel-image-viewer": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/[slug]/messages",
+                "/[slug]/post/[code]",
+                "/bookmarks",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-image-viewer.tsx:335"
+        },
+        "channel-image-viewer-close": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/[slug]/messages",
+                "/[slug]/post/[code]",
+                "/bookmarks",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-image-viewer.tsx:385"
         },
         "channel-invitation-accept": {
             "scope": "channel",

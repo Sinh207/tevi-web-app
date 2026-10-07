@@ -2607,5 +2607,7 @@
     "event_account_banned_title": "Hindi ka makakasali sa livestream na ito",
     "event_account_banned_body": "Hindi makakasali ang iyong account sa mga livestream sa ngayon.",
     "following_live_happening_now": "Nagaganap ngayon",
-    "nav_create_event_badge": "App"
+    "nav_create_event_badge": "App",
+    "channel_view_avatar": "Tingnan ang profile picture",
+    "channel_view_cover": "Tingnan ang cover image"
 }

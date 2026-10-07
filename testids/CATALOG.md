@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-1089 ids across 30 surfaces.
+1091 ids across 30 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -253,6 +253,8 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-following-sign-in` | — | `src/features/channel/components/following-view.tsx:271` |
 | `channel-following-sort` | — | `src/features/channel/components/following-view.tsx:464` |
 | `channel-header-loading` | — | `src/features/channel/components/channel-header-skeleton.tsx:26` |
+| `channel-image-viewer` | — | `src/features/channel/components/channel-image-viewer.tsx:335` |
+| `channel-image-viewer-close` | — | `src/features/channel/components/channel-image-viewer.tsx:385` |
 | `channel-invitation-accept` | — | `src/features/channel/components/mcn-invitation-view.tsx:616` |
 | `channel-invitation-error` | — | `src/features/channel/components/mcn-invitation-view.tsx:96` |
 | `channel-invitation-expired` | — | `src/features/channel/components/mcn-invitation-view.tsx:133` |

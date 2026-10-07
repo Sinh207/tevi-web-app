@@ -2607,5 +2607,7 @@
     "event_account_banned_title": "You can’t join this livestream",
     "event_account_banned_body": "Your account can’t take part in livestreams right now.",
     "following_live_happening_now": "Happening now",
-    "nav_create_event_badge": "App"
+    "nav_create_event_badge": "App",
+    "channel_view_avatar": "View profile picture",
+    "channel_view_cover": "View cover image"
 }

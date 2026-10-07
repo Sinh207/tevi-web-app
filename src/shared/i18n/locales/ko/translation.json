@@ -2605,5 +2605,7 @@
     "event_account_banned_title": "이 라이브에 참여할 수 없어요",
     "event_account_banned_body": "현재 계정으로 라이브에 참여할 수 없어요.",
     "following_live_happening_now": "진행 중",
-    "nav_create_event_badge": "앱"
+    "nav_create_event_badge": "앱",
+    "channel_view_avatar": "프로필 사진 보기",
+    "channel_view_cover": "커버 이미지 보기"
 }

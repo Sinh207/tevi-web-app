@@ -2723,5 +2723,7 @@
     "event_account_banned_title": "لا يمكنك الانضمام إلى هذا البث المباشر",
     "event_account_banned_body": "لا يمكن لحسابك المشاركة في البث المباشر حاليًا.",
     "following_live_happening_now": "يحدث الآن",
-    "nav_create_event_badge": "التطبيق"
+    "nav_create_event_badge": "التطبيق",
+    "channel_view_avatar": "عرض صورة الملف الشخصي",
+    "channel_view_cover": "عرض صورة الغلاف"
 }
