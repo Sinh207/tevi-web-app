@@ -26,9 +26,14 @@ import { PostMenu } from './post-menu'
  * `rgba(52,199,89,0.10)`; `--text-success` and `--accents-success-bg-active` are the same intent in
  * tokens that have a dark mode, which a raw hex does not — and `CLAUDE.md` bars one outright.
  *
- * `check-double` is the sprite's own glyph for legacy's two-tick drawing. **16, not legacy's 12**:
- * `IconSize` is a union of the DS's six steps and 12 is not one of them, so a hand-picked 12 is a
- * type error rather than a blurry glyph — the same trade the audience icon two lines below records.
+ * ⚠ **`check-all`, not `check-double`.** Legacy's mark is two ticks **side by side**, the second
+ * offset to the right — that drawing is the sprite's `check-all`. `check-double` is two ticks
+ * **stacked**, a different shape, and it is what shipped here first. Rendered side by side with
+ * legacy's inline SVG before choosing.
+ *
+ * **12px, legacy's size**, through `size-3` on top of `size={16}`: `IconSize` is a union of the DS's
+ * component steps and 12 is not one of them, and a class is the opt-out `Icon` allows for a glyph
+ * inside text (`share-in-message.tsx` and `following-channel-row.tsx` do the same).
  */
 function PurchasedTag({ testId }: { testId?: string }) {
     const { t } = useTranslation()
@@ -37,7 +42,7 @@ function PurchasedTag({ testId }: { testId?: string }) {
             data-testid={subTestId(testId, 'label')}
             className="inline-flex h-6 flex-none items-center gap-0.5 rounded-full bg-(--accents-success-bg-active) px-2 text-(--text-success)"
         >
-            <Icon name="check-double" size={16} />
+            <Icon name="check-all" size={16} className="size-3 flex-none" />
             {/* 10/500 — the DS's only 10px step, and legacy's size and weight. */}
             <span className="type-micro-overline">{t('post_purchased')}</span>
         </span>

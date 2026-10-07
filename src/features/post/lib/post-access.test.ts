@@ -80,6 +80,13 @@ describe('isLocked', () => {
         expect(isLocked(paid)).toBe(false)
         expect(isPurchased(paid)).toBe(true)
     })
+
+    it('never calls the author’s own paid post purchased', () => {
+        // The author is not locked out, which is exactly the shape a purchase has.
+        const own = post({ ...gated, need_unlock_package: false, is_owner: true })
+        expect(isLocked(own)).toBe(false)
+        expect(isPurchased(own)).toBe(false)
+    })
 })
 
 describe('isNsfw', () => {

@@ -71,11 +71,18 @@ export function isLocked(
  * The inverse of `isLocked` **only among gated posts** — an open post is neither locked nor
  * purchased, and conflating the two is how legacy's `PurchasedBadge` ends up on posts that were
  * never for sale.
+ *
+ * **Never the author's own post.** The author is not locked out of what they wrote, so without
+ * this every paid post in their own space read *Purchased* — a sale that never happened. Legacy's
+ * `isPurchasedPost` opens with `!isMyPost` for exactly this.
  */
 export function isPurchased(
-    post: Pick<Post, 'product_id' | 'required_packages' | 'viewer' | 'need_unlock_package'>,
+    post: Pick<
+        Post,
+        'product_id' | 'required_packages' | 'viewer' | 'need_unlock_package' | 'is_owner'
+    >,
 ): boolean {
-    return isGated(post) && !isLocked(post)
+    return !post.is_owner && isGated(post) && !isLocked(post)
 }
 
 /**
