@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
      */
     env: { NEXT_PUBLIC_APP_VERSION: version },
     reactStrictMode: true,
+
+    /**
+     * Testing on a real phone. Next 16 refuses `/_next/*` and the HMR socket to any origin but
+     * localhost, so a tunnel renders the HTML and then hydrates nothing. Use the tunnel, not the
+     * LAN IP: `http://192.168.x.x` is not a secure context, so `crypto.subtle` is missing and
+     * every API call goes out unsigned (`interceptors/sign.ts`). Dev-only — ignored by a build.
+     */
+    allowedDevOrigins: ['*.ngrok-free.app', '*.ngrok-free.dev', '*.ngrok.app'],
     poweredByHeader: false,
 
     experimental: {
