@@ -162,8 +162,14 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
      * *What's new?* heads the tab in **every** state — loading, empty, signed out — as legacy's
      * `WhatNew` does: it is the feed's own invitation to post, and an empty feed is where it matters
      * most. One hairline below it, the same 1px gap that separates the groups.
+     *
+     * **The two top corners round from `md`** (16px — `xl` in this theme's ramp, where `2xl` is
+     * 24), and only those: legacy's desktop feed is one `borderRadius: 16px` box whose first row is
+     * this bar, so the bar carries the box's top edge. The groups below stay square — the flat band
+     * product asked for. Below `md` the bar runs to both screen edges and a radius there would read
+     * as a mistake, as legacy's `matchUpSm` gate also says.
      */
-    const whatsNew = <WhatsNewBar testId="home-composer" />
+    const whatsNew = <WhatsNewBar testId="home-composer" className="md:rounded-t-xl" />
     if (isSignedOut) return withWhatsNew(whatsNew, <HomeEmptyState kind="signed-out" />)
     if (isLoading) return withWhatsNew(whatsNew, <FeedSkeleton className="md:pt-0" />)
     if (isError) {
