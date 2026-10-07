@@ -1,10 +1,16 @@
 import { NONCE_HEADER } from '@shared/config/csp'
 import { BASE_URL } from '@shared/config/env'
 import { chella, inter } from '@shared/config/fonts'
+import { SITE_NAME, siteOpenGraph } from '@shared/config/seo'
 import { STARTUP_IMAGES } from '@shared/config/startup-images'
 import { readWebviewHeaders } from '@shared/config/webview'
 import { getLocaleBundle } from '@shared/i18n/resources'
-import { COOKIE_NAME, htmlDir, resolveInitialLocale } from '@shared/i18n/settings'
+import {
+    COOKIE_NAME,
+    htmlDir,
+    resolveInitialLocale,
+    URL_LOCALE_HEADER,
+} from '@shared/i18n/settings'
 import type { Metadata, Viewport } from 'next'
 import { cookies, headers } from 'next/headers'
 import { AppProviders } from './providers'
@@ -17,6 +23,13 @@ export const metadata: Metadata = {
     },
     description: 'Tevi — a monetization platform for content creators.',
     metadataBase: new URL(BASE_URL),
+    applicationName: SITE_NAME,
+    /*
+     * The share card every page inherits until it writes its own — and a page that does write one
+     * goes through `siteOpenGraph` too, because Next replaces `openGraph` whole rather than merging
+     * it. `twitter` is deliberately absent: Next derives it from this.
+     */
+    openGraph: siteOpenGraph(),
     // iOS launch images. Android gets its splash from the manifest's `background_color`;
     // iOS ignores that and needs a bitmap per screen size, or it launches to white — see
     // `shared/config/startup-images.ts`. Declaring `appleWebApp` at all also emits
@@ -50,6 +63,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const locale =
         webview.locale ??
         resolveInitialLocale({
+            urlValue: headerStore.get(URL_LOCALE_HEADER),
             cookieValue: cookieStore.get(COOKIE_NAME)?.value,
             acceptLanguage: headerStore.get('accept-language'),
         })

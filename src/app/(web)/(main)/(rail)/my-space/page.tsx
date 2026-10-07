@@ -10,8 +10,9 @@ import type { Metadata } from 'next'
  * out) are the reason it is a page rather than a redirect in `proxy.ts`, which could not know either.
  *
  * `noindex`: it is a per-user redirect, so there is nothing here for a crawler to index and its
- * content differs for every visitor. Also listed in `robots.ts`'s `disallow`, and deliberately absent
- * from `sitemap.ts`.
+ * content differs for every visitor. Said again as an `X-Robots-Tag` by `proxy.ts`, and deliberately
+ * absent from `sitemap.ts` — but **not** disallowed in `robots.ts`, where its `noindex` would go
+ * unread.
  *
  * ## The bar is passed in, and only the empty states use it
  *

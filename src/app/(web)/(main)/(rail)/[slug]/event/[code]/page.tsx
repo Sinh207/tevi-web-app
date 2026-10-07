@@ -6,8 +6,10 @@ import {
     eventCanonicalPath,
     eventJsonLd,
     getEventForRequest,
+    mayDescribeEventForCrawler,
     studioBackdropUrl,
 } from '@features/event/server'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
@@ -61,10 +63,10 @@ import { notFound, permanentRedirect } from 'next/navigation'
  * page is one level up. The rule it follows: `app/not-found.tsx` is for a URL matching **no route in
  * the app**; a route that exists and cannot find its *data* answers for itself.
  *
- * ⚠ **It is still a soft 404** — 200 with the not-found body. Not this route's doing: every route in
- * this app is dynamically rendered because `app/layout.tsx` awaits `cookies()` and `headers()` to
- * resolve the locale, and a `notFound()` raised *during* a render can no longer set the status.
- * `(main)/[slug]/page.tsx` carries the measurement and the two ways out, neither free. Which is also
+ * ⚠ **It is still a soft 404** — 200 with the not-found body. Not this route's doing: this route
+ * has a `loading.tsx`, and so do `[slug]` and the app root, so by the time `notFound()` runs a
+ * fallback has streamed and the status line is sent. `(main)/[slug]/page.tsx` carries the
+ * measurement and why it is left alone. Which is also
  * why `generateMetadata` returns **no `robots`** on that path: Next emits its own `noindex` for a
  * not-found render, and a second tag beside it is two where one is expected.
  */
@@ -84,15 +86,28 @@ export async function generateMetadata({
     // deindexing a live stream over one failed request would be the wrong permanent decision.
     if (status !== 'ok') return {}
 
-    const fallbackTitle = t('channel_event_untitled')
     const canonical = eventCanonicalPath(event)
 
+    // NSFW space or an 18+ stream: the generic card, nothing of the broadcast's own. The reasons —
+    // and why the 18+ half diverges from legacy — are on `mayDescribeEventForCrawler`.
+    if (!mayDescribeEventForCrawler(event)) {
+        return {
+            title: { absolute: t('event_meta_fallback_title') },
+            ...(canonical ? { alternates: { canonical } } : {}),
+            robots: { index: false, follow: false },
+        }
+    }
+
+    const title = buildEventTitle(event, t('channel_event_untitled'))
+    const description = buildEventDescription(
+        event,
+        t('event_seo_join', { name: event.channel?.name ?? `@${event.channel?.slug ?? ''}` }),
+    )
+
     return {
-        title: buildEventTitle(event, fallbackTitle),
-        description: buildEventDescription(
-            event,
-            t('event_seo_join', { name: event.channel?.name ?? `@${event.channel?.slug ?? ''}` }),
-        ),
+        // `absolute`: legacy's shape already ends in `on Tevi`, and the template would add `· Tevi`.
+        title: { absolute: title },
+        description,
         ...(canonical ? { alternates: { canonical } } : {}),
         /*
          * `noindex, follow`. A live event is the most perishable page in the app — indexed, it puts
@@ -102,12 +117,12 @@ export async function generateMetadata({
          * including why this URL must **not** be disallowed in `robots.ts`.
          */
         robots: { index: false, follow: true },
-        openGraph: {
-            type: 'website',
+        openGraph: siteOpenGraph({
             ...(canonical ? { url: canonical } : {}),
-            title: buildEventTitle(event, fallbackTitle),
+            title,
+            description,
             ...(event.images.banner ? { images: [{ url: event.images.banner }] } : {}),
-        },
+        }),
     }
 }
 
@@ -137,10 +152,9 @@ export default async function ChannelEventPage({
      * ## ⚠ It is not a 308 on the wire, and that is measured
      *
      * `permanentRedirect` is Next's 308 and this comment used to say so. It is not what ships. Same
-     * cause as the soft 404 one directory up (`[slug]/page.tsx` carries the measurement): every
-     * document in this app streams, because `app/layout.tsx` awaits `cookies()` and `headers()` to
-     * resolve the locale — and a redirect raised *during* a streamed render can no longer set a
-     * status either. What Next emits instead is a `<meta http-equiv="refresh" content="0;url=…">`
+     * cause as the soft 404 one directory up (`[slug]/page.tsx` carries the measurement): a
+     * `loading.tsx` fallback has streamed before this runs, and a redirect raised *after* that can
+     * no longer set a status. What Next emits instead is a `<meta http-equiv="refresh" content="0;url=…">`
      * inside a **200**:
      *
      * ```
@@ -148,16 +162,15 @@ export default async function ChannelEventPage({
      * /@SinhPn11/event/{code}      200  → lands on /@sinhpn11/event/{code}
      * ```
      *
-     * So the correction *works* — a reader and a browser both end up on the canonical URL — and the
-     * half that is lost is the half aimed at machines: a meta refresh is weaker than a 308, slower,
-     * and not something every proxy or share-unfurler follows at all. The duplicate-folding argument
-     * above is therefore weaker than it reads, and `alternates.canonical` in `generateMetadata` is
-     * carrying more of that weight than this block is.
+     * So the correction *works* — a reader and a browser both end up on the canonical URL, and Google
+     * reads a zero-delay meta refresh as a permanent redirect. What is lost is the rest of the
+     * machines: not every proxy or share-unfurler follows one, which is why `alternates.canonical`
+     * in `generateMetadata` carries more of the duplicate-folding weight than this block does.
      *
-     * Not worth chasing here: the fix is the soft 404's fix, one level up and app-wide — resolve the
-     * locale somewhere that is not a Dynamic API, or give up a localized `<title>`. Written down so
-     * the next reader does not conclude from a 200 that the redirect is broken. `[slug]/page.tsx`'s
-     * own `canonicalChannelRedirect` is subject to exactly the same thing.
+     * Not worth chasing here: the fix is the soft 404's fix, and `[slug]/page.tsx` says why it is
+     * not taken. Written down so the next reader does not conclude from a 200 that the redirect is
+     * broken. `[slug]/page.tsx`'s own `canonicalChannelRedirect` is subject to exactly the same
+     * thing.
      *
      * ## Compared **exactly**, and it used to be compared case-insensitively
      *
@@ -193,9 +206,10 @@ export default async function ChannelEventPage({
         <>
             {/*
              * Rendered only for a body we actually have. `Event` structured data built from an
-             * `unavailable` render would be a page describing an event it could not read.
+             * `unavailable` render would be a page describing an event it could not read — and
+             * never for one the metadata withholds (`mayDescribeEventForCrawler`).
              */}
-            {event && (
+            {event && mayDescribeEventForCrawler(event) && (
                 <script
                     type="application/ld+json"
                     /*

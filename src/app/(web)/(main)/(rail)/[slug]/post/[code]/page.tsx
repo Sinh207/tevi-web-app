@@ -8,6 +8,7 @@ import {
     postCanonicalPath,
 } from '@features/post'
 import { getPostForRequest } from '@features/post/server'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 import { permanentRedirect } from 'next/navigation'
@@ -47,12 +48,9 @@ import { PostDetailScreen } from './post-detail-screen'
  * Do not "fix" this by hand-rolling a response: the redirect is correct, its transport is decided
  * one level up, and the two ways out are the ones `[slug]/page.tsx` lists.
  *
- * ## `notFound()` here is a **soft** 404, and that is not this route's doing
- *
- * `app/layout.tsx` awaits `cookies()` and `headers()` to resolve the locale, so every document in
- * this app is dynamically rendered and a `notFound()` raised during the render can no longer set
- * the status. `[slug]/page.tsx` measures it on four routes and lists the two ways out, neither
- * free. Nothing here can opt out of its own root layout.
+ * The cause is a `loading.tsx` above this route (the root one, and `[slug]`'s): once a Suspense
+ * fallback has streamed, the status line is sent. `[slug]/page.tsx` has the measurement and why it
+ * is left alone.
  */
 type PageProps = { params: Promise<{ slug: string; code: string }> }
 
@@ -109,18 +107,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
          *
          * The root layout's template is `'%s · Tevi'`, and legacy's post title format — pinned by a
          * test, because changing it churns the preview of every link already shared — ends in
-         * `'| Tevi'`. Left to the template the tab would read `… | Tevi · Tevi`.
-         *
-         * ⚠ `/@{slug}` has the same defect today (`… - Tevi · Tevi`, measured). Not fixed here: that
-         * page **is** indexed, so its title is a live SEO surface and changing it is a decision of a
-         * different weight than a preview nobody ranks.
+         * `'| Tevi'`. Left to the template the tab would read `… | Tevi · Tevi`. `/@{slug}` and the
+         * event page do the same, for the same reason.
          */
         title: { absolute: title },
         description: buildPostDescription(post),
         ...(canonical ? { alternates: { canonical } } : {}),
         // `follow`, so a shared post keeps passing signal to the space that owns it.
         robots: { index: false, follow: true },
-        openGraph: {
+        openGraph: siteOpenGraph({
             type: 'article',
             title,
             description: buildPostDescription(post),
@@ -132,7 +127,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
              * ordering below just makes sure a free post's own image wins when it has one.
              */
             ...ogImage(post.cover_image?.uri ?? post.images?.[0]?.uri ?? null),
-        },
+        }),
     }
 }
 

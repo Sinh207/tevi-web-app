@@ -162,7 +162,6 @@ export {
  */
 export {
     buildPostDescription,
-    buildPostHeadline,
     buildPostTitle,
     isCanonicalPath,
     mayRenderForCrawler,

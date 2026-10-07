@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 /**
  * Dev-only harness for `/app/[channelSlug]/membership/[packageId]`: `pnpm dev`, then open
- * `/app/dev-checkout`. It `notFound()`s in production, and `robots.ts` disallows the whole `/app`
- * namespace.
+ * `/app/dev-checkout`. It `notFound()`s in production, and the whole `/app` namespace is `noindex`
+ * (`proxy.ts`).
  *
  * ⚠ It is under `/app/`, not `/dev/`, and that is not filing: `/dev/*` is a `(web)` route, so the
  * website's `PaymentProvider` would sit above it and claim the returning 3DS callback before the

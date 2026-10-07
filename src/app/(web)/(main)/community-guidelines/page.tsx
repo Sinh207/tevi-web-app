@@ -1,5 +1,6 @@
 import { COMMUNITY_GUIDELINES, LEGAL_CONTAINER, LegalPageView } from '@features/legal'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -22,12 +23,11 @@ export async function generateMetadata(): Promise<Metadata> {
         description: t('guidelines_meta_description'),
         alternates: { canonical: '/community-guidelines' },
         robots: { index: true, follow: true },
-        openGraph: {
-            type: 'website',
+        openGraph: siteOpenGraph({
             url: '/community-guidelines',
             title: t('menu_community_guidelines'),
             description: t('guidelines_meta_description'),
-        },
+        }),
     }
 }
 

@@ -1,6 +1,6 @@
 import 'server-only'
 import { env } from '@shared/config/env'
-import { serverEnv } from '@shared/config/server-env'
+import { internalApiBase } from '@shared/config/server-env'
 import { createServerApiModel } from '@shared/lib/api/server-client'
 import { cache } from 'react'
 import { type ChannelFetchStatus, resolveChannelFetchStatus } from '../lib/channel-seo'
@@ -25,10 +25,10 @@ import { type Channel, normalizeChannel } from './types'
  * cluster.
  */
 function model() {
-    const internal = serverEnv().INTERNAL_CHANNEL_API
+    const internal = internalApiBase('channel')
     return internal
         ? createServerApiModel({ apiBase: internal, revalidate: 60, unwrapEnvelope: true })
-        : // Unset — local dev, or a deploy outside the cluster. The public gateway answers the
+        : // Outside the cluster (`SERVER_API_VIA_GATEWAY`) — local dev, the CI e2e job. The public gateway answers the
           // same shape and its origin *does* match, so the origin-scoped unwrap applies and the
           // flag must not be forced on: doing so would strip a second level.
           createServerApiModel({

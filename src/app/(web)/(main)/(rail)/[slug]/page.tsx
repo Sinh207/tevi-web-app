@@ -19,38 +19,41 @@ import { ChannelPageBody, channelPageMetadata } from './channel-page'
  * is a parallel-route *slot* and never becomes a URL segment), so it rides inside `[slug]` and
  * `parseChannelSlug` strips it.
  *
- * ## This route reads no `searchParams` — and ⚠ that is **not** what fixes the soft 404
+ * ## A missing channel answers **200**, and what actually causes it
  *
- * It used to read them, for one reason: the canonical-case redirect had to carry `?action=` —
- * legacy's spelling of the donation and membership deep links — because `permanentRedirect()` drops
- * the query. Those links are paths now, so the redirect carries a `suffix` instead and the prop is
- * gone. Worth doing on its own: less code, and one Dynamic API fewer.
- *
- * **The note that used to stand here claimed that reading `searchParams` was what made
- * `notFound()` answer 200 rather than a real 404, and offered removing it as one of two fixes. That
- * attribution is wrong.** Removing it changes nothing, measured:
+ * Measured:
  *
  * ```
  * /a/b/c                          404   ← no route matches; Next sets the status before any render
- * /@nonexistent-xyz-123           200   ← this route, with no searchParams read
+ * /@nonexistent-xyz-123           200   ← notFound() in this route
  * /add-home-screen/not-a-channel  200   ← notFound() on a pure path check: no fetch, no query
  * /@tevi/event/nonexistent-code   200
  * ```
  *
- * The cause is one level up and applies to **every route in the app**: `app/layout.tsx` awaits
- * `cookies()` and `headers()` to resolve the request locale, so every document is dynamically
- * rendered and streams — and a `notFound()` raised during a streamed render can no longer set the
- * status. Nothing a page does can opt out of its own root layout.
+ * **The cause is streaming, and specifically `loading.tsx`.** Next commits the status line when the
+ * first byte of the body goes out, and the body starts the moment a Suspense fallback renders. Every
+ * page here sits under one: `app/loading.tsx` wraps the whole app, and this route has its own. By
+ * the time `notFound()` (or `permanentRedirect()`) runs, `200` is already on the wire — Next's own
+ * docs, `loading.js` § Status Codes.
  *
- * So the soft 404 stands, and the two fixes the old note listed reduce to one that is real (reject
- * in `proxy.ts`, which needs the reserved-route list the `@` namespace exists to avoid) plus one
- * that would work and costs more than it sounds: give up a localized `<title>` on every page, or
- * resolve the locale somewhere that is not a Dynamic API.
+ * This note used to blame the root layout's `cookies()` / `headers()`. That was wrong: dynamic
+ * rendering does not stream by itself, so resolving the locale differently would change nothing.
+ * The earlier version before it blamed `searchParams`, also wrong. Neither was ever the lever.
  *
- * What dropping the prop does cost is small and worth naming: a URL that is **both** misspelled and
- * carrying `?action=` now lands on the right space without opening anything, because the correction
- * no longer carries a query. A legacy URL with a legacy typo. The query spelling itself still works
- * everywhere else — `parseChannelIntent` accepts both.
+ * **It is left as is, on purpose**, because for a search engine it costs nothing:
+ *
+ * - A `notFound()` that streams gets `<meta name="robots" content="noindex">` from Next, so the URL
+ *   is never indexed. A crawler may *label* it a soft 404; it does not keep it.
+ * - A `permanentRedirect()` that streams becomes `<meta http-equiv="refresh" content="0;url=…">`,
+ *   which Google treats as a permanent redirect. `rel=canonical` says the same thing again.
+ *
+ * The real 404 / 308 would cost the instant skeleton on every client-side navigation into a space —
+ * the two ways to get it are removing the `loading.tsx` above the `notFound()`, or a channel lookup
+ * in `proxy.ts` on every `/@…` request (Next's other suggestion, "keep proxy checks fast"). Revisit
+ * if a real status is ever needed for something other than a crawler — analytics, compliance.
+ *
+ * (`searchParams` is still not read here, for its own reason: the canonical-case redirect carries a
+ * `suffix` rather than `?action=`, so the prop has no reader.)
  */
 type PageProps = { params: Promise<{ slug: string }> }
 

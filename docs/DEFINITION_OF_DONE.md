@@ -153,7 +153,14 @@ Test at all custom breakpoints, not just mobile/desktop:
 
 - [ ] `generateMetadata`/`metadata` export set with a real title + description, not the layout
       default.
-- [ ] Open Graph / Twitter card fields set for anything shareable (profile, post, stream page).
+- [ ] Open Graph / Twitter card fields set for anything shareable (profile, post, stream page) —
+      through `siteOpenGraph()` (`shared/config/seo.ts`). A page's `openGraph` replaces the root
+      layout's **whole** object, so one written by hand loses `siteName` and the default image.
+      Leave `twitter` out: Next derives it from `openGraph`.
+- [ ] A title that already ends in the brand uses `title: { absolute }`, or the root template
+      prints it twice.
+- [ ] Indexable or not, never `disallow` a page in `robots.ts` to keep it out of the index — a
+      disallowed URL is never fetched, so its `noindex` is never read. `noindex` + crawlable.
 - [ ] Public pages are server-rendered where possible — remember there's no SSR bearer token, so
       anything requiring auth must be client-fetched, not blocked on the server.
 - [ ] New public route added to `src/app/sitemap.ts` if it should be discoverable/indexed.

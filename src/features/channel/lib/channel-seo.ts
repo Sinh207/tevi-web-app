@@ -1,3 +1,4 @@
+import { BASE_URL } from '@shared/config/env'
 import { ApiError } from '@shared/lib/api/errors'
 import type { Channel } from '../api/types'
 import { toChannelPath } from './channel-slug'
@@ -109,7 +110,9 @@ export function channelProfileJsonLd(channel: Channel) {
             ...(channel.images.thumb ? { image: channel.images.thumb } : {}),
             ...(sameAs.length > 0 ? { sameAs } : {}),
         },
-        url: toChannelPath(channel.slug),
+        // Absolute: JSON-LD is read outside the document, so there is no base for a path to
+        // resolve against — `metadataBase` only applies to Next's own tags. `eventJsonLd` agrees.
+        url: `${BASE_URL}${toChannelPath(channel.slug)}`,
         ...(channel.created_at ? { dateCreated: channel.created_at } : {}),
     }
 }

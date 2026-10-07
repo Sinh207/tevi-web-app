@@ -122,6 +122,22 @@ export function buildEventDescription(event: EventDetail, joinSentence: string):
     return truncateForSeo(parts.join(' · '), DESCRIPTION_LIMIT)
 }
 
+/**
+ * Whether a crawler may be told **what this broadcast is** — its title, description and banner.
+ *
+ * Metadata is what a chat app draws as a link preview, with no gate in front of it and no way for us
+ * to put one there, so for these two cases withholding the words is the only control the surface
+ * has (the rule `post-seo.ts`'s `mayRenderForCrawler` states for posts):
+ *
+ * - **The space is NSFW.** Legacy's exact rule: generic title, `noindex, nofollow`.
+ * - **The stream is 18+.** A deliberate divergence — legacy describes these in full. But this page
+ *   shows the banner and the description only *after* the reader confirms their age, so a share
+ *   card printing both would hand any chat app what the page itself withholds.
+ */
+export function mayDescribeEventForCrawler(event: EventDetail): boolean {
+    return !event.channel?.is_nsfw && !event.age_restriction
+}
+
 /** The canonical path — the one spelling of this URL, whatever casing the request used. */
 export function eventCanonicalPath(event: EventDetail): string | null {
     const slug = event.channel?.slug

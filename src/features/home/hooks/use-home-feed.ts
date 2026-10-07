@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@features/auth'
+import type { Post } from '@features/post'
 import { nextPageParam, type PageCursor } from '@shared/lib/api/page-cursor'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -44,8 +45,20 @@ import { groupPosts, type PostGroup, reuseGroups, visibleCount } from '../lib/po
  */
 const MIN_CARDS = 4
 
-export function useHomeFeed() {
+/**
+ * `publicFeed` is the server's anonymous read of the same endpoint (`getPublicFeedForRequest`),
+ * shown to a reader who is **not signed in** — the guest and the crawler, who otherwise got a sign-in
+ * prompt and nothing else. It is one page, and deliberately stays one: the browser cannot ask for a
+ * second, because the public gateway answers this path with an empty list for a guest's anonymous
+ * bearer. A signed-in reader never sees it — their feed is theirs, fetched as them.
+ *
+ * Read as `!isAuthenticated`, which includes the bootstrap: the server renders before anyone is
+ * known, so that is the branch the HTML is built from, and the first client render has to agree with
+ * it. A signed-in reader spends the bootstrap behind the splash, as they did before.
+ */
+export function useHomeFeed({ publicFeed = null }: { publicFeed?: readonly Post[] | null } = {}) {
     const { activeId, isAuthenticated } = useAuth()
+    const showPublic = !isAuthenticated && !!publicFeed && publicFeed.length > 0
 
     /**
      * Groups the reader has opened with *See more*, by `groupKey` — **not** by index.
@@ -89,7 +102,7 @@ export function useHomeFeed() {
          */
         const all = groupPosts(
             [],
-            pages.flatMap(page => page.results),
+            showPublic ? [...publicFeed] : pages.flatMap(page => page.results),
         )
         const next = reuseGroups(
             previousGroups.current,
@@ -97,7 +110,7 @@ export function useHomeFeed() {
         )
         previousGroups.current = next
         return next
-    }, [query.data, blocked])
+    }, [query.data, blocked, showPublic, publicFeed])
 
     const cards = visibleCount(groups, expanded)
 
@@ -122,7 +135,8 @@ export function useHomeFeed() {
         isError: query.isError,
         refetch: query.refetch,
         fetchNextPage: query.fetchNextPage,
-        hasNextPage: query.hasNextPage,
+        // The public page is the only one there is — see `publicFeed` above.
+        hasNextPage: showPublic ? false : query.hasNextPage,
         isFetchingNextPage: query.isFetchingNextPage,
         /**
          * Too few cards on screen to scroll, and there is another page to ask for.
@@ -131,7 +145,11 @@ export function useHomeFeed() {
          * for the same reason, one triggered by geometry and one by arithmetic.
          */
         needsMore:
-            cards < MIN_CARDS && query.hasNextPage && !query.isLoading && !query.isFetchingNextPage,
+            !showPublic &&
+            cards < MIN_CARDS &&
+            query.hasNextPage &&
+            !query.isLoading &&
+            !query.isFetchingNextPage,
         /**
          * `true` only once the first page has come back **and** held nothing. Distinct from
          * `isLoading`: an empty state shown while a request is in flight tells the reader there is
@@ -139,6 +157,8 @@ export function useHomeFeed() {
          */
         isEmpty: !query.isLoading && !query.isError && groups.length === 0,
         /** No account, so no follow list — a different state from an empty feed. */
-        isSignedOut: !isAuthenticated,
+        isSignedOut: !isAuthenticated && !showPublic,
+        /** Showing the server's anonymous page rather than this reader's own feed. */
+        isPublic: showPublic,
     }
 }

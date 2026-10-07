@@ -30,6 +30,7 @@ export {
     eventCanonicalPath,
     eventJsonLd,
     formatEventDateForSeo,
+    mayDescribeEventForCrawler,
     truncateForSeo,
 } from './lib/event-seo'
 /** The studio's pre-blurred ground — server-only because the image proxy's base is a server setting. */

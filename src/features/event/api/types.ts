@@ -191,7 +191,8 @@ export const eventChannelSchema = z.looseObject({
     /**
      * The space is flagged sensitive.
      *
-     * Read by `generateMetadata` only, where it turns the page `noindex, nofollow` — legacy does the
+     * Read by `generateMetadata` only (through `mayDescribeEventForCrawler`), where it turns the
+     * page `noindex, nofollow` and withholds the title, banner and structured data — legacy does the
      * same, and it is the one thing this flag genuinely protects. It does **not** raise a wall here:
      * that is `ChannelNsfwGate`'s job on the space's own page, and an event has its own, narrower
      * gate in `age_restriction` below.

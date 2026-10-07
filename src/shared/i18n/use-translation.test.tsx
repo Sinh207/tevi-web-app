@@ -38,7 +38,8 @@ import { useTranslation } from './use-translation'
  * ignores the picker.
  */
 const refresh = vi.fn()
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }))
+const replace = vi.fn()
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, replace }) }))
 
 /**
  * A one-shot switch that makes the *next* chunk fetch fail, with the real loader behind it — the
@@ -81,6 +82,8 @@ function renderProbe(locale: string, bundle = bundles[locale] ?? null) {
 beforeEach(() => {
     storage.remove(STORAGE_KEYS.locale)
     refresh.mockClear()
+    replace.mockClear()
+    window.history.replaceState(null, '', '/')
 })
 
 describe('the locale the page was served in', () => {
@@ -151,6 +154,29 @@ describe('switching to a locale the client was not shipped', () => {
         await read().changeLanguage('ko')
         expect(refresh).toHaveBeenCalledTimes(1)
         expect(document.cookie).toContain('tevi.locale=ko')
+    })
+
+    /**
+     * On an address that names a language, the pick has to drop it: `?lang=` outranks the cookie
+     * on the server, so a refresh would re-render in the language being left — measured, with the
+     * router putting the old URL back over a bare `history.replaceState`. Changing the URL is the
+     * re-request, so there is no refresh beside it.
+     */
+    it('drops ?lang= from the address instead of refreshing under it', async () => {
+        window.history.replaceState(null, '', '/premium?lang=vi&tab=plans#faq')
+        const read = renderProbe('vi')
+        await read().changeLanguage('ko')
+        expect(replace).toHaveBeenCalledWith('/premium?tab=plans#faq', { scroll: false })
+        expect(refresh).not.toHaveBeenCalled()
+    })
+
+    /** The webview's `?lang=` is the app's contract, not a link the reader arrived by. */
+    it('leaves a webview address alone', async () => {
+        window.history.replaceState(null, '', '/app/privacy?lang=vi')
+        const read = renderProbe('vi')
+        await read().changeLanguage('ko')
+        expect(replace).not.toHaveBeenCalled()
+        expect(refresh).toHaveBeenCalledTimes(1)
     })
 
     /** Switching back to the locale the server rendered needs no second round trip. */

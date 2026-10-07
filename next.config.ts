@@ -206,7 +206,9 @@ const nextConfig: NextConfig = {
     },
 
     async redirects() {
-        return [{ source: '/home', destination: '/', permanent: false }]
+        // `permanent` (308), where legacy has a 307: `/home` is not coming back, and a temporary
+        // redirect asks a crawler to keep the old URL indexed beside the one it points at.
+        return [{ source: '/home', destination: '/', permanent: true }]
     },
 
     async headers() {

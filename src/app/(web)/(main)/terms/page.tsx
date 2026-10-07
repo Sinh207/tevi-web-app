@@ -1,5 +1,6 @@
 import { LEGAL_CONTAINER, LegalPageView, TERMS_OF_USE } from '@features/legal'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -18,12 +19,11 @@ export async function generateMetadata(): Promise<Metadata> {
         description: t('terms_meta_description'),
         alternates: { canonical: '/terms' },
         robots: { index: true, follow: true },
-        openGraph: {
-            type: 'website',
+        openGraph: siteOpenGraph({
             url: '/terms',
             title: t('menu_terms_of_use'),
             description: t('terms_meta_description'),
-        },
+        }),
     }
 }
 

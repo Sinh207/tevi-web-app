@@ -13,6 +13,7 @@ import {
     toChannelPath,
 } from '@features/channel'
 import { channelManifestPath, getChannelForRequest } from '@features/channel/server'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import { getServerQueryClient } from '@shared/lib/api/server-query-client'
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
@@ -120,7 +121,8 @@ export async function channelPageMetadata(
          * `restricted` and `unavailable` still render the page, so those do need it.
          */
         return {
-            title: t('channel_meta_fallback_title'),
+            // `absolute`: the fallback *is* the brand, and the template would print it twice.
+            title: { absolute: t('channel_meta_fallback_title') },
             ...(result.status === 'gone' ? {} : { robots: { index: false, follow: false } }),
         }
     }
@@ -138,7 +140,7 @@ export async function channelPageMetadata(
      */
     if (channel.is_nsfw) {
         return {
-            title: t('channel_meta_fallback_title'),
+            title: { absolute: t('channel_meta_fallback_title') },
             alternates: { canonical: path },
             robots: { index: false, follow: false },
         }
@@ -152,7 +154,13 @@ export async function channelPageMetadata(
     const indexable = !titleKey && isIndexableChannel(channel)
 
     return {
-        title,
+        /*
+         * `absolute`: `buildChannelTitle` is legacy's format and already ends in `- Tevi`, so the
+         * root template would print the brand twice (`… - Tevi · Tevi`). With it, the indexed title
+         * is byte-for-byte legacy's — which is what keeps the cut-over from churning every result.
+         * The deep-link titles carry no brand of their own, so they keep the template.
+         */
+        title: titleKey ? title : { absolute: title },
         description,
         alternates: { canonical: path },
         robots: { index: indexable, follow: true },
@@ -165,19 +173,16 @@ export async function channelPageMetadata(
          * blocking metadata gets the right link in the head for free.
          */
         manifest: channelManifestPath(channel.slug),
-        openGraph: {
-            type: 'website',
+        // No avatar → the site card (`siteOpenGraph`), so a share never unfurls bare.
+        openGraph: siteOpenGraph({
             url: path,
             title,
             description,
             ...(image ? { images: [{ url: image }] } : {}),
-        },
-        twitter: {
-            card: image ? 'summary_large_image' : 'summary',
-            title,
-            description,
-            ...(image ? { images: [image] } : {}),
-        },
+        }),
+        // An avatar is a square thumbnail: a large card would crop a face to a strip. Only the
+        // site card is drawn for the wide layout; Next fills title, description and image.
+        twitter: { card: image ? 'summary' : 'summary_large_image' },
     }
 }
 

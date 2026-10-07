@@ -21,10 +21,9 @@ import { CollectionScreen } from './collection-screen'
  * the reason `/identification` spells out: a disallowed URL is never fetched, so its `noindex` is
  * never read.
  *
- * ⚠ A bad slug is `notFound()` and a **soft 404** — 200 with the not-found body. Every route in
- * this app is dynamically rendered (`app/layout.tsx` awaits `cookies()`), so a `notFound()` raised
- * during a render can no longer set the status. `[slug]/page.tsx` has the table and the two ways
- * out, neither free.
+ * ⚠ A bad slug is `notFound()` and a **soft 404** — 200 with the not-found body, because a
+ * `loading.tsx` above has already streamed by the time it runs. `[slug]/page.tsx` has the table and
+ * why it is left alone.
  *
  * The collection id is **not** validated here. Its shape is the backend's to decide, and a wrong
  * one is already a state the screen draws — `isMissing`, which is what a reader gets for a

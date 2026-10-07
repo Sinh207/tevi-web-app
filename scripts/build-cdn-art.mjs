@@ -396,6 +396,26 @@ const SOURCES = [
      *
      * The box is legacy's own draw; the source is 154×200, so `scale: 2` clamps to it.
      */
+    /*
+     * The **default share card** — `og:image` for every page that has no picture of its own (`/`,
+     * `/premium`, the policies, a space without an avatar). Legacy's `IMAGES_STATIC.bannerMeta`.
+     *
+     * The one **JPEG** here, and on purpose: this file is read by link unfurlers, not by a browser,
+     * and WebP support among them is not something to bet a share card on. A gradient behind a white
+     * mark is what JPEG is good at anyway.
+     *
+     * 1200×630 is the 1.91:1 box every unfurler crops to. The source is 1920×1080 (16:9), so the
+     * crop takes a centred 1920×1008 band — the mark sits between y≈230 and y≈890, well inside it —
+     * rather than letting each platform pick its own crop.
+     */
+    {
+        name: 'og-default',
+        out: 'brand/og-default.jpg',
+        url: `${CDN}/web/web-common/banner-meta.png`,
+        crop: { x: 0, y: 36, width: 1920, height: 1008 },
+        box: { width: 1200, height: 630 },
+        scale: 1,
+    },
     {
         name: 'event-not-found',
         out: 'event/not-found.webp',
@@ -844,6 +864,11 @@ function mimeOf(url, bytes) {
     throw new Error(`${url}: cannot tell what this is — add a case here rather than guessing`)
 }
 
+/** WebP for everything a browser draws; JPEG only where the reader is an unfurler (`og-default`). */
+function outputType(out) {
+    return out.endsWith('.jpg') ? 'image/jpeg' : 'image/webp'
+}
+
 async function main() {
     const only = process.argv.slice(2)
     const wanted = only.length ? SOURCES.filter(s => only.includes(s.name)) : SOURCES
@@ -882,7 +907,7 @@ async function main() {
         }
 
         const dataUrl = await page.evaluate(
-            async ({ src, width, height, quality, crop }) => {
+            async ({ src, width, height, quality, crop, type }) => {
                 const img = new Image()
                 img.width = width
                 img.height = height
@@ -900,7 +925,7 @@ async function main() {
                 const ctx = canvas.getContext('2d')
                 if (crop) ctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height)
                 else ctx.drawImage(img, 0, 0, width, height)
-                return canvas.toDataURL('image/webp', quality)
+                return canvas.toDataURL(type, quality)
             },
             {
                 src: `data:${mimeOf(source.url, input)};base64,${input.toString('base64')}`,
@@ -908,11 +933,12 @@ async function main() {
                 height,
                 quality: QUALITY,
                 crop: source.crop ?? null,
+                type: outputType(source.out),
             },
         )
 
-        if (!dataUrl.startsWith('data:image/webp')) {
-            throw new Error(`${source.name}: Chromium did not encode WebP (got ${dataUrl.slice(0, 24)}…)`)
+        if (!dataUrl.startsWith(`data:${outputType(source.out)}`)) {
+            throw new Error(`${source.name}: Chromium did not encode ${outputType(source.out)} (got ${dataUrl.slice(0, 24)}…)`)
         }
         const output = Buffer.from(dataUrl.split(',')[1], 'base64')
         await writeFile(file, output)

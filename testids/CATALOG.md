@@ -598,7 +598,7 @@ Routes: `/`
 
 | testid | companions | source |
 |---|---|---|
-| `home-composer` | — | `src/features/home/components/home-post-feed.tsx:172` |
+| `home-composer` | — | `src/features/home/components/home-post-feed.tsx:179` |
 
 ## `identification` — Identity verification (KYC)
 

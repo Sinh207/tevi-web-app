@@ -18,7 +18,7 @@ import type { Metadata } from 'next'
  * **`noindex, nofollow`**, as legacy sets it — a personal account screen whose content differs
  * for every visitor and means nothing to a crawler.
  *
- * It is deliberately **not** added to `robots.ts`'s disallow list, unlike `/my-space`. A
+ * It is deliberately **not** added to `robots.ts`'s disallow list, like `/my-space`. A
  * disallowed URL is one a crawler never fetches, so it never reads the `noindex` either — and
  * a disallowed page that is linked from the account drawer on every screen can still surface
  * as a bare URL. Crawlable + `noindex` is the combination that actually keeps it out. Same

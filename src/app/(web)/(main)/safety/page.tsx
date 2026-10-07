@@ -1,5 +1,6 @@
 import { LEGAL_CONTAINER, LegalPageView, SAFETY_POLICY } from '@features/legal'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -18,12 +19,11 @@ export async function generateMetadata(): Promise<Metadata> {
         description: t('safety_meta_description'),
         alternates: { canonical: '/safety' },
         robots: { index: true, follow: true },
-        openGraph: {
-            type: 'website',
+        openGraph: siteOpenGraph({
             url: '/safety',
             title: t('menu_safety'),
             description: t('safety_meta_description'),
-        },
+        }),
     }
 }
 

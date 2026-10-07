@@ -50,10 +50,10 @@ function post(id: string, channel = 'ch-1', at: number = BASE): Post {
     return parsed
 }
 
-function mount() {
+function mount(publicFeed: Post[] | null = null) {
     const out = { current: null as ReturnType<typeof useHomeFeed> | null }
     function Probe() {
-        out.current = useHomeFeed()
+        out.current = useHomeFeed({ publicFeed })
         return null
     }
     const client = new QueryClient({
@@ -205,5 +205,44 @@ describe('useHomeFeed', () => {
         expect(probe.current?.groups).toHaveLength(1)
         expect(groupKey(probe.current?.groups[0] as PostGroup)).toBe(opened)
         expect(probe.current?.expanded.has(opened)).toBe(true)
+    })
+
+    describe('the public page, for a reader who is not signed in', () => {
+        it('shows the server’s page to a guest, without a request and without more pages', async () => {
+            auth.isAuthenticated = false
+            auth.activeId = null
+
+            const probe = mount([post('a'), post('b', 'ch-2', MINUTES(10))])
+
+            await waitFor(() => expect(probe.current?.groups).toHaveLength(2))
+            expect(probe.current?.isPublic).toBe(true)
+            expect(probe.current?.isSignedOut).toBe(false)
+            // The gateway answers a guest's bearer with an empty list, so there is no page two.
+            expect(probe.current?.hasNextPage).toBe(false)
+            expect(probe.current?.needsMore).toBe(false)
+            expect(getFeed).not.toHaveBeenCalled()
+        })
+
+        it('falls back to the sign-in prompt when the server had nothing', async () => {
+            auth.isAuthenticated = false
+            auth.activeId = null
+
+            const probe = mount([])
+
+            await waitFor(() => expect(probe.current?.isSignedOut).toBe(true))
+            expect(probe.current?.isPublic).toBe(false)
+        })
+
+        it('is never shown to a signed-in reader, whose feed is their own', async () => {
+            getFeed.mockResolvedValue({ results: [post('mine', 'ch-9')], next: null })
+
+            const probe = mount([post('public', 'ch-1')])
+
+            await waitFor(() => expect(probe.current?.isLoading).toBe(false))
+            expect(probe.current?.isPublic).toBe(false)
+            expect(probe.current?.groups.flatMap(group => group.posts.map(p => p.id))).toEqual([
+                'mine',
+            ])
+        })
     })
 })

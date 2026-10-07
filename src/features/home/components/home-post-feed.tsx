@@ -58,7 +58,14 @@ const STAGGERED = 6
  * hook's `toggleGroup` — legacy routes the same press through a global event emitter and a
  * `findIndex` over the feed, which is two moving parts for a local toggle.
  */
-export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
+export function HomePostFeed({
+    testId = 'home-feed',
+    publicFeed = null,
+}: {
+    testId?: string
+    /** The server's anonymous page, for a reader who is not signed in — `useHomeFeed` says why. */
+    publicFeed?: readonly Post[] | null
+}) {
     const {
         groups,
         expanded,
@@ -73,7 +80,7 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
         hasNextPage,
         isFetchingNextPage,
         needsMore,
-    } = useHomeFeed()
+    } = useHomeFeed({ publicFeed })
 
     /**
      * Premium readers pay nothing to react or reply, and the flag is the **reader's**, not the

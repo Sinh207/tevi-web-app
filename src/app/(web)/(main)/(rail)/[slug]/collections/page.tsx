@@ -21,10 +21,10 @@ import { CollectionsScreen } from './collections-screen'
  * bar is legacy's own (`CollectionScreenHeader` — a centred title between two floating discs), and
  * its `+` is the owner's, so it is drawn by the client boundary rather than by `PageBackBar` here.
  *
- * ⚠ **A bad slug is `notFound()` here and a soft 404 on the wire.** `app/layout.tsx` awaits
- * `cookies()`, so every route in this app is dynamically rendered, and a `notFound()` raised
- * *during* a render can no longer set the status — see `[slug]/page.tsx` for the table and the two
- * ways out, neither free. The body is right; the status is 200.
+ * ⚠ **A bad slug is `notFound()` here and a soft 404 on the wire.** By the time it runs, a
+ * `loading.tsx` above (the root one, and `[slug]`'s) has already streamed, so the status line is
+ * sent; Next adds `noindex` instead. `[slug]/page.tsx` has the table and why it is left alone. The
+ * body is right; the status is 200.
  */
 type PageProps = { params: Promise<{ slug: string }> }
 

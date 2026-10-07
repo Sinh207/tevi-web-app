@@ -30,6 +30,11 @@ variable fails loudly instead of surfacing as a broken request later. Required:
 client IDs, analytics) is optional and degrades gracefully. Only `NEXT_PUBLIC_*` reaches the
 browser — server-only secrets must not carry that prefix.
 
+**Outside the cluster, keep `SERVER_API_VIA_GATEWAY=1`** (the example file sets it). The server's
+metadata reads go to the in-cluster services by default (`tevi-channel`, `tevi-post`,
+`tevi-livestream`), whose names resolve only inside the cluster; without the flag a local server
+renders every space, post and event page with a generic card. Never set it in a deployment.
+
 ## Commands
 
 ```bash

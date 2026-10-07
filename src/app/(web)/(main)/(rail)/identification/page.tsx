@@ -19,7 +19,7 @@ import type { Metadata } from 'next'
  * crawler. It is also the one page in `(main)` that mounts a third-party iframe, which is
  * a second reason not to advertise the URL.
  *
- * It is deliberately **not** in `robots.ts`'s disallow list, unlike `/my-space`, which is
+ * It is deliberately **not** in `robots.ts`'s disallow list, and neither is `/my-space`, which is
  * personal in the same way. A disallowed URL is one a crawler never fetches — so it never
  * reads the `noindex` either, and a disallowed page that is linked from every screen in the
  * app (the drawer links here) can still surface as a bare URL. Crawlable + `noindex` is the

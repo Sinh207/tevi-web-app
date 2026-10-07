@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { htmlDir, isRtl, resolveInitialLocale, toLocale } from './settings'
+import { htmlDir, isRtl, parseUrlLocale, resolveInitialLocale, toLocale } from './settings'
 
 describe('toLocale', () => {
     it('defaults to en for empty/unknown', () => {
@@ -47,5 +47,28 @@ describe('resolveInitialLocale', () => {
     it('defaults to en when nothing matches', () => {
         expect(resolveInitialLocale({ acceptLanguage: 'fr,de' })).toBe('en')
         expect(resolveInitialLocale({})).toBe('en')
+    })
+
+    it('lets ?lang= win over the cookie — a URL that names a language must render it', () => {
+        expect(resolveInitialLocale({ urlValue: 'vi', cookieValue: 'ko' })).toBe('vi')
+    })
+
+    it('ignores a ?lang= it does not ship, rather than forcing English', () => {
+        expect(resolveInitialLocale({ urlValue: 'fr', cookieValue: 'ko' })).toBe('ko')
+    })
+})
+
+describe('parseUrlLocale', () => {
+    it('accepts the spellings people type', () => {
+        expect(parseUrlLocale('vi')).toBe('vi')
+        expect(parseUrlLocale('vi_VN')).toBe('vi')
+        expect(parseUrlLocale('zh-tw')).toBe('zh-TW')
+        expect(parseUrlLocale('en')).toBe('en')
+    })
+
+    it('answers null for anything it cannot honour', () => {
+        expect(parseUrlLocale('fr')).toBeNull()
+        expect(parseUrlLocale('')).toBeNull()
+        expect(parseUrlLocale(null)).toBeNull()
     })
 })

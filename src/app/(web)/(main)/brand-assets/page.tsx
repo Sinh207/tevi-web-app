@@ -1,6 +1,7 @@
 import { BRAND_CONTAINER, BrandAssetsView } from '@features/brand-assets'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
-import { getServerT } from '@shared/i18n/server'
+import { localizedPath, siteAlternates, siteOpenGraph } from '@shared/config/seo'
+import { getServerT, getUrlLocale } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
 /**
@@ -19,17 +20,19 @@ import type { Metadata } from 'next'
  */
 export async function generateMetadata(): Promise<Metadata> {
     const t = await getServerT()
+    // The language the URL names decides the canonical, `og:url` and `hreflang` — see `siteAlternates`.
+    const urlLocale = await getUrlLocale()
+    const alternates = siteAlternates('/brand-assets', urlLocale)
     return {
         title: t('brand_assets_meta_title'),
         description: t('brand_assets_meta_description'),
-        alternates: { canonical: '/brand-assets' },
+        alternates,
         robots: { index: true, follow: true },
-        openGraph: {
-            type: 'website',
-            url: '/brand-assets',
+        openGraph: siteOpenGraph({
+            url: localizedPath('/brand-assets', urlLocale),
             title: t('brand_assets_meta_title'),
             description: t('brand_assets_meta_description'),
-        },
+        }),
     }
 }
 

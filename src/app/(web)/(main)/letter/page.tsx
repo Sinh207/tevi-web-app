@@ -1,5 +1,6 @@
 import { getOpenLetter, LETTER_CONTAINER, OpenLetterView } from '@features/legal'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerLocale, getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -36,14 +37,14 @@ export async function generateMetadata(): Promise<Metadata> {
         description: letter.metaDescription,
         alternates: { canonical: '/letter' },
         robots: { index: true, follow: true },
-        openGraph: {
+        openGraph: siteOpenGraph({
             type: 'article',
             url: '/letter',
             title: letter.title,
             description: letter.metaDescription,
             // A letter is dated, and `article` is the one OG type that carries it.
             publishedTime: letter.publishedAt,
-        },
+        }),
     }
 }
 
