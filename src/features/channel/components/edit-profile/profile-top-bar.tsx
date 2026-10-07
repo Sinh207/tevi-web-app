@@ -62,7 +62,7 @@ export function ProfileTopBar({
     const router = useRouter()
 
     return (
-        <AppBar className={cn('md:px-0', CHANNEL_SETTINGS_CONTAINER)}>
+        <AppBar className={cn('md:px-0', CHANNEL_SETTINGS_CONTAINER, 'max-md:px-0')}>
             <AppBarCluster className="min-w-0">
                 <BarIconButton
                     data-testid="channel-profile-back"

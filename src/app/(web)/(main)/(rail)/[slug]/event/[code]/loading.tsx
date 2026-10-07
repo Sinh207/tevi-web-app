@@ -1,7 +1,7 @@
 import { EVENT_CONTAINER, EventSkeleton } from '@features/event/skeleton'
+import { BarIconButtonSkeleton } from '@shared/components/bar-icon-button-skeleton'
 import { getServerT } from '@shared/i18n/server'
 import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
-import { Skeleton } from '@shared/ui/skeleton'
 
 /**
  * Shown during the streaming gap while the server fetches the event, and on a client-side
@@ -43,9 +43,9 @@ export default async function Loading() {
     return (
         <main className="flex flex-1 flex-col">
             <div className="sticky top-0 z-20 bg-(--background)">
-                <AppBar className={`md:px-0 ${EVENT_CONTAINER}`}>
+                <AppBar className={`md:px-0 ${EVENT_CONTAINER} max-md:px-0`}>
                     <AppBarCluster className="min-w-0">
-                        <Skeleton w={40} h={40} circle />
+                        <BarIconButtonSkeleton />
                     </AppBarCluster>
                     <AppBarTitle className="max-w-[calc(100%-112px)]">
                         <AppBarTitleText className="max-w-full truncate">

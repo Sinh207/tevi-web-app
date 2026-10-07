@@ -1948,7 +1948,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-top-bar.tsx:117"
+            "source": "src/features/channel/components/channel-top-bar.tsx:118"
         },
         "channel-bio-link": {
             "scope": "channel",
@@ -1975,7 +1975,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-bio.tsx:202"
+            "source": "src/features/channel/components/channel-bio.tsx:214"
         },
         "channel-bio-nsfw": {
             "scope": "channel",
@@ -2002,7 +2002,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-bio.tsx:134"
+            "source": "src/features/channel/components/channel-bio.tsx:146"
         },
         "channel-bio-social": {
             "scope": "channel",
@@ -2029,7 +2029,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-bio.tsx:245"
+            "source": "src/features/channel/components/channel-bio.tsx:264"
         },
         "channel-block": {
             "scope": "channel",
@@ -6289,7 +6289,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-top-bar.tsx:174"
+            "source": "src/features/channel/components/channel-top-bar.tsx:175"
         },
         "channel-share-profile": {
             "scope": "channel",
@@ -6941,7 +6941,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-top-bar.tsx:60"
+            "source": "src/features/event/components/event-top-bar.tsx:61"
         },
         "event-banned": {
             "scope": "event",
@@ -10771,7 +10771,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:190"
+            "source": "src/features/navigation/components/page-back-bar.tsx:203"
         },
         "navigation-breadcrumb-item": {
             "scope": "navigation",
@@ -10810,7 +10810,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:199"
+            "source": "src/features/navigation/components/page-back-bar.tsx:212"
         },
         "navigation-breadcrumb-link": {
             "scope": "navigation",
@@ -10849,7 +10849,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:221"
+            "source": "src/features/navigation/components/page-back-bar.tsx:234"
         },
         "navigation-end-rail": {
             "scope": "navigation",
@@ -12505,7 +12505,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:131"
+            "source": "src/features/navigation/components/page-back-bar.tsx:144"
         },
         "navigation-tab-bar": {
             "scope": "navigation",
@@ -12976,7 +12976,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:89"
+            "source": "src/features/navigation/components/app-top-bar.tsx:94"
         },
         "navigation-top-bar-menu": {
             "scope": "navigation",
@@ -13015,7 +13015,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:92"
+            "source": "src/features/navigation/components/app-top-bar.tsx:97"
         },
         "navigation-top-bar-notifications": {
             "scope": "navigation",
@@ -13054,7 +13054,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:203"
+            "source": "src/features/navigation/components/app-top-bar.tsx:208"
         },
         "navigation-top-bar-premium": {
             "scope": "navigation",
@@ -13093,7 +13093,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:191"
+            "source": "src/features/navigation/components/app-top-bar.tsx:196"
         },
         "navigation-top-bar-search": {
             "scope": "navigation",
@@ -13132,7 +13132,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:222"
+            "source": "src/features/navigation/components/app-top-bar.tsx:227"
         },
         "navigation-top-bar-star-balance": {
             "scope": "navigation",
@@ -13171,7 +13171,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:145"
+            "source": "src/features/navigation/components/app-top-bar.tsx:150"
         },
         "navigation-top-bar-star-count": {
             "scope": "navigation",
@@ -13210,7 +13210,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:169"
+            "source": "src/features/navigation/components/app-top-bar.tsx:174"
         },
         "notification-actions": {
             "scope": "notification",
@@ -14920,7 +14920,7 @@
                 "/gift-premium",
                 "/premium"
             ],
-            "source": "src/features/premium/components/premium-top-bar.tsx:74"
+            "source": "src/features/premium/components/premium-top-bar.tsx:78"
         },
         "premium-benefit": {
             "scope": "premium",
@@ -15011,7 +15011,7 @@
                 "/gift-premium",
                 "/premium"
             ],
-            "source": "src/features/premium/components/gift-premium-top-bar.tsx:117"
+            "source": "src/features/premium/components/gift-premium-top-bar.tsx:123"
         },
         "premium-gift-bar": {
             "scope": "premium",

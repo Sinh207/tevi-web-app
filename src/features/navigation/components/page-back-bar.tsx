@@ -51,9 +51,15 @@ import type { ReactNode } from 'react'
  * hand that in and `twMerge` drops this, so their bar keeps matching their prose. Pages whose
  * column has no padding keep this and the bar goes flush.
  *
- * Below `md` nothing changes: the content there is full-bleed with its own 16px inset (a list
- * row's leading column, a card's padding), which is exactly what `px-4` lines the button up
- * with. The rule is the same at both ends — **match the content** — the content just changes.
+ * **Below `md` the bar carries no side padding either**, for a different reason: the controls at
+ * its edges are ghost (`BarIconButton` — a 24px glyph in a 40px target, no disc at rest), and that
+ * target already holds the glyph 8px off its own edge. `AppBar`'s 16 on top of it parked the
+ * chevron 24px from the bezel, visibly further in than the title's optical margin and than every
+ * native bar. So `max-md:px-0`, placed **after** `className`: half the containers handed in here
+ * carry a base `px-4` for their cards (`MY_WALLET_CONTAINER`, `EVENT_CONTAINER`…), which would
+ * otherwise put the inset straight back. The same rule is on `AppTopBar` and every bar that copies
+ * this one; a bar whose edge control has a **fill** of its own (the Premium band's glass) keeps
+ * `px-4`, because a plate against the bezel is a different object from a bare glyph.
  *
  * ## The gap under the bar is the *bar's*, not the page's
  *
@@ -113,7 +119,14 @@ export function PageBackBar({
     const { t } = useTranslation()
 
     return (
-        <AppBar className={cn('md:px-0', className)}>
+        <AppBar
+            className={cn(
+                'md:px-0',
+                className,
+                // Last, so a container's own `px-4` cannot win it back — see "below `md`" above.
+                'max-md:px-0',
+            )}
+        >
             <AppBarCluster className="min-w-0">
                 {/*
                  * `BarIconButton` owns this treatment now — the 40px disc on `--background-surface`,

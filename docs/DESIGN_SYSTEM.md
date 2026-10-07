@@ -358,6 +358,14 @@ Short of 1.4.11's 3:1, and deliberately: that clause covers what *identifies* a 
 the glyph (**19.9** Light / **17.7** Dark against the fill). The disc is shaping. A hairline heavy
 enough to hit 3:1 against white is `--zinc-400`, which is a border nobody drew.
 
+✅ **Superseded 2026-10-07: the disc is gone.** The hairline fixed visibility and kept the cost — three
+outlined circles around a centred title, the heaviest thing in the bar. Every sub-page bar is opaque,
+so the control never needed a ground of its own: `BarIconButton` is now **ghost at rest** (bare 24px
+glyph in a 40px target, `--text-title` ≥17:1 on both grounds) and paints `--background-segment` only on
+hover/press. Artwork is the one ground that still needs a plate, and the caller supplies it
+(`PREMIUM_CONTROL_ON_HERO` on the Premium band). Loading states use `BarIconButtonSkeleton` — a
+glyph-sized mark in the 40px box, not a 40px circle. Compared side by side at `/dev/bar-icon-button`.
+
 The codebase is no longer mixed on this rule. If a screen turns up flat on `--background` below `md`,
 it is either a **multi-block** screen (below) or it was missed.
 

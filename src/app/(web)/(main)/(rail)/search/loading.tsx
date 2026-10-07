@@ -1,4 +1,5 @@
 import { SEARCH_CONTAINER, SEARCH_PANEL, SEARCH_SCREEN } from '@features/search/skeleton'
+import { BarIconButtonSkeleton } from '@shared/components/bar-icon-button-skeleton'
 import { getServerT } from '@shared/i18n/server'
 import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
 import { Skeleton } from '@shared/ui/skeleton'
@@ -44,9 +45,9 @@ export default async function Loading() {
             {/* The page's own sticky wrapper, verbatim — a skeleton that scrolls differently from
                 the screen it stands in for is a second layout. */}
             <div className={`sticky top-0 z-20 ${SEARCH_SCREEN}`}>
-                <AppBar className={`md:px-0 ${SEARCH_CONTAINER}`}>
+                <AppBar className={`md:px-0 ${SEARCH_CONTAINER} max-md:px-0`}>
                     <AppBarCluster className="min-w-0">
-                        <Skeleton w={40} h={40} circle />
+                        <BarIconButtonSkeleton />
                     </AppBarCluster>
                     <AppBarTitle className="max-w-[calc(100%-160px)]">
                         {/* `span`, not `h1`: the page's real bar carries the document's only h1,

@@ -110,7 +110,7 @@ export function EventReportScreen({
     return (
         <main className={cn('flex flex-1 flex-col', EVENT_SCREEN)}>
             <div className={cn('sticky top-0 z-20', EVENT_SCREEN)}>
-                <AppBar className={cn(EVENT_LIST_CONTAINER, 'md:px-0')}>
+                <AppBar className={cn(EVENT_LIST_CONTAINER, 'md:px-0', 'max-md:px-0')}>
                     <AppBarCluster className="min-w-0">
                         {/*
                          * ⚠ **`router.back()` when there is history, the event page when there is

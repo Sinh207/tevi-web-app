@@ -86,7 +86,12 @@ export function AppTopBar() {
     const { isPremium } = useMyChannel()
 
     return (
-        <AppBar data-testid="navigation-top-bar" aria-label={t('nav_main')}>
+        /*
+         * `max-md:px-0`: both edge controls (the menu and search) are `GHOST` — a 22px glyph in a 44px
+         * target that already holds it 11px off its own edge — so `AppBar`'s 16 on top doubled the
+         * inset. `PageBackBar`'s note has the rule; it applies only while the edge controls have no fill.
+         */
+        <AppBar data-testid="navigation-top-bar" aria-label={t('nav_main')} className="max-md:px-0">
             <AppBarCluster>
                 <AppBarButton
                     data-testid="navigation-top-bar-menu"

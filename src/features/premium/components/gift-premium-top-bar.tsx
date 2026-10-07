@@ -108,6 +108,12 @@ export function GiftPremiumTopBar({
                 'sticky top-0 z-20 backdrop-blur-[10px] transition-colors duration-300',
                 // The picker's plane is the column itself from `md` — see the note above.
                 ground === 'surface' && 'md:px-0',
+                /*
+                 * Below `md`, off the band, the back control is ghost and the bar drops its inset —
+                 * `PageBackBar`'s rule. On the band it is a glass plate, and a plate keeps `px-4`.
+                 * This changes on a step change, never under a scroll, so nothing twitches.
+                 */
+                ground !== 'brand' && 'max-md:px-0',
                 ground === 'page' && 'bg-(--background)',
                 ground === 'surface' && 'bg-(--background-surface) md:bg-(--background)',
             )}
@@ -120,7 +126,7 @@ export function GiftPremiumTopBar({
                     mirrored
                     label={backLabel}
                     /*
-                     * Glass on the band, the surface disc on the other two grounds — the same flip
+                     * Glass on the band, the bar's ghost control on the other two grounds — the same flip
                      * `/premium`'s bar makes, driven here by the step rather than by a sentinel. See
                      * `PREMIUM_CONTROL_ON_HERO`.
                      */

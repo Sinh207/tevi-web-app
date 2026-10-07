@@ -54,7 +54,8 @@ export function EventTopBar({
     return (
         // `md:px-0` — the same rule, at the same breakpoint, as `PageBackBar` and `ChannelTopBar`:
         // the bar's inset matches the *content*, and this page's column is full-bleed below `md`.
-        <AppBar className={cn(EVENT_CONTAINER, 'md:px-0')}>
+        // `max-md:px-0` last, over the container's `px-4`: the edge controls are ghost.
+        <AppBar className={cn(EVENT_CONTAINER, 'md:px-0', 'max-md:px-0')}>
             <AppBarCluster className="min-w-0">
                 <BarIconButton
                     data-testid="event-back"

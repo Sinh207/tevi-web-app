@@ -48,14 +48,14 @@ import { PREMIUM_CONTROL_FLIP, PREMIUM_CONTROL_ON_HERO } from '../lib/premium-su
  * `endIcon`. That geometry is not a stylistic preference here: this button sits on the brand band at
  * rest, where a DS `secondary` (a bordered surface at the DS radius, glyph first) reads as a form
  * control dropped onto artwork rather than as the overlay affordance the design draws. The **back
- * button on the same bars is the disc of the same pair** (`BarIconButton`), so the two ends of the
+ * button on the same bars is the other half of the same pair** (`BarIconButton`), so the two ends of the
  * bar are one object in two shapes — same height, same edge, same paint in each state.
  *
  * ## The paint is the bar's state, not legacy's white
  *
  * Legacy is `backgroundColor: '#ffffff'`, `color: '#131313'` at every scroll position. **Deliberate
  * divergence:** on the band the pill is frosted glass instead (`PREMIUM_CONTROL_ON_HERO`, where the
- * reasoning and the measured contrast live), and it takes the surface-and-hairline paint below only
+ * reasoning and the measured contrast live), and it takes the ghost paint below only
  * once the band has gone past. Two opaque white pills are the brightest thing on a near-black band,
  * which puts the chrome ahead of the mark, the pitch and the price.
  *
@@ -101,9 +101,8 @@ export function PremiumManageButton({
         <Button
             data-testid="premium-manage"
             /*
-             * `ghost` rather than `secondary`, then repainted: ghost is the variant with no border of
-             * its own, which is what lets the pill be a clean disc-and-capsule pair with the back
-             * button. The paint is applied here rather than in `shared/ui` because it is this
+             * `ghost` rather than `secondary`: ghost is the variant with no border of its own, which is
+             * what lets the pill and the back button be one pair in every state. The paint is applied here rather than in `shared/ui` because it is this
              * screen's overlay treatment, not a DS variant — the same call `BarIconButton` makes.
              */
             variant="ghost"
@@ -112,21 +111,18 @@ export function PremiumManageButton({
             onClick={portal.open}
             className={cn(
                 PREMIUM_CONTROL_FLIP,
-                'h-10 rounded-full bg-(--background-surface) px-4 text-(--text-title)',
                 /*
-                 * The same hairline `BarIconButton` carries, for the reason written there and
-                 * measured on this bar's *other* ground: `/gift-premium`'s picker step paints the
-                 * bar `--background-surface` below `md` (§6's single-panel rule), and this pill's
-                 * fill is that same token — surface on surface, contrast **1.00**, so the control
-                 * read as a bare glyph floating in the bar. The band hides it and the surface does
-                 * not, and the ground is the bar's choice rather than this button's, so the edge
-                 * comes with the button. `Button`'s base is already `border border-transparent`,
-                 * so this only paints an edge that was always in the box — nothing moves.
+                 * Off the band it is **ghost, like the back button at the other end** — no fill, no
+                 * edge at rest, `--background-segment` on hover. It used to be a surface pill with
+                 * `BarIconButton`'s hairline, and moved with it: a bordered capsule beside a bare
+                 * chevron is two treatments on one bar. `BarIconButton`'s note has the reasoning.
+                 * The edge colour still lands on `Button`'s own `border border-transparent` when the
+                 * glass below paints one, so the box does not change between the two states.
                  */
-                'border-(--button-secondary-border)',
+                'h-10 rounded-full bg-transparent px-4 text-(--text-title)',
                 'hover:not-disabled:bg-(--background-segment) active:scale-[0.98]',
-                // A 40px disc on a phone, where the label is `sr-only` and there is nothing to pad —
-                // the same box as the back disc at the other end of the bar.
+                // A 40px target on a phone, where the label is `sr-only` and there is nothing to pad —
+                // the same box as the back button at the other end of the bar.
                 'max-sm:w-10 max-sm:px-0',
                 /*
                  * Last, so the glass overrides the three paints above it — `twMerge` keeps the later

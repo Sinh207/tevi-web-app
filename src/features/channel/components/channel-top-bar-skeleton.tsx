@@ -1,3 +1,4 @@
+import { BarIconButtonSkeleton } from '@shared/components/bar-icon-button-skeleton'
 import { cn } from '@shared/lib/utils'
 import { Skeleton } from '@shared/ui/skeleton'
 import { CHANNEL_CONTAINER } from '../lib/container'
@@ -12,13 +13,11 @@ import { CHANNEL_CONTAINER } from '../lib/container'
  * `loading.tsx` renders the same skeleton, that jump is the *first* thing a visitor sees.
  *
  * It reserves the same 60px, the same sticky position and the same z-index as `ChannelTopBar`, so the
- * two are interchangeable. The back button is real rather than a placeholder circle — it works without
- * knowing anything about the channel, and a visitor who lands on a slow page should be able to leave
- * it. That is the one thing worth *not* skeletonising.
+ * two are interchangeable.
  *
  * ## It matches the bar the page actually has, which took two corrections
  *
- * **40, not 44.** `ChannelTopBar` wears `BarIconButton`, a 40px disc — the 44 here was the DS `App
+ * **40, not 44.** `ChannelTopBar` wears `BarIconButton`, a 40px target — the 44 here was the DS `App
  * Bar` button, which is what the *other* bar family uses (see that component's note). Four pixels
  * per button, on both sides.
  *
@@ -32,7 +31,8 @@ export function ChannelTopBarSkeleton() {
     return (
         <div className="sticky top-0 z-20 bg-(--background-surface) md:bg-(--background) print:hidden">
             {/*
-             * `px-4 md:px-0` — **copied from `ChannelTopBar`, and it has to stay copied.** This
+             * `px-0` — **copied from `ChannelTopBar` (`md:px-0` above, `max-md:px-0` below), and it
+             * has to stay copied.** This
              * used to be `px-2`, which put the placeholder circle 8px from the column edge while
              * the real button sat at 16, so the bar's contents slid sideways the moment the
              * channel resolved — the exact class of shift this component exists to prevent, just
@@ -44,11 +44,11 @@ export function ChannelTopBarSkeleton() {
                 aria-busy="true"
                 className={cn(
                     CHANNEL_CONTAINER,
-                    'relative flex h-[60px] items-center justify-between px-4 md:px-0',
+                    'relative flex h-[60px] items-center justify-between px-0',
                 )}
             >
-                {/* 40px is `BarIconButton`'s disc — what this bar actually renders. */}
-                <Skeleton circle w={40} h={40} />
+                {/* `BarIconButton`'s 40px target, holding a glyph-sized mark — see that skeleton. */}
+                <BarIconButtonSkeleton />
 
                 {/*
                  * The centred title, at the height its text occupies: `AppBarTitleText` is
@@ -68,8 +68,8 @@ export function ChannelTopBarSkeleton() {
 
                 {/* Share + the overflow menu, the cluster's own `gap-2` between them. */}
                 <div className="flex items-center gap-2">
-                    <Skeleton circle w={40} h={40} delay={320} />
-                    <Skeleton circle w={40} h={40} delay={480} />
+                    <BarIconButtonSkeleton delay={320} />
+                    <BarIconButtonSkeleton delay={480} />
                 </div>
             </div>
         </div>

@@ -24,8 +24,8 @@ import { PremiumManageButton } from './premium-manage-button'
  * bar's controls are `BarIconButton` and its pill rather than the DS's `overlay` theme, which is
  * drawn for a bar over photography and would put a dark translucent plate on an already near-black
  * band. What they do take from that theme is its hairline of light: on the band both controls wear
- * `PREMIUM_CONTROL_ON_HERO` — frosted glass, white ink — and they cross to the surface-and-hairline
- * paint with the rest of the bar. That constant carries the reasoning and the measured contrast.)
+ * `PREMIUM_CONTROL_ON_HERO` — frosted glass, white ink — and they cross to the ghost paint every
+ * other sub-page bar wears. That constant carries the reasoning and the measured contrast.)
  *
  * ## `stuck` is the band's news, so the band is what decides it
  *
@@ -52,7 +52,11 @@ export function PremiumTopBar({
         <AppBar
             data-stuck={stuck || undefined}
             /*
-             * **The bar keeps `AppBar`'s own `px-4` at every width — no `md:px-0` here.**
+             * **The bar keeps `AppBar`'s own `px-4` at every width — no `md:px-0` here, and no
+             * `max-md:px-0` either.** At rest both edge controls are glass plates on the band, and a
+             * plate keeps its inset (`PageBackBar`'s rule drops it only for ghost controls). The
+             * bar turns ghost when `stuck`, but that happens under a scroll, and moving both
+             * controls 16px sideways mid-scroll is worse than the inset.
              *
              * `PageBackBar`'s rule is to drop the bar's inset from `md`, because on those screens
              * the *column* carries the 16 below `md` and a card carries it above, so 0 lines the
@@ -80,7 +84,7 @@ export function PremiumTopBar({
                      * The two ends of the bar flip together — see `PREMIUM_CONTROL_ON_HERO`. It is
                      * passed as a class here and as a prop to the pill because that is what each
                      * control accepts: `BarIconButton` is a `className` component by design (its own
-                     * note: the disc's ground is not knowable at the call site), while the pill has a
+                     * note: only the caller knows when it is on artwork), while the pill has a
                      * second paint of its own to switch and takes the answer typed.
                      */
                     className={cn(PREMIUM_CONTROL_FLIP, !stuck && PREMIUM_CONTROL_ON_HERO)}

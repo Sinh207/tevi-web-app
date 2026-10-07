@@ -11,8 +11,8 @@ import { Icon, type IconGlyphProps } from '@shared/ui/icon'
  *
  * There are two bar families in this app and they are not interchangeable. `AppTopBar` — the mobile
  * home bar inside `(tabs)` — uses the DS `App Bar`'s own buttons at 44 with unfilled 22px glyphs,
- * which is what Figma draws for it. A **sub-page** bar is the other family: a 40px disc on
- * `--background-surface` with a 24px glyph, which is what `PageBackBar` arrived at.
+ * which is what Figma draws for it. A **sub-page** bar is the other family: a 40px ghost target
+ * with a 24px glyph, which is what `PageBackBar` arrived at.
  *
  * That second treatment used to exist in exactly one file, so the channel page's own bar reproduced
  * it from memory and got four things different at once: `AppBarButton` instead of `Button`, 44
@@ -31,36 +31,41 @@ import { Icon, type IconGlyphProps } from '@shared/ui/icon'
  * 2. **`weight="filled"` needs the sprite rebuilt.** A new name+weight pair is not in the subset until
  *    `pnpm icons` runs, and until then the glyph is an empty box.
  *
- * `variant="ghost"` is the base only because it is the one that paints nothing of its own for the
- * `--background-surface` fill to sit on. The hover and press states are additions — Figma has no
- * interaction layer.
+ * `variant="ghost"` is the base because the control paints nothing at rest (see below). The hover
+ * disc and the press scale are additions — Figma has no interaction layer.
  *
- * ## The hairline is not decoration — without it the disc disappears on half the app's bars
+ * ## Ghost on the bar — no disc, no edge — because the bar is already the ground
  *
- * The fill is `--background-surface`, and a sub-page bar is **not always** page-coloured: every
- * screen following `docs/DESIGN_SYSTEM.md` §6's single-panel rule paints its bar with that same
- * surface below `md`. On those the disc was surface-on-surface — measured **1.00** — so the control
- * read as a bare chevron floating in the bar, on `/my-wallet/transaction-history`,
- * `/redeem-gift-code`, `/identification` and every other aligned screen. It only ever looked right on
- * the page-coloured half.
+ * This was a 40px disc filled `--background-surface` with a `--button-secondary-border` hairline, and
+ * the hairline existed only to rescue the disc: on every screen following `docs/DESIGN_SYSTEM.md` §6's
+ * single-panel rule the bar *is* `--background-surface` below `md`, so the disc measured **1.00**
+ * against it and read as a bare chevron. The edge fixed the visibility and kept the cost — three
+ * outlined circles flanking a centred title, the heaviest thing in a bar whose only job is to get out
+ * of the way.
  *
- * This is §6a's rule applied to the one component it kept catching out: *a disc's ground is chosen
- * against the surface it lands on*, and here the surface is not knowable at the call site — the same
- * bar is page-coloured at one breakpoint and surface at the other. So the disc carries its own edge
- * instead of relying on a ground it cannot predict, and one hairline is right on both.
+ * Every sub-page bar here is **opaque** (`ChannelTopBar`'s note says why the immersive cover bar was
+ * not ported), so the control never needs a ground of its own: the glyph against the bar is what
+ * identifies it, and `--text-title` clears 17:1 against both grounds in both themes, so it does not
+ * matter which of the two the bar is wearing at this breakpoint. The disc now appears only as a **state** — hover and
+ * press paint `--background-segment` — which is the shape native navigation bars use.
+ * Compared side by side, both themes × both grounds, at `/dev/bar-icon-button`.
  *
- * **A border, not legacy's shadow.** Legacy solves the same problem with
- * `boxShadow: '0px 2px 10px rgba(0,0,0,0.1)'` — a soft dark halo, which is very nearly invisible on a
- * dark surface and would leave this broken in the theme legacy does not have.
- * The token is **`--button-secondary-border`** — what the DS already draws every `secondary` button's
- * edge with, so this disc's outline is the same hairline as every other bordered control rather than
- * a third opinion. It resolves to `--separator-strong` (`--zinc-300`), a ramp that flips with the
- * mode, so the edge is there at both ends. `--separator-default` was measurably too faint: **1.19**
- * against a dark surface bar.
+ * **Deliberate divergence from legacy**, which draws a white disc with a
+ * `0px 2px 10px rgba(0,0,0,0.1)` halo — a treatment that is nearly invisible on a dark surface, in the
+ * theme legacy does not have.
  *
- * It is added **here** rather than on the screen that surfaced it, because a per-screen fix is
- * exactly the deviation §6b records being tried and reversed: two bars a scroll apart, visibly not
- * the same control, is the bug this component exists to prevent.
+ * **The one ground that does need a disc is artwork**, and it is the caller's to supply because only
+ * the caller knows when it is on it: `/premium` and `/gift-premium` pass `PREMIUM_CONTROL_ON_HERO`
+ * (frosted glass) while their bar sits on the brand band. That class sets fill, edge and ink, and the
+ * edge lands on `Button`'s own `border border-transparent`, so the box does not change size between
+ * the two states.
+ *
+ * Fix the treatment **here**, never on the screen that surfaced a problem: two bars a scroll apart
+ * that are visibly not the same control is the bug this component exists to prevent (§6b records a
+ * per-screen fix being tried and reversed).
+ *
+ * The loading half is `BarIconButtonSkeleton`, next to this file — a 40px grey disc stood in for the
+ * old control, and standing in for a bare glyph it would be a shape the page never shows.
  *
  * The 40px box is a deliberate 4 under Apple's HIG and Material's 44, and well over WCAG 2.5.8's
  * 24×24 minimum; the bar's own 16 padding keeps it clear of the screen edge either way.
@@ -108,8 +113,7 @@ export function BarIconButton({
             aria-label={label}
             className={cn(
                 'size-10 rounded-full active:scale-[0.95]',
-                'border border-(--button-secondary-border) bg-(--background-surface)',
-                'hover:not-disabled:bg-(--background-segment)',
+                'bg-transparent hover:not-disabled:bg-(--background-segment)',
                 className,
             )}
             {...props}

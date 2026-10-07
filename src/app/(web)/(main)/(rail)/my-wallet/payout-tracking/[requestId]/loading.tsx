@@ -3,9 +3,9 @@
  * feature in this loading chunk and the app's CSP blocks it, silently.
  */
 import { PAYOUT_CONTAINER, PayoutDetailSkeleton } from '@features/payout/skeleton'
+import { BarIconButtonSkeleton } from '@shared/components/bar-icon-button-skeleton'
 import { getServerT } from '@shared/i18n/server'
 import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
-import { Skeleton } from '@shared/ui/skeleton'
 
 /**
  * Shown during the streaming gap and on a client-side navigation from the tracking list — which is how
@@ -23,9 +23,9 @@ export default async function Loading() {
         // `--background`: three cards separated by the page colour, not one full-bleed panel.
         <main className="flex flex-1 flex-col">
             <div className="sticky top-0 z-20 bg-(--background)">
-                <AppBar className={`md:px-0 ${PAYOUT_CONTAINER}`}>
+                <AppBar className={`md:px-0 ${PAYOUT_CONTAINER} max-md:px-0`}>
                     <AppBarCluster className="min-w-0">
-                        <Skeleton w={40} h={40} circle />
+                        <BarIconButtonSkeleton />
                     </AppBarCluster>
                     <AppBarTitle className="max-w-[calc(100%-160px)]">
                         {/* `span`, not `h1` — the real bar's title is the page's only one. */}

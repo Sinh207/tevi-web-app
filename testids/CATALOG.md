@@ -190,10 +190,10 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-add-home-screen-item` | — | `src/features/channel/components/add-home-screen-guide.tsx:206` |
 | `channel-auto-follow-now` | `data-option-value` | `src/features/channel/components/channel-auto-follow.tsx:344` |
 | `channel-auto-follow-skip` | `data-option-value` | `src/features/channel/components/channel-auto-follow.tsx:328` |
-| `channel-back` | — | `src/features/channel/components/channel-top-bar.tsx:117` |
-| `channel-bio-link` | — | `src/features/channel/components/channel-bio.tsx:202` |
-| `channel-bio-nsfw` | — | `src/features/channel/components/channel-bio.tsx:134` |
-| `channel-bio-social` | — | `src/features/channel/components/channel-bio.tsx:245` |
+| `channel-back` | — | `src/features/channel/components/channel-top-bar.tsx:118` |
+| `channel-bio-link` | — | `src/features/channel/components/channel-bio.tsx:214` |
+| `channel-bio-nsfw` | — | `src/features/channel/components/channel-bio.tsx:146` |
+| `channel-bio-social` | — | `src/features/channel/components/channel-bio.tsx:264` |
 | `channel-block` | — | `src/features/channel/components/channel-viewer-menu.tsx:177` |
 | `channel-block-confirm` | — | `src/features/channel/components/channel-viewer-menu.tsx:210` |
 | `channel-blocked-loading` | — | `src/features/channel/components/blocked-accounts-skeleton.tsx:33` |
@@ -350,7 +350,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-report-submit` | — | `src/features/channel/components/channel-report-dialog.tsx:252` |
 | `channel-report-submit-block` | — | `src/features/channel/components/channel-report-dialog.tsx:261` |
 | `channel-retry` | — | `src/features/channel/components/channel-error.tsx:76` |
-| `channel-share` | — | `src/features/channel/components/channel-top-bar.tsx:174` |
+| `channel-share` | — | `src/features/channel/components/channel-top-bar.tsx:175` |
 | `channel-share-profile` | — | `src/features/channel/components/share-profile-button.tsx:50` |
 | `channel-social-link` | `data-row-key` | `src/features/channel/components/channel-about-details.tsx:101` |
 | `channel-suspended-guidelines` | — | `src/features/channel/components/channel-state-screens.tsx:117` |
@@ -417,7 +417,7 @@ Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
 | `event-age-decline` | — | `src/features/event/components/event-age-gate.tsx:168` |
 | `event-age-gate` | — | `src/features/event/components/event-age-gate.tsx:78` |
 | `event-analytics` | — | `src/features/event/components/event-analytics-cards.tsx:65` |
-| `event-back` | — | `src/features/event/components/event-top-bar.tsx:60` |
+| `event-back` | — | `src/features/event/components/event-top-bar.tsx:61` |
 | `event-banned` | — | `src/features/event/components/event-state-screens.tsx:186` |
 | `event-banned-discover` | — | `src/features/event/components/event-state-screens.tsx:195` |
 | `event-banned-home` | — | `src/features/event/components/event-state-screens.tsx:203` |
@@ -909,9 +909,9 @@ Also present on every route it is mounted under — `src/app/(web)/(main)/layout
 
 | testid | companions | source |
 |---|---|---|
-| `navigation-breadcrumb` | — | `src/features/navigation/components/page-back-bar.tsx:190` |
-| `navigation-breadcrumb-item` | — | `src/features/navigation/components/page-back-bar.tsx:199` |
-| `navigation-breadcrumb-link` | — | `src/features/navigation/components/page-back-bar.tsx:221` |
+| `navigation-breadcrumb` | — | `src/features/navigation/components/page-back-bar.tsx:203` |
+| `navigation-breadcrumb-item` | — | `src/features/navigation/components/page-back-bar.tsx:212` |
+| `navigation-breadcrumb-link` | — | `src/features/navigation/components/page-back-bar.tsx:234` |
 | `navigation-end-rail` | — | `src/features/navigation/components/end-rail/app-end-rail.tsx:70` |
 | `navigation-end-rail-get-app` | — | `src/features/navigation/components/end-rail/get-app-button.tsx:48` |
 | `navigation-end-rail-get-star` | — | `src/features/navigation/components/end-rail/end-rail-pill.tsx:87` |
@@ -953,7 +953,7 @@ Also present on every route it is mounted under — `src/app/(web)/(main)/layout
 | `navigation-navbar-notifications` | — | `src/features/navigation/components/app-navbar.tsx:327` |
 | `navigation-navbar-profile` | — | `src/features/navigation/components/app-navbar.tsx:366` |
 | `navigation-navbar-search` | — | `src/features/navigation/components/app-navbar.tsx:300` |
-| `navigation-page-back` | — | `src/features/navigation/components/page-back-bar.tsx:131` |
+| `navigation-page-back` | — | `src/features/navigation/components/page-back-bar.tsx:144` |
 | `navigation-tab-bar` | — | `src/features/navigation/components/app-tab-bar.tsx:84` |
 | `navigation-tab-bar-create` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:88` |
 | `navigation-tab-bar-create-dialog` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:120` |
@@ -965,13 +965,13 @@ Also present on every route it is mounted under — `src/app/(web)/(main)/layout
 | `navigation-tab-bar-home` | — | `src/features/navigation/components/app-tab-bar.tsx:110` |
 | `navigation-tab-bar-messages` | — | `src/features/navigation/components/app-tab-bar.tsx:141` |
 | `navigation-tab-bar-my-space` | — | `src/features/navigation/components/app-tab-bar.tsx:161` |
-| `navigation-top-bar` | — | `src/features/navigation/components/app-top-bar.tsx:89` |
-| `navigation-top-bar-menu` | — | `src/features/navigation/components/app-top-bar.tsx:92` |
-| `navigation-top-bar-notifications` | — | `src/features/navigation/components/app-top-bar.tsx:203` |
-| `navigation-top-bar-premium` | — | `src/features/navigation/components/app-top-bar.tsx:191` |
-| `navigation-top-bar-search` | — | `src/features/navigation/components/app-top-bar.tsx:222` |
-| `navigation-top-bar-star-balance` | — | `src/features/navigation/components/app-top-bar.tsx:145` |
-| `navigation-top-bar-star-count` | — | `src/features/navigation/components/app-top-bar.tsx:169` |
+| `navigation-top-bar` | — | `src/features/navigation/components/app-top-bar.tsx:94` |
+| `navigation-top-bar-menu` | — | `src/features/navigation/components/app-top-bar.tsx:97` |
+| `navigation-top-bar-notifications` | — | `src/features/navigation/components/app-top-bar.tsx:208` |
+| `navigation-top-bar-premium` | — | `src/features/navigation/components/app-top-bar.tsx:196` |
+| `navigation-top-bar-search` | — | `src/features/navigation/components/app-top-bar.tsx:227` |
+| `navigation-top-bar-star-balance` | — | `src/features/navigation/components/app-top-bar.tsx:150` |
+| `navigation-top-bar-star-count` | — | `src/features/navigation/components/app-top-bar.tsx:174` |
 
 ## `notification` — Notifications
 
@@ -1182,7 +1182,7 @@ Routes: `/gift-premium`, `/premium`
 | testid | companions | source |
 |---|---|---|
 | `premium-about` | — | `src/features/premium/components/premium-about.tsx:59` |
-| `premium-back` | — | `src/features/premium/components/premium-top-bar.tsx:74` |
+| `premium-back` | — | `src/features/premium/components/premium-top-bar.tsx:78` |
 | `premium-benefit` | — | `src/features/premium/components/premium-benefit-dialog.tsx:120` |
 | `premium-benefit-dialog` | — | `src/features/premium/components/premium-benefit-dialog.tsx:87` |
 | `premium-benefit-dialog-close` | — | `src/features/premium/components/premium-benefit-dialog.tsx:202` |
@@ -1193,7 +1193,7 @@ Routes: `/gift-premium`, `/premium`
 | `premium-benefits-skeleton` | — | `src/features/premium/components/premium-benefits.tsx:286` |
 | `premium-confirm` | — | `src/features/premium/components/premium-subscribe-confirm.tsx:50` |
 | `premium-gift-again` | — | `src/features/premium/components/gift-premium-view.tsx:201` |
-| `premium-gift-back` | — | `src/features/premium/components/gift-premium-top-bar.tsx:117` |
+| `premium-gift-back` | — | `src/features/premium/components/gift-premium-top-bar.tsx:123` |
 | `premium-gift-bar` | — | `src/features/premium/components/gift-premium-top-bar.tsx:71` |
 | `premium-gift-catalogue-retry` | — | `src/features/premium/components/gift-recipient-picker.tsx:183` |
 | `premium-gift-confirm` | — | `src/features/premium/components/gift-confirm-dialog.tsx:62` |

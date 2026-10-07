@@ -58,7 +58,7 @@ export function TwoFaBackBar({
            visible border, and the eye measures the bar against *that*, so any padding here pulls
            the button inside the card's outline. */
         <div className="sticky top-0 z-20 bg-(--background)">
-            <AppBar className={cn(TWO_FA_CONTAINER, 'md:px-0')}>
+            <AppBar className={cn(TWO_FA_CONTAINER, 'md:px-0', 'max-md:px-0')}>
                 <AppBarCluster className="min-w-0">
                     <BarIconButton
                         data-testid="auth-two-fa-back"

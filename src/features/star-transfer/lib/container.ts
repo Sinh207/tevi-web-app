@@ -29,8 +29,8 @@
  * background between them. Same rule in all three: the column's padding is whatever makes the content
  * sit right.
  *
- * The page hands this to `PageBackBar` as well. The bar keeps its own `px-4` below `md` (it applies
- * `md:px-0` itself, before this class): a lone 40px back button hard against the bezel is not the same
- * problem as a full-bleed surface — it is a control, and controls keep their inset.
+ * The page hands this to `PageBackBar` as well. The bar sets its own side padding at both ends and
+ * after this class (`PageBackBar` says why it is 0 below `md`: the back control is a ghost glyph whose
+ * 40px target is already its inset).
  */
 export const STAR_TRANSFER_CONTAINER = 'mx-auto w-full md:max-w-[612px]'

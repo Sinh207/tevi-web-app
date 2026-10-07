@@ -93,7 +93,8 @@ export function ChannelTopBar({
         // strip parks under it at `top-[60px] z-10`, so the two make one 108px stack.
         <div className="sticky top-0 z-20 bg-(--background-surface) md:bg-(--background) print:hidden">
             {/*
-             * `md:px-0` — the same rule `PageBackBar` applies, at the same breakpoint.
+             * `md:px-0` — the same rule `PageBackBar` applies, at the same breakpoint. Below `md` it
+             * is `px-0` too, because the edge controls are ghost; `PageBackBar` says why.
              *
              * `AppBar` carries `px-4`, drawn for a phone where the bar spans the screen. Once the
              * column caps, that 16px measures from the *column's* edge while the header card below
@@ -106,7 +107,7 @@ export function ChannelTopBar({
              * `md`, so the answer moved with it — and this page and the settings screens now agree
              * on both the number and the reason.
              */}
-            <AppBar className={cn(CHANNEL_CONTAINER, 'md:px-0')}>
+            <AppBar className={cn(CHANNEL_CONTAINER, 'md:px-0 max-md:px-0')}>
                 <AppBarCluster className="min-w-0">
                     {/*
                      * `BarIconButton`, the same control `PageBackBar` renders. It used to be an
