@@ -78,6 +78,12 @@ export function ChannelHeader({
      * leave a visitor unsure they had the right URL.
      */
     blurred = false,
+    /**
+     * Callback ref for the cover's last pixel — `useBandPassed`'s sentinel. Below `sm` the page's
+     * bar sits over the cover and changes paint once the cover has gone (`ChannelTopBar`); the cover
+     * is here and the bar is not, so the page owns the answer and hands each half its part.
+     */
+    coverEndRef,
     className,
 }: {
     channel: Channel
@@ -85,6 +91,7 @@ export function ChannelHeader({
     actions?: ReactNode
     isOwner?: boolean
     blurred?: false | 'soft' | 'strong'
+    coverEndRef?: (node: HTMLDivElement | null) => void
     className?: string
 }) {
     const { t } = useTranslation()
@@ -187,6 +194,7 @@ export function ChannelHeader({
             )}
         >
             <ChannelCover src={channel.images.cover} blurred={blurred} />
+            <div ref={coverEndRef} aria-hidden="true" className="h-0" />
 
             <div className={cn('flex min-w-0 flex-col gap-3 md:gap-6', CHANNEL_PADDING)}>
                 {/*

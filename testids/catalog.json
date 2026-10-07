@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 1087,
+        "ids": 1089,
         "surfaces": 30
     },
     "surfaces": {
@@ -1948,7 +1948,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-top-bar.tsx:118"
+            "source": "src/features/channel/components/channel-top-bar.tsx:168"
         },
         "channel-bio-link": {
             "scope": "channel",
@@ -1975,7 +1975,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-bio.tsx:214"
+            "source": "src/features/channel/components/channel-bio.tsx:209"
         },
         "channel-bio-nsfw": {
             "scope": "channel",
@@ -2002,7 +2002,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-bio.tsx:146"
+            "source": "src/features/channel/components/channel-bio.tsx:141"
         },
         "channel-bio-social": {
             "scope": "channel",
@@ -2029,7 +2029,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-bio.tsx:264"
+            "source": "src/features/channel/components/channel-bio.tsx:259"
         },
         "channel-block": {
             "scope": "channel",
@@ -2056,7 +2056,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:177"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:187"
         },
         "channel-block-confirm": {
             "scope": "channel",
@@ -2083,7 +2083,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:210"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:220"
         },
         "channel-blocked-loading": {
             "scope": "channel",
@@ -4882,7 +4882,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:143"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:153"
         },
         "channel-message": {
             "scope": "channel",
@@ -5125,7 +5125,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:124"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:134"
         },
         "channel-owner-edit": {
             "scope": "channel",
@@ -5152,7 +5152,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-owner-actions.tsx:85"
+            "source": "src/features/channel/components/channel-owner-actions.tsx:77"
         },
         "channel-owner-share": {
             "scope": "channel",
@@ -5179,7 +5179,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-owner-actions.tsx:115"
+            "source": "src/features/channel/components/channel-owner-actions.tsx:107"
         },
         "channel-premium-badge": {
             "scope": "channel",
@@ -6046,7 +6046,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:163"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:173"
         },
         "channel-report-close": {
             "scope": "channel",
@@ -6289,7 +6289,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-top-bar.tsx:175"
+            "source": "src/features/channel/components/channel-top-bar.tsx:193"
         },
         "channel-share-profile": {
             "scope": "channel",
@@ -6347,6 +6347,33 @@
                 "data-row-key"
             ],
             "source": "src/features/channel/components/channel-about-details.tsx:101"
+        },
+        "channel-star-balance": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/[slug]/messages",
+                "/[slug]/post/[code]",
+                "/bookmarks",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-top-bar.tsx:185"
         },
         "channel-suspended-guidelines": {
             "scope": "channel",
@@ -6456,6 +6483,33 @@
             ],
             "source": "src/features/channel/components/channel-thread-list.tsx:226"
         },
+        "channel-top-bar": {
+            "scope": "channel",
+            "routes": [
+                "/[slug]",
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/direct-donation",
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/event/[code]",
+                "/[slug]/event/[code]/report",
+                "/[slug]/membership/[[...tier]]",
+                "/[slug]/messages",
+                "/[slug]/post/[code]",
+                "/bookmarks",
+                "/follow-requests",
+                "/following",
+                "/invitation/verify",
+                "/mcn-partnership",
+                "/mcn-user-invitation/verify",
+                "/my-space",
+                "/settings/blocked-accounts",
+                "/settings/custom-profile",
+                "/settings/space-visibility"
+            ],
+            "source": "src/features/channel/components/channel-top-bar.tsx:109"
+        },
         "channel-top-bar-loading": {
             "scope": "channel",
             "routes": [
@@ -6481,7 +6535,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-top-bar-skeleton.tsx:43"
+            "source": "src/features/channel/components/channel-top-bar-skeleton.tsx:46"
         },
         "channel-unblock": {
             "scope": "channel",
@@ -10771,7 +10825,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:203"
+            "source": "src/features/navigation/components/page-back-bar.tsx:225"
         },
         "navigation-breadcrumb-item": {
             "scope": "navigation",
@@ -10810,7 +10864,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:212"
+            "source": "src/features/navigation/components/page-back-bar.tsx:234"
         },
         "navigation-breadcrumb-link": {
             "scope": "navigation",
@@ -10849,7 +10903,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:234"
+            "source": "src/features/navigation/components/page-back-bar.tsx:256"
         },
         "navigation-end-rail": {
             "scope": "navigation",
@@ -12505,7 +12559,46 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/page-back-bar.tsx:144"
+            "source": "src/features/navigation/components/page-back-bar.tsx:154"
+        },
+        "navigation-page-star-balance": {
+            "scope": "navigation",
+            "routes": [
+                "/[slug]/earnings-report",
+                "/[slug]/earnings-report/[dateTs]",
+                "/[slug]/post/[code]",
+                "/bookmarks",
+                "/brand-assets",
+                "/card-management",
+                "/community-guidelines",
+                "/dashboard-analytics",
+                "/follow-requests",
+                "/following",
+                "/get-star",
+                "/get-star/transaction-history",
+                "/gift-star",
+                "/identification",
+                "/letter",
+                "/moderation",
+                "/monetization",
+                "/my-space",
+                "/my-star",
+                "/my-wallet",
+                "/notification",
+                "/privacy",
+                "/privacy/mini-app",
+                "/privacy/tevi-premium",
+                "/redeem-gift-code",
+                "/safety",
+                "/search",
+                "/settings/blocked-accounts",
+                "/settings/password",
+                "/settings/space-visibility",
+                "/terms",
+                "/terms/tevi-premium",
+                "/tos/mini-app"
+            ],
+            "source": "src/features/navigation/components/page-back-bar.tsx:170"
         },
         "navigation-tab-bar": {
             "scope": "navigation",
@@ -12976,7 +13069,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:94"
+            "source": "src/features/navigation/components/app-top-bar.tsx:71"
         },
         "navigation-top-bar-menu": {
             "scope": "navigation",
@@ -13015,7 +13108,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:97"
+            "source": "src/features/navigation/components/app-top-bar.tsx:74"
         },
         "navigation-top-bar-notifications": {
             "scope": "navigation",
@@ -13054,7 +13147,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:208"
+            "source": "src/features/navigation/components/app-top-bar.tsx:109"
         },
         "navigation-top-bar-premium": {
             "scope": "navigation",
@@ -13093,7 +13186,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:196"
+            "source": "src/features/navigation/components/app-top-bar.tsx:97"
         },
         "navigation-top-bar-search": {
             "scope": "navigation",
@@ -13132,7 +13225,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:227"
+            "source": "src/features/navigation/components/app-top-bar.tsx:128"
         },
         "navigation-top-bar-star-balance": {
             "scope": "navigation",
@@ -13171,46 +13264,7 @@
                 "/terms/tevi-premium",
                 "/tos/mini-app"
             ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:150"
-        },
-        "navigation-top-bar-star-count": {
-            "scope": "navigation",
-            "routes": [
-                "/[slug]/earnings-report",
-                "/[slug]/earnings-report/[dateTs]",
-                "/[slug]/post/[code]",
-                "/bookmarks",
-                "/brand-assets",
-                "/card-management",
-                "/community-guidelines",
-                "/dashboard-analytics",
-                "/follow-requests",
-                "/following",
-                "/get-star",
-                "/get-star/transaction-history",
-                "/gift-star",
-                "/identification",
-                "/letter",
-                "/moderation",
-                "/monetization",
-                "/my-space",
-                "/my-star",
-                "/my-wallet",
-                "/notification",
-                "/privacy",
-                "/privacy/mini-app",
-                "/privacy/tevi-premium",
-                "/redeem-gift-code",
-                "/safety",
-                "/search",
-                "/settings/blocked-accounts",
-                "/settings/password",
-                "/settings/space-visibility",
-                "/terms",
-                "/terms/tevi-premium",
-                "/tos/mini-app"
-            ],
-            "source": "src/features/navigation/components/app-top-bar.tsx:174"
+            "source": "src/features/navigation/components/app-top-bar.tsx:91"
         },
         "notification-actions": {
             "scope": "notification",
@@ -13406,12 +13460,12 @@
         "nsfw-confirm-age": {
             "scope": "nsfw",
             "routes": [],
-            "source": "src/features/nsfw/components/nsfw-gate-panel.tsx:149"
+            "source": "src/features/nsfw/components/nsfw-gate-panel.tsx:212"
         },
         "nsfw-filter-toggle": {
             "scope": "nsfw",
             "routes": [],
-            "source": "src/features/nsfw/components/nsfw-gate-panel.tsx:195"
+            "source": "src/features/nsfw/components/nsfw-gate-panel.tsx:258"
         },
         "nsfw-info-appeal": {
             "scope": "nsfw",
@@ -15359,7 +15413,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-following-strip.tsx:322"
+            "source": "src/features/search/components/search-following-strip.tsx:324"
         },
         "search-following-view-all": {
             "scope": "search",
@@ -15437,7 +15491,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-channel-row.tsx:75"
+            "source": "src/features/search/components/search-channel-row.tsx:76"
         },
         "search-retry": {
             "scope": "search",
@@ -15731,6 +15785,14 @@
             ],
             "parts": [
                 "digit"
+            ]
+        },
+        "src/features/balance/components/star-balance-pill.tsx": {
+            "accepts": [
+                "StarBalancePill"
+            ],
+            "parts": [
+                "label-data"
             ]
         },
         "src/features/event/components/event-gift-panel.tsx": {

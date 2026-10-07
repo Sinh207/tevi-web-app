@@ -1,6 +1,9 @@
 'use client'
 
+import { StarBalancePill } from '@features/balance'
 import { BarIconButton } from '@shared/components/bar-icon-button'
+import { BAR_TITLE_RESERVE_BELOW_MD } from '@shared/components/bar-layout'
+import { BarTitleReserve } from '@shared/components/bar-title-reserve'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
@@ -103,6 +106,12 @@ export function PageBackBar({
     titleClassName,
     trailing,
     actions,
+    /**
+     * The Star pill after the back button, below `md`. **Off by default** — product wants it on the
+     * reading surfaces only (a post here; the channel page draws its own bar), not on settings,
+     * wallet or legal screens. A page that wants it opts in.
+     */
+    starBalance = false,
     className,
 }: {
     title: string
@@ -113,6 +122,7 @@ export function PageBackBar({
     trailing?: ReactNode
     /** The bar's trailing edge — the page's own controls. See the note above. */
     actions?: ReactNode
+    starBalance?: boolean
     className?: string
 }) {
     const router = useRouter()
@@ -155,6 +165,10 @@ export function PageBackBar({
                         else router.push(home)
                     }}
                 />
+                {/* Below `md` only — the shell's own top bar is not on a sub-page there. */}
+                {starBalance && (
+                    <StarBalancePill testId="navigation-page-star-balance" className="md:hidden" />
+                )}
                 {trailing}
             </AppBarCluster>
             {/*
@@ -164,7 +178,15 @@ export function PageBackBar({
              * button, the bar's 16 padding and room to spare, so a long title truncates
              * instead of sliding under the button.
              */}
-            <AppBarTitle className={cn('max-w-[calc(100%-160px)]', titleClassName)}>
+            {starBalance && <BarTitleReserve />}
+            <AppBarTitle
+                className={cn(
+                    'max-w-[calc(100%-160px)]',
+                    // Keeps the title centred clear of the pill — only when there is one.
+                    starBalance && BAR_TITLE_RESERVE_BELOW_MD,
+                    titleClassName,
+                )}
+            >
                 <AppBarTitleText as="h1" className="max-w-full truncate">
                     {title}
                 </AppBarTitleText>

@@ -76,6 +76,7 @@ export type { Balance, LedgerEntry } from './api/types'
  * to "what shape is `created_at` this time" — see B37 and the parser's own note.
  */
 export { EARNINGS_CURRENCY, epochMs, normalizeLedger, STAR_CURRENCY } from './api/types'
+export { StarBalancePill } from './components/star-balance-pill'
 /**
  * The Star amount that drifts off the balance when it moves. Presentation of this feature's own data,
  * like `useBalanceDisplay` — the shell only places it.

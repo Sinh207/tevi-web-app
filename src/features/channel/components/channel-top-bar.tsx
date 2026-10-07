@@ -1,16 +1,26 @@
 'use client'
 
+import { StarBalancePill } from '@features/balance'
 import { ShareDialog, spaceShareContext } from '@features/share'
 import { BarIconButton } from '@shared/components/bar-icon-button'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
-import { AppBar, AppBarCluster, AppBarTitle, AppBarTitleText } from '@shared/ui/app-bar'
+import { AppBar, AppBarCluster } from '@shared/ui/app-bar'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { Channel } from '../api/types'
 import { CHANNEL_CONTAINER } from '../lib/container'
-import { ChannelVerifiedMark } from './channel-verified-mark'
 import { ChannelViewerMenu } from './channel-viewer-menu'
+
+/**
+ * The plate the bar's controls wear **below `sm`**, where the bar sits over the cover: legacy's
+ * `#00000080` with white ink, plus a backdrop blur. Fixed colours rather than tokens — the ground is
+ * a photograph, which does not flip with the theme. From `sm` the controls are `BarIconButton`'s
+ * own ghost.
+ */
+const CHANNEL_BAR_CONTROL =
+    'max-sm:bg-black/50 max-sm:text-white max-sm:backdrop-blur-sm max-sm:hover:not-disabled:bg-black/65'
 
 /**
  * The channel page's own bar — back on the leading side, share on the trailing side.
@@ -23,47 +33,52 @@ import { ChannelViewerMenu } from './channel-viewer-menu'
  * clusters is what the DS expects; the back button is a deliberate copy of `PageBackBar`'s, down to
  * the `1-icon` type and the RTL mirror.
  *
- * ## The title is back, the rule under it is not
+ * ## No title
  *
- * The name was removed from this bar once, on the grounds that it is thirty pixels below in
- * `CardUserHeader` at `type-title-t2-bold` and repeating it says the same thing twice on one screen.
- * That reading is still true at the top of the page and stops being true the moment you scroll: past
- * the header there is nothing on screen naming whose space this is. Restored by request, with the
- * verified mark beside it.
+ * The space's name is not repeated here (product call, 2026-10-07). It was restored once so a
+ * scrolled page still named whose space it is, then dropped again: the header prints it at
+ * `type-title-t2-bold` right under the cover, and the copy in the bar was a truncated duplicate
+ * squeezed between two clusters. The bar is controls only. The `h1` stays in `channel-identity.tsx`.
  *
- * ⚠ It shows **always**, not on scroll. The pattern that resolves the duplication properly is to
- * reveal it once the header's own name leaves the viewport, and that is a scroll listener plus a
- * transition — deliberately not added here, because the same listener was declined for the blurred
- * bar below and one of those two decisions would then be wrong.
+ * The `border-b` did not come back either. The header card starts immediately below and carries its
+ * own rounded top edge from `md`, which already reads as an edge.
  *
- * The `border-b` did **not** come back. The header card starts immediately below and carries its own
- * rounded top edge from `md`, which already reads as an edge; a rule there drew a line across the
- * page for a boundary that does not exist.
+ * ## Below `sm` the bar is drawn over the cover — legacy's immersive bar, ported on request
  *
- * **The `h1` stays in the header**, and this title is a `<span>`. Two headings saying the same thing
- * is worse than one, and the one worth keeping is the full-width original rather than the copy
- * truncated to fit between two buttons.
+ * It was declined once (opaque, sticky, `--background`, on the grounds that the DS draws no blur and a
+ * light cover under a translucent bar is unreadable). Product asked for legacy's look on a phone, so
+ * here it is, with the readability problem solved rather than inherited:
  *
- * ## Legacy's blurred fading bar is not reproduced
+ * - **Over the cover** the bar has no paint and **no layout height** (`max-sm:h-0` on the sticky
+ *   host, so the cover starts at the top of the screen and the 60px bar overflows onto it). The
+ *   controls are legacy's dark plate — `#00000080`, white glyph — plus a backdrop blur, because a
+ *   bare glyph on an unknown photograph is the one ground nothing can be guaranteed against.
+ * - **Once the cover has gone** (`coverPassed`, from `useBandPassed` on the cover's last pixel —
+ *   an observer, not legacy's per-frame `scrollTop >= 60` listener on a container this app does not
+ *   have) a blurred copy of the cover fades in behind the bar, legacy's `blur(20px)`, under a
+ *   `black/30` scrim legacy does not have — without it a pale cover washes the bar out — and `saturate-150`, so the scrim does not leave the colour muddy.
+ *   The plates stay, and so does the bar's `px-4`. A filled edge control keeps its inset
+ *   (`PageBackBar`'s rule), and dropping both the plate and the inset at this moment would move every
+ *   control 16px sideways in the middle of a scroll.
+ * - The backdrop reuses the cover's own URL and `sizes`, so on a phone it is a cache hit, and it is
+ *   `sm:hidden` and lazy, so a wider screen never fetches it. A sensitive space passes no
+ *   `backdropSrc` (`ChannelView` says why) and gets the scrim over the plain segment fill.
  *
- * Legacy pins the bar `position: fixed` on mobile and fades in a blurred copy of the cover behind it
- * past `scrollTop >= 60`, driven by a scroll listener on its own scroll container — a container this
- * app does not have, since the window scrolls. Reproducing it means re-adding that listener plus a
- * `backdrop-filter` layer and a duplicate background image, for a decorative effect.
- *
- * The DS's answer for a bar over a cover is `App Bar data-theme="overlay"`, and `app-bar.css` states
- * that Figma applies **no backdrop blur anywhere on that page** — the translucent fill is used bare.
- * A third reason: the DS cover has no scrim, so a light cover under a translucent bar would be
- * unreadable. Opaque, sticky, `--background`. If product wants the immersive look later, the honest
- * route is the overlay-theme AppBar positioned over the cover, which is a DS-backed change.
+ * From `sm` up: opaque, ghost controls.
  */
 export function ChannelTopBar({
     channel,
     isOwner = false,
+    coverPassed = false,
+    backdropSrc = null,
 }: {
     channel: Channel
     /** Hides the overflow menu — nothing in it applies to the person whose space it is. */
     isOwner?: boolean
+    /** Below `sm`: has the cover scrolled out from under the bar? See the note above. */
+    coverPassed?: boolean
+    /** Below `sm`: the art blurred behind the bar once the cover has gone, or `null` for none. */
+    backdropSrc?: string | null
 }) {
     const { t } = useTranslation()
     const router = useRouter()
@@ -82,16 +97,50 @@ export function ChannelTopBar({
     const [shareOpen, setShareOpen] = useState(false)
 
     /**
-     * Falls back to the handle for a channel with no display name — a real state, the field is
-     * nullable. `@slug` identifies the space where an empty bar identifies nothing, and it is the
-     * same fallback `channel-identity.tsx` uses so the two never disagree.
+     * The share sheet's title. Falls back to the handle for a channel with no display name — a real
+     * state, the field is nullable — the same fallback `channel-identity.tsx` uses.
      */
     const title = channel.name ?? `@${channel.slug}`
 
     return (
         // 60px tall and `top-0 z-20`, matching the sticky-bar precedent in `/brand-assets`. The tab
         // strip parks under it at `top-[60px] z-10`, so the two make one 108px stack.
-        <div className="sticky top-0 z-20 bg-(--background-surface) md:bg-(--background) print:hidden">
+        <div
+            data-testid="channel-top-bar"
+            data-cover-passed={coverPassed || undefined}
+            className={cn(
+                'sticky top-0 z-20 bg-(--background-surface) md:bg-(--background) print:hidden',
+                // Over the cover on a phone: no paint and no layout height — see the note above.
+                'max-sm:h-0 max-sm:bg-transparent',
+            )}
+        >
+            {/*
+             * The blurred cover behind the bar once the cover itself has gone. Absolutely placed in
+             * the sticky host (a positioned element), before the bar in the DOM so the bar — which
+             * is `relative` — paints over it. `scale-125` pushes the blur's soft edge outside the
+             * clip.
+             */}
+            <div
+                aria-hidden="true"
+                className={cn(
+                    'pointer-events-none absolute inset-x-0 top-0 h-[60px] overflow-hidden sm:hidden',
+                    'bg-(--background-segment) transition-opacity duration-300',
+                    coverPassed ? 'opacity-100' : 'opacity-0',
+                )}
+            >
+                {backdropSrc && (
+                    <Image
+                        src={backdropSrc}
+                        alt=""
+                        fill
+                        // The cover's own `sizes` (`channel-cover.tsx`), so a phone gets the file
+                        // it has already downloaded for the cover.
+                        sizes="(max-width: 612px) 100vw, 612px"
+                        className="scale-125 object-cover blur-[20px] saturate-150"
+                    />
+                )}
+                <div className="absolute inset-0 bg-black/30" />
+            </div>
             {/*
              * `md:px-0` — the same rule `PageBackBar` applies, at the same breakpoint. Below `md` it
              * is `px-0` too, because the edge controls are ghost; `PageBackBar` says why.
@@ -107,7 +156,8 @@ export function ChannelTopBar({
              * `md`, so the answer moved with it — and this page and the settings screens now agree
              * on both the number and the reason.
              */}
-            <AppBar className={cn(CHANNEL_CONTAINER, 'md:px-0 max-md:px-0')}>
+            {/* `px-0` from `sm` (ghost controls); `px-4` below it, where the controls are plates. */}
+            <AppBar className={cn(CHANNEL_CONTAINER, 'px-0 max-sm:px-4')}>
                 <AppBarCluster className="min-w-0">
                     {/*
                      * `BarIconButton`, the same control `PageBackBar` renders. It used to be an
@@ -120,6 +170,7 @@ export function ChannelTopBar({
                         weight="filled"
                         mirrored
                         label={t('common_back')}
+                        className={CHANNEL_BAR_CONTROL}
                         onClick={() => {
                             // Same rule as `PageBackBar`: a channel opened from a shared link has
                             // no history to go back to, so fall through to home rather than
@@ -128,46 +179,13 @@ export function ChannelTopBar({
                             else router.push('/')
                         }}
                     />
+                    {/* Over the cover (below `sm`) it wears the controls' dark plate. The prefixed
+                        string is written out because Tailwind only sees literal classes. */}
+                    <StarBalancePill
+                        testId="channel-star-balance"
+                        className="md:hidden max-sm:[--star-pill-bg:rgb(0_0_0/0.5)] max-sm:[--star-pill-edge:transparent] max-sm:[--star-pill-ink:white] max-sm:[--star-pill-plus-bg:rgb(255_255_255/0.2)] max-sm:[--star-pill-plus-ink:white]"
+                    />
                 </AppBarCluster>
-
-                {/*
-                 * The channel's name, centred — the DS default for `AppBarTitle`.
-                 *
-                 * A `<span>`, **not** a second `h1`. The document's heading is the display name in
-                 * `channel-identity.tsx`, at full width and full size; this is a copy of it squeezed
-                 * between two buttons, so promoting it would give the page two `h1`s that say the
-                 * same thing and hand a screen-reader user the truncated one first.
-                 *
-                 * `AppBarTitle`'s centred variant is `position: absolute` at 50% with a translate
-                 * back, which means it does **not** participate in the flex row and will happily run
-                 * under the buttons. The two 40px discs plus the bar's own padding are 56px a side,
-                 * so the cap is `100% - 112px` — written as a calc rather than a guessed `max-w-[60%]`
-                 * because the buttons are a fixed size and the viewport is not.
-                 */}
-                <AppBarTitle className="max-w-[calc(100%-112px)]">
-                    {/*
-                     * `w-full`, and it is load-bearing. `AppBarTitle` is a **column** flex with
-                     * `items-center`, so a child without an explicit width sizes to its content and
-                     * simply ignores the parent's `max-width` — a long display name painted straight
-                     * across both buttons, cap or no cap. Taking the parent's width is what puts the
-                     * child inside the constraint so `truncate` has something to truncate against.
-                     */}
-                    <div className="flex w-full min-w-0 items-center justify-center gap-1">
-                        <AppBarTitleText className="min-w-0 truncate">{title}</AppBarTitleText>
-                        {/*
-                         * 24, and **not** the 16 that matched the title's own 16px.
-                         *
-                         * Matching the type size is the rule this row used to follow, and at 16 the
-                         * tick reads as punctuation rather than as a mark. 24 is what fits without
-                         * costing anything: `AppBarTitleText` is `type-body-strong` and
-                         * `--line-height-default` is 1.5, so the title's line box is already 24px —
-                         * and the bar itself is a fixed `h-[60px]` (`shared/ui/app-bar.tsx`). The
-                         * badge therefore grows into space that was already there and cannot move
-                         * the bar. Same number as the rows use, one scale rather than per-surface.
-                         */}
-                        <ChannelVerifiedMark channel={channel} size={24} />
-                    </div>
-                </AppBarTitle>
 
                 <AppBarCluster>
                     {channel.shareable_url && (
@@ -185,6 +203,7 @@ export function ChannelTopBar({
                              */
                             name="share"
                             label={t('channel_share')}
+                            className={CHANNEL_BAR_CONTROL}
                             onClick={() => setShareOpen(true)}
                         />
                     )}
@@ -198,7 +217,12 @@ export function ChannelTopBar({
                      * the event row's menu. See `ChannelViewerMenu` for what it does and does not
                      * carry (Report is the one legacy row still missing).
                      */}
-                    {!isOwner && <ChannelViewerMenu channel={channel} />}
+                    {!isOwner && (
+                        <ChannelViewerMenu
+                            channel={channel}
+                            triggerClassName={CHANNEL_BAR_CONTROL}
+                        />
+                    )}
                 </AppBarCluster>
             </AppBar>
 

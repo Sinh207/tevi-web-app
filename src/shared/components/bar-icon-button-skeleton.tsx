@@ -18,3 +18,16 @@ export function BarIconButtonSkeleton({ delay }: { delay?: number }) {
         </span>
     )
 }
+
+/**
+ * The Star pill's placeholder, for a back-button bar's skeleton below `md` (`StarBalancePill` is
+ * `md:hidden` on every such bar). Its chip is 32 tall in a 44 target, and ~104 wide for a five-digit
+ * figure — reserving it is what keeps the title from sliding sideways when the bar resolves.
+ */
+export function StarPillSkeleton({ delay }: { delay?: number }) {
+    return (
+        <span aria-hidden="true" className="flex h-11 flex-none items-center md:hidden">
+            <Skeleton w={104} h={32} delay={delay} className="rounded-full" />
+        </span>
+    )
+}

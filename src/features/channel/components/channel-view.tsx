@@ -1,5 +1,6 @@
 'use client'
 
+import { useBandPassed } from '@shared/hooks/use-band-passed'
 import { cn } from '@shared/lib/utils'
 import { ListSeparator } from '@shared/ui/list'
 import { Skeleton } from '@shared/ui/skeleton'
@@ -142,6 +143,12 @@ export function ChannelView({
      */
     const showStats = Boolean(channel && visibility && showsChannelStats(channel, visibility))
     const { stats } = useChannelStats(slug, { enabled: showStats })
+    /*
+     * Below `sm` the bar is drawn over the cover and changes paint once the cover has scrolled out
+     * from under it (`ChannelTopBar`). The cover's last pixel answers that and the bar renders it,
+     * so the answer lives here, above both.
+     */
+    const cover = useBandPassed()
 
     // The server fetched nothing usable and the client has not answered yet.
     if (!channel) {
@@ -250,7 +257,18 @@ export function ChannelView({
 
     return (
         <>
-            <ChannelTopBar channel={channel} isOwner={isOwner} />
+            <ChannelTopBar
+                channel={channel}
+                isOwner={isOwner}
+                coverPassed={cover.passed}
+                /*
+                 * The art behind the bar once the cover is gone — **not** for a sensitive space. Its
+                 * cover is fetched as a 64px thumbnail precisely so the full image never reaches the
+                 * device, and a backdrop asking for the full-size file would undo that. A closed
+                 * space's cover is on the page already (only softened), so it may be reused.
+                 */
+                backdropSrc={visibility?.kind === 'nsfw' ? null : channel.images.cover}
+            />
 
             <div className={cn(CHANNEL_CONTAINER, CHANNEL_COLUMN)}>
                 {/*
@@ -280,6 +298,7 @@ export function ChannelView({
                             stats={showStats ? stats : null}
                             actions={actions}
                             isOwner={isOwner}
+                            coverEndRef={cover.ref}
                             /*
                              * Cover and avatar go out of focus for three states, at **two
                              * strengths** — the difference is what is being withheld.

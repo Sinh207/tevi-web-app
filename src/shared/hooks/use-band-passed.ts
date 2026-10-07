@@ -4,8 +4,12 @@ import { APP_BAR_HEIGHT } from '@shared/ui/app-bar'
 import { useEffect, useState } from 'react'
 
 /**
- * Has the brand band scrolled out from under the bar? — the one piece of state `/premium`'s chrome
- * needs, and the reason the bar and the band are siblings rather than nested.
+ * Has a band of artwork scrolled out from under the 60px bar? — the one piece of state a bar drawn
+ * *over* artwork needs, and the reason the bar and the band are siblings rather than nested.
+ *
+ * Two callers, which is why it lives in `shared/`: `/premium` (and `/gift-premium`) for the brand
+ * band, and the channel page below `sm`, whose bar sits over the space's cover and takes a blurred
+ * copy of it once the cover has gone. The notes below are written about the first and hold for both.
  *
  * The bar is transparent with white ink while there is still brand colour behind it, and takes the
  * page's ground and ink once there is not. That question belongs to neither component on its own:
