@@ -23,7 +23,8 @@ declare module 'lottie-web/build/player/esm/lottie_light.min.js' {
             renderer: 'svg'
             loop: boolean
             autoplay: boolean
-            path: string
+            /** The parsed JSON. lottie-web mutates it, so hand each player its own copy. */
+            animationData: unknown
         }) => LottieAnimationItem
     }
 

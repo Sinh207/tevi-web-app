@@ -18,7 +18,12 @@ import { useEffect, useRef } from 'react'
  *   move, and the fix is to say so here rather than to grow every page that has an animation;
  * - the JSON is **fetched by URL, never imported**. `icon-live-main.json` carries five base64 PNGs,
  *   and importing it would inline 17 KB of artwork into a JS chunk where it can be neither cached
- *   on its own nor served with the compression a `.json` gets.
+ *   on its own nor served with the compression a `.json` gets;
+ * - and it is fetched **once per URL**, not once per player (`loadAnimationData`). Handing lottie a
+ *   `path` made every instance request and parse the file itself — the reaction star is 117 KB and
+ *   sits on every post and every reply, and the render windows remount rows as they scroll, so a
+ *   ten-second scroll of the home feed issued 129 requests for that one file (each a revalidation:
+ *   `public/` is served `max-age=0`). Measured on a production build.
  *
  * Whether an animation may play at all is the **caller's** decision (`useMayAnimate`) — mounting
  * this component is what downloads the player, so a component that decided internally would have
@@ -99,37 +104,48 @@ export function LottieAnimation({
         if (!node) return
         let cancelled = false
 
-        import('lottie-web/build/player/esm/lottie_light.min.js')
-            .then(({ default: lottie }) => {
-                /*
-                 * The import can lose its race with unmount. Without this, a page left before the
-                 * chunk lands attaches a player to a detached node — one that goes on running rAF
-                 * for as long as the tab is open, because nothing holds a reference to stop it.
-                 */
-                if (cancelled) return
-                const player = lottie.loadAnimation({
-                    container: node,
-                    renderer: 'svg',
-                    loop: !isStill,
-                    autoplay: !isStill,
-                    path: src,
-                })
-                playerRef.current = player
-                /*
-                 * `DOMLoaded`, not straight away: before the JSON lands the player does not know how
-                 * many frames it has, so `goToAndStop` is ignored and the icon sits at frame 0 —
-                 * the pressed state never appears and nothing throws.
-                 */
-                player.addEventListener('DOMLoaded', () => {
-                    const pending = pendingRef.current
-                    if (!pending) return
-                    player.goToAndStop(pending.frame, true)
-                    lastFrameRef.current = pending.frame
-                })
-            })
+        Promise.all([
+            import('lottie-web/build/player/esm/lottie_light.min.js'),
+            loadAnimationData(src),
+        ])
+            .then(([{ default: lottie }, data]) =>
+                scheduleBuild(() => {
+                    /*
+                     * The import can lose its race with unmount — and so can the queue below. Without
+                     * this, a page left before the build attaches a player to a detached node — one that
+                     * goes on running rAF for as long as the tab is open, because nothing holds a
+                     * reference to stop it.
+                     */
+                    if (cancelled) return
+                    const player = lottie.loadAnimation({
+                        container: node,
+                        renderer: 'svg',
+                        loop: !isStill,
+                        autoplay: !isStill,
+                        // A copy per player: lottie-web completes the data it is given in place.
+                        animationData: structuredClone(data),
+                    })
+                    playerRef.current = player
+                    /*
+                     * Not straight away unless it is already loaded: before the DOM is built the player
+                     * does not know how many frames it has, so `goToAndStop` is ignored and the icon
+                     * sits at frame 0 — the pressed state never appears and nothing throws. With the
+                     * data handed over in memory `DOMLoaded` can fire inside `loadAnimation`, before a
+                     * listener exists, which is what the `isLoaded` check covers.
+                     */
+                    const applyPending = () => {
+                        const pending = pendingRef.current
+                        if (!pending) return
+                        player.goToAndStop(pending.frame, true)
+                        lastFrameRef.current = pending.frame
+                    }
+                    if (player.isLoaded) applyPending()
+                    else player.addEventListener('DOMLoaded', applyPending)
+                }),
+            )
             .catch(error => {
                 // Never silent again — see the import-path note above.
-                console.error('[LottieAnimation] failed to load the player', error)
+                console.error('[LottieAnimation] failed to load the player or its animation', error)
             })
 
         return () => {
@@ -173,4 +189,56 @@ type LottiePlayer = {
     goToAndStop: (value: number, isFrame?: boolean) => void
     playSegments: (segments: [number, number], forceFlag?: boolean) => void
     addEventListener: (name: string, handler: () => void) => void
+}
+
+/**
+ * Each animation's JSON, by URL, for the life of the page — the fetch and the parse are paid once
+ * however many players draw it. A failure is forgotten, so the next mount can try again.
+ */
+const animationData = new Map<string, Promise<unknown>>()
+
+function loadAnimationData(src: string): Promise<unknown> {
+    const cached = animationData.get(src)
+    if (cached) return cached
+    const pending = fetch(src).then(response => {
+        if (!response.ok) throw new Error(`${src} answered ${response.status}`)
+        return response.json() as Promise<unknown>
+    })
+    animationData.set(src, pending)
+    pending.catch(() => animationData.delete(src))
+    return pending
+}
+
+/**
+ * Building a player is synchronous DOM work — the reaction star is thirteen layers and an image —
+ * and a page of posts or replies mounts twenty of them in one commit. While each player fetched its
+ * own JSON the builds landed whenever each response did, spread out by accident; with the data
+ * shared they would all land in the same task (measured: ~90ms at 4× CPU, once per page appended).
+ * So builds queue, and the queue runs in slices that leave the main thread every `BUILD_SLICE_MS`
+ * — a scroll in progress gets its frames between them.
+ */
+const BUILD_SLICE_MS = 8
+const builds: Array<() => void> = []
+let draining = false
+
+function scheduleBuild(build: () => void) {
+    builds.push(build)
+    if (draining) return
+    draining = true
+    setTimeout(drainBuilds, 0)
+}
+
+function drainBuilds() {
+    const start = performance.now()
+    while (builds.length > 0 && performance.now() - start < BUILD_SLICE_MS) {
+        const build = builds.shift()
+        try {
+            build?.()
+        } catch (error) {
+            // One broken animation must not strand every player queued behind it.
+            console.error('[LottieAnimation] failed to build a player', error)
+        }
+    }
+    if (builds.length > 0) setTimeout(drainBuilds, 0)
+    else draining = false
 }
