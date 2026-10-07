@@ -8,7 +8,8 @@ import { subTestId } from '@shared/lib/test-id'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Skeleton } from '@shared/ui/skeleton'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, type RefCallback, useCallback, useEffect, useMemo, useState } from 'react'
+import type { Reply } from '../api/reply-types'
 import type { Post } from '../api/types'
 import { usePostDetail } from '../hooks/use-post-detail'
 import { usePostReplies } from '../hooks/use-post-replies'
@@ -103,19 +104,6 @@ export function PostDetailView({
     /** One sheet for the page, holding whichever post or reply raised it — the feed's arrangement. */
     const [sharing, setSharing] = useState<Post | null>(null)
 
-    const keys = useMemo(() => replies.replies.map(reply => reply.id), [replies.replies])
-    const { observe, heightFor } = useRenderWindow(keys)
-
-    const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({
-        enabled: replies.hasNextPage && !replies.isFetchingNextPage,
-    })
-
-    useEffect(() => {
-        if (sentinelInView && replies.hasNextPage && !replies.isFetchingNextPage) {
-            replies.fetchNextPage()
-        }
-    }, [sentinelInView, replies.hasNextPage, replies.isFetchingNextPage, replies.fetchNextPage])
-
     if (isLoading) return <DetailSkeleton />
 
     /*
@@ -161,22 +149,24 @@ export function PostDetailView({
         <div
             data-testid={testId}
             /*
-             * `flex-1`, so the stack takes the height the route's `<main>` has left it and the
+             * Growing, so the stack takes the height the route's `<main>` has left it and the
              * replies block can fill it. The chain it completes starts at `(main)/layout.tsx`'s
              * `min-h-[var(--window-height)]`, runs through `TabBarShell` and `<main flex-1>`, and
              * ends here — a break anywhere in it and the block below collapses to its content.
              */
             /*
-             * ⚠ `shrink-0` beside `flex-1`, i.e. `flex: 1 0 0%` rather than `1 1 0%`.
+             * ⚠ `flex: 1 0 auto`, and the **basis** is the half that matters.
              *
              * From `md` the route gives this stack a **height-constrained** parent (the page's own
-             * scroller — see `[code]/page.tsx`). A flex child defaults to `flex-shrink: 1`, so in
-             * that parent the stack would be compressed to the viewport instead of overflowing it
-             * — and with `overflow-hidden` on itself, the rest of the thread would be clipped with
-             * no way to reach it. Growing is still wanted (a short thread paints to the bottom);
-             * being squashed is not.
+             * scroller — see `[code]/page.tsx`), and in it the stack has to be as tall as the
+             * thread so that parent has something to scroll. `flex-1 shrink-0` looked like it said
+             * that and did not: `flex-1` brings a `0%` basis, so the stack's size was 0 plus its
+             * share of the free space — exactly the viewport — and `overflow-hidden` both zeroes
+             * a flex item's automatic minimum and clips what is left. Measured at 1280: a
+             * 3696px thread in a 740px box, wheel doing nothing. An `auto` basis starts from the
+             * content; `grow` still paints a short thread to the bottom.
              */
-            className="flex min-w-0 flex-1 shrink-0 flex-col overflow-hidden rounded-b-2xl md:rounded-2xl"
+            className="flex min-w-0 flex-[1_0_auto] flex-col overflow-hidden rounded-b-2xl md:rounded-2xl"
         >
             <div className="bg-(--background-surface)">
                 <PostCard
@@ -203,9 +193,6 @@ export function PostDetailView({
                 author={author}
                 isPremiumReader={isPremiumReader}
                 onChanged={threadChanged}
-                observe={observe}
-                heightFor={heightFor}
-                sentinelRef={sentinelRef}
                 testId={testId}
             />
 
@@ -231,9 +218,6 @@ function RepliesSection({
     author,
     isPremiumReader,
     onChanged,
-    observe,
-    heightFor,
-    sentinelRef,
     testId,
 }: {
     replies: ReturnType<typeof usePostReplies>
@@ -247,12 +231,27 @@ function RepliesSection({
      * `threadChanged`, which is the one place that knows both.
      */
     onChanged: () => void
-    observe: ReturnType<typeof useRenderWindow>['observe']
-    heightFor: ReturnType<typeof useRenderWindow>['heightFor']
-    sentinelRef: ReturnType<typeof useInView<HTMLDivElement>>[0]
     testId: string
 }) {
     const { t } = useTranslation()
+
+    /*
+     * The window lives **here**, not in `PostDetailView`: it moves its span every time a reply
+     * crosses the viewport edge, and from up there each move re-rendered the post's own card and
+     * the composer with it. Down here a move re-renders this list, and `ReplyWindowRow` is
+     * memoised, so only the rows whose `height` flipped render again.
+     */
+    const keys = useMemo(() => replies.replies.map(reply => reply.id), [replies.replies])
+    const { observe, heightFor } = useRenderWindow(keys)
+
+    const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({
+        enabled: replies.hasNextPage && !replies.isFetchingNextPage,
+    })
+
+    const { hasNextPage, isFetchingNextPage, fetchNextPage } = replies
+    useEffect(() => {
+        if (sentinelInView && hasNextPage && !isFetchingNextPage) fetchNextPage()
+    }, [sentinelInView, hasNextPage, isFetchingNextPage, fetchNextPage])
 
     return (
         <section
@@ -316,29 +315,19 @@ function RepliesSection({
                  * between rows only, so the last row still meets the empty space below it cleanly.
                  */
                 <div className="flex min-w-0 flex-col divide-y divide-(--separator-default)">
-                    {replies.replies.map(reply => {
-                        const height = heightFor(reply.id)
-                        return (
-                            <div
-                                key={reply.id}
-                                ref={observe}
-                                {...windowKeyProps(reply.id)}
-                                className="min-w-0"
-                                style={height === null ? undefined : { height }}
-                            >
-                                {height === null ? (
-                                    <ReplyThread
-                                        post={post}
-                                        reply={reply}
-                                        author={author}
-                                        isPremiumReader={isPremiumReader}
-                                        onChanged={onChanged}
-                                        testId={subTestId(testId, 'row')}
-                                    />
-                                ) : null}
-                            </div>
-                        )
-                    })}
+                    {replies.replies.map(reply => (
+                        <ReplyWindowRow
+                            key={reply.id}
+                            reply={reply}
+                            height={heightFor(reply.id)}
+                            observe={observe}
+                            post={post}
+                            author={author}
+                            isPremiumReader={isPremiumReader}
+                            onChanged={onChanged}
+                            testId={subTestId(testId, 'row')}
+                        />
+                    ))}
 
                     {/* Zero-height, so it never adds space to a list that has stopped growing. */}
                     {replies.hasNextPage && (
@@ -350,6 +339,50 @@ function RepliesSection({
         </section>
     )
 }
+
+/**
+ * One reply thread inside the render window. Memoised — see `RepliesSection` — so every prop is a
+ * value or a stable callback (`threadChanged` is a `useCallback`).
+ */
+const ReplyWindowRow = memo(function ReplyWindowRow({
+    reply,
+    height,
+    observe,
+    post,
+    author,
+    isPremiumReader,
+    onChanged,
+    testId,
+}: {
+    reply: Reply
+    height: number | null
+    observe: RefCallback<HTMLElement>
+    post: Post
+    author: ReplyComposerAuthor | null
+    isPremiumReader: boolean
+    onChanged: () => void
+    testId?: string
+}) {
+    return (
+        <div
+            ref={observe}
+            {...windowKeyProps(reply.id)}
+            className="min-w-0"
+            style={height === null ? undefined : { height }}
+        >
+            {height === null ? (
+                <ReplyThread
+                    post={post}
+                    reply={reply}
+                    author={author}
+                    isPremiumReader={isPremiumReader}
+                    onChanged={onChanged}
+                    testId={testId}
+                />
+            ) : null}
+        </div>
+    )
+})
 
 /**
  * Matches the card's own shape, so nothing jumps at the moment the post lands.
