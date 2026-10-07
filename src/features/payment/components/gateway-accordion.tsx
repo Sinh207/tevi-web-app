@@ -5,7 +5,7 @@ import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
-import { useEffect, useId, useRef, useState } from 'react'
+import { type RefObject, useEffect, useId, useRef, useState } from 'react'
 import type { Gateway, StarPackage } from '../api/types'
 import { formatCharge, gatewayRatePerStar, gatewayTotal, isSymbolFirst } from '../lib/gateway-fee'
 import { StarPackageGrid } from './star-package-grid'
@@ -69,6 +69,13 @@ export function GatewayAccordion({
      */
     const [collapsed, setCollapsed] = useState(false)
     const openId = collapsed ? null : (selected?.id ?? null)
+    /**
+     * Whether a card has been opened yet. The first open is the gateway the page **arrived** on —
+     * the catalogue's seeded default, which is card, the last of seven rows on a real catalogue — and
+     * it is scrolled to like a press would be: what is active has to be on screen, or the total bar
+     * prices a selection the reader cannot see. One ref for the list, so it happens once per page.
+     */
+    const arrived = useRef(false)
 
     return (
         <section className="flex flex-col gap-3">
@@ -92,6 +99,7 @@ export function GatewayAccordion({
                     selectedPackage={selectedPackage}
                     onSelectPackage={onSelectPackage}
                     disabled={disabled}
+                    arrived={arrived}
                 />
             ))}
         </section>
@@ -106,6 +114,7 @@ function GatewayPanel({
     selectedPackage,
     onSelectPackage,
     disabled,
+    arrived,
 }: {
     gateway: Gateway
     open: boolean
@@ -114,11 +123,12 @@ function GatewayPanel({
     selectedPackage: StarPackage | null
     onSelectPackage: (pkg: StarPackage) => void
     disabled?: boolean
+    arrived: RefObject<boolean>
 }) {
     const { t } = useTranslation()
     const panelId = useId()
     const cardRef = useRef<HTMLDivElement>(null)
-    /** Set by a press, so the catalogue's seeded default never scrolls a page nobody touched. */
+    /** Set by a press; the arrival open is the other reason to reveal (see `arrived`). */
     const revealOnOpen = useRef(false)
     const rate = gatewayRatePerStar(gateway)
     const logos = gateway.images.slice(0, 3)
@@ -127,19 +137,30 @@ function GatewayPanel({
     /*
      * Opening a card low in the list puts its grid below the fold — and, on a phone, under the
      * sticky total bar. After the panel has laid out, scroll the card the least distance that shows
-     * it (`nearest`: a card already in view does not move). The scroll margins clear the back bar
-     * (60) and the total bar (222 at its tallest, every note showing), both measured.
+     * it (`nearest`: a card already in view does not move; one taller than the viewport aligns its
+     * header). The scroll margins clear the back bar (60) and the total bar (222 at its tallest,
+     * every note showing), both measured.
+     *
+     * The arrival scroll is instant and waits a frame: smooth motion on a page that just loaded reads
+     * as the page moving by itself, and the frame lets the router's own scroll-to-top land first.
      */
     useEffect(() => {
-        if (!open || !revealOnOpen.current) return
-        revealOnOpen.current = false
-        cardRef.current?.scrollIntoView({
-            block: 'nearest',
-            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                ? 'auto'
-                : 'smooth',
+        if (!open) return
+        const isArrival = !arrived.current
+        if (!revealOnOpen.current && !isArrival) return
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        // The flags flip inside the frame: StrictMode's mount-cleanup-mount would otherwise consume
+        // them on a frame that its own cleanup cancels, and the arrival would never scroll.
+        const frame = requestAnimationFrame(() => {
+            arrived.current = true
+            revealOnOpen.current = false
+            cardRef.current?.scrollIntoView({
+                block: 'nearest',
+                behavior: isArrival || reduced ? 'auto' : 'smooth',
+            })
         })
-    }, [open])
+        return () => cancelAnimationFrame(frame)
+    }, [open, arrived])
 
     return (
         <div
