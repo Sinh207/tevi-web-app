@@ -161,8 +161,9 @@ export function BookmarkList({
 
             {slider.open ? (
                 <PostSlider
-                    posts={posts}
+                    posts={slider.slides}
                     index={slider.open.index}
+                    media={slider.open.media}
                     onIndexChange={slider.goTo}
                     onLoadMore={loadMore}
                     hasMore={hasNextPage}

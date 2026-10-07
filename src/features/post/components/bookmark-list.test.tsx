@@ -99,7 +99,7 @@ vi.mock('@features/share', () => ({
 const { BookmarkList } = await import('./bookmark-list')
 
 function post(id: string): Post {
-    return { id, text: `post ${id}` } as unknown as Post
+    return { id, text: `post ${id}`, required_packages: [] } as unknown as Post
 }
 
 function setState(next: Partial<UseBookmarksResult>) {

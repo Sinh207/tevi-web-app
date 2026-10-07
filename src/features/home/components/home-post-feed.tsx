@@ -223,8 +223,9 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
 
             {slider.open && (
                 <PostSlider
-                    posts={flatPosts}
+                    posts={slider.slides}
                     index={slider.open.index}
+                    media={slider.open.media}
                     onIndexChange={slider.goTo}
                     onLoadMore={fetchNextPage}
                     hasMore={hasNextPage}

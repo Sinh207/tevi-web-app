@@ -17,10 +17,14 @@ import { createPortal } from 'react-dom'
 import type { Post } from '../api/types'
 import { usePostBookmark } from '../hooks/use-post-bookmark'
 import { usePostReaction } from '../hooks/use-post-reaction'
-import { isGated, postActionVisibility, replyCost } from '../lib/post-access'
+import type { SliderFilter } from '../hooks/use-post-slider'
+import { usePostUnlock } from '../hooks/use-post-unlock'
+import { isGated, postActionVisibility, postDisplay, replyCost } from '../lib/post-access'
 import { formatPostTimestamp, truncateSliderCaption } from '../lib/post-format'
 import { isLocalImageSrc, videoSrc } from '../lib/post-media'
 import { LockMediaIcon } from './legacy-icons'
+import { PostLockPanel } from './post-lock-panel'
+import { PostUnlockDialogs } from './post-unlock-dialogs'
 
 /**
  * The **post slider** — legacy's `ViewMediaSlide` + `PostSlider`, full screen, one post per screen.
@@ -64,6 +68,7 @@ export function PostSlider({
     isPremiumReader = false,
     onShare,
     onComment,
+    media = 'all',
     testId = 'post-slider',
 }: {
     posts: Post[]
@@ -77,6 +82,11 @@ export function PostSlider({
     onShare?: (post: Post) => void
     /** Go to the post's page. The viewer closes itself first — see the rail. */
     onComment?: (post: Post) => void
+    /**
+     * Which list the press opened (`usePostSlider`'s `open.media`). It decides what a post carrying
+     * **both** shows: its pictures in the picture list, its clip otherwise.
+     */
+    media?: SliderFilter
     testId?: string
 }) {
     const { t } = useTranslation()
@@ -181,6 +191,7 @@ export function PostSlider({
                             <PostSliderSlide
                                 post={post}
                                 isPremiumReader={isPremiumReader}
+                                media={media}
                                 onShare={onShare ? () => onShare(post) : undefined}
                                 onComment={onComment ? () => onComment(post) : undefined}
                                 testId={testId}
@@ -243,19 +254,31 @@ export function PostSlider({
 function PostSliderSlide({
     post,
     isPremiumReader,
+    media,
     onShare,
     onComment,
     testId,
 }: {
     post: Post
     isPremiumReader: boolean
+    media: SliderFilter
     onShare?: () => void
     onComment?: () => void
     testId: string
 }) {
     const { t } = useTranslation()
-    const images = post.images ?? []
-    const clip = videoSrc(post.video)
+    /*
+     * A locked post's pictures and clip are **not in the payload**, so its slide is the paywall —
+     * legacy's `LockPost`. Without this branch the slide had nothing to draw but the caption.
+     */
+    const locked = postDisplay(post) === 'locked'
+    const unlock = usePostUnlock(post)
+    const images = locked ? [] : (post.images ?? [])
+    /*
+     * A clip outranks pictures everywhere but the **picture list**: a post with both, opened from
+     * its picture, has to show the picture that was pressed.
+     */
+    const clip = locked || (media === 'image' && images.length > 0) ? null : videoSrc(post.video)
     const [picture, setPicture] = useState(0)
     const stripRef = useRef<HTMLDivElement>(null)
     /*
@@ -308,7 +331,19 @@ function PostSliderSlide({
                     clip ? 'flex-col' : 'items-center justify-center',
                 )}
             >
-                {clip ? (
+                {locked ? (
+                    /*
+                     * Legacy's `Container maxWidth='md'`: the cover at the column's width, centred,
+                     * and the whole panel is the press — the same `PostLockPanel` the card draws.
+                     */
+                    <div className="flex h-full w-full max-w-[900px] items-center justify-center">
+                        <PostLockPanel
+                            post={post}
+                            onPress={unlock.press}
+                            testId={subTestId(testId, 'panel')}
+                        />
+                    </div>
+                ) : clip ? (
                     <div className="flex min-h-0 flex-1 items-center justify-center">
                         {/*
                          * ⚠ **Sized by its own aspect ratio, not by `max-w`/`max-h`.**
@@ -464,6 +499,8 @@ function PostSliderSlide({
                 onComment={onComment}
                 testId={testId}
             />
+
+            <PostUnlockDialogs flow={unlock} testId={subTestId(testId, 'overlay')} />
         </div>
     )
 }

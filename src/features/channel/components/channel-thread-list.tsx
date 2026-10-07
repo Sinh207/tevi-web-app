@@ -78,7 +78,7 @@ export function ChannelThreadList({
      * One viewer for the whole list, so it can page between **posts** — `usePostSlider` carries why
      * the list owns that and the viewer does not. Same arrangement as the share sheet above.
      */
-    const slider = usePostSlider(threads)
+    const slider = usePostSlider(threads, { mixed: kind === 'media' })
 
     /* A post's id is the row's identity here, where home's is a whole group's. */
     const keys = useMemo(() => threads.map(thread => thread.id), [threads])
@@ -241,8 +241,9 @@ export function ChannelThreadList({
 
             {slider.open && (
                 <PostSlider
-                    posts={threads}
+                    posts={slider.slides}
                     index={slider.open.index}
+                    media={slider.open.media}
                     onIndexChange={slider.goTo}
                     onLoadMore={fetchNextPage}
                     hasMore={hasNextPage}
