@@ -58,6 +58,24 @@ export function forgetMyChannelCache(accountId: string | null) {
 }
 
 /**
+ * Forget the cached body of one space and of its thread pages for one account — **on joining its
+ * membership**, and only then.
+ *
+ * Both are viewer-relative: a members-only post's `viewer` / `need_unlock_package` are computed for
+ * the bearer, so the reader who has just paid is the one reader whose copy is now wrong. Same trap,
+ * same answer as `forgetMyChannelCache` above: the refetch must not carry a validator a backend that
+ * has not moved its ETag would answer `304` to (**B72**). Without params, every thread variant
+ * goes — both tabs and every cursor.
+ */
+export function forgetChannelViewerCache(slug: string, accountId: string | null) {
+    const scope = accountId ?? ANON_SCOPE
+    return Promise.all([
+        invalidateETagCache(scope, `${api.apiBase}/${channelPath(slug)}`),
+        invalidateETagCache(scope, `${api.apiBase}/${channelPath(slug, 'threads/')}`),
+    ])
+}
+
+/**
  * Query keys for the channel feature.
  *
  * **Every key carries the account id**, including `detail`, which looks like it needs only a

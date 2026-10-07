@@ -53,6 +53,12 @@ export function useChannelMembership(channelId: string | null | undefined) {
         /** The membership itself, so the activated state can name the tier. */
         membership: query.data?.results[0] ?? null,
         isMember: (query.data?.results.length ?? 0) > 0,
+        /**
+         * The server has answered for this account and space. `isMember` reads `false` both before
+         * that and after a "no", so anything that reacts to the answer *changing* — rather than to
+         * its value — has to know which `false` it is looking at.
+         */
+        isKnown: query.data !== undefined,
         /** `isLoading`, not `isPending`: a disabled query is pending forever and is not loading. */
         isLoading: query.isLoading,
     }

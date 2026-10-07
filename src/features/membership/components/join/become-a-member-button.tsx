@@ -1,12 +1,13 @@
 'use client'
 
+import { useAuth } from '@features/auth'
 import { channelBasePath, parseChannelIntent } from '@features/channel/routes'
 import { useUrlIntent } from '@shared/hooks/use-url-intent'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { MembershipTarget } from '../../api/types'
 import { useJoinFlow } from '../../hooks/join/use-join-flow'
 /*
@@ -86,18 +87,26 @@ import { BecomeAMemberDialogs } from './become-a-member-dialogs'
 export function BecomeAMemberButton({
     target,
     memberCount,
+    onJoined,
     className,
 }: {
     /** Who is being joined — identity only, assembled by the caller. See `MembershipTarget`. */
     target: MembershipTarget
     /** For the dialog's "N members" line. `null` until the stats microservice answers. */
     memberCount?: number | null
+    /**
+     * This account has **just become** a member of `target` — see `useJoinedEdge` below. For the
+     * page around the button, whose own data (locked posts, the member count) the purchase moved
+     * and which this feature cannot reach.
+     */
+    onJoined?: () => void
     className?: string
 }) {
     const { t } = useTranslation()
     const flow = useJoinFlow(target)
-    const { offer, isMember, membership, canOffer, open } = flow
+    const { offer, isMember, isMemberKnown, membership, canOffer, open } = flow
     const [detailOpen, setDetailOpen] = useState(false)
+    useJoinedEdge(isMember, isMemberKnown, onJoined)
 
     const { intent, consume } = useUrlIntent(parseChannelIntent, channelBasePath)
     /*
@@ -214,4 +223,33 @@ export function BecomeAMemberButton({
             <BecomeAMemberDialogs flow={flow} target={target} memberCount={memberCount} />
         </>
     )
+}
+
+/**
+ * Call `onJoined` when the membership answer flips from a known "no" to "yes" for the same account.
+ *
+ * Read off the **answer**, not off the purchase, because there are two purchases and only one of
+ * them finishes here: Star settles inside `useJoinMembership`, while a card settles in
+ * `PaymentProvider` — possibly after the dialog has closed — and reaches this feature only as the
+ * `useMembershipPaymentSync` refetch. Both end in `useChannelMembership` answering "member", so the
+ * edge on that answer covers both without a second signal.
+ *
+ * Three `false`s are not a "no", and each would fire a refetch for nothing: the beat before the
+ * first answer (`isKnown`), a new account's beat before *its* answer (the key moves, so `isKnown`
+ * drops), and an account switch onto one that already holds the membership (the account changed).
+ */
+function useJoinedEdge(isMember: boolean, isKnown: boolean, onJoined: (() => void) | undefined) {
+    const { activeId } = useAuth()
+    const last = useRef<{ accountId: string | null; isMember: boolean } | null>(null)
+    const callback = useRef(onJoined)
+    useEffect(() => {
+        callback.current = onJoined
+    })
+
+    useEffect(() => {
+        if (!isKnown) return
+        const previous = last.current
+        last.current = { accountId: activeId, isMember }
+        if (previous?.accountId === activeId && !previous.isMember && isMember) callback.current?.()
+    }, [isMember, isKnown, activeId])
 }

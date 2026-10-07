@@ -53,17 +53,20 @@ export function useJoinFlow(
     canOffer: boolean
     /** Holds an **active** membership to this space — `undefined` id and anonymous both read false. */
     isMember: boolean
+    /** Whether `isMember` is the server's answer rather than the default before one arrives. */
+    isMemberKnown: boolean
     /** The membership itself, so an activated state can name the tier. `null` when not a member. */
     membership: ReturnType<typeof useChannelMembership>['membership']
 } {
     const { offer } = useChannelPackages(target.slug, { enabled })
-    const { isMember, membership } = useChannelMembership(target.id)
+    const { isMember, isKnown, membership } = useChannelMembership(target.id)
     const flow = useJoinMembership({ slug: target.slug, channelId: target.id, offer })
 
     return {
         ...flow,
         canOffer: Boolean(offer) && !isMember,
         isMember,
+        isMemberKnown: isKnown,
         membership,
     }
 }

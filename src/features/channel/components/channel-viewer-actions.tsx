@@ -14,6 +14,7 @@ import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import type { Channel } from '../api/types'
 import { useChannelActions } from '../hooks/use-channel-actions'
+import { useMembershipRefresh } from '../hooks/use-membership-refresh'
 
 /**
  * The viewer's action row.
@@ -117,6 +118,7 @@ export function ChannelViewerActions({
     useAutoOpenMiniApp(channel)
     const locked = channel.privacy === 'protected' && !channel.is_followed
     const showsSecondary = !hasMiniApp && !locked
+    const refreshAfterJoin = useMembershipRefresh(channel.slug)
 
     return (
         /*
@@ -170,6 +172,7 @@ export function ChannelViewerActions({
                             avatarUrl: channel.images.thumb,
                         }}
                         memberCount={memberCount}
+                        onJoined={refreshAfterJoin}
                         className="flex-1"
                     />
                     <DonateButton
