@@ -66,20 +66,6 @@ export function ChannelBio({
 
             {!withheld && customLink && <ChannelMetaLink link={customLink} />}
 
-            {!withheld && platformLinks.length > 0 && (
-                /*
-                 * `gap-0`, not the `gap-1` this had while every mark was a 24px glyph filling a
-                 * 24px box. Each mark now centres its ink in that box with 2–2.4px to spare on
-                 * either side (`SOCIAL_MARK_SIZE`), so the row still separates at the ~4px it
-                 * always showed. `gap-1` on top of that would space it at 8px.
-                 */
-                <ul className="flex min-w-0 flex-wrap items-center gap-0">
-                    {platformLinks.map(link => (
-                        <ChannelSocialMark key={link.id} link={link} />
-                    ))}
-                </ul>
-            )}
-
             {joined && (
                 <p className="type-body-default flex min-w-0 items-center gap-1 text-(--text-subtitle)">
                     {/* 20 — see the note on `ChannelMetaLink` for why, and for why it is not the
@@ -96,6 +82,25 @@ export function ChannelBio({
             )}
 
             {channel.is_nsfw && <ChannelNsfwLabel isOwner={isOwner} />}
+
+            {!withheld && platformLinks.length > 0 && (
+                /*
+                 * Last, below the meta rows — the DS's order (`__meta`, then `__socials`), and a
+                 * deliberate divergence from legacy, which draws the marks between the custom link
+                 * and the joined date. The named link and the date are both a glyph plus a line of
+                 * text and read as one column; a row of bare marks wedged between them split it.
+                 *
+                 * `gap-0`, not the `gap-1` this had while every mark was a 24px glyph filling a
+                 * 24px box. Each mark now centres its ink in that box with 2–2.4px to spare on
+                 * either side (`SOCIAL_MARK_SIZE`), so the row still separates at the ~4px it
+                 * always showed. `gap-1` on top of that would space it at 8px.
+                 */
+                <ul className="flex min-w-0 flex-wrap items-center gap-0">
+                    {platformLinks.map(link => (
+                        <ChannelSocialMark key={link.id} link={link} />
+                    ))}
+                </ul>
+            )}
         </div>
     )
 }
@@ -117,9 +122,16 @@ export function ChannelBio({
  * not. What marks it as pressable is the hover, plus `w-fit` so the target is the words and not the
  * full width of a 612px column.
  *
- * The glyph stays subtitle-grey; the dialog's copy of it is pink. See `NsfwInfoDialog` for why the
- * same mark is drawn twice in two colours — and for what the **owner** additionally gets behind this
- * row, which is the appeal.
+ * ## The hover has to be visible in Dark
+ *
+ * Ink alone does not do it: subtitle → title is `#3f3f46` → `#09090b` in Light but `#d4d4d8` →
+ * `#fafafa` in Dark, a change nobody sees. So the words also take an underline, and the glyph turns
+ * `--accents-nsfw` — the pink the dialog draws it in, so the hover previews what the press opens.
+ * Only the glyph goes pink, never the words: an accent ink is for marks, not text.
+ *
+ * At rest the glyph stays subtitle-grey; the dialog's copy of it is pink. See `NsfwInfoDialog` for
+ * why the same mark is drawn twice in two colours — and for what the **owner** additionally gets
+ * behind this row, which is the appeal.
  *
  * `type="button"` explicitly: this block sits inside no form today, and a bare `<button>` in one
  * submits it.
@@ -134,13 +146,13 @@ function ChannelNsfwLabel({ isOwner }: { isOwner: boolean }) {
                 data-testid="channel-bio-nsfw"
                 type="button"
                 onClick={() => setOpen(true)}
-                className="type-body-default flex w-fit min-w-0 items-center gap-1 text-start text-(--text-subtitle) transition-colors hover:text-(--text-title)"
+                className="group type-body-default flex w-fit min-w-0 items-center gap-1 text-start text-(--text-subtitle) transition-colors hover:text-(--text-title) hover:underline"
             >
                 <Icon
                     name="nsfw"
                     weight="filled"
                     size={20}
-                    className="flex-none"
+                    className="flex-none transition-colors group-hover:text-(--accents-nsfw)"
                     aria-hidden="true"
                 />
                 {t('channel_nsfw')}
@@ -230,6 +242,13 @@ function ChannelMetaLink({ link }: { link: ChannelSocialLink }) {
  * only links in the header that are pure icon, with no text to extend the target, and 24px is
  * already under any touch guidance. It is a tap target, not a size spec — what the mark should
  * look like and how much of the page listens for the tap are different questions.
+ *
+ * ## Hover dims the mark
+ *
+ * `--icon-default` → `--icon-secondary`: title ink to body ink, a step that shows in both modes
+ * (unlike subtitle → title, which is invisible in Dark — see `ChannelNsfwLabel`). Dimming rather
+ * than tinting, because a row of brand marks turning indigo would read as five links to one place.
+ * The CDN fallback is a raster that `color` cannot reach, so it fades to match instead.
  */
 function ChannelSocialMark({ link }: { link: ChannelSocialLink }) {
     const href = safeExternalUrl(link.url)
@@ -248,7 +267,7 @@ function ChannelSocialMark({ link }: { link: ChannelSocialLink }) {
                 rel="noopener noreferrer"
                 aria-label={label}
                 title={label}
-                className="flex size-6 items-center justify-center text-(--icon-default)"
+                className="group flex size-6 items-center justify-center text-(--icon-default) transition-colors hover:text-(--icon-secondary)"
             >
                 {/* Not a brand, so not a brand mark — see `isWebLink`. Filled, like the marks
                     beside it and like legacy's `icon-globe`. */}
@@ -262,7 +281,7 @@ function ChannelSocialMark({ link }: { link: ChannelSocialLink }) {
                         alt=""
                         width={SOCIAL_MARK_SIZE.brand}
                         height={SOCIAL_MARK_SIZE.brand}
-                        className="size-6"
+                        className="size-6 transition-opacity group-hover:opacity-60"
                     />
                 )}
             </a>
