@@ -28,8 +28,9 @@ legacy that looks missing.
 
 ## 1. Two pages behind one URL
 
-`useEventOwnership` decides which. The bar, the column, the surfaces and the age gate are shared —
-they are the *page*; only the content below the bar differs.
+`useEventOwnership` decides which. The bar, the column and the surfaces are shared — they are the
+*page*; only the content below the bar differs. The age gate is **not** shared: it is the viewer's,
+and only the studio's (§2a).
 
 **A viewer:**
 
@@ -115,17 +116,21 @@ Everywhere else this feature is a port: the copy, the geometry, the status vocab
 purchase confirmation are all legacy's. Two things are not, and both were chosen for a stated
 reason rather than drifted into.
 
-### 2a. The age gate covers the whole page
+### 2a. The age gate is asked in front of the player, and nowhere else
 
-Legacy raises *Age-Restricted Content* **inside its live view only** — the desktop player branch. Its
-own details page therefore shows the banner, the title and the description of an 18+ broadcast with
-no question asked, and on a phone, or for a scheduled event, the details page is the *only* thing it
-ever shows. The material being gated is the creator's artwork and their own description of the
-stream, so gating the player and not the poster protects nothing.
+Legacy raises *Age-Restricted Content* **inside its live view only** — `LiveView`, rendered for
+`matchUpMd && isLive`, with its `isEnded` branch ahead of the age check. Below `md`, and on any
+status but live, legacy shows the details page and asks nothing. This port does the same:
+`useAgeGate` is `required` only for an 18+ stream that is live **and** in the studio, and
+`EventAgeGate` is drawn in one place — centred in `EventStudioShell`, so no preview is spent, no
+stream requested and no room joined before the reader agrees.
 
-Here the gate is the page (`EventAgeGate`, raised by `EventScreen` before anything else). This app
-already made the same call one surface over: `NsfwGatePanel` replaces a space's content while leaving
-its identity visible, where legacy drew a dialog over a faked page.
+This was once a deliberate divergence — the gate *was* the page, on every status, on the argument
+that the banner and the description are the material and gating the player alone protects nothing.
+It was narrowed to live streams first, and then out of Live details altogether, because of what it
+did on a phone: *Yes, I'm over 18*, then *"Live isn't available on mobile web"*. A confirmation that
+unlocks nothing is not a gate, it is a step. If the poster ever does need withholding, that is a
+product decision to make for the details page as a whole — not a side-effect of the player's gate.
 
 **It is not `features/nsfw`, and the two must not be merged.** That feature answers a question about
 a **space** — `channel.is_nsfw` *and* the account's `nsfw_settings.show_sensitive`, both of which

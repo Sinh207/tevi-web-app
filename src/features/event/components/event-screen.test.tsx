@@ -104,7 +104,7 @@ vi.mock('./event-state-screens', () => ({
 const { EventScreen } = await import('./event-screen')
 
 /**
- * An 18+ event, which is the only case where the two orderings differ.
+ * An 18+ event — the case where asking the question in the wrong place is visible.
  *
  * ⚠ `ENDED`, not `LIVE`. A **live** host takes an earlier branch entirely — `EventHostLiveScreen`,
  * the app hand-off — so a live fixture would exercise that instead of the report and quietly stop
@@ -179,29 +179,26 @@ describe('the host of an 18+ stream that is on air', () => {
     })
 })
 
-describe('a viewer of an 18+ stream', () => {
-    it('is shown the age gate before any of the content', () => {
-        show()
-
-        expect(screen.getByTestId('stub-age-gate')).toBeTruthy()
-        expect(screen.queryByTestId('stub-viewer')).toBeNull()
-    })
-
-    it('sees the page once the confirmation is in hand', () => {
-        state.age = { isResolving: false, isAllowed: true, required: true, confirm: vi.fn() }
+/**
+ * Live details never asks. Legacy's `AgeRestricted` sits inside `LiveView`, which only the studio
+ * renders — so the question belongs in front of the player, and the page *about* a broadcast shows
+ * its details whatever the stored answer is. `useAgeGate` is stubbed to "not confirmed" here, which
+ * is exactly the state that used to put a wall over this page.
+ */
+describe('a viewer of an 18+ stream on Live details', () => {
+    it('sees the page without being asked', () => {
         show()
 
         expect(screen.getByTestId('stub-viewer')).toBeTruthy()
         expect(screen.queryByTestId('stub-age-gate')).toBeNull()
     })
 
-    /** Still a skeleton rather than a gate flashed at somebody who may already have confirmed. */
-    it('waits on the consent lookup rather than guessing', () => {
+    it('does not wait on the consent lookup', () => {
         state.age = { isResolving: true, isAllowed: false, required: true, confirm: vi.fn() }
         show()
 
-        expect(screen.getByTestId('stub-skeleton')).toBeTruthy()
-        expect(screen.queryByTestId('stub-age-gate')).toBeNull()
+        expect(screen.getByTestId('stub-viewer')).toBeTruthy()
+        expect(screen.queryByTestId('stub-skeleton')).toBeNull()
     })
 })
 
@@ -339,11 +336,13 @@ describe('the Live studio', () => {
 })
 
 /**
- * `age_restriction` gates the **broadcast**, not the page about it — legacy reads it in `LiveView`
- * alone, after its ended branch. An 18+ event that is upcoming or over shows its details freely.
+ * `age_restriction` gates the **broadcast**, and only where it plays — legacy reads it in `LiveView`
+ * alone, after its ended branch, and `LiveView` renders only from `md`. An 18+ event that is upcoming
+ * or over shows its details freely, and so does a live one on a screen with no studio.
  */
 describe('the 18+ question', () => {
-    it('is asked only while the event is live', () => {
+    it('is asked only for a live stream in the studio', () => {
+        state.inStudio = true
         for (const status of ['UPCOMING', 'ENDED', 'CANCELLED', 'PAUSED']) {
             state.event = eventDetailSchema.parse({ ...RESTRICTED_INPUT, status })
             show()
@@ -353,6 +352,12 @@ describe('the 18+ question', () => {
         state.event = eventDetailSchema.parse({ ...RESTRICTED_INPUT, status: 'LIVE' })
         show()
         expect(ageArgs.last?.required).toBe(true)
+    })
+
+    it('is not asked of a live stream outside the studio', () => {
+        state.event = eventDetailSchema.parse({ ...RESTRICTED_INPUT, status: 'LIVE' })
+        show()
+        expect(ageArgs.last?.required).toBe(false)
     })
 })
 
@@ -368,6 +373,18 @@ describe('a narrow screen on a live stream', () => {
         state.event = eventDetailSchema.parse({ ...RESTRICTED_INPUT, status: 'LIVE' })
         show()
         expect(screen.getByTestId('stub-mobile-notice')).toBeTruthy()
+    })
+
+    /**
+     * The reported case: an 18+ live on a phone asked *Yes, I'm over 18* and then said the stream
+     * is not available here. The notice comes straight away — the answer would unlock nothing.
+     */
+    it('goes straight to the notice for an 18+ stream, with no age question', () => {
+        state.compact = true
+        state.event = eventDetailSchema.parse({ ...RESTRICTED_INPUT, status: 'LIVE' })
+        show()
+        expect(screen.getByTestId('stub-mobile-notice')).toBeTruthy()
+        expect(screen.queryByTestId('stub-age-gate')).toBeNull()
     })
 
     it('keeps the details page for a stream that is not live', () => {

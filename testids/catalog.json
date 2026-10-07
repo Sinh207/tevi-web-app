@@ -6909,7 +6909,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-age-gate.tsx:155"
+            "source": "src/features/event/components/event-age-gate.tsx:142"
         },
         "event-age-decline": {
             "scope": "event",
@@ -6917,7 +6917,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-age-gate.tsx:168"
+            "source": "src/features/event/components/event-age-gate.tsx:155"
         },
         "event-age-gate": {
             "scope": "event",
@@ -6925,7 +6925,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-age-gate.tsx:78"
+            "source": "src/features/event/components/event-age-gate.tsx:67"
         },
         "event-analytics": {
             "scope": "event",
@@ -7310,7 +7310,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-mobile-live-notice.tsx:77"
+            "source": "src/features/event/components/event-mobile-live-notice.tsx:81"
         },
         "event-mobile-live-stores": {
             "scope": "event",

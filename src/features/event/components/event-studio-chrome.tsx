@@ -80,7 +80,7 @@ export function EventStudioBackButton({ slug, testId }: { slug: string | null; t
                 else in this app, and legacy's `ArrowBackIosNewRounded` is the same shape.
                 **24, measured off the comps** (`Chevron` is 24×24 inside the 40px disc); 20 was
                 inherited from nothing in particular and read a size small against the pill. */}
-            <Icon name="angle-left" size={24} />
+            <Icon name="angle-left" size={24} className="rtl:-scale-x-100" />
         </button>
     )
 }

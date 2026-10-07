@@ -68,10 +68,9 @@ import { EventAccountBannedPanel, EventBlockedPanel, EventWatchPanel } from './e
  * telling somebody their link is broken because a service blinked is a lie with a long tail.
  *
  * The **age gate** comes after those and after the ownership branch — it is a *viewer* state, one of
- * the six legacy lists beside Ended, GeoRestricted, PlatformRestricted, Kickout and Locked. Within
- * the viewer it still comes before everything, because what it withholds is the banner and the
- * description: the material itself. See `EventAgeGate` for why it covers the whole viewer page where
- * legacy's covers only the player.
+ * the six legacy lists beside Ended, GeoRestricted, PlatformRestricted, Kickout and Locked — and it
+ * is asked **only in front of the studio**, as legacy asks it in front of the player. Live details,
+ * and the phone's *not available on mobile web* notice, never raise it.
  */
 export function EventScreen({
     code,
@@ -130,23 +129,6 @@ export function EventScreen({
     const [bannedMessage, setBannedMessage] = useState<string | null>(null)
     const isRefused = isBlocked || bannedMessage !== null
 
-    /*
-     * Called unconditionally, as a hook must be — `required` is what makes it inert. It reads the
-     * event that may not have arrived yet, which is why `required` is `Boolean(event?…)` rather than
-     * a bare field access: before the payload lands there is no question to ask, and after it lands
-     * the effect inside re-reads the stored answer.
-     */
-    /*
-     * ⚠ **Live only.** `age_restriction` gates the *broadcast*, not the page about it: an upcoming,
-     * ended or cancelled 18+ event shows its details card like any other. Legacy reads the flag in
-     * `LiveView` alone, after its `isEnded` branch — so this asked a question legacy never asks,
-     * on every status, and put the details of a finished stream behind a confirmation.
-     */
-    const age = useAgeGate({
-        code,
-        required: Boolean(event?.age_restriction) && isLive(event?.status ?? null),
-    })
-
     const slug = event?.channel?.slug ?? null
 
     /*
@@ -199,6 +181,27 @@ export function EventScreen({
     // `!isBlocked` is the half of legacy's `EventLayout` condition this port left out — its own
     // comment in `lib/studio.ts` quoted it and the predicate dropped it.
     const inStudio = studioEligible && !isRefused && ownership === 'viewer' && Boolean(event)
+
+    /*
+     * Called unconditionally, as a hook must be — `required` is what makes it inert. It reads the
+     * event that may not have arrived yet, which is why `required` is `Boolean(event?…)` rather than
+     * a bare field access: before the payload lands there is no question to ask, and after it lands
+     * the effect inside re-reads the stored answer.
+     *
+     * ⚠ **Asked in the studio and nowhere else** — legacy's structure: `AgeRestricted` lives inside
+     * `LiveView`, which renders only for `matchUpMd && isLive`. Below `md`, and on every status but
+     * live, legacy shows the details page with no question asked.
+     *
+     * This used to gate the whole page on every status, then on every live stream — which put the
+     * question in front of a phone whose next screen is *"Live isn't available on mobile web"*.
+     * Confirming there unlocked nothing: the stream never plays on that screen. `isLive` stays
+     * beside `inStudio` because the studio also takes a stream that came off air in the last five
+     * minutes, and legacy's `isEnded` branch is ahead of its age check.
+     */
+    const age = useAgeGate({
+        code,
+        required: Boolean(event?.age_restriction) && isLive(event?.status ?? null) && inStudio,
+    })
     /*
      * **A phone on a live stream** — while the phone studio is switched off
      * (`COMPACT_STUDIO_ENABLED`), it gets one clear screen saying so, with the way into the app,
@@ -365,16 +368,8 @@ export function EventScreen({
                      * reader agrees. While the stored answer is read, the frame alone stands.
                      */
                     <EventStudioShell event={event} backdropUrl={backdropUrl}>
-                        {!age.isResolving && (
-                            <EventAgeGate onConfirm={age.confirm} slug={slug} surface="studio" />
-                        )}
+                        {!age.isResolving && <EventAgeGate onConfirm={age.confirm} slug={slug} />}
                     </EventStudioShell>
-                ) : age.isResolving ? (
-                    // Only the viewer waits on it now — the stored answer is per account and per
-                    // event, and the host branch never asks the question.
-                    <EventSkeleton />
-                ) : !age.isAllowed ? (
-                    <EventAgeGate onConfirm={age.confirm} slug={slug} />
                 ) : showMobileNotice && event ? (
                     <EventMobileLiveNotice event={event} backdropUrl={backdropUrl} />
                 ) : inStudio ? (

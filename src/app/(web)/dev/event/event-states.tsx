@@ -637,7 +637,6 @@ function compactModel(mode: 'solo' | 'session' | 'preview') {
 }
 
 export function EventStates() {
-    const [ageConfirmed, setAgeConfirmed] = useState(false)
     const [info, setInfo] = useState<'sustained' | 'maintenance' | null>(null)
     const [outOfStar, setOutOfStar] = useState(false)
     const [notEnough, setNotEnough] = useState(false)
@@ -1106,26 +1105,6 @@ export function EventStates() {
                     </div>
                 </Section>
 
-                <Section title="Age gate — the wall over an 18+ broadcast">
-                    {ageConfirmed ? (
-                        <div className="flex flex-col gap-4">
-                            <p className="type-caption-meta text-(--text-placeholder)">
-                                confirmed — the page below is what is revealed
-                            </p>
-                            <EventDetailsCard event={FULL_PAGE} />
-                            <button
-                                type="button"
-                                className="type-link-dense self-start text-(--text-link)"
-                                onClick={() => setAgeConfirmed(false)}
-                            >
-                                reset
-                            </button>
-                        </div>
-                    ) : (
-                        <EventAgeGate onConfirm={() => setAgeConfirmed(true)} slug="ada" />
-                    )}
-                </Section>
-
                 <Section title="Protected space — a non-follower's 422 CHN0009 (new · request pending)">
                     {/*
                      * `dev-protected-*` slugs 404 upstream, so `useChannel` stays empty and the
@@ -1287,7 +1266,7 @@ export function EventStates() {
                 <Section title="Age gate — on the studio frame (a live 18+ stream, wide screens)">
                     {/* The studio's blurred ground stood in by a gradient; the card is the real one. */}
                     <div className="flex min-h-[460px] items-center justify-center rounded-xl bg-[radial-gradient(circle_at_30%_30%,#4b2a8a,#1a1033_55%,#3d3410)] p-6">
-                        <EventAgeGate onConfirm={() => {}} slug="ada" surface="studio" />
+                        <EventAgeGate onConfirm={() => {}} slug="ada" />
                     </div>
                 </Section>
 

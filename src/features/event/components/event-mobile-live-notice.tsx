@@ -10,10 +10,10 @@ import { Avatar, AvatarInitials } from '@shared/ui/avatar'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
-import Link from 'next/link'
 import { appLink } from '../access'
 import type { EventDetail } from '../api/types'
 import { EVENT_STUDIO_BACKDROP, EVENT_STUDIO_SCRIM, EVENT_STUDIO_STAGE } from '../lib/studio'
+import { EventStudioBackButton } from './event-studio-chrome'
 import { StudioPortal } from './event-studio-screen'
 
 /**
@@ -70,16 +70,16 @@ export function EventMobileLiveNotice({
             <div aria-hidden className={EVENT_STUDIO_SCRIM} />
 
             <div className="relative z-10 flex h-full flex-col overflow-y-auto overscroll-contain px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-[calc(env(safe-area-inset-bottom)+20px)]">
-                {channel?.slug && (
-                    <Link
-                        href={`/@${encodeURIComponent(channel.slug)}`}
-                        aria-label={t('channel_live_back_to_space', { name })}
-                        data-testid="event-mobile-live-back"
-                        className="grid size-10 flex-none place-items-center rounded-full bg-black/35 text-white ring-1 ring-inset ring-white/15 backdrop-blur-md transition-transform active:scale-95 motion-reduce:transition-none"
-                    >
-                        <Icon name="angle-left" size={20} className="rtl:-scale-x-100" />
-                    </Link>
-                )}
+                {/*
+                 * Back, not a link to the space. A `<Link>` here *pushed* the space on top of this
+                 * page, so the space's own back returned to the notice, whose back pushed the space
+                 * again — a loop a reader could not leave by pressing back. The studio's button
+                 * goes back when there is history and to the space only when there is none.
+                 */}
+                <EventStudioBackButton
+                    slug={channel?.slug ?? null}
+                    testId="event-mobile-live-back"
+                />
 
                 <div className="flex flex-1 items-center justify-center py-6">
                     <section
