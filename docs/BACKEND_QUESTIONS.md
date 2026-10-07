@@ -1738,6 +1738,19 @@ render. Five things the client cannot find out for itself:
    the *space*, so a missing flag is a cosmetic loss rather than an exposure — but a search result
    list is exactly where somebody would want the warning before they press.
 
+   **Sharper since the Figma Search redesign (2026-10):** the screen now *hides* sensitive spaces
+   unless the account turned on `nsfw_settings.nsfw_search`, and measured on dev (`q=sinh`) the
+   search payload carries **no `is_nsfw` at all** — `sinhpn207` is `is_nsfw: true` on
+   `followed-channels/` and absent on `search/`. So the client can filter only the Following list;
+   the global list is filtered only if the search service applies the account's own setting. Does
+   it? If not, `search/` needs to send `is_nsfw`, or filter server-side.
+6. **`follower_count` disagrees with `followed-channels/`.** The redesigned row prints
+   "N Followers" from it. Same space, same moment: `16` on `followed-channels/`, `0` on `search/` —
+   the search index looks stale. Is it re-indexed, or should the row not trust it?
+7. **No member count on either endpoint.** The Figma row reads "40.4k Followers • 276 Members".
+   The client declares `member_count` (the spelling the channel stats payload uses) and draws the
+   second half the day either endpoint sends it; until then the line is followers alone.
+
 Separately, and smaller: the **Following grid** on the same screen sends `q` to
 `core/v3/channel/followed-channels/`, which legacy also does (`getFollowedChannels(page, size, q)`).
 Same question 1 applies to that endpoint, and the two need not agree with each other — a term that

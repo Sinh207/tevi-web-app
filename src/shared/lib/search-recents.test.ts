@@ -4,6 +4,7 @@ import {
     addSearchRecent,
     clearSearchRecents,
     getSearchRecents,
+    MAX_TERMS,
     removeSearchRecent,
     subscribeSearchRecents,
 } from './search-recents'
@@ -121,12 +122,12 @@ describe('addSearchRecent', () => {
         expect(getSearchRecents('acc-1')).toEqual(['ADA', 'grace'])
     })
 
-    it('caps the list at twenty, dropping the oldest', () => {
-        for (let index = 0; index < 25; index += 1) addSearchRecent(`term-${index}`, 'acc-1')
+    it('caps the list at five, dropping the oldest', () => {
+        for (let index = 0; index < 8; index += 1) addSearchRecent(`term-${index}`, 'acc-1')
         const recents = getSearchRecents('acc-1')
-        expect(recents).toHaveLength(20)
-        expect(recents[0]).toBe('term-24')
-        expect(recents).not.toContain('term-4')
+        expect(recents).toHaveLength(MAX_TERMS)
+        expect(recents[0]).toBe('term-7')
+        expect(recents).not.toContain('term-2')
     })
 
     /** A pasted paragraph is a legitimate search; twenty of them in localStorage are not. */

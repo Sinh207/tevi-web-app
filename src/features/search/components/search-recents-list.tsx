@@ -3,7 +3,7 @@
 import { useTranslation } from '@shared/i18n/use-translation'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
-import { ListHeader, ListHeaderAction, ListHeaderTitle } from '@shared/ui/list'
+import { SEARCH_SECTION_ACTION, SearchSectionHeader } from './search-section-header'
 
 /**
  * What this account searched for before — the screen's whole content while the field is empty.
@@ -50,71 +50,64 @@ export function SearchRecentsList({
 
     return (
         <section aria-labelledby="search-recents-heading" className={className}>
-            {/* `rule={false}` for the reason the Following grid's header gives: what follows is
-                not a rowed list that the hairline would continue. */}
-            <ListHeader rule={false}>
-                <ListHeaderTitle as="h2" id="search-recents-heading">
-                    {t('search_recents')}
-                </ListHeaderTitle>
-                <ListHeaderAction>
-                    {/*
-                     * `ghost`, and the DS has no "text link" button — `ghost` is the boxless one.
-                     * Legacy paints this in `#007AFF`, iOS's system blue, which is not a Tevi
-                     * token at all; `--accents-indigo-active` is the ramp's own interactive blue
-                     * and it inverts with the theme, which the literal does not.
-                     *
-                     * `-me-2` against the button's own padding: with no box to see, the *label*
-                     * is what should line up with the header's 16px inset, not the hit area.
-                     * Same trick `BlockedAccountRow`'s Unblock uses.
-                     */}
-                    <Button
+            {/*
+             * The Figma Search page's `Recents Search` component: a 16/600 title with *Clear all
+             * history* at the trailing edge (12px, the interactive blue), then the terms — a 16px
+             * clock, the term in 16/400 and a ✕ — 22px lines 24 apart, inset 24 on both sides.
+             *
+             * The pitch is kept (46px per term) but spent on the hit area rather than on a gap:
+             * each row is `py-3` around its 22px line, so the whole band is pressable instead of a
+             * 22px strip with dead space between strips.
+             */}
+            <SearchSectionHeader
+                id="search-recents-heading"
+                title={t('search_recents')}
+                action={
+                    <button
+                        type="button"
                         data-testid="search-recents-clear-all"
-                        variant="ghost"
-                        size="small"
                         onClick={onClear}
-                        className="-me-2 text-(--accents-indigo-active) hover:not-disabled:bg-(--background-segment)"
+                        className={SEARCH_SECTION_ACTION}
                     >
                         {t('search_clear_recents')}
-                    </Button>
-                </ListHeaderAction>
-            </ListHeader>
+                    </button>
+                }
+            />
 
-            <ul className="flex list-none flex-col">
+            {/* No vertical padding of its own: each row's `py-3` is the 12 the comp puts above
+                the first term and below the last. */}
+            <ul className="flex list-none flex-col px-6">
                 {recents.map((term, index) => (
-                    <li key={term} className="flex items-center gap-2 px-4 py-1">
+                    <li key={term} className="flex items-center gap-2">
                         {/*
-                         * The term takes the row's width so the whole line is pressable, and its
-                         * text is start-aligned inside it — a centred label in a full-width
-                         * button is what makes a list of terms look like a list of buttons.
-                         *
-                         * `truncate` because a recent term is user input and can be 120
-                         * characters (see `MAX_TERM_LENGTH`); `min-w-0` is what lets it.
+                         * The term takes the row's width so the whole line is pressable, start-
+                         * aligned so a list of terms does not read as a list of buttons. `truncate`
+                         * because a stored term can be 120 characters (`MAX_TERM_LENGTH`).
                          */}
-                        <Button
+                        <button
+                            type="button"
                             data-testid="search-recent"
                             data-index={index}
-                            variant="ghost"
-                            size="medium"
                             onClick={() => onPick(term)}
-                            className="-mx-2 min-w-0 flex-1 justify-start gap-3 px-2 text-(--text-title)"
+                            className="type-body-default flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 py-3 text-start text-(--text-title) outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus-ring)"
                         >
                             <Icon
                                 name="clock"
-                                size={20}
+                                size={16}
                                 aria-hidden="true"
-                                className="size-5 flex-none text-(--icon-secondary)"
+                                className="size-4 flex-none text-(--icon-default)"
                             />
                             <span className="min-w-0 truncate">{term}</span>
-                        </Button>
+                        </button>
                         <Button
                             data-testid="search-recent-forget"
                             data-index={index}
                             variant="ghost"
-                            size="medium"
+                            size="small"
                             iconOnly
                             aria-label={t('search_remove_recent', { term })}
                             onClick={() => onForget(term)}
-                            className="flex-none text-(--icon-secondary)"
+                            className="-me-2 flex-none text-(--icon-secondary)"
                         >
                             <Icon name="xmark" size={20} className="size-5" />
                         </Button>

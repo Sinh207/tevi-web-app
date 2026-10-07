@@ -66,6 +66,12 @@ export const STORAGE_KEYS = {
      */
     searchRecents: `${NS}.search.recents`,
     /**
+     * The spaces each account opened from `/search` — a JSON map of
+     * `accountId -> RecentCreator[]`, capped at five. Owned by
+     * `shared/lib/search-recent-creators.ts`; dropped by `forgetAccount` beside `searchRecents`.
+     */
+    searchRecentCreators: `${NS}.search.recentCreators`,
+    /**
      * The version each mini app last reported — a JSON map of `appId -> { version, at }`.
      *
      * Not per account, and deliberately: this is the **device's** cache state, the same thing the

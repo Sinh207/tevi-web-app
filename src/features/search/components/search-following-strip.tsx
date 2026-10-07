@@ -7,10 +7,10 @@ import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
-import { ListHeader, ListHeaderTitle } from '@shared/ui/list'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { type SearchChannel, searchChannelName } from '../api/types'
+import { SearchSectionHeader } from './search-section-header'
 
 /**
  * The spaces you already follow that match the term — a horizontal strip of tiles above the global
@@ -62,9 +62,9 @@ import { type SearchChannel, searchChannelName } from '../api/types'
  *
  * ## The track bleeds, the content does not
  *
- * `-mx-4 px-4` — the scrollport runs edge to edge so a tile mid-scroll is clipped by the panel rather
- * than by an invisible box inset from it, while the first and last tiles still line up with the 16px
- * column the header and the rows below use. `scroll-px-4` makes snapping respect the same inset.
+ * `-mx-6 px-6` — the scrollport runs edge to edge so a tile mid-scroll is clipped by the panel rather
+ * than by an invisible box inset from it, while the first and last tiles still line up with the 24px
+ * column the header and the rows below use. `scroll-px-6` makes snapping respect the same inset.
  * Straight from `share-dialog.tsx`, which solved this first.
  *
  * Rendered only when there is something in it — the caller checks, because an empty strip should
@@ -93,17 +93,13 @@ export function SearchFollowingStrip({
              * with its own visual mass, and the section below brings its own header — two rules
              * across one card reads as three separate cards.
              */}
-            <ListHeader rule={false}>
-                <ListHeaderTitle as="h2" id="search-following-heading">
-                    {t('search_following')}
-                </ListHeaderTitle>
-            </ListHeader>
+            <SearchSectionHeader id="search-following-heading" title={t('search_following')} />
 
-            <div className="relative px-4 pb-4">
+            <div className="relative px-6 pb-4">
                 <ul
                     ref={trackRef}
                     className={cn(
-                        '-mx-4 flex list-none snap-x scroll-px-4 items-start gap-2 px-4',
+                        '-mx-6 flex list-none snap-x scroll-px-6 items-start gap-2 px-6',
                         'overflow-x-auto overscroll-x-contain',
                         /*
                          * The scrollbar is chrome the design does not draw, and on the platforms

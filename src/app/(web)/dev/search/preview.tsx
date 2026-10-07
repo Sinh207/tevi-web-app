@@ -3,9 +3,12 @@
 import {
     type SearchChannel,
     SearchChannelRow,
+    SearchFollowingList,
     SearchFollowingStrip,
+    SearchRecentCreators,
     SearchRecentsList,
 } from '@features/search'
+import type { RecentCreator } from '@shared/lib/search-recent-creators'
 import { Button } from '@shared/ui/button'
 import { useState } from 'react'
 
@@ -39,6 +42,17 @@ export function SearchPreview({
     recents: string[]
 }) {
     const [recents, setRecents] = useState(initialRecents)
+    const [creators, setCreators] = useState<RecentCreator[]>(() =>
+        rows.map(row => ({
+            slug: row.slug,
+            name: row.display_name ?? row.name,
+            thumb: row.images.thumb,
+            verifiedImage: row.verified_tick_badge?.image ?? null,
+            isPremium: row.is_premium,
+            isNsfw: row.is_nsfw,
+            at: 0,
+        })),
+    )
     /** What the real screen would have written to Recents — the `commit` a press stands for. */
     const [opened, setOpened] = useState<string | null>(null)
 
@@ -60,13 +74,36 @@ export function SearchPreview({
                 />
             </Section>
 
+            <Section title="recent creators — scrolls below md, wraps from md; ✕ removes">
+                {creators.length > 0 ? (
+                    <SearchRecentCreators
+                        creators={creators}
+                        onOpen={creator => setOpened(creator.slug)}
+                        onForget={slug => setCreators(list => list.filter(c => c.slug !== slug))}
+                    />
+                ) : (
+                    <p className="type-dense-default p-4 text-(--text-body)">
+                        all removed — the real screen hides the section
+                    </p>
+                )}
+            </Section>
+
+            <Section title="following list — the /search section, with View all">
+                <SearchFollowingList
+                    title="Following"
+                    channels={rows}
+                    onOpen={channel => setOpened(channel.slug)}
+                    viewAll
+                    rowTestId="search-following-row"
+                />
+            </Section>
+
             <Section title="result rows">
-                <ul className="list-none">
+                <ul className="flex list-none flex-col gap-3 px-6">
                     {rows.map((channel, index) => (
                         <SearchChannelRow
                             key={channel.slug}
                             channel={channel}
-                            rule={index > 0}
                             /*
                              * The row is a real anchor to `/@{slug}` and none of these fixtures
                              * is a space that exists, so a press will leave for a 404 — which is

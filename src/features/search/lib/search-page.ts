@@ -55,3 +55,12 @@ export function nextSearchCursor(
  * is not a reason for the other to.
  */
 export const FOLLOWING_GRID_SIZE = 20
+
+/**
+ * How many followed spaces `/search` shows — idle and typed alike.
+ *
+ * The Figma Search page: "Following → 10 kết quả phù hợp nhất". It is a list now rather than the
+ * strip `FOLLOWING_GRID_SIZE` feeds, and the exhaustive answer is behind *View all* (`/following`)
+ * or in the Global search list below it, so ten is the whole of what this section offers.
+ */
+export const SEARCH_FOLLOWING_SIZE = 10

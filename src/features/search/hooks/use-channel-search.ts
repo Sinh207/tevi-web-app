@@ -6,7 +6,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { searchApi, searchKeys } from '../api/search-api'
 import type { SearchChannel } from '../api/types'
-import { nextSearchCursor } from '../lib/search-page'
+import { FOLLOWING_GRID_SIZE, nextSearchCursor } from '../lib/search-page'
 import { useSearchRecents } from './use-search-recents'
 
 /**
@@ -150,10 +150,30 @@ export interface UseChannelSearchOptions {
      * platform.
      */
     followingWhenIdle?: boolean
+    /**
+     * How many followed spaces to ask for. `/search` shows ten (`SEARCH_FOLLOWING_SIZE`); the
+     * creator picker keeps the strip's twenty, which is the default.
+     */
+    followingPageSize?: number
+    /**
+     * Drop sensitive spaces from both lists — `/search` sets it when the account has not turned
+     * on *Show NSFW spaces when searching* (`nsfw_settings.nsfw_search`).
+     *
+     * Applied **here** rather than in the view because `isEmpty` has to be computed over what is
+     * actually drawn: a term whose only matches are sensitive must reach the no-results state, not
+     * a blank panel.
+     *
+     * Only as good as the flag on the row. `followed-channels/` sends `is_nsfw`; `search/` does not
+     * today, so global results rely on the search service filtering by the account's own setting
+     * (B78). Rows without the field parse as `false` and are kept.
+     */
+    hideNsfw?: boolean
 }
 
 export function useChannelSearch({
     followingWhenIdle = false,
+    followingPageSize = FOLLOWING_GRID_SIZE,
+    hideNsfw = false,
 }: UseChannelSearchOptions = {}): UseChannelSearchResult {
     const { activeId, isAuthenticated } = useAuth()
     const { remember } = useSearchRecents()
@@ -195,7 +215,10 @@ export function useChannelSearch({
      * the settled term does.
      */
     const resultsKey = useMemo(() => searchKeys.channels(q, activeId), [q, activeId])
-    const followingKey = useMemo(() => searchKeys.following(q, activeId), [q, activeId])
+    const followingKey = useMemo(
+        () => searchKeys.following(q, activeId, followingPageSize),
+        [q, activeId, followingPageSize],
+    )
 
     const resultsQuery = useInfiniteQuery({
         queryKey: resultsKey,
@@ -208,7 +231,13 @@ export function useChannelSearch({
 
     const followingQuery = useQuery({
         queryKey: followingKey,
-        queryFn: ({ signal }) => searchApi.getFollowedChannels({ q, accountId: activeId, signal }),
+        queryFn: ({ signal }) =>
+            searchApi.getFollowedChannels({
+                q,
+                pageSize: followingPageSize,
+                accountId: activeId,
+                signal,
+            }),
         /*
          * Signed-in only, and the gate is the *query's* rather than a branch in the component:
          * legacy checks `isAuthenticated` inside the fetcher and returns early, which still mints
@@ -283,13 +312,18 @@ export function useChannelSearch({
     const seen = new Set<string>()
     for (const page of resultsQuery.data?.pages ?? []) {
         for (const row of page.results) {
-            if (seen.has(row.slug)) continue
+            if (seen.has(row.slug) || (hideNsfw && row.is_nsfw)) continue
             seen.add(row.slug)
             results.push(row)
         }
     }
 
-    const following = followingQuery.data ?? []
+    const followingData = followingQuery.data
+    const following = useMemo(
+        () =>
+            hideNsfw ? (followingData ?? []).filter(row => !row.is_nsfw) : (followingData ?? []),
+        [followingData, hideNsfw],
+    )
 
     /**
      * `fetchNextPage` guarded here rather than at the sentinel, and depending on the **three

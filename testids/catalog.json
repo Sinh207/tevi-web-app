@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 1084,
+        "ids": 1087,
         "surfaces": 30
     },
     "surfaces": {
@@ -15335,7 +15335,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-view.tsx:359"
+            "source": "src/features/search/components/search-view.tsx:326"
         },
         "search-following-loading": {
             "scope": "search",
@@ -15343,7 +15343,15 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-skeleton.tsx:115"
+            "source": "src/features/search/components/search-view.tsx:199"
+        },
+        "search-following-placeholder": {
+            "scope": "search",
+            "routes": [
+                "/gift-star",
+                "/search"
+            ],
+            "source": "src/features/search/components/search-view.tsx:172"
         },
         "search-following-tile": {
             "scope": "search",
@@ -15351,7 +15359,15 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-following-strip.tsx:326"
+            "source": "src/features/search/components/search-following-strip.tsx:322"
+        },
+        "search-following-view-all": {
+            "scope": "search",
+            "routes": [
+                "/gift-star",
+                "/search"
+            ],
+            "source": "src/features/search/components/search-following-list.tsx:60"
         },
         "search-form": {
             "scope": "search",
@@ -15359,15 +15375,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-view.tsx:351"
-        },
-        "search-loading": {
-            "scope": "search",
-            "routes": [
-                "/gift-star",
-                "/search"
-            ],
-            "source": "src/features/search/components/search-skeleton.tsx:49"
+            "source": "src/features/search/components/search-view.tsx:318"
         },
         "search-recent": {
             "scope": "search",
@@ -15375,7 +15383,37 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-recents-list.tsx:94"
+            "source": "src/features/search/components/search-recents-list.tsx:89"
+        },
+        "search-recent-creator": {
+            "scope": "search",
+            "routes": [
+                "/gift-star",
+                "/search"
+            ],
+            "companions": [
+                "data-channel-slug"
+            ],
+            "source": "src/features/search/components/search-recent-creators.tsx:72"
+        },
+        "search-recent-creator-link": {
+            "scope": "search",
+            "routes": [
+                "/gift-star",
+                "/search"
+            ],
+            "source": "src/features/search/components/search-recent-creators.tsx:77"
+        },
+        "search-recent-creator-remove": {
+            "scope": "search",
+            "routes": [
+                "/gift-star",
+                "/search"
+            ],
+            "companions": [
+                "data-channel-slug"
+            ],
+            "source": "src/features/search/components/search-recent-creators.tsx:128"
         },
         "search-recent-forget": {
             "scope": "search",
@@ -15383,7 +15421,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-recents-list.tsx:110"
+            "source": "src/features/search/components/search-recents-list.tsx:103"
         },
         "search-recents-clear-all": {
             "scope": "search",
@@ -15391,15 +15429,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-recents-list.tsx:71"
-        },
-        "search-result": {
-            "scope": "search",
-            "routes": [
-                "/gift-star",
-                "/search"
-            ],
-            "source": "src/features/search/components/search-view.tsx:276"
+            "source": "src/features/search/components/search-recents-list.tsx:68"
         },
         "search-result-link": {
             "scope": "search",
@@ -15407,7 +15437,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-channel-row.tsx:100"
+            "source": "src/features/search/components/search-channel-row.tsx:75"
         },
         "search-retry": {
             "scope": "search",
@@ -15415,7 +15445,7 @@
                 "/gift-star",
                 "/search"
             ],
-            "source": "src/features/search/components/search-view.tsx:197"
+            "source": "src/features/search/components/search-view.tsx:215"
         },
         "share-channel": {
             "scope": "share",

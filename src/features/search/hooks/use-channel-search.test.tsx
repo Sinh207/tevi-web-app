@@ -60,7 +60,7 @@ function page(count: number): SearchChannelsPage {
     return { results: rows(count), count, next: null }
 }
 
-function mount() {
+function mount(options: Parameters<typeof useChannelSearch>[0] = {}) {
     /*
      * `staleTime` mirrors the app's own client (`shared/lib/api/query-client.ts`), and the
      * "clearing costs no request" assertion depends on it: at the library default of 0 every
@@ -71,7 +71,7 @@ function mount() {
     })
     let api!: ReturnType<typeof useChannelSearch>
     function Probe() {
-        api = useChannelSearch()
+        api = useChannelSearch(options)
         return null
     }
     render(
@@ -412,5 +412,53 @@ describe('the states the screen branches on', () => {
         h.type('ada ')
         await h.settle()
         expect(searchChannels.mock.calls.map(([a]) => a.accountId)).toEqual(['acc-1', 'acc-2'])
+    })
+})
+
+describe('hideNsfw', () => {
+    const sensitive = (slug: string) => ({ slug, is_nsfw: true }) as SearchChannel
+
+    it('drops sensitive spaces from both lists', async () => {
+        searchChannels.mockResolvedValue({
+            results: [...rows(1), sensitive('nsfw-global')],
+            count: 2,
+            next: null,
+        })
+        getFollowedChannels.mockResolvedValue([sensitive('nsfw-followed'), ...rows(1, 5)])
+        const view = mount({ hideNsfw: true })
+        view.type('ada')
+        await view.settle()
+        expect(view.read().results.map(row => row.slug)).toEqual(['space-0'])
+        expect(view.read().following.map(row => row.slug)).toEqual(['space-5'])
+    })
+
+    /** Filtered in the hook, not the view, precisely so this reaches the no-results state. */
+    it('reports empty when every match was sensitive', async () => {
+        searchChannels.mockResolvedValue({ results: [sensitive('a')], count: 1, next: null })
+        getFollowedChannels.mockResolvedValue([sensitive('b')])
+        const view = mount({ hideNsfw: true })
+        view.type('ada')
+        await view.settle()
+        expect(view.read().isEmpty).toBe(true)
+    })
+
+    it('keeps sensitive spaces when the account opted in', async () => {
+        searchChannels.mockResolvedValue({ results: [sensitive('a')], count: 1, next: null })
+        getFollowedChannels.mockResolvedValue([])
+        const view = mount()
+        view.type('ada')
+        await view.settle()
+        expect(view.read().results).toHaveLength(1)
+    })
+})
+
+describe('followingPageSize', () => {
+    it('is what the followed-channels request asks for', async () => {
+        searchChannels.mockResolvedValue(page(0))
+        getFollowedChannels.mockResolvedValue([])
+        const view = mount({ followingPageSize: 10 })
+        view.type('ada')
+        await view.settle()
+        expect(getFollowedChannels).toHaveBeenCalledWith(expect.objectContaining({ pageSize: 10 }))
     })
 })

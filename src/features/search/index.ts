@@ -26,7 +26,9 @@ export { CreatorPickerView } from './components/creator-picker-view'
  * `BlockedAccountRow` and `FollowRequestRow`.
  */
 export { SearchChannelRow } from './components/search-channel-row'
+export { SearchFollowingList } from './components/search-following-list'
 export { SearchFollowingStrip } from './components/search-following-strip'
+export { SearchRecentCreators } from './components/search-recent-creators'
 export { SearchRecentsList } from './components/search-recents-list'
 export { SearchFollowingSkeleton, SearchSkeleton } from './components/search-skeleton'
 export { SearchView } from './components/search-view'

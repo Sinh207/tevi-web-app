@@ -127,6 +127,19 @@ export const searchChannelSchema = z.looseObject({
      * sensitive content.
      */
     is_nsfw: boolish,
+    /**
+     * Drawn on the row's second line ("40.4k Followers"). Both endpoints send it, and they do not
+     * agree: `search/` reads it off its index, which lags — a space with 16 followers on
+     * `followed-channels/` came back as `0` from search (B78). `null` when absent, so the row can
+     * leave the line out rather than print a made-up zero.
+     */
+    follower_count: nullable(z.coerce.number().nonnegative()),
+    /**
+     * The other half of the Figma row ("276 Members"). **Neither endpoint sends it today** — it is
+     * declared so the row picks it up the day the backend adds it, and until then the line shows
+     * followers alone. Spelling is `member_count`, as on the channel stats payload.
+     */
+    member_count: nullable(z.coerce.number().nonnegative()),
 })
 
 export type SearchChannel = z.infer<typeof searchChannelSchema>

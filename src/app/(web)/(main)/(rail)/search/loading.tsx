@@ -60,10 +60,10 @@ export default async function Loading() {
             </div>
             <div className={`${SEARCH_CONTAINER} flex flex-1 flex-col md:pb-6`}>
                 <div className={SEARCH_PANEL} aria-busy="true">
-                    {/* The field's own box, from `SearchView`: `px-4 pt-4 pb-3` around a 48px pill
+                    {/* The field's own box, from `SearchView`: `px-4 pt-4` around a 48px pill
                         at radius 24. Reserved as its shape rather than rendered as a real
                         `SearchBar`, which would be a client control that cannot be typed into. */}
-                    <div className="px-4 pt-4 pb-3">
+                    <div className="px-4 pt-4">
                         <Skeleton h={48} className="rounded-[24px]" />
                     </div>
                 </div>

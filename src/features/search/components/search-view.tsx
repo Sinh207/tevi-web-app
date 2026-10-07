@@ -1,64 +1,72 @@
 'use client'
 
+import { accountNsfwSettings, useAuth } from '@features/auth'
 import { ChannelEmptyState } from '@features/channel'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
-import { ListHeader, ListHeaderTitle } from '@shared/ui/list'
 import { Loader } from '@shared/ui/loader'
 import { SearchBar } from '@shared/ui/search-bar'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
+import type { SearchChannel } from '../api/types'
 import { useChannelSearch } from '../hooks/use-channel-search'
+import { useRecentCreators } from '../hooks/use-recent-creators'
 import { useSearchRecents } from '../hooks/use-search-recents'
 import { SEARCH_PANEL } from '../lib/container'
 import { SEARCH_ART } from '../lib/illustrations'
-import { SearchChannelRow } from './search-channel-row'
-import { SearchFollowingStrip } from './search-following-strip'
+import { SEARCH_FOLLOWING_SIZE } from '../lib/search-page'
+import { SearchFollowingList } from './search-following-list'
+import { SearchRecentCreators } from './search-recent-creators'
 import { SearchRecentsList } from './search-recents-list'
-import { SearchFollowingSkeleton, SearchSkeleton } from './search-skeleton'
+import { SearchSkeleton } from './search-skeleton'
 
 /**
- * `/search` — everything below the page's back bar.
+ * `/search` — everything below the page's back bar. A port of the Figma Search page (the *Search*
+ * spec board: idle, typed, no results, and the four "no data" edge cases).
  *
- * ## Six states, and the first of them is the one legacy renders as a blank card
+ * ## Idle — three sections, each drawn only when it has something
  *
- * DoD §1's loading / error / empty / success, plus the two this screen has of its own:
+ * **Recents** (the terms, at most five, *Clear all history*), **Recent creators** (spaces opened
+ * from here, at most five) and **Following** (ten of the spaces this account follows, *View all* →
+ * `/following`). The edge-case comps hide each one independently when it is empty, and so does this.
+ * With all three empty a signed-in reader gets the short "Search creators" prompt rather than a
+ * field over an empty card.
  *
- * - **Idle**: nothing typed. The screen is the Recents list, and when there is no history it is a
- *   short prompt rather than legacy's *nothing at all* — its `Recents` component returns `null`
- *   for an empty list, so a first-time visitor gets a search field over 700px of empty white card
- *   and no indication that the page has finished loading. Which of the two it is, is **not known
- *   until the device's list has been read**, so the idle body holds until it has — see the branch
- *   below.
- * - **Nothing matched**: a list that came back empty because of the **term** is not an empty list,
- *   and it gets Brand's art plus copy that says what to try instead. The distinction is the same
- *   one `BlockedAccountsView` draws between `isEmpty` and `isSearchEmpty`; here *every* empty
- *   result is a search's, because there is no unfiltered list to be empty.
+ * **Signed out, the idle screen is the field alone** ("Chỉ hiển thị search input + kết quả; ẩn tất
+ * cả 3 section trên"). Global search stays public — only the sections that describe an account are
+ * withheld, which is also why recents recorded under an anonymous session are not shown.
  *
- * There is deliberately **no signed-out state**. Global search is public — legacy's page is too —
- * and the only part that needs an account is the Following grid, which simply is not fetched
- * without one (`useChannelSearch` gates the query rather than the screen). An anonymous visitor
- * gets a working search, which is what a platform's front door should be.
+ * The two device lists cannot be read on the server, so the idle body **holds** (an empty `flex-1`)
+ * until both are known rather than painting the prompt and swapping it for a returning reader's
+ * history a frame later.
  *
- * ## The URL carries no term, and that is a decision
+ * ## Typed — Following first, then Global search
  *
- * `/search?q=ada` would be shareable, and it is not implemented: the term is client state.
- * Legacy has no such parameter either, so nothing in the wild links to one; and writing it on
- * every settle means a `router.replace` per debounce, which puts a history entry (or a suppressed
- * one) and a server round-trip on the typing path for a page whose content is entirely
- * client-fetched. Worth revisiting the day something needs to *link* to a search — the hook's
- * `submit` is already the seam a `?q=` reader would use.
+ * "Search Priority: (1 Following) Spaces/Creators đang follow → (2 Global search) Similar creators".
+ * The followed list is capped at ten ("10 kết quả phù hợp nhất") and the global list paginates.
+ * Following failing is silent (the hook explains); global failing is the error state.
  *
- * ## Pagination is real
+ * ## Sensitive spaces
  *
- * DoD §6, and this is the list that most needs it: a two-letter term matches a lot of spaces.
- * `useInView`'s default 600px lead time means the next page is usually in the cache before the
- * reader reaches the bottom, so the "loading more" row is rare rather than a spinner per scroll.
+ * Hidden unless the account turned on *Show NSFW spaces when searching* (`nsfw_settings.nsfw_search`)
+ * — "nếu user chưa bật filtering: Không show space NSFW". The spec's banner prompting the reader to
+ * turn the setting on was struck from the board ("BỎ BANNER KÊU BẬT SETTINGS"), so there is none.
+ *
+ * ## No results — unchanged ("Case search không ra → Như cũ")
+ *
+ * ## The URL carries no term
+ *
+ * `/search?q=` would be shareable and is not implemented: legacy has no such parameter, and writing
+ * it on every settle puts a `router.replace` on the typing path. The hook's `submit` is the seam a
+ * `?q=` reader would use.
  */
 export function SearchView({ className }: { className?: string }) {
     const { t, currentLanguage } = useTranslation()
+    const { currentUser, isAuthenticated } = useAuth()
+    const hideNsfw = accountNsfwSettings(currentUser).nsfw_search !== true
+
     const {
         search,
         setSearch,
@@ -77,16 +85,37 @@ export function SearchView({ className }: { className?: string }) {
         hasNextPage,
         isFetchingNextPage,
         loadMore,
-    } = useChannelSearch()
+    } = useChannelSearch({
+        followingWhenIdle: isAuthenticated,
+        followingPageSize: SEARCH_FOLLOWING_SIZE,
+        hideNsfw,
+    })
     const { recents, isReady: recentsReady, forget, clear } = useSearchRecents()
+    const {
+        creators,
+        isReady: creatorsReady,
+        remember: rememberCreator,
+        reopen: reopenCreator,
+        forget: forgetCreator,
+    } = useRecentCreators()
+    /* The store outlives the setting, so the filter is applied on read as well. */
+    const visibleCreators = hideNsfw ? creators.filter(creator => !creator.isNsfw) : creators
 
     /**
-     * The sentinel, and the effect that acts on it.
-     *
-     * `enabled` detaches the observer once there is nothing left to fetch, and detaching it while
-     * a page is in flight is what keeps `inView` from re-firing for the whole duration of the
-     * request. `loadMore` is guarded in the hook as well; belt and braces, because the failure
-     * here is a request loop rather than a wrong pixel.
+     * Opening a row records two things: the term that found it (`record` — `q`, not the field) and
+     * the space itself, for the Recent creators row ("creator mà user đã từng tìm hoặc truy cập").
+     */
+    const open = useCallback(
+        (channel: SearchChannel) => {
+            record()
+            rememberCreator(channel)
+        },
+        [record, rememberCreator],
+    )
+
+    /*
+     * The pagination sentinel. `enabled` detaches the observer while a page is in flight, which is
+     * what keeps `inView` from re-firing for the whole request; `loadMore` is guarded as well.
      */
     const [sentinelRef, sentinelInView] = useInView<HTMLDivElement>({
         enabled: hasNextPage && !isFetchingNextPage,
@@ -95,227 +124,166 @@ export function SearchView({ className }: { className?: string }) {
         if (sentinelInView) loadMore()
     }, [sentinelInView, loadMore])
 
-    /**
-     * The two sections, each rendered only when it has something in it.
-     *
-     * `hasResults` looks redundant next to `isEmpty` and is not: `isEmpty` needs **both** lists
-     * empty, so `results.length === 0 && hasFollowing` reaches the success branch below. Without
-     * this gate that state drew a "Global search" heading and a live region announcing "0 results"
-     * over an empty `<ul>` — a section header for a section that is not there.
-     *
-     * It is an edge case created by an open contract question rather than by a normal payload: the
-     * global list ought to be a superset of the spaces you follow, so reaching it means the two
-     * endpoints match terms by different rules (B78, question 1). Which is exactly why it is
-     * handled rather than assumed away.
-     *
-     * The **visible** "Global search" header is separate again, and is drawn only when the
-     * Following grid is above it: a heading earns its line by telling two things apart, and with no
-     * grid there is one list on the screen and the page title already names it. The section keeps
-     * its accessible name in both cases (`aria-label`), so a screen reader loses nothing when the
-     * line is not drawn.
-     */
     const hasFollowing = following.length > 0
     const hasResults = results.length > 0
 
-    const body = isIdle ? (
-        !recentsReady ? (
-            /*
-             * The one frame in which the answer is not known yet.
-             *
-             * Recents are `localStorage`, so they cannot be read on the server and are not in the
-             * hydrating render either (`useSearchRecents` explains where `isReady` comes from). The
-             * two states below are a **list** and an **empty state**, so guessing costs a whole
-             * block of content: this used to paint "Search creators" at every reader and replace it
-             * with the history a returning one has.
-             *
-             * Nothing is drawn rather than a shimmer of the list, because the alternative to the
-             * list is a prompt — a static instruction, not data — and shimmer resolving into
-             * *copy* is a placeholder that was standing in for nothing. It holds the panel's height
-             * (`flex-1`) so the card does not collapse and reopen. The route's `loading.tsx` paints
-             * this same nothing under its field, so the two moments agree.
-             */
-            <div className="flex-1" aria-hidden="true" />
-        ) : recents.length > 0 ? (
-            <SearchRecentsList
-                recents={recents}
-                onPick={submit}
-                onForget={forget}
-                onClear={clear}
-                /* Arrives like every other region in this app — including the empty states it
-                   alternates with, so clearing the field does not swap an animated block for a
-                   static one. */
-                className={RISE}
-            />
-        ) : (
-            /*
-             * The prompt, in place of legacy's blank card. A glyph and not art: this is not an
-             * empty state — there is nothing missing — it is the instruction, and Brand has drawn
-             * nothing for it. `ChannelEmptyState`'s own doc calls a 32px glyph the honest minimum
-             * for a state nobody has drawn.
-             */
+    let body: React.ReactNode
+    if (isIdle) {
+        if (!isAuthenticated) {
+            body = <div className="flex-1" aria-hidden="true" />
+        } else if (!recentsReady || !creatorsReady) {
+            body = <div className="flex-1" aria-hidden="true" />
+        } else if (
+            recents.length === 0 &&
+            visibleCreators.length === 0 &&
+            !hasFollowing &&
+            !isFollowingLoading
+        ) {
+            /* A glyph, not art: this is the instruction, not something missing. */
+            body = (
+                <ChannelEmptyState
+                    className={cn('flex-1', RISE)}
+                    icon="search"
+                    title={t('search_idle_title')}
+                />
+            )
+        } else {
+            body = (
+                <div className={cn('flex flex-col', RISE)}>
+                    {recents.length > 0 && (
+                        <SearchRecentsList
+                            recents={recents}
+                            onPick={submit}
+                            onForget={forget}
+                            onClear={clear}
+                        />
+                    )}
+                    {visibleCreators.length > 0 && (
+                        <SearchRecentCreators
+                            creators={visibleCreators}
+                            onOpen={reopenCreator}
+                            onForget={forgetCreator}
+                        />
+                    )}
+                    {isFollowingLoading ? (
+                        <SearchSkeleton
+                            count={4}
+                            title={t('search_following')}
+                            testId="search-following-placeholder"
+                        />
+                    ) : (
+                        hasFollowing && (
+                            <SearchFollowingList
+                                title={t('search_following')}
+                                channels={following}
+                                onOpen={open}
+                                viewAll
+                                rowTestId="search-following-row"
+                            />
+                        )
+                    )}
+                </div>
+            )
+        }
+    } else if (isLoading) {
+        /*
+         * The layout the results are about to have. The Following block is reserved only while
+         * that request is actually in flight — an anonymous visitor's never is.
+         */
+        body = (
+            <>
+                {isFollowingLoading && (
+                    <SearchSkeleton
+                        count={2}
+                        title={t('search_following')}
+                        testId="search-following-loading"
+                    />
+                )}
+                <SearchSkeleton title={t('search_global_results')} />
+            </>
+        )
+    } else if (isError) {
+        body = (
             <ChannelEmptyState
                 className={cn('flex-1', RISE)}
-                icon="search"
-                title={t('search_idle_title')}
+                icon="exclamation-diamond"
+                tone="error"
+                title={t('search_error_title')}
+                body={t('search_error_body')}
+                action={
+                    <Button
+                        data-testid="search-retry"
+                        variant="secondary"
+                        size="large"
+                        onClick={retry}
+                    >
+                        {t('common_retry')}
+                    </Button>
+                }
             />
         )
-    ) : isLoading ? (
-        /*
-         * The layout the results are about to have, not just its list.
-         *
-         * `isFollowingLoading` is the gate and it is the honest one: it is true only while the
-         * followed-channels request is in flight, i.e. only when a block of tiles is on its way to
-         * that exact spot. An anonymous visitor's query is never enabled, so they get the rows
-         * alone — which is also all their screen will ever have. The strip's own note explains why
-         * a count can be guessed here and `SearchSkeleton`'s why it will not guess the block.
-         *
-         * The "Global search" heading comes with it, drawn under the same condition the real one
-         * uses (`hasFollowing`): the line exists to tell two lists apart, so a screen that is about
-         * to have one list does not reserve a line for it. Both headings print their real words —
-         * they are chrome, and reserving space for text we already have is what makes a skeleton
-         * feel like a different screen.
-         */
-        <>
-            {isFollowingLoading && (
-                <>
-                    <SearchFollowingSkeleton label={t('search_following')} />
-                    <ListHeader rule={false}>
-                        <ListHeaderTitle as="h2">{t('search_global_results')}</ListHeaderTitle>
-                    </ListHeader>
-                </>
-            )}
-            <SearchSkeleton />
-        </>
-    ) : isError ? (
-        <ChannelEmptyState
-            className={cn('flex-1', RISE)}
-            icon="exclamation-diamond"
-            tone="error"
-            title={t('search_error_title')}
-            body={t('search_error_body')}
-            action={
-                <Button data-testid="search-retry" variant="secondary" size="large" onClick={retry}>
-                    {t('common_retry')}
-                </Button>
-            }
-        />
-    ) : isEmpty ? (
-        /*
-         * Legacy's own words for this state ("Oops! No results found"), which is what people
-         * recognise, over the repo's own actionable second line — "Try a different name or
-         * handle", the same sentence `/settings/blocked-accounts` and `/my-membership` use for
-         * the identical moment. Legacy's second line is `dangerouslySetInnerHTML` around a
-         * string with a literal `\n` in it that it replaces with a `<br />`; there is nothing
-         * to port there.
-         *
-         * The term is **not** quoted back. It is four lines up in a field the reader is still
-         * looking at, and a `t()` call that interpolates it would be a fourteenth string to
-         * translate into nine locales for something already on screen.
-         *
-         * No action button — the way out is the field's own cancel, which is on screen a few
-         * pixels above. A "clear search" button here would be a second control for one job, the
-         * same call `BlockedAccountsView` makes.
-         */
-        <ChannelEmptyState
-            className={cn('flex-1', RISE)}
-            art={SEARCH_ART.empty}
-            title={t('search_no_results_title')}
-            body={t('search_no_results_body')}
-        />
-    ) : (
-        <>
-            {hasFollowing && (
-                <SearchFollowingStrip
-                    channels={following}
-                    /* A press records the term that found the tile — see `record` in the hook. */
-                    onOpen={record}
-                    /* The grid arrives with the results, so it arrives the same way they do. */
-                    className={RISE}
-                />
-            )}
+    } else if (isEmpty) {
+        /* Legacy's words over the repo's actionable second line; no button — the field's own
+           cancel is the way out, a few pixels above. */
+        body = (
+            <ChannelEmptyState
+                className={cn('flex-1', RISE)}
+                art={SEARCH_ART.empty}
+                title={t('search_no_results_title')}
+                body={t('search_no_results_body')}
+            />
+        )
+    } else {
+        body = (
+            <>
+                {hasFollowing && (
+                    <SearchFollowingList
+                        title={t('search_following')}
+                        channels={following}
+                        onOpen={open}
+                        stagger
+                        rowTestId="search-following-result"
+                    />
+                )}
 
-            {hasResults && (
-                <section aria-label={t('search_global_results')}>
-                    {hasFollowing && (
-                        <ListHeader rule={false}>
-                            <ListHeaderTitle as="h2">{t('search_global_results')}</ListHeaderTitle>
-                        </ListHeader>
-                    )}
+                {/*
+                 * `hasResults` is not redundant with `isEmpty`: a match in Following alone reaches
+                 * this branch with an empty global list, and a heading over nothing is wrong.
+                 */}
+                {hasResults && (
+                    <SearchFollowingList
+                        title={t('search_global_results')}
+                        channels={results}
+                        onOpen={open}
+                        stagger
+                        rowTestId="search-result"
+                    >
+                        {/*
+                         * The count, for screen readers only: results replace themselves under a
+                         * field the reader is still typing into, with no navigation and no focus
+                         * change, so without a live region nothing says the list changed. The
+                         * server's total, formatted exactly.
+                         */}
+                        <p role="status" aria-live="polite" className="sr-only">
+                            {t('search_results_count', {
+                                count: total,
+                                formatted: new Intl.NumberFormat(currentLanguage).format(total),
+                            })}
+                        </p>
+                    </SearchFollowingList>
+                )}
 
-                    {/*
-                     * The count, for screen readers only.
-                     *
-                     * The design has no line for it, and its job is not decorative: results replace
-                     * themselves under a field the reader is still typing into, with no navigation
-                     * and no focus change, so without a live region a screen-reader user gets no
-                     * signal that the list changed at all. `role="status"` rather than a bare
-                     * `aria-live`, so it is announced as a status update and not as part of the list.
-                     *
-                     * **Inside the gate**, so it counts something that is on screen — the state
-                     * this used to be wrong about is the one above (`hasResults`): a match in the
-                     * Following grid alone had it announcing "0 results" over visible content. The
-                     * cost is that such a match is announced by nothing at all, which is the
-                     * quieter of the two wrongs and is the state B78 exists to remove.
-                     *
-                     * `Intl` formats the number, because `1,024` is `1.024` in German — and it is
-                     * exact rather than compact, since this stands in for a list the reader can
-                     * count. It is the **server's** total, so it may sit a row or two above what is
-                     * rendered once duplicates across pages are dropped; that is the honest figure
-                     * for "how many matched", which is what it is announcing.
-                     */}
-                    <p role="status" aria-live="polite" className="sr-only">
-                        {t('search_results_count', {
-                            count: total,
-                            formatted: new Intl.NumberFormat(currentLanguage).format(total),
-                        })}
-                    </p>
+                {/* Zero-height and outside the list, so it is neither a row nor a tab stop. */}
+                <div ref={sentinelRef} aria-hidden="true" className="h-px" />
 
-                    <ul className="list-none">
-                        {results.map((channel, index) => (
-                            <SearchChannelRow
-                                testId="search-result"
-                                channelSlug={channel.slug}
-                                key={channel.slug}
-                                channel={channel}
-                                /*
-                                 * A hairline above every row but the first. No "is the row above me
-                                 * still visible" arithmetic here, unlike the blocked list: nothing
-                                 * on this screen removes a row, so there is no exit animation
-                                 * during which a mounted-but-collapsed neighbour could leave a rule
-                                 * floating against the card's edge.
-                                 */
-                                rule={index > 0}
-                                /*
-                                 * Opening a result is the strongest signal the term was a good one,
-                                 * so it is what records it — `record` and not `commit`, because the
-                                 * term that found this row is `q` rather than whatever is in the
-                                 * field by now. See the hook.
-                                 */
-                                onOpen={record}
-                                /*
-                                 * The stagger is a **first-paint** flourish, so only the first
-                                 * screen gets one. Rows appended by pagination mount below the fold
-                                 * and are scrolled to, not revealed — a delay there makes them look
-                                 * late rather than orderly. 40ms rather than `riseDelay`'s 60,
-                                 * because ten rows at 60 would still be arriving 600ms in.
-                                 */
-                                enterDelay={index < 10 ? index * 40 : 0}
-                            />
-                        ))}
-                    </ul>
-                </section>
-            )}
-
-            {/* Zero-height and outside the list, so it is neither a row nor a tab stop. */}
-            <div ref={sentinelRef} aria-hidden="true" className="h-px" />
-
-            {isFetchingNextPage && (
-                <div className="flex items-center justify-center py-6">
-                    <Loader label={t('common_loading')} />
-                </div>
-            )}
-        </>
-    )
+                {isFetchingNextPage && (
+                    <div className="flex items-center justify-center py-6">
+                        <Loader label={t('common_loading')} />
+                    </div>
+                )}
+            </>
+        )
+    }
 
     return (
         <div className={cn(SEARCH_PANEL, className)}>
@@ -342,11 +310,10 @@ export function SearchView({ className }: { className?: string }) {
              * `noValidate` because there is nothing to validate: any string is a legitimate
              * search, including one that will match nothing.
              *
-             * 16 on the sides, which is the inset the DS list row gives its avatar — so the
-             * field's edge lines up with the rows under it at every width. `pb-3` rather than a
-             * symmetric 16, because the first row brings 8 of its own.
+             * 16 on the sides and 16 on top, as the comp's `Search Bars` instance is; nothing
+             * below, because every section under it opens with its own 12px band.
              */}
-            <search className="px-4 pt-4 pb-3">
+            <search className="px-4 pt-4">
                 <form
                     data-testid="search-form"
                     noValidate

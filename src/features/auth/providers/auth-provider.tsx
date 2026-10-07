@@ -23,6 +23,7 @@ import { eventBus } from '@shared/lib/event-bus'
 import { getFirebaseAuth } from '@shared/lib/firebase'
 import { LOCKS, withLock } from '@shared/lib/locks'
 import { clearNsfwConsent } from '@shared/lib/nsfw-consent'
+import { clearRecentCreators } from '@shared/lib/search-recent-creators'
 import { clearSearchRecents } from '@shared/lib/search-recents'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
@@ -478,6 +479,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // consent above — a search history left on a shared device reads as the next
             // person's, and it is legible at a glance.
             clearSearchRecents(id)
+            // …and the creators it opened from there, for the same reason.
+            clearRecentCreators(id)
             queryClient.removeQueries({ queryKey: authKeys.me(id) })
         },
         [queryClient],

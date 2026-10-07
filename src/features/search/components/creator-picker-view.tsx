@@ -7,7 +7,6 @@ import { RISE } from '@shared/lib/motion'
 import { subTestId } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
-import { ListHeader, ListHeaderTitle } from '@shared/ui/list'
 import { Loader } from '@shared/ui/loader'
 import { SearchBar } from '@shared/ui/search-bar'
 import { useEffect } from 'react'
@@ -18,6 +17,7 @@ import { SEARCH_ART } from '../lib/illustrations'
 import { SearchChannelRow } from './search-channel-row'
 import { SearchFollowingStrip } from './search-following-strip'
 import { SearchRecentsList } from './search-recents-list'
+import { SearchSectionHeader } from './search-section-header'
 import { SearchFollowingSkeleton, SearchSkeleton } from './search-skeleton'
 
 /**
@@ -221,9 +221,7 @@ export function CreatorPickerView({
             {isFollowingLoading && (
                 <>
                     <SearchFollowingSkeleton label={t('search_following')} />
-                    <ListHeader rule={false}>
-                        <ListHeaderTitle as="h2">{t('search_global_results')}</ListHeaderTitle>
-                    </ListHeader>
+                    <SearchSectionHeader title={t('search_global_results')} />
                 </>
             )}
             <SearchSkeleton />
@@ -267,23 +265,18 @@ export function CreatorPickerView({
 
             {hasResults && (
                 <section aria-label={t('search_global_results')}>
-                    {/* The heading earns its line only when the grid is above it, exactly as on
-                        `/search`: with one list on screen the page title is the label. The section
-                        keeps its accessible name either way. */}
-                    {hasFollowing && (
-                        <ListHeader rule={false}>
-                            <ListHeaderTitle as="h2">{t('search_global_results')}</ListHeaderTitle>
-                        </ListHeader>
-                    )}
+                    {/* The heading earns its line only when the strip is above it: with one list
+                        on screen the page title is the label, and the section keeps its accessible
+                        name either way. (`/search` always draws it — its comps title both lists.) */}
+                    {hasFollowing && <SearchSectionHeader title={t('search_global_results')} />}
 
-                    <ul className="list-none">
+                    <ul className="flex list-none flex-col gap-3 px-6 pb-3">
                         {results.map((channel, index) => (
                             <SearchChannelRow
                                 key={channel.slug}
                                 testId={subTestId(testId, 'item')}
                                 channelSlug={channel.slug}
                                 channel={channel}
-                                rule={index > 0}
                                 /*
                                  * `record` and not a handler of this screen's own: pressing a row is
                                  * a navigation the `Link` performs, and all that is left to do is

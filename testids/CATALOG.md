@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-1084 ids across 30 surfaces.
+1087 ids across 30 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -1248,17 +1248,20 @@ Routes: `/gift-star`, `/search`
 
 | testid | companions | source |
 |---|---|---|
-| `search-field` | — | `src/features/search/components/search-view.tsx:359` |
-| `search-following-loading` | — | `src/features/search/components/search-skeleton.tsx:115` |
-| `search-following-tile` | — | `src/features/search/components/search-following-strip.tsx:326` |
-| `search-form` | — | `src/features/search/components/search-view.tsx:351` |
-| `search-loading` | — | `src/features/search/components/search-skeleton.tsx:49` |
-| `search-recent` | — | `src/features/search/components/search-recents-list.tsx:94` |
-| `search-recent-forget` | — | `src/features/search/components/search-recents-list.tsx:110` |
-| `search-recents-clear-all` | — | `src/features/search/components/search-recents-list.tsx:71` |
-| `search-result` | — | `src/features/search/components/search-view.tsx:276` |
-| `search-result-link` | — | `src/features/search/components/search-channel-row.tsx:100` |
-| `search-retry` | — | `src/features/search/components/search-view.tsx:197` |
+| `search-field` | — | `src/features/search/components/search-view.tsx:326` |
+| `search-following-loading` | — | `src/features/search/components/search-view.tsx:199` |
+| `search-following-placeholder` | — | `src/features/search/components/search-view.tsx:172` |
+| `search-following-tile` | — | `src/features/search/components/search-following-strip.tsx:322` |
+| `search-following-view-all` | — | `src/features/search/components/search-following-list.tsx:60` |
+| `search-form` | — | `src/features/search/components/search-view.tsx:318` |
+| `search-recent` | — | `src/features/search/components/search-recents-list.tsx:89` |
+| `search-recent-creator` | `data-channel-slug` | `src/features/search/components/search-recent-creators.tsx:72` |
+| `search-recent-creator-link` | — | `src/features/search/components/search-recent-creators.tsx:77` |
+| `search-recent-creator-remove` | `data-channel-slug` | `src/features/search/components/search-recent-creators.tsx:128` |
+| `search-recent-forget` | — | `src/features/search/components/search-recents-list.tsx:103` |
+| `search-recents-clear-all` | — | `src/features/search/components/search-recents-list.tsx:68` |
+| `search-result-link` | — | `src/features/search/components/search-channel-row.tsx:75` |
+| `search-retry` | — | `src/features/search/components/search-view.tsx:215` |
 
 ## `share` — Share sheet — link preview, QR step, channel row
 

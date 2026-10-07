@@ -30,7 +30,7 @@ import { STORAGE_KEYS, storage } from './storage'
  *
  * That file expires entries at 90 days because consent is an *answer* that should go stale ("yes, I
  * am over 18" should not still be answered a year later on a device that may have changed hands).
- * This is not an answer, it is a convenience, and `MAX_TERMS` is already the bound: twenty entries
+ * This is not an answer, it is a convenience, and `MAX_TERMS` is already the bound: five entries
  * is the whole of it, and a term nobody has searched since is on its way out of the list by being
  * pushed off the end. A TTL on top would only make a *short* list shorter.
  *
@@ -70,8 +70,11 @@ interface RecentEntry {
 
 type RecentsRecord = Record<string, RecentEntry[]>
 
-/** Legacy's `MAX_SEARCHES`, and the only bound this needs — see the note above. */
-const MAX_TERMS = 20
+/**
+ * The only bound this needs — see the note above. Five, from the Figma Search page ("Giới hạn lưu 5
+ * items mỗi loại"); legacy's `MAX_SEARCHES` was 20.
+ */
+export const MAX_TERMS = 5
 
 /**
  * A ceiling on one stored term, not on what may be *typed*.

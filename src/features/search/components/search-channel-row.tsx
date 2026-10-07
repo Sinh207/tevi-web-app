@@ -5,89 +5,64 @@ import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { formatCompactCount, formatExactCount } from '@shared/lib/format-count'
+import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
-import {
-    ListRowRule,
-    ListUserItem,
-    ListUserItemAvatar,
-    ListUserItemContent,
-    ListUserItemHandle,
-    ListUserItemInfo,
-    ListUserItemName,
-    ListUserItemNameRow,
-    ListUserItemPreview,
-} from '@shared/ui/list'
 import Link from 'next/link'
 import { type SearchChannel, searchChannelName } from '../api/types'
 
 /**
- * One global-search result: avatar, name with its marks, handle.
+ * One space in a search list — the Figma Search page's `User Info` row (56px tall, 12 apart).
  *
- * The DS `List/User Item` (2089:2965) with **no `__cta` slot** — this row has one action, which
- * is "go there", so the row *is* the control. That is the one structural difference from
- * `BlockedAccountRow`, and it is what lets the whole 80px band be a single anchor rather than an
- * anchor around the name with a button beside it.
+ * The product brief on that page, item by item:
  *
- * ## The link wraps the row, not the name
+ * - **"Tăng kích thước avatar"** — the avatar slot is 56px. The avatar itself is the DS `large`
+ *   (48) centred in it: the comp draws a 48 disc inside a 56 frame, the 4px of air being where a
+ *   live ring would sit. `AnimatedAvatar` has no 56 rung, and stretching a 48 asset is worse than
+ *   honouring the comp's own inset.
+ * - **"Đưa Spacename + Verified badge – Premium badge + @username về cùng 1 hàng"** — one line,
+ *   in that order. The marks are `flex-none`; the name and the handle both truncate, the handle
+ *   twice as eagerly (`shrink-[2]`), because the name is what the reader is scanning for.
+ * - **"Hiển thị số followers và số members"** — the second line. Neither endpoint sends a member
+ *   count yet (see `member_count` in `api/types.ts`), so today the line is followers alone and the
+ *   dot appears only once both halves exist.
  *
- * Legacy makes the row a `div` with an `onClick` that pushes `/@{slug}` — not focusable, not
- * middle-clickable, no status-bar preview, and invisible to a screen reader as a destination.
- * Here it is one `<a>` with the whole row inside it. Nothing else in the row is interactive, so
- * there is no nested-control problem: the reason `BlockedAccountRow` scopes its anchor to the
- * identity block is that it has an Unblock button, and this row does not.
+ * ## Not the DS `List/User Item` any more
  *
- * `normalizeSearchChannels` guarantees a slug, so there is no "row without a link" branch to
- * write — a row that could not be reached was dropped at the boundary.
+ * That row is 80px with a hairline between rows; this comp is 56px rows with a 12px gap and no
+ * rule, so building it from `ListUserItem*` would mean overriding every measurement it has. The
+ * geometry is the comp's: 24px side inset (`px-6`, set by the list), 12 between avatar and text, 4
+ * between the two lines.
  *
- * ## Two lines, so the row centres them
+ * ## The link wraps the row
  *
- * Both `ListUserItemAvatar` and `ListUserItemPreview` are drawn `items-start` for the DS's
- * three-line conversation row. A result has a name and a handle and nothing else — no date, no
- * preview — so top alignment leaves 21px of air underneath and the avatar sitting visibly above
- * the name it belongs to. `items-center` on both, the same override `BlockedAccountRow` applies
- * for its own two-line case.
- *
- * ## The avatar animates here, unlike on the blocked list
- *
- * `isPremium` is passed through rather than pinned to `false`. That is the opposite call to
- * `BlockedAccountRow`, and the difference is what the screen is for: a list of people you have
- * blocked should not spend a battery on their clips, while a list of creators you are choosing
- * between is exactly where a Premium creator's avatar is meant to be seen. `AnimatedAvatar` still
- * gates playback on visibility, reduced motion and `saveData`, so the cost is bounded by what is
- * actually on screen.
+ * One `<a>` around everything — the row has one action, "go there". Legacy's `div` + `onClick` is
+ * neither focusable nor middle-clickable. `prefetch={false}`: a paginated list of a hundred rows
+ * would otherwise prefetch a hundred dynamic channel routes to open one.
  */
 export function SearchChannelRow({
     channel,
-    rule,
     onOpen,
-    /**
-     * Milliseconds of entrance delay. The list staggers its first screen and hands later rows
-     * `0` — see `SearchView`.
-     */
+    /** Entrance delay in ms — the list staggers its first screen, see `SearchView`. */
     enterDelay = 0,
     testId,
     channelSlug,
 }: {
     channel: SearchChannel
-    /** Draw a hairline above this row. Every row but the first. */
-    rule: boolean
-    /** Called on press, so the term can be recorded as a recent. Navigation is the link's. */
+    /** Called on press — records the term and the creator. Navigation is the link's. */
     onOpen: () => void
     enterDelay?: number
-    /**
-     * The row's own `data-testid`, plus the identity of the thing it shows in a companion
-     * attribute. Passed rather than spread because this component has a closed prop list — a
-     * `data-testid` handed to it would otherwise be dropped silently, which is a whole class of
-     * "the id is there but nothing can find it". See docs/TEST_IDS.md.
-     */
+    /** The row's `data-testid`, plus its identity in a companion attribute (docs/TEST_IDS.md). */
     testId?: string
     channelSlug?: string
 }) {
-    const { t } = useTranslation()
+    const { t, currentLanguage } = useTranslation()
 
     const name = searchChannelName(channel)
     const label = name || `@${channel.slug}`
     const verifiedImage = channel.verified_tick_badge?.image ?? null
+    const followers = channel.follower_count
+    const members = channel.member_count
 
     return (
         <li
@@ -100,120 +75,107 @@ export function SearchChannelRow({
                 data-testid="search-result-link"
                 href={toChannelPath(channel.slug)}
                 onClick={onOpen}
-                /*
-                 * **No prefetch**, and on this screen that is not a micro-optimisation.
-                 *
-                 * `Link` prefetches on viewport entry by default, so a results list paginating to
-                 * a hundred rows sends a hundred RSC requests for `/@{slug}` — a route that is
-                 * dynamic and server-fetches the channel — to open exactly one of them. That is
-                 * the opposite trade from a nav rail, where there are five destinations and one is
-                 * certain to be used.
-                 *
-                 * The cost is a slower first paint on the space that *is* pressed. It is the right
-                 * side of the trade for a list built to be scanned, and it is the standard call
-                 * for long lists of links.
-                 */
                 prefetch={false}
                 /*
-                 * `focus-visible` on the anchor rather than on anything inside it: the anchor is
-                 * the row, so the ring belongs around the row. `-outline-offset-2` (inward) and
-                 * not the usual positive offset — a ring drawn *outside* an 80px row that is
-                 * flush against the panel's edge is clipped by the panel's `overflow-hidden`,
-                 * which is how a focus ring goes missing on exactly the rows at the top and
-                 * bottom of a card.
+                 * The hover wash bleeds 8px past the text column (`-mx-2 px-2`) so it reads as a
+                 * row rather than a box hugging the avatar; the focus ring is inward for the reason
+                 * the panel's `overflow-hidden` clips anything drawn outside its edge.
                  */
-                className="block no-underline outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus-ring)"
+                className="-mx-2 flex min-w-0 items-center gap-3 rounded-(--radius-lg) px-2 no-underline outline-none transition-colors hover:bg-(--background-segment) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus-ring)"
             >
-                {/*
-                 * Surface, not Listing, and the hover is Segment — the two token overrides
-                 * `blocked-account-row.tsx` documents in full. Short version: `ListUserItem`
-                 * paints `--background-listing`, which is `--black` in Dark and identical to
-                 * `--background`, so an un-overridden row repaints the page colour over the card
-                 * it sits in; and `--background-subtle` is the same `#18181b` as
-                 * `--background-surface` in Dark, so a subtle hover would do nothing at all.
-                 */}
-                <ListUserItem className="bg-(--background-surface) transition-colors hover:bg-(--background-segment)">
-                    <ListUserItemAvatar className="items-center">
-                        <AnimatedAvatar
-                            size="large"
-                            thumb={channel.images.thumb}
-                            avatarVideo={channel.images.avatar_video}
-                            isPremium={channel.is_premium}
-                            /*
-                             * Decorative: the anchor's own text already names this space, and the
-                             * avatar is inside the anchor — an `alt` here would have a screen
-                             * reader read the name twice for one link.
-                             */
-                            alt=""
-                            initials={label.replace('@', '').slice(0, 2).toUpperCase()}
-                        />
-                    </ListUserItemAvatar>
+                <span className="flex size-14 flex-none items-center justify-center">
+                    <AnimatedAvatar
+                        size="large"
+                        thumb={channel.images.thumb}
+                        avatarVideo={channel.images.avatar_video}
+                        isPremium={channel.is_premium}
+                        /* Decorative — the name is inside the same link. */
+                        alt=""
+                        initials={label.replace('@', '').slice(0, 2).toUpperCase()}
+                    />
+                </span>
 
-                    <ListUserItemContent>
-                        {rule && <ListRowRule />}
-                        <ListUserItemPreview className="items-center">
-                            <ListUserItemInfo>
-                                <ListUserItemNameRow className="w-full">
-                                    <ListUserItemName premium={channel.is_premium}>
-                                        {label}
-                                    </ListUserItemName>
-                                    {/* The badge *image* is the fact, and the gate lives in
-                                        `VerifiedBadge`: the payload object is present (`{}`) on
-                                        an ordinary unverified account, so there is nothing to
-                                        draw without art — no sprite fallback. */}
-                                    <VerifiedBadge image={verifiedImage} size={24} />
-                                    {/*
-                                     * Legacy's `BadgePremium`, after the tick — the same placement
-                                     * `FollowingChannelRow` uses. The plain badge, not the `href`
-                                     * one: the whole row is already a `<Link>` to the space, and an
-                                     * `<a>` inside an `<a>` is invalid.
-                                     */}
-                                    {channel.is_premium && (
-                                        <PremiumBadge
-                                            size={18}
-                                            label={t('channel_premium')}
-                                            className="flex-none"
-                                        />
-                                    )}
-                                    {/*
-                                     * Legacy overlays a hand-drawn pink diamond on the avatar for
-                                     * this. Two reasons it is a labelled sprite glyph beside the
-                                     * name instead: the DS ships the `nsfw` glyph (the channel's
-                                     * own bio row already uses it), so there is nothing to draw
-                                     * by hand — and a mark *in the name row* is read out with
-                                     * the name, where a decorative overlay on an avatar is read
-                                     * out as nothing at all.
-                                     *
-                                     * `title` rather than `aria-hidden`, because this one is
-                                     * information and not decoration: it is the only thing on
-                                     * the row that says the space is sensitive.
-                                     *
-                                     * **`--accents-nsfw`, not `--icon-secondary`.** The DS ships
-                                     * one token for this fact (`#f43fca` Light, `#ff5ed9` Dark),
-                                     * which is also legacy's pink, and `FollowingChannelRow`'s
-                                     * note already says what grey costs: it "reads as one more
-                                     * secondary icon; the point of the mark is that it is not".
-                                     * Pink **ink** here rather than the pink disc the tile and
-                                     * `/following` use, because there is no avatar corner to sit
-                                     * on — the same call `NsfwInfoDialog` makes for its inline
-                                     * glyph. Measured on the row's Surface: 3.28:1 Light and
-                                     * 6.62:1 Dark, both over WCAG's 3:1 for a graphic.
-                                     */}
-                                    {channel.is_nsfw && (
-                                        <Icon
-                                            name="nsfw"
-                                            weight="filled"
-                                            size={18}
-                                            title={t('channel_nsfw')}
-                                            className="flex-none text-(--accents-nsfw)"
-                                        />
-                                    )}
-                                </ListUserItemNameRow>
-                                <ListUserItemHandle>@{channel.slug}</ListUserItemHandle>
-                            </ListUserItemInfo>
-                        </ListUserItemPreview>
-                    </ListUserItemContent>
-                </ListUserItem>
+                <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="flex min-w-0 items-center gap-0.5">
+                        <span
+                            className={cn(
+                                'type-dense-strong min-w-0 truncate',
+                                channel.is_premium
+                                    ? '[background-image:var(--gradient-premium-name)] bg-clip-text text-transparent'
+                                    : 'text-(--text-title)',
+                            )}
+                        >
+                            {label}
+                        </span>
+                        {/*
+                         * 16 / 12 rather than the comp's 16 / 16: the verified PNG's tick fills 75%
+                         * of its box and the crown's hexagon ~92%, so equal boxes draw the crown a
+                         * third larger. Same 4:3 the channel header and the following strip use.
+                         */}
+                        <VerifiedBadge
+                            image={verifiedImage}
+                            size={16}
+                            label={t('channel_verified')}
+                        />
+                        {channel.is_premium && (
+                            <PremiumBadge
+                                size={12}
+                                label={t('channel_premium')}
+                                className="flex-none"
+                            />
+                        )}
+                        {/*
+                         * Sensitive spaces only reach this row when the account opted in (or the
+                         * service did not say), and then the mark is information, not decoration —
+                         * hence `title`. `--accents-nsfw` is the DS token for this one fact.
+                         */}
+                        {channel.is_nsfw && (
+                            <Icon
+                                name="nsfw"
+                                weight="filled"
+                                size={16}
+                                title={t('channel_nsfw')}
+                                className="flex-none text-(--accents-nsfw)"
+                            />
+                        )}
+                        <span className="type-dense-default ms-0.5 min-w-0 shrink-[2] truncate text-(--text-subtitle)">
+                            @{channel.slug}
+                        </span>
+                    </span>
+
+                    {(followers !== null || members !== null) && (
+                        <span className="type-dense-default flex min-w-0 items-center gap-1 text-(--text-title)">
+                            {followers !== null && (
+                                <span
+                                    className="truncate"
+                                    title={formatExactCount(followers, currentLanguage)}
+                                >
+                                    {t('search_followers', {
+                                        count: followers,
+                                        formatted: formatCompactCount(followers, currentLanguage),
+                                    })}
+                                </span>
+                            )}
+                            {followers !== null && members !== null && (
+                                <span
+                                    aria-hidden="true"
+                                    className="size-1 flex-none rounded-(--radius-fill) bg-(--icon-secondary)"
+                                />
+                            )}
+                            {members !== null && (
+                                <span
+                                    className="truncate"
+                                    title={formatExactCount(members, currentLanguage)}
+                                >
+                                    {t('search_members', {
+                                        count: members,
+                                        formatted: formatCompactCount(members, currentLanguage),
+                                    })}
+                                </span>
+                            )}
+                        </span>
+                    )}
+                </span>
             </Link>
         </li>
     )

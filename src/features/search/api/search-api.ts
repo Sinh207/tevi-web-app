@@ -55,8 +55,8 @@ export const searchKeys = {
     all: ['search'] as const,
     channels: (q: string, accountId: string | null) =>
         ['search', 'channels', q, accountId ?? 'anon'] as const,
-    following: (q: string, accountId: string | null) =>
-        ['search', 'following', q, accountId ?? 'anon'] as const,
+    following: (q: string, accountId: string | null, pageSize: number) =>
+        ['search', 'following', q, accountId ?? 'anon', pageSize] as const,
 }
 
 export const searchApi = {
@@ -127,16 +127,19 @@ export const searchApi = {
      */
     async getFollowedChannels({
         q,
+        pageSize = FOLLOWING_GRID_SIZE,
         accountId,
         signal,
     }: {
         q: string
+        /** `/search` asks for ten (`SEARCH_FOLLOWING_SIZE`), the creator picker for twenty. */
+        pageSize?: number
         accountId?: string | null
         signal?: AbortSignal
     }): Promise<SearchChannel[]> {
         const body = await channelService.get<Partial<PagedList<unknown>>>(
             'v3/channel/followed-channels/',
-            { page: 1, page_size: FOLLOWING_GRID_SIZE, ...(q ? { q } : {}) },
+            { page: 1, page_size: pageSize, ...(q ? { q } : {}) },
             { signal, ...(accountId ? { accountId } : {}) },
         )
         return normalizeSearchChannels(body?.results)

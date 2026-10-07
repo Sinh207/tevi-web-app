@@ -53,6 +53,8 @@ const ROWS: SearchChannel[] = [
         verified_tick_badge: { image: null },
         is_premium: false,
         is_nsfw: false,
+        follower_count: 40400,
+        member_count: 276,
     },
     {
         // Premium: the name takes the brand gradient, and with no clip the avatar stays a still.
@@ -64,6 +66,8 @@ const ROWS: SearchChannel[] = [
         verified_tick_badge: { image: null },
         is_premium: true,
         is_nsfw: false,
+        follower_count: null,
+        member_count: null,
     },
     {
         // Sensitive: the labelled `nsfw` glyph sits in the name row, beside the name.
@@ -75,6 +79,8 @@ const ROWS: SearchChannel[] = [
         verified_tick_badge: null,
         is_premium: false,
         is_nsfw: true,
+        follower_count: 12,
+        member_count: null,
     },
     {
         // No name at all: the row falls back to the handle, and prints it once rather than twice.
@@ -86,6 +92,8 @@ const ROWS: SearchChannel[] = [
         verified_tick_badge: null,
         is_premium: false,
         is_nsfw: false,
+        follower_count: 0,
+        member_count: null,
     },
     {
         // The truncation case, in both the row and the strip.
@@ -97,6 +105,8 @@ const ROWS: SearchChannel[] = [
         verified_tick_badge: null,
         is_premium: true,
         is_nsfw: true,
+        follower_count: 1250000,
+        member_count: 3800,
     },
 ]
 
