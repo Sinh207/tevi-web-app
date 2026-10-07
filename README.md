@@ -116,6 +116,8 @@ says why each exists.
 | [`docs/WEBVIEW.md`](docs/WEBVIEW.md) | The `/app/*` namespace the mobile apps open, and the native JS bridge. |
 | [`docs/MINI_APP.md`](docs/MINI_APP.md) | Third-party apps framed inside Tevi — the `postMessage` contract and its security posture. |
 | [`docs/PAYMENT.md`](docs/PAYMENT.md) | Stripe, checkout and saved cards: the four `action` branches, and what is still unbuilt. |
+| [`docs/POST.md`](docs/POST.md) | Posts end to end: the card and what it hands up to its list, the post page, paywall and paid interaction, replies, the composer, bookmarks and collections. |
+| [`docs/MESSAGE.md`](docs/MESSAGE.md) | Direct messages: the inbox, a conversation, the socket frames, how a send survives going offline, and the floating chat window. |
 | [`docs/END_RAIL_OPEN_ITEMS.md`](docs/END_RAIL_OPEN_ITEMS.md) | The desktop end rail — what is deliberately unfinished, and why. |
 | [`docs/BACKEND_QUESTIONS.md`](docs/BACKEND_QUESTIONS.md) | Contract questions the client is still guessing at. Read before "fixing" an odd-looking payload. |
 

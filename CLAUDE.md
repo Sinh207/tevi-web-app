@@ -72,7 +72,7 @@ pnpm format                           # biome format --write
 `pnpm typecheck && pnpm lint && pnpm lint:rtl && pnpm lint:links && pnpm lint:testids` is the
 pre-PR gate (see `.github/pull_request_template.md`).
 
-## `docs/` — the eleven long-form documents
+## `docs/` — the thirteen long-form documents
 
 Each one holds the reasoning a code comment has no room for. Read the relevant one **before**
 changing the area it covers; several exist because a "simplification" was tried and reverted.
@@ -86,6 +86,8 @@ changing the area it covers; several exist because a "simplification" was tried 
 | [`WEBVIEW.md`](docs/WEBVIEW.md) | anything under `/app/*`, including the native JS bridge |
 | [`MINI_APP.md`](docs/MINI_APP.md) | the third-party `postMessage` player and its security posture |
 | [`PAYMENT.md`](docs/PAYMENT.md) | Stripe, checkout, saved cards — the four `action` branches, and what is still unbuilt (§8) |
+| [`POST.md`](docs/POST.md) | the post card, post page, paywall and paid interaction, replies, composer, bookmarks, collections |
+| [`MESSAGE.md`](docs/MESSAGE.md) | direct messages — the inbox, a conversation, the socket frames, sending offline, the floating window |
 | [`END_RAIL_OPEN_ITEMS.md`](docs/END_RAIL_OPEN_ITEMS.md) | the desktop end rail / campaign — what is deliberately unfinished (R1–R9) |
 | [`EVENT.md`](docs/EVENT.md) | the event area — its **three** screens (My event · Live details · Live studio, legacy's own vocabulary), the divergences, and what the player brings |
 | [`API_ERRORS.md`](docs/API_ERRORS.md) | wording any failed write — the API's own message wins, ours is the fallback |
