@@ -57,7 +57,7 @@ import { StripeElementsScope } from './stripe-elements-scope'
  * refactor. Switching it is `ResponsiveDialog` plus the `className` already here.
  * ## The body scrolls, the title and the footer do not
  *
- * `gap-0 p-0` overrides the DS Dialog's `gap-5 p-6` and the padding moves into the three bands, for
+ * `gap-0 p-0` overrides the DS Dialog's inset and gap and the padding moves into the three bands, for
  * the reason the membership dialog gives: otherwise the scrollbar runs inside 24px of dead margin and
  * the title scrolls away with the form. The card form is the one dialog in this app that genuinely
  * cannot fit a short viewport — an `AddressElement` is six fields.

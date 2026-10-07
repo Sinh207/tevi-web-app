@@ -49,7 +49,7 @@ export function TwoFaRecoveryEmailFlow({ flow }: { flow: TwoFaRecoveryEmail }) {
 
     return (
         /* `key` remounts on each step so the entrance replays; the values live in the hook. */
-        <form key={flow.step} onSubmit={submit} className="flex w-full flex-col gap-6">
+        <form key={flow.step} onSubmit={submit} className="flex w-full flex-col gap-4 md:gap-6">
             <StepHeader
                 icon={{ name: 'envelope', weight: 'filled' }}
                 tone="brand"

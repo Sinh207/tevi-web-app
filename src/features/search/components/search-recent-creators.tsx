@@ -59,7 +59,7 @@ export function SearchRecentCreators({
 
             <ul
                 className={cn(
-                    'flex list-none snap-x scroll-px-6 gap-2 overflow-x-auto overscroll-x-contain px-6 py-3',
+                    'flex list-none snap-x scroll-px-4 gap-2 overflow-x-auto overscroll-x-contain px-4 py-3 md:scroll-px-6 md:px-6',
                     '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
                     'md:flex-wrap md:overflow-visible',
                 )}

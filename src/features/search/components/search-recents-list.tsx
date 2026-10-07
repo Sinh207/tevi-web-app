@@ -76,7 +76,7 @@ export function SearchRecentsList({
 
             {/* No vertical padding of its own: each row's `py-3` is the 12 the comp puts above
                 the first term and below the last. */}
-            <ul className="flex list-none flex-col px-6">
+            <ul className="flex list-none flex-col px-4 md:px-6">
                 {recents.map((term, index) => (
                     <li key={term} className="flex items-center gap-2">
                         {/*

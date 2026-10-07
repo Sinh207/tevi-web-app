@@ -320,7 +320,7 @@ export function McnInvitationHero({
             <div
                 className={cn(
                     'theme-light absolute inset-x-0 bottom-0',
-                    'flex items-center justify-between gap-3 px-6 py-2',
+                    'flex items-center justify-between gap-3 px-4 py-2 md:px-6',
                     'bg-(--background-surface)/40 backdrop-blur-[var(--blur-md)]',
                 )}
             >

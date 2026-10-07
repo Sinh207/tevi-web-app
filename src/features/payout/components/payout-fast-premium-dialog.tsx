@@ -91,7 +91,7 @@ export function PayoutFastPremiumDialog({
                     </DialogTitle>
                 </div>
 
-                <div className="flex flex-col gap-3 px-6 pt-5 pb-6">
+                <div className="flex flex-col gap-3 px-4 pt-5 pb-4 sm:px-6 sm:pb-6">
                     {/*
                      * The promise, with the duration in bold — the one figure in the sheet, so it carries
                      * the emphasis rather than the whole sentence. Withheld when the payload states no

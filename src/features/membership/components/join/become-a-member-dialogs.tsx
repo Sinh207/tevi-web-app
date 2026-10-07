@@ -288,7 +288,7 @@ export function BecomeAMemberDialogs({
                          */}
                     </div>
 
-                    <div className="-mx-6 flex flex-col gap-3 border-(--separator-default) border-t px-6 pt-4">
+                    <div className="-mx-(--dialog-pad) flex flex-col gap-3 border-(--separator-default) border-t px-(--dialog-pad) pt-4">
                         {/*
                          * Said once, next to the control it disables — and it now means something
                          * narrower than it used to. Card payment **works**; what this covers is a

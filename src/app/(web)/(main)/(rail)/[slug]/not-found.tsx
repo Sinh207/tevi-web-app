@@ -39,7 +39,7 @@ export default async function ChannelNotFound() {
     const t = await getServerT()
 
     return (
-        <main className="flex flex-1 flex-col items-center justify-center px-6 py-16">
+        <main className="flex flex-1 flex-col items-center justify-center px-4 py-10 md:px-6 md:py-16">
             <ChannelEmptyState
                 testId="channel-not-found"
                 art={CHANNEL_NOT_FOUND_ART.space}

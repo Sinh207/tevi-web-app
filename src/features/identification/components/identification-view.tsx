@@ -129,7 +129,7 @@ export function IdentificationView() {
         return (
             <div
                 className={cn(
-                    'flex flex-col gap-6 px-3 pt-3 pb-6 md:px-6 md:pt-6',
+                    'flex flex-col gap-4 px-3 pt-3 pb-6 md:gap-6 md:px-6 md:pt-6',
                     IDENTIFICATION_PANEL,
                 )}
                 aria-busy="true"

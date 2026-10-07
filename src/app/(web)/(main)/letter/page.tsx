@@ -52,7 +52,7 @@ export default async function LetterPage() {
     const letter = getOpenLetter(locale)
 
     return (
-        <main className="flex flex-1 flex-col pb-16">
+        <main className="flex flex-1 flex-col pb-8 md:pb-16">
             <div className="sticky top-0 z-20 bg-(--background) md:border-b md:border-(--separator-default) print:hidden">
                 <PageBackBar
                     title={letter.barTitle}

@@ -27,7 +27,7 @@ export function BrandPanel({ className, ...props }: ComponentPropsWithoutRef<'di
     return (
         <div
             className={cn(
-                'flex min-w-0 flex-col gap-6 bg-(--background-surface) px-4 py-6 md:p-8',
+                'flex min-w-0 flex-col gap-4 bg-(--background-surface) p-4 md:gap-6 md:p-8',
                 'md:rounded-[var(--radius-2xl)] md:shadow-xs',
                 className,
             )}

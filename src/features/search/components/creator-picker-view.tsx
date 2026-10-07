@@ -270,7 +270,7 @@ export function CreatorPickerView({
                         name either way. (`/search` always draws it — its comps title both lists.) */}
                     {hasFollowing && <SearchSectionHeader title={t('search_global_results')} />}
 
-                    <ul className="flex list-none flex-col gap-3 px-6 pb-3">
+                    <ul className="flex list-none flex-col gap-3 px-4 pb-3 md:px-6">
                         {results.map((channel, index) => (
                             <SearchChannelRow
                                 key={channel.slug}

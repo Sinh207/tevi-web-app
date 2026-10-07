@@ -259,7 +259,7 @@ export function PasswordSetupFlow({
             data-testid="auth-password-setup-form"
             key={step}
             onSubmit={submit}
-            className="flex w-full flex-col gap-6"
+            className="flex w-full flex-col gap-4 md:gap-6"
         >
             <PasswordStepHeader
                 icon={stepCopy.icon}
@@ -270,7 +270,7 @@ export function PasswordSetupFlow({
                 email={step === 'email' ? undefined : trimmedEmail}
             />
 
-            <div className={cn('flex flex-col gap-6', RISE)} style={riseDelay(2)}>
+            <div className={cn('flex flex-col gap-4 md:gap-6', RISE)} style={riseDelay(2)}>
                 <PasswordStepProgress steps={STEPS} current={step} />
 
                 {step === 'email' && (

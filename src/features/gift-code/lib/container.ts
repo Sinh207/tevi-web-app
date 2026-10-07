@@ -82,7 +82,7 @@ export const GIFT_CODE_PANEL = cn(
      * does not contain: the spacing indices are not Tailwind's from step 5 up (see the mapping
      * table at the top of the spacing block in `globals.css`).
      */
-    'flex flex-col items-center gap-6 px-4 py-6',
+    'flex flex-col items-center gap-4 px-4 py-6 md:gap-6',
     'md:grow md:justify-center md:p-6',
     'md:rounded-2xl md:border md:border-(--separator-default) md:bg-(--background-surface)',
 )

@@ -82,7 +82,7 @@ export function TwoFaGate({
          * `key` remounts on each step so the entrance replays — the values live in the hook, so
          * nothing typed is lost. Same device the two other flows on this screen use.
          */
-        <div key={flow.step} className="flex w-full flex-col gap-6">
+        <div key={flow.step} className="flex w-full flex-col gap-4 md:gap-6">
             <StepHeader
                 icon={{ name: MARKS[flow.step], weight: 'filled' }}
                 // Neutral, which is what the comps draw — see `StepTone`'s `zinc`.

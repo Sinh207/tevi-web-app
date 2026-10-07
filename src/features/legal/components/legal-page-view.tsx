@@ -159,7 +159,7 @@ export async function LegalPageView({
                 <a
                     data-testid="legal-back-to-top"
                     href={`#${TOP_ID}`}
-                    className="type-dense-emphasis mt-8 inline-flex items-center gap-2 rounded-(--radius-md) text-(--text-body) no-underline transition-colors hover:text-(--text-title) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring) print:hidden"
+                    className="type-dense-emphasis mt-6 inline-flex md:mt-8 items-center gap-2 rounded-(--radius-md) text-(--text-body) no-underline transition-colors hover:text-(--text-title) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring) print:hidden"
                 >
                     <Icon name="arrow-up" size={16} />
                     {t('legal_back_to_top')}

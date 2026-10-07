@@ -89,7 +89,7 @@ export function GetStarView() {
     const feeCharge = gatewayFeeCharge(flow.selected?.price ?? 0, flow.gateway)
 
     return (
-        <div className={cn(GET_STAR_CONTAINER, 'flex flex-1 flex-col gap-6 pb-6')}>
+        <div className={cn(GET_STAR_CONTAINER, 'flex flex-1 flex-col gap-4 pb-6 md:gap-6')}>
             {/*
              * Outside `renderBody`, so it is on screen before either catalogue answers.
              *
@@ -137,7 +137,7 @@ export function GetStarView() {
         if (flow.isEmpty) return <StarCatalogueUnavailable />
 
         return (
-            <div className="flex flex-1 flex-col gap-6">
+            <div className="flex flex-1 flex-col gap-4 md:gap-6">
                 {/* Only when somebody was sent here by a gap: it is what makes the pre-selected tile
                     legible as an answer rather than a guess. */}
                 {flow.shortfall > 0 && (

@@ -486,7 +486,7 @@ export function TwoFaDialogBody({
                 disabled={flow.busy}
             />
 
-            <div className="flex flex-col gap-4 p-6">
+            <div className="flex flex-col gap-4 p-4 sm:p-6">
                 {/*
                  * **The reset note is a tinted block, and not green text.** Measured on the Light
                  * dialog ground (`--background-subtle`, `#f4f4f5`): `--accents-success-active` is

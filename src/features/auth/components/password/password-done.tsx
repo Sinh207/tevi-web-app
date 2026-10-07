@@ -32,7 +32,7 @@ export function PasswordDone({
     const { t } = useTranslation()
 
     return (
-        <div className="flex w-full flex-col gap-6">
+        <div className="flex w-full flex-col gap-4 md:gap-6">
             {/* The same header every step of the flow wears, in success green and with the
                 mark *landing* rather than rising — see `POP` in `shared/lib/motion.ts`. */}
             <PasswordStepHeader

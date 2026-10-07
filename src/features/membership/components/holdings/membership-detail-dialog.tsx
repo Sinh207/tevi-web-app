@@ -287,7 +287,7 @@ export function MembershipDetailDialog({
         <>
             <Dialog open={membership !== null} onOpenChange={onOpenChange}>
                 {/*
-                 * `gap-0 p-0` overrides the DS Dialog's `gap-5 p-6`: the padding belongs to the two
+                 * `gap-0 p-0` overrides the DS Dialog's inset and gap: the padding belongs to the two
                  * bands (a fixed title row, a scrolling body) rather than to the popup, or the
                  * scrollbar runs inside 24px of dead margin and the title scrolls with the content.
                  */}

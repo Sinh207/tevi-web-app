@@ -31,7 +31,8 @@ import { type SearchChannel, searchChannelName } from '../api/types'
  *
  * That row is 80px with a hairline between rows; this comp is 56px rows with a 12px gap and no
  * rule, so building it from `ListUserItem*` would mean overriding every measurement it has. The
- * geometry is the comp's: 24px side inset (`px-6`, set by the list), 12 between avatar and text, 4
+ * geometry is the comp's: 24px side inset (`md:px-6`, set by the list —
+ * 16 below `md`, where there is no card for the comp's inset to belong to), 12 between avatar and text, 4
  * between the two lines.
  *
  * ## The link wraps the row

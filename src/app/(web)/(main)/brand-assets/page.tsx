@@ -37,7 +37,7 @@ export default async function BrandAssetsPage() {
     const t = await getServerT()
 
     return (
-        <main className="flex flex-1 flex-col pb-16">
+        <main className="flex flex-1 flex-col pb-8 md:pb-16">
             {/* The bar is chrome, so it drops out on paper — and because an A4 sheet is
                 ~794px, i.e. below md, the masthead has to take the title back there:
                 `BrandAssetsView` restores its `h1` in print for exactly this reason. */}

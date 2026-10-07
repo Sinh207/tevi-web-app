@@ -123,7 +123,7 @@ export function IdentityIntro({
              */}
             <div
                 className={cn(
-                    'flex flex-col gap-6 px-3 pt-3 pb-6 md:px-6 md:pt-6',
+                    'flex flex-col gap-4 px-3 pt-3 pb-6 md:gap-6 md:px-6 md:pt-6',
                     // The panel is on the content, not on the page: the action bar below stays
                     // a thing that floats over it (mobile) or beside it (md), which is what
                     // keeps it reading as chrome rather than as the last row of the form.
