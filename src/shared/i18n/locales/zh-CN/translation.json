@@ -1978,6 +1978,8 @@
     "post_pinned_toast": "已置顶帖子",
     "post_unpinned_toast": "已取消置顶",
     "post_pin_failed": "无法更改置顶",
+    "post_pin_replace_title": "替换当前置顶？",
+    "post_pin_replace_body": "每次只能固定一条帖子到空间",
     "post_replies_opened_toast": "已开启回复",
     "post_replies_closed_toast": "已关闭回复",
     "post_replies_failed": "无法更改回复设置",

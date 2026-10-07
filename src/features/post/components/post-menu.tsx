@@ -31,7 +31,16 @@ import { PostReportDialog } from './post-report-dialog'
  *
  * *Delete* is irreversible. *Block* replaces the author's space with a wall and removes them from
  * the reader's feed. Neither is something to do on one press of a row sitting under a thumb, and
- * legacy asks before both. **Pin and replies do not confirm** — both are one press to undo.
+ * legacy asks before both. **Opening or closing replies does not confirm** — it is one press to
+ * undo.
+ *
+ * ## Pinning confirms, unpinning does not
+ *
+ * A space has **one** pinned post. Pinning another replaces it, and the post it displaced is not
+ * one press away from coming back — the author has to find it in the list first. So *Pin* asks
+ * "Replace current pin?", every time, which is legacy's `MenuItemPinPost`; *Unpin* replaces
+ * nothing and acts at once. Legacy does not know whether a pin exists when it asks, and neither
+ * does a card, so the question is worded to be true either way.
  *
  * ## Pin's glyph does not change and its label does
  *
@@ -62,10 +71,9 @@ export function PostMenu({
     /**
      * The writes, **owned by `PostCard`** rather than by this component.
      *
-     * Pin is the reason. Its optimistic state drives a marker in the *header* and a label in this
-     * menu — two components — so the hook has to sit above both. A menu that owned the hook would
-     * have to push the flag back up through a setter, which is the arrangement where the two
-     * drift and the header keeps showing a pin the menu says is off.
+     * The card needs them too — `onChanged` and `onAuthorBlocked` are the card's props, and the
+     * hook is where they are called — so the hook sits in the card and the menu is handed its
+     * result.
      */
     actions: PostActions
     testId?: string
@@ -82,6 +90,7 @@ export function PostMenu({
 
     const { pinned, pin, replyAllowed, remove, block } = actions
 
+    const [confirmPin, setConfirmPin] = useState(false)
     const [confirmDelete, setConfirmDelete] = useState(false)
     const [confirmBlock, setConfirmBlock] = useState(false)
     const [reportOpen, setReportOpen] = useState(false)
@@ -130,7 +139,7 @@ export function PostMenu({
                         <ActionMenuItem
                             data-testid={subTestId(testId, 'item')}
                             disabled={pin.isPending}
-                            onClick={() => pin.run(!pinned)}
+                            onClick={() => (pinned ? pin.run(false) : setConfirmPin(true))}
                         >
                             {pinned ? t('post_menu_unpin') : t('post_menu_pin')}
                             <Icon name="thumbtack" size={20} className="flex-none" />
@@ -175,6 +184,20 @@ export function PostMenu({
                     )}
                 </ActionMenuContent>
             </ActionMenu>
+
+            <ConfirmDialog
+                open={confirmPin}
+                onOpenChange={setConfirmPin}
+                title={t('post_pin_replace_title')}
+                description={t('post_pin_replace_body')}
+                confirmLabel={t('post_menu_pin')}
+                pending={pin.isPending}
+                onConfirm={() => {
+                    pin.run(true)
+                    setConfirmPin(false)
+                }}
+                testId={subTestId(testId, 'overlay')}
+            />
 
             <ConfirmDialog
                 open={confirmDelete}

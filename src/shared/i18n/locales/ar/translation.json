@@ -2036,6 +2036,8 @@
     "post_pinned_toast": "تم تثبيت المنشور",
     "post_unpinned_toast": "تم إلغاء تثبيت المنشور",
     "post_pin_failed": "تعذّر تغيير التثبيت",
+    "post_pin_replace_title": "استبدال الدبوس الحالي؟",
+    "post_pin_replace_body": "لا يمكنك تثبيت أكثر من منشور واحد على مساحتك في كل مرة.",
     "post_replies_opened_toast": "تم تفعيل الردود",
     "post_replies_closed_toast": "تم إيقاف الردود",
     "post_replies_failed": "تعذّر تغيير إعدادات الردود",

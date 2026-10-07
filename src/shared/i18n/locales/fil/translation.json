@@ -1980,6 +1980,8 @@
     "post_pinned_toast": "Na-pin ang post",
     "post_unpinned_toast": "Na-unpin ang post",
     "post_pin_failed": "Hindi mabago ang pin",
+    "post_pin_replace_title": "Palitan ang current pin?",
+    "post_pin_replace_body": "Maaari ka lang mag-pin ng isang post sa iyong Space nang sabay-sabay.",
     "post_replies_opened_toast": "Naka-on ang mga reply",
     "post_replies_closed_toast": "Naka-off ang mga reply",
     "post_replies_failed": "Hindi mabago ang setting ng reply",

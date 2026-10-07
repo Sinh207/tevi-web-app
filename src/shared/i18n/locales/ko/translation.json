@@ -1978,6 +1978,8 @@
     "post_pinned_toast": "게시물을 고정했습니다",
     "post_unpinned_toast": "게시물 고정을 해제했습니다",
     "post_pin_failed": "고정을 변경하지 못했습니다",
+    "post_pin_replace_title": "현재 고정을 교체하시겠습니까?",
+    "post_pin_replace_body": "공간에는 동시에 하나의 게시물만 고정할 수 있습니다.",
     "post_replies_opened_toast": "답글을 켰습니다",
     "post_replies_closed_toast": "답글을 껐습니다",
     "post_replies_failed": "답글 설정을 변경하지 못했습니다",

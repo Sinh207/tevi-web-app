@@ -1978,6 +1978,8 @@
     "post_pinned_toast": "Siaran disematkan",
     "post_unpinned_toast": "Sematan siaran dibuang",
     "post_pin_failed": "Tidak dapat menukar sematan",
+    "post_pin_replace_title": "Ganti pin semasa?",
+    "post_pin_replace_body": "Anda hanya boleh pin satu pos ke Space anda pada satu masa.",
     "post_replies_opened_toast": "Balasan dihidupkan",
     "post_replies_closed_toast": "Balasan dimatikan",
     "post_replies_failed": "Tidak dapat menukar tetapan balasan",

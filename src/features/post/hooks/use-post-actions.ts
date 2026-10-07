@@ -29,8 +29,9 @@ import type { Post } from '../api/types'
  * ## Pin is optimistic, and the other three are not
  *
  * Legacy flips `pinned` before the request and leaves the rest to wait, and that asymmetry is
- * right rather than accidental. Pinning has an immediate, *reversible*, visible result — a marker
- * in the header — so making the reader wait for it feels broken. The other three do not: closing
+ * right rather than accidental. Pinning has an immediate, *reversible*, visible result — the menu's
+ * label flips — so making the reader wait for it feels broken. (Where the post *sits* in its space
+ * moves only after the refetch: the space draws its pin in a separate block.) The other three do not: closing
  * replies removes a control, deleting replaces the card, blocking removes the author from the feed.
  * Doing any of those optimistically means undoing them in front of the reader when the request
  * fails, which reads far worse than a half-second wait.
@@ -82,9 +83,8 @@ export function usePostActions(
     /**
      * The pin state the card should draw, which is **not** `post.pinned` while a press is settling.
      *
-     * Held here rather than in the menu because the marker it drives lives in the header — a
-     * different component — and passing a setter down through two components to keep one boolean in
-     * sync is how the two drift.
+     * Drives the menu's Pin / Unpin label. The hook lives in `PostCard`, not in the menu — see
+     * `PostMenu`'s prop doc.
      */
     const [pinned, setPinned] = useState(post.pinned)
 

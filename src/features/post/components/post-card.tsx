@@ -156,8 +156,8 @@ export function PostCard({
     const href = postHref(post, { disabled: disableDetail })
 
     /*
-     * Owned here and not in the menu: pin's optimistic flag drives a marker in the header *and* a
-     * label in the menu, so the hook has to sit above both. `PostMenu`'s prop doc says the rest.
+     * Owned here and not in the menu: the writes call back into this card's `onChanged` /
+     * `onAuthorBlocked`. `PostMenu`'s prop doc says the rest.
      */
     const actions = usePostActions(post, { onChanged, onAuthorBlocked })
     const unlock = usePostUnlock(post, { onUnlocked: onChanged })
@@ -186,7 +186,7 @@ export function PostCard({
             )}
         >
             <div className="px-3 md:px-6">
-                <PostHeader post={post} actions={actions} pinned={actions.pinned} testId={testId} />
+                <PostHeader post={post} actions={actions} testId={testId} />
             </div>
 
             <div className="flex min-w-0 flex-col gap-1 px-3 md:px-6">

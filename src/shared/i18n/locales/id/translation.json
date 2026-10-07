@@ -1978,6 +1978,8 @@
     "post_pinned_toast": "Postingan disematkan",
     "post_unpinned_toast": "Sematan dilepas",
     "post_pin_failed": "Tidak dapat mengubah sematan",
+    "post_pin_replace_title": "Ganti pin saat ini?",
+    "post_pin_replace_body": "Anda hanya dapat memiliki satu postingan yang disematkan ke space Anda dalam satu waktu.",
     "post_replies_opened_toast": "Balasan diaktifkan",
     "post_replies_closed_toast": "Balasan dimatikan",
     "post_replies_failed": "Tidak dapat mengubah pengaturan balasan",

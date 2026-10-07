@@ -1978,6 +1978,8 @@
     "post_pinned_toast": "已置頂貼文",
     "post_unpinned_toast": "已取消置頂",
     "post_pin_failed": "無法變更置頂",
+    "post_pin_replace_title": "要替換目前的置頂貼文嗎？",
+    "post_pin_replace_body": "您一次只能將一則貼文固定在您的專區。",
     "post_replies_opened_toast": "已開啟回覆",
     "post_replies_closed_toast": "已關閉回覆",
     "post_replies_failed": "無法變更回覆設定",

@@ -71,7 +71,6 @@ function PurchasedTag({ testId }: { testId?: string }) {
 export function PostHeader({
     post,
     actions,
-    pinned,
     testId,
 }: {
     post: Post
@@ -86,21 +85,12 @@ export function PostHeader({
      * draft away to go somewhere the author already is.
      */
     actions?: PostActions
-    /**
-     * The **optimistic** pin state, not `post.pinned`.
-     *
-     * A press on *Pin* has to move this marker immediately; reading the prop would leave the header
-     * showing the old state until the list refetches, which on a feed is never. Defaults to the
-     * post's own field, which is right for a header with no writes behind it.
-     */
-    pinned?: boolean
     testId?: string
 }) {
     const { t, currentLanguage } = useTranslation()
     const channel = post.channel
     const name = channel?.name ?? ''
     const channelHref = actions && channel?.slug ? `/@${channel.slug}` : null
-    const isPinned = pinned ?? post.pinned
     const gated = isGated(post)
     const tierBadge = spaceTierBadge(channel)
 
@@ -194,19 +184,11 @@ export function PostHeader({
             )}
 
             {/*
-             * The pin marker and the menu share the trailing edge, in that order — legacy draws the
-             * marker inline in the header row and the kebab outside it, which at 16 and 32 puts the
-             * smaller mark nearer the text it qualifies.
+             * No pin marker here. Legacy draws none on the card: a space lifts its pinned post into
+             * its own block under a *Pinned* heading (`ChannelThreadList`'s `PinnedThreads`), and
+             * that heading is the marker.
              */}
             <span className="flex flex-none items-center gap-1">
-                {isPinned ? (
-                    <Icon
-                        name="thumbtack"
-                        size={16}
-                        title={t('post_pinned')}
-                        className="flex-none text-(--text-placeholder)"
-                    />
-                ) : null}
                 {/*
                  * `data-no-navigate` on the wrapper rather than on the trigger: the menu's popup is
                  * portalled, so a press on a **row** is not a DOM descendant of this span — but the

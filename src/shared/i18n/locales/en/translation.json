@@ -1980,6 +1980,8 @@
     "post_pinned_toast": "Post pinned",
     "post_unpinned_toast": "Post unpinned",
     "post_pin_failed": "Couldn't change the pin",
+    "post_pin_replace_title": "Replace current pin?",
+    "post_pin_replace_body": "You can only have one post pinned to your space at a time.",
     "post_replies_opened_toast": "Replies are on",
     "post_replies_closed_toast": "Replies are off",
     "post_replies_failed": "Couldn't change reply settings",

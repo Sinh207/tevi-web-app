@@ -1978,6 +1978,8 @@
     "post_pinned_toast": "Đã ghim bài viết",
     "post_unpinned_toast": "Đã bỏ ghim bài viết",
     "post_pin_failed": "Không thể thay đổi ghim",
+    "post_pin_replace_title": "Thay ghim hiện tại?",
+    "post_pin_replace_body": "Bạn chỉ có thể ghim một bài đăng vào Space của mình tại một thời điểm.",
     "post_replies_opened_toast": "Đã bật trả lời",
     "post_replies_closed_toast": "Đã tắt trả lời",
     "post_replies_failed": "Không thể đổi cài đặt trả lời",
