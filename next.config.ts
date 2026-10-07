@@ -15,6 +15,24 @@ const nextConfig: NextConfig = {
 
     experimental: {
         /**
+         * **Without it, a client navigation does not scroll to the top** — read `/` far down, tap a
+         * space, and the space opens at the feed's scroll position.
+         *
+         * Next's default handler finds the new segment's DOM with `findDOMNode`, which returns the
+         * segment's *first* host node. Every route here streams its metadata into the body (the root
+         * layout reads `cookies()`/`headers()`, see `[slug]/page.tsx`), and React hoists those
+         * `<title>`/`<meta>` tags into `<head>` — so the first node is in `<head>`, every sibling
+         * there measures as hidden, the walk runs off the end and the handler returns without
+         * scrolling. Next's own source names this as its bug and this flag as the fix: the new
+         * handler takes the segment from a Fragment ref instead. Measured on `/` → `/@slug`: the
+         * first frame of the space sat at the browser-clamped `scrollY` before, `0` after.
+         *
+         * Also new with it: the handler blurs the focused element instead of focusing the
+         * segment's first node, which is what a hard navigation does anyway.
+         */
+        appNewScrollHandler: true,
+
+        /**
          * **Turbopack's persistent dev store, and the reason it needs a switch.**
          *
          * Next 16 defaults this to `true` (`config-shared.js`), which is why `next dev` writes
