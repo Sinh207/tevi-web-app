@@ -2051,8 +2051,8 @@
     "home_feed_empty_title": "Chưa có gì ở đây",
     "home_feed_empty_body": "Các space bạn theo dõi chưa đăng gì. Tìm thêm nhà sáng tạo để lấp đầy bảng tin.",
     "home_feed_discover": "Khám phá nhà sáng tạo",
-    "home_lives_empty_title": "Hiện chưa ai phát trực tiếp",
-    "home_lives_empty_body": "Khi một space bạn theo dõi lên sóng, nó sẽ hiện ở đây.",
+    "home_lives_empty_title": "Hiện chưa có Live... Sắp rồi",
+    "home_lives_empty_body": "Creators của bạn hiện chưa Live, nhưng đừng lo, cuộc vui sẽ bắt đầu sớm thôi. Hãy follow thêm creators để xem ngay các buổi Live sắp tới.",
     "home_feed_error_title": "Không tải được bảng tin",
     "home_feed_error_body": "Có lỗi từ phía chúng tôi. Vui lòng thử lại sau giây lát.",
     "post_reply_title": "Phản hồi",
@@ -2596,5 +2596,7 @@
     "channel_protected_view_space": "Xem không gian",
     "event_banned_body": "Bạn không thể xem các buổi live hay tương tác với không gian của nhà sáng tạo này nữa. Hãy khám phá thêm những nhà sáng tạo khác nhé.",
     "event_account_banned_title": "Bạn không thể tham gia buổi live này",
-    "event_account_banned_body": "Tài khoản của bạn hiện không thể tham gia các buổi live."
+    "event_account_banned_body": "Tài khoản của bạn hiện không thể tham gia các buổi live.",
+    "following_live_happening_now": "Đang diễn ra",
+    "nav_create_event_badge": "App"
 }

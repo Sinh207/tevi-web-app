@@ -54,13 +54,13 @@ export function MessagesShell({ children }: { children: ReactNode }) {
             className={cn(
                 'mx-auto flex w-full overflow-hidden md:h-[var(--window-height)] md:max-w-[1504px] md:gap-0.5 md:p-3',
                 /*
-                 * `84px` is the phone tab bar's reserve — `TabBarShell`'s `pb-[84px]`. `/messages`
-                 * is a tab destination, so its frame is the window less the bar; a conversation is
-                 * not, so it is the whole window. The two numbers must agree or the page scrolls by
-                 * the difference. Written out rather than interpolated: Tailwind only generates
-                 * classes it can read as a literal.
+                 * The window less the phone tab bar's reserve — `--tab-bar-reserve`, which
+                 * `TabBarShell` both pads by and publishes, so the two cannot disagree (this used to
+                 * subtract a literal 84 kept in step by hand, and the page scrolled by the
+                 * difference when they did not). `/messages` is a tab destination so it is set; a
+                 * conversation is not, so it is unset and the frame is the whole window.
                  */
-                open ? 'h-[var(--window-height)]' : 'h-[calc(var(--window-height)-84px)]',
+                'h-[calc(var(--window-height)_-_var(--tab-bar-reserve,0px))]',
             )}
         >
             <ConversationPane

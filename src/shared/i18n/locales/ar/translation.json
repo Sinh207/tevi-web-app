@@ -2109,8 +2109,8 @@
     "home_feed_empty_title": "لا شيء هنا بعد",
     "home_feed_empty_body": "لم تنشر المساحات التي تتابعها شيئًا بعد. ابحث عن صنّاع محتوى لملء موجزك.",
     "home_feed_discover": "اكتشف صنّاع المحتوى",
-    "home_lives_empty_title": "لا أحد يبث مباشرة الآن",
-    "home_lives_empty_body": "عندما تبدأ مساحة تتابعها بالبث، ستظهر هنا.",
+    "home_lives_empty_title": "لا شيء حي… حتى الآن",
+    "home_lives_empty_body": "لا يبثّ مُنشئو المحتوى الخاص بك مباشرةً الآن، ولكن لا تقلق، سيظهر نجوم المرح قريبًا. تابع المزيد من المُنشئين لمتابعة البث المباشر فور حدوثه.",
     "home_feed_error_title": "تعذّر تحميل موجزك",
     "home_feed_error_body": "حدث خطأ من جانبنا. حاول مرة أخرى بعد قليل.",
     "post_reply_title": "رد",
@@ -2706,5 +2706,7 @@
     "channel_protected_view_space": "عرض المساحة",
     "event_banned_body": "لم يعد بإمكانك مشاهدة البث المباشر لهذا المنشئ أو التفاعل مع مساحته. اكتشف منشئين آخرين لتستمر المتعة.",
     "event_account_banned_title": "لا يمكنك الانضمام إلى هذا البث المباشر",
-    "event_account_banned_body": "لا يمكن لحسابك المشاركة في البث المباشر حاليًا."
+    "event_account_banned_body": "لا يمكن لحسابك المشاركة في البث المباشر حاليًا.",
+    "following_live_happening_now": "يحدث الآن",
+    "nav_create_event_badge": "التطبيق"
 }

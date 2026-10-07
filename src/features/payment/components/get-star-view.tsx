@@ -167,7 +167,7 @@ export function GetStarView() {
                 {/*
                  * `sticky bottom-0`, and `mt-auto` so it sits at the foot of a short page instead of
                  * halfway up it. **No offset for the mobile tab bar**: `TabBarShell` renders that bar,
-                 * and its 84px reserve, only on the four tab destinations, and `/get-star` is not one
+                 * and its reserve, only on the four tab destinations, and `/get-star` is not one
                  * — holding an offset here would push the button up over content that cannot be
                  * scrolled into view (`follow-requests-view.tsx` measured that).
                  *

@@ -20,7 +20,7 @@ import { AppSide, MenuProvider, TabBarShell } from '@features/navigation'
  * it points at — Home, Following, Messages and your own space — and a sub-page like
  * `/settings/password` or `/identification` gets none: the bar's job is to say where
  * you are among the tabs, and on a screen that is not one of them it says nothing
- * while covering 84px of the page. `TabBarShell` owns that decision *and* the reserve
+ * while covering the bottom of the page. `TabBarShell` owns that decision *and* the reserve
  * the fixed bar needs, because the two must agree on every route; the rule itself is
  * in `features/navigation/lib/tab-destinations.ts`.
  *
@@ -31,7 +31,7 @@ import { AppSide, MenuProvider, TabBarShell } from '@features/navigation'
  *
  * That reserve is why the content column is a flex context. A page that wants the
  * full height must take it with `flex-1`, **not** `min-h-[var(--window-height)]` —
- * a viewport min-height inside the 84px reserve overflows the viewport by exactly
+ * a viewport min-height inside the tab bar's reserve (`--tab-bar-reserve`) overflows the viewport by exactly
  * the reserve and puts a scrollbar on every mobile page.
  */
 export default function MainLayout({ children }: { children: React.ReactNode }) {

@@ -1,4 +1,4 @@
-import { AppTopBar } from '@features/navigation'
+import { AppTopBarDock } from '@features/navigation'
 
 /**
  * Tab destinations — the screens the bottom Tab Bar and the left rail point at (home,
@@ -18,14 +18,8 @@ import { AppTopBar } from '@features/navigation'
 export default function TabsLayout({ children }: { children: React.ReactNode }) {
     return (
         <>
-            {/*
-             * The DS bar has no background of its own — in the app it sits on a screen.
-             * Sticky over scrolling content needs one, so the host supplies
-             * `--background`; without it the page scrolls straight through the bar.
-             */}
-            <div data-viewport="md-down" className="sticky top-0 z-20 bg-(--background) md:hidden">
-                <AppTopBar />
-            </div>
+            {/* Sticky, frosted, and tucked away while scrolling down — `AppTopBarDock` says why. */}
+            <AppTopBarDock />
             {children}
         </>
     )

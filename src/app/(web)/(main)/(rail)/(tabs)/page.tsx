@@ -24,7 +24,11 @@ import type { Metadata } from 'next'
  * `alternates.canonical` is `/` rather than being omitted: the page is reachable at `/` and at
  * whatever the marketing links append, and one canonical keeps those from splitting.
  *
- * ## The column is 612 and carries no side padding
+ * ## The column is 612 from `md`, the full width below it, and carries no side padding
+ *
+ * Below `md` the feed is bands edge to edge at **every** phone and tablet width — capped at 612 it
+ * left a 600–899px window with a narrow column floating in the page colour under a full-width top
+ * bar and tab bar, which read as a desktop layout that had not finished collapsing.
  *
  * 612 is the number `(rail)/layout.tsx` pins the desktop end rail against — every route in that
  * group caps there. No side padding because `PostCard` is a **full-bleed band**: its own horizontal
@@ -46,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function HomePage() {
     return (
-        <main className="mx-auto flex w-full max-w-[612px] flex-1 flex-col">
+        <main className="mx-auto flex w-full flex-1 flex-col md:max-w-[612px]">
             <HomeView />
         </main>
     )

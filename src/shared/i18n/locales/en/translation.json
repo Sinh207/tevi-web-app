@@ -2053,8 +2053,8 @@
     "home_feed_empty_title": "Nothing here yet",
     "home_feed_empty_body": "The spaces you follow haven't posted anything. Find creators to fill your feed.",
     "home_feed_discover": "Discover creators",
-    "home_lives_empty_title": "Nobody is live right now",
-    "home_lives_empty_body": "When a space you follow goes live, it shows up here.",
+    "home_lives_empty_title": "Nothing's Live… Yet",
+    "home_lives_empty_body": "Your creators aren't live right now, but don't worry, the fun starts soon. Follow more creators to catch lives as they happen.",
     "home_feed_error_title": "Couldn't load your feed",
     "home_feed_error_body": "Something went wrong on our side. Try again in a moment.",
     "post_reply_title": "Reply",
@@ -2598,5 +2598,7 @@
     "channel_protected_view_space": "View space",
     "event_banned_body": "You can no longer watch this creator’s lives or interact with their space. Discover other creators to keep the fun going.",
     "event_account_banned_title": "You can’t join this livestream",
-    "event_account_banned_body": "Your account can’t take part in livestreams right now."
+    "event_account_banned_body": "Your account can’t take part in livestreams right now.",
+    "following_live_happening_now": "Happening now",
+    "nav_create_event_badge": "App"
 }

@@ -2053,8 +2053,8 @@
     "home_feed_empty_title": "Wala pa rito",
     "home_feed_empty_body": "Wala pang na-post ang mga space na sinusundan mo. Maghanap ng creator para mapuno ang feed mo.",
     "home_feed_discover": "Tuklasin ang mga creator",
-    "home_lives_empty_title": "Walang live ngayon",
-    "home_lives_empty_body": "Kapag nag-live ang space na sinusundan mo, lalabas ito rito.",
+    "home_lives_empty_title": "Wala pang Live… Yet",
+    "home_lives_empty_body": "Wala pang Live ang mga creators mo ngayon, pero don’t worry — magsisimula na ang saya! Sundan pa ang ibang creators para hindi ka mahuli sa Lives.",
     "home_feed_error_title": "Hindi ma-load ang feed mo",
     "home_feed_error_body": "May nangyaring mali sa amin. Subukan ulit maya-maya.",
     "post_reply_title": "Tumugon",
@@ -2598,5 +2598,7 @@
     "channel_protected_view_space": "Tingnan ang space",
     "event_banned_body": "Hindi mo na mapapanood ang mga live ng creator na ito o makikipag-ugnayan sa kanilang space. Tumuklas ng ibang creator para tuloy ang saya.",
     "event_account_banned_title": "Hindi ka makakasali sa livestream na ito",
-    "event_account_banned_body": "Hindi makakasali ang iyong account sa mga livestream sa ngayon."
+    "event_account_banned_body": "Hindi makakasali ang iyong account sa mga livestream sa ngayon.",
+    "following_live_happening_now": "Nagaganap ngayon",
+    "nav_create_event_badge": "App"
 }

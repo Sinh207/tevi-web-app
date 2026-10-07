@@ -2051,8 +2051,8 @@
     "home_feed_empty_title": "这里还没有内容",
     "home_feed_empty_body": "你关注的空间还没有发帖。去发现创作者，填满你的信息流。",
     "home_feed_discover": "发现创作者",
-    "home_lives_empty_title": "当前没有人在直播",
-    "home_lives_empty_body": "你关注的空间开播时会出现在这里。",
+    "home_lives_empty_title": "暂无直播…",
+    "home_lives_empty_body": "你关注的创作者暂时没有直播，但别担心，精彩很快开始。多关注创作者，及时获取直播动态。",
     "home_feed_error_title": "无法加载你的信息流",
     "home_feed_error_body": "我们这边出了点问题，请稍后再试。",
     "post_reply_title": "回复",
@@ -2596,5 +2596,7 @@
     "channel_protected_view_space": "查看空间",
     "event_banned_body": "你已无法观看该创作者的直播或与其空间互动。去发现更多创作者吧。",
     "event_account_banned_title": "你无法加入此直播",
-    "event_account_banned_body": "你的账号目前无法参与直播。"
+    "event_account_banned_body": "你的账号目前无法参与直播。",
+    "following_live_happening_now": "正在进行",
+    "nav_create_event_badge": "App"
 }

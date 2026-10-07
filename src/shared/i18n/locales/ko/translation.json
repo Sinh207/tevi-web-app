@@ -2051,8 +2051,8 @@
     "home_feed_empty_title": "아직 아무것도 없습니다",
     "home_feed_empty_body": "팔로우한 스페이스에 아직 게시물이 없습니다. 크리에이터를 찾아 피드를 채워보세요.",
     "home_feed_discover": "크리에이터 둘러보기",
-    "home_lives_empty_title": "현재 라이브 중인 사람이 없습니다",
-    "home_lives_empty_body": "팔로우한 스페이스가 라이브를 시작하면 여기에 표시됩니다.",
+    "home_lives_empty_title": "아직 라이브 방송이 없습니다…",
+    "home_lives_empty_body": "크리에이터가 지금 라이브 중이 아니에요. 곧 재미있는 방송이 시작됩니다. 더 많은 크리에이터를 팔로우하고 라이브를 즐겨보세요",
     "home_feed_error_title": "피드를 불러오지 못했습니다",
     "home_feed_error_body": "문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
     "post_reply_title": "답글",
@@ -2596,5 +2596,7 @@
     "channel_protected_view_space": "스페이스 보기",
     "event_banned_body": "더 이상 이 크리에이터의 라이브를 시청하거나 스페이스와 소통할 수 없어요. 다른 크리에이터를 찾아보세요.",
     "event_account_banned_title": "이 라이브에 참여할 수 없어요",
-    "event_account_banned_body": "현재 계정으로 라이브에 참여할 수 없어요."
+    "event_account_banned_body": "현재 계정으로 라이브에 참여할 수 없어요.",
+    "following_live_happening_now": "진행 중",
+    "nav_create_event_badge": "앱"
 }

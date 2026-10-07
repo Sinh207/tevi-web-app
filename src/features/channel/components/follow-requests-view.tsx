@@ -342,9 +342,9 @@ export function FollowRequestsView({ className }: { className?: string }) {
                     />
                     {/*
                      * `sticky bottom-0` at every width, and **no offset for the mobile tab bar**:
-                     * `TabBarShell` renders that bar, and its 84px reserve, only on the four tab
+                     * `TabBarShell` renders that bar, and its reserve, only on the four tab
                      * destinations, and `/follow-requests` is not one of them. Holding the bar at
-                     * 84 anyway is not a harmless margin — with no reserve the column is exactly
+                     * the bar's height anyway is not a harmless margin — with no reserve the column is exactly
                      * the window's height, so the document does not scroll and an offset bar
                      * covers content that cannot be scrolled into view. `identity-intro.tsx`
                      * measured that; if this screen ever becomes a tab destination, the offset

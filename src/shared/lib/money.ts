@@ -67,6 +67,35 @@ export function formatStarAmount(value: number | null | undefined, locale = 'en'
     return formatNumber(amount, locale, { maximumFractionDigits: 0 })
 }
 
+/** Where `formatStarCompact` starts abbreviating — below it the exact figure always fits. */
+export const STAR_COMPACT_FROM = 1_000_000
+
+/**
+ * A Star count for a slot with no room to grow — the mobile top bar's pill. Exact below a million
+ * (`120,018`, `formatStarAmount`'s output), abbreviated from it in the reader's own notation:
+ * `1.2M` in `en`, `1,2 Tr` in `vi`, `120万` in `zh-CN`. One fraction digit, rounded **down**, so the
+ * pill never shows more Star than the account holds (`1,999,999` is `1.9M`, not `2M`).
+ *
+ * The threshold is a million rather than a thousand because the pill fits six digits at 360px, and
+ * an exact figure is what someone about to spend Star wants to read; the full count is always on
+ * `/my-star`.
+ */
+export function formatStarCompact(value: number | null | undefined, locale = 'en'): string {
+    const amount = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : 0
+    if (amount < STAR_COMPACT_FROM) return formatStarAmount(amount, locale)
+    const options: Intl.NumberFormatOptions = {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+        roundingMode: 'floor',
+    }
+    try {
+        return new Intl.NumberFormat(locale, options).format(amount)
+    } catch {
+        // An unrecognised locale tag must not take the shell down.
+        return new Intl.NumberFormat('en', options).format(amount)
+    }
+}
+
 /**
  * A fiat amount in a given currency — `₫157,155,000`, `$4,400.03`.
  *

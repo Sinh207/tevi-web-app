@@ -5,12 +5,17 @@ import { type Post, PostCard, PostSlider, usePostSlider } from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
+import { RISE, riseDelay } from '@shared/lib/motion'
 import { subTestId } from '@shared/lib/test-id'
+import { cn } from '@shared/lib/utils'
 import { Skeleton } from '@shared/ui/skeleton'
 import { useEffect, useMemo, useState } from 'react'
 import { useHomeFeed } from '../hooks/use-home-feed'
 import { groupKey, visiblePosts } from '../lib/post-groups'
 import { HomeEmptyState } from './home-empty-state'
+
+/** Groups past this many arrive together — see `HomeLiveFeed`'s constant of the same name. */
+const STAGGERED = 6
 
 /**
  * The Posts tab — the first real consumer of `PostCard`.
@@ -24,6 +29,18 @@ import { HomeEmptyState } from './home-empty-state'
  *
  * The surface is the card's, the page colour is the gap's — which is `docs/DESIGN_SYSTEM.md` §6's
  * "blocks that are full-bleed carry their own edges" read from the other side.
+ *
+ * **From `md` a group becomes a card**: 16px radius, 12 apart, 24 below the tab row — Figma's
+ * `Content` / `Post` frames in `Live Display Improvements`, which float white cards on the page
+ * colour exactly as legacy's desktop feed does. Below `md` it stays the band: a 16px radius on a
+ * 390px-wide edge-to-edge strip reads as a mistake, not a card.
+ *
+ * ## Entrance
+ *
+ * Each group rises in (`RISE`) as it mounts, the first screenful staggered by `riseDelay` so the
+ * feed lands as a sequence rather than a slab. The wrapper the window observes is the element that
+ * animates, and it never remounts — windowing only empties it — so a card scrolled back into view
+ * does not rise a second time. `translate` and `opacity` only, so nothing the window measures moves.
  *
  * ## The sentinel and `needsMore` are the same request
  *
@@ -117,8 +134,8 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
     if (isEmpty) return <HomeEmptyState kind="empty" />
 
     return (
-        <div data-testid={testId} className="flex min-w-0 flex-col gap-px">
-            {groups.map(group => {
+        <div data-testid={testId} className="flex min-w-0 flex-col gap-px md:gap-3 md:py-6">
+            {groups.map((group, index) => {
                 const key = groupKey(group)
                 const height = heightFor(key)
                 const posts = visiblePosts(group, expanded.has(key))
@@ -135,13 +152,21 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
                         key={key}
                         ref={observe}
                         {...windowKeyProps(key)}
-                        className="flex min-w-0 flex-col gap-px bg-(--background-surface)"
+                        className={cn(
+                            // `overflow-clip`, not `-hidden`: the card must not become a scrollport
+                            // under the sticky tab row (`docs/DESIGN_SYSTEM.md` §6).
+                            'flex min-w-0 flex-col gap-px bg-(--background-surface) md:overflow-clip md:rounded-2xl',
+                            RISE,
+                        )}
                         /*
                          * Held open at the height it had, so nothing below it moves. Drawn empty
                          * rather than as a skeleton: it is off screen by definition, and an
                          * animating placeholder is paint work in the one place built to avoid it.
                          */
-                        style={height === null ? undefined : { height }}
+                        style={{
+                            ...(index < STAGGERED ? riseDelay(index) : undefined),
+                            ...(height === null ? undefined : { height }),
+                        }}
                     >
                         {height === null
                             ? posts.map((post, positionInGroup) => (
@@ -187,7 +212,7 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
             {/* Zero-height, so it never adds space to a list that has stopped growing. */}
             {hasNextPage && <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />}
 
-            {isFetchingNextPage && <FeedSkeleton rows={1} />}
+            {isFetchingNextPage && <FeedSkeleton rows={1} className="md:py-0" />}
 
             {/*
              * Rendered only while a post is selected, so a feed nobody shares from mounts nothing.
@@ -232,16 +257,16 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
  * which is the one moment the reader is looking. Avatar, two lines of meta, a paragraph, a 16/9
  * media box, an action row.
  */
-function FeedSkeleton({ rows = 3 }: { rows?: number }) {
+function FeedSkeleton({ rows = 3, className }: { rows?: number; className?: string }) {
     return (
-        <div className="flex flex-col gap-px" aria-busy="true">
+        <div className={cn('flex flex-col gap-px md:gap-3 md:py-6', className)} aria-busy="true">
             {Array.from({ length: rows }, (_, index) => (
                 <div
                     // Skeletons have no identity beyond their position, and this list never
                     // reorders — it is replaced wholesale by the real cards.
                     // biome-ignore lint/suspicious/noArrayIndexKey: position is the only identity a placeholder has.
                     key={index}
-                    className="flex flex-col gap-3 bg-(--background-surface) px-3 py-3 md:px-6 md:py-5"
+                    className="flex flex-col gap-3 bg-(--background-surface) px-3 py-3 md:rounded-2xl md:px-6 md:py-5"
                 >
                     <div className="flex items-center gap-2">
                         <Skeleton className="size-10 rounded-full" />

@@ -55,7 +55,19 @@ import {
  * Cancel goes through `ConfirmDialog` before it goes through the mutation. It notifies whoever was
  * going to attend, so it is not undoable by pressing the button again.
  */
-export function ChannelEventMenu({ event, slug }: { event: ChannelEvent; slug: string }) {
+export function ChannelEventMenu({
+    event,
+    slug,
+    orientation = 'vertical',
+}: {
+    event: ChannelEvent
+    slug: string
+    /**
+     * The trigger's glyph. `horizontal` where Figma draws the menu in a post-shaped card header (the
+     * home Lives card), so it matches the post cards beside it; the event list keeps its kebab.
+     */
+    orientation?: 'vertical' | 'horizontal'
+}) {
     const { t } = useTranslation()
     const [qrOpen, setQrOpen] = useState(false)
     const [shareOpen, setShareOpen] = useState(false)
@@ -80,7 +92,11 @@ export function ChannelEventMenu({ event, slug }: { event: ChannelEvent; slug: s
                      */
                     className={MENU_TRIGGER}
                 >
-                    <Icon name="more-vertical" size={20} className="size-5" />
+                    <Icon
+                        name={orientation === 'horizontal' ? 'more-horizontal' : 'more-vertical'}
+                        size={20}
+                        className="size-5"
+                    />
                 </Menu.Trigger>
                 <Menu.Portal>
                     <Menu.Positioner side="bottom" align="end" sideOffset={4} className="z-50">

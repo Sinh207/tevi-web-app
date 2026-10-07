@@ -192,7 +192,7 @@ export default async function PostDetailPage({ params }: PageProps) {
          * the wrapper below.
          *
          * Below `md` it stays **document scroll**, deliberately. There is no left rail to hold
-         * still there, the tab bar is `fixed` and the shell already reserves its 84px — and an inner
+         * still there, the tab bar is `fixed` and the shell already reserves room for it (`--tab-bar-reserve`) — and an inner
          * scroller on a phone is where the virtual keyboard turns a composer into a trap, because
          * the viewport shrinks under a box whose height was pinned to the old one. Legacy and both
          * native clients scroll the page on a phone too.

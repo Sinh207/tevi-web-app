@@ -61,3 +61,21 @@ export function isTabDestination(pathname: string, ownChannelPath: string | null
     if (!ownChannelPath) return false
     return pathname.toLowerCase() === ownChannelPath.toLowerCase()
 }
+
+/**
+ * Whether the **My Space** entry is the current one — on `/my-space`, or anywhere inside the reader's
+ * **own** space (`/@me`, `/@me/post/…`), and nowhere else.
+ *
+ * Both navigation bars used to light it on `pathname.startsWith('/@')`, i.e. on **every** space —
+ * open somebody else's and your own tab claimed you were home. The rule their comments stated was
+ * always "your own channel"; this is that rule, compared the way `isTabDestination` compares (case
+ * folded — a slug typed with capitals is the same space). With no own space yet (`null`, or still
+ * loading) only `/my-space` counts.
+ */
+export function isOwnSpacePath(pathname: string, ownChannelPath: string | null): boolean {
+    if (pathname === '/my-space') return true
+    if (!ownChannelPath) return false
+    const path = pathname.toLowerCase()
+    const own = ownChannelPath.toLowerCase()
+    return path === own || path.startsWith(`${own}/`)
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isTabDestination, TAB_PATHS } from './tab-destinations'
+import { isOwnSpacePath, isTabDestination, TAB_PATHS } from './tab-destinations'
 
 /**
  * The rule a route group would normally enforce for free, pinned instead — because this one
@@ -55,5 +55,22 @@ describe('isTabDestination', () => {
         // Prefix matching would put the bar back on every sub-page under `/@ada`.
         expect(isTabDestination('/@ada/settings', MINE)).toBe(false)
         expect(isTabDestination('/my-space/edit', MINE)).toBe(false)
+    })
+})
+
+describe('isOwnSpacePath', () => {
+    it('is the reader’s own space and its pages, and /my-space', () => {
+        expect(isOwnSpacePath('/my-space', null)).toBe(true)
+        expect(isOwnSpacePath('/@me', '/@me')).toBe(true)
+        expect(isOwnSpacePath('/@Me', '/@me')).toBe(true)
+        expect(isOwnSpacePath('/@me/post/abc', '/@me')).toBe(true)
+    })
+
+    // The bug this exists for: every space lit My Space.
+    it('is not somebody else’s space', () => {
+        expect(isOwnSpacePath('/@someone', '/@me')).toBe(false)
+        expect(isOwnSpacePath('/@someone', null)).toBe(false)
+        // A slug that merely starts with yours is a different space.
+        expect(isOwnSpacePath('/@meow', '/@me')).toBe(false)
     })
 })

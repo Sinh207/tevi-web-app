@@ -170,6 +170,11 @@ export { FollowRequestsView } from './components/follow-requests-view'
  * the strip, somebody who is live right now), which is not a state a developer can arrange. Same
  * reason as `BlockedAccountRow` and `FollowRequestRow` above.
  */
+/**
+ * The home page's Lives card — `features/home` draws the list, this feature owns what a stream row
+ * says about access and where it links, exactly as it does for `FollowingLiveRow`.
+ */
+export { FollowedLiveCard, FollowedLiveTile } from './components/followed-live-card'
 export { FollowingChannelRow } from './components/following-channel-row'
 export { FollowingLimitNotice } from './components/following-limit-notice'
 export { FollowingLiveRow } from './components/following-live-row'

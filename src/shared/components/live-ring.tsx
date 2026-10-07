@@ -38,11 +38,18 @@ export const LIVE_RING_GRADIENT =
  */
 export function LiveRing({
     label,
+    size = 'default',
     className,
     children,
 }: {
     /** The pill's word — `channel_event_live`. `null` draws the ring alone. */
     label: string | null
+    /**
+     * The pill's scale. `compact` is Figma's tag on a **32px** face (a post-card header, the home
+     * Lives card): 10px type, no dot, 14 tall — the default pill is sized for the 80–120px space
+     * avatar and on a 32px face it is wider than the face itself.
+     */
+    size?: 'default' | 'compact'
     /** Sizing (`[--live-ring:4px]`), the ground (`[--live-ground:#16121F]`), layout. */
     className?: string
     children: ReactNode
@@ -88,12 +95,19 @@ export function LiveRing({
                 <span className="pointer-events-none absolute inset-x-0 -bottom-[calc(var(--live-ring)+var(--live-gap))] flex translate-y-1/2 justify-center">
                     <span
                         style={{ backgroundImage: LIVE_GRADIENT }}
-                        className="type-caption-label-strong flex h-5 items-center gap-1 rounded-full px-2 whitespace-nowrap text-white shadow-[0_0_0_2px_var(--live-ground),0_4px_10px_rgba(225,29,72,0.35)]"
+                        className={cn(
+                            'flex items-center rounded-full whitespace-nowrap text-white shadow-[0_0_0_2px_var(--live-ground),0_4px_10px_rgba(225,29,72,0.35)]',
+                            size === 'compact'
+                                ? 'type-micro-overline h-3.5 px-1'
+                                : 'type-caption-label-strong h-5 gap-1 px-2',
+                        )}
                     >
-                        <span
-                            aria-hidden
-                            className={cn('size-1 rounded-full bg-white', LIVE_BREATH)}
-                        />
+                        {size === 'default' && (
+                            <span
+                                aria-hidden
+                                className={cn('size-1 rounded-full bg-white', LIVE_BREATH)}
+                            />
+                        )}
                         {label}
                     </span>
                 </span>

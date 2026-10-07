@@ -71,7 +71,12 @@ export function AppEndRail() {
             data-viewport="xl-up"
             aria-label={t('rail_landmark')}
             className={[
-                'fixed top-0 z-30 hidden flex-col gap-3 py-3',
+                /*
+                 * `pt-2`, not `py-3`: the rail lines up with the 612 column beside it, whose first
+                 * thing is the home tab capsule at 8 (Figma `Posts Container`'s inset). Pill
+                 * 8–56 against the capsule's 8–54, centres a pixel apart.
+                 */
+                'fixed top-0 z-30 hidden flex-col gap-3 pt-2 pb-3',
                 /*
                  * The underscores are Tailwind's escape for spaces in an arbitrary value, and
                  * they are load-bearing: `calc()` requires whitespace around `-`, so
@@ -94,7 +99,23 @@ export function AppEndRail() {
              * creator never sees the second, and a campaign that is not running returns null — so
              * the stack collapses to whatever is true rather than reserving space for what is not.
              */}
-            <div className="flex flex-col gap-3 py-6">
+            {/*
+             * The first card's top edge sits at **86**, level with the column's first card —
+             * Figma's home frame puts them at 86 and 84. 8 + 48 (pill) + 12 (gap) + 18 = 86; it
+             * was 96, ten below the post beside it. 18 rather than a ramp step because the sum is
+             * the point, and the pill's 48 is legacy's (`docs/END_RAIL_OPEN_ITEMS.md` R7).
+             */}
+            {/*
+             * The cards **float**, like the pill above them, instead of wearing the DS card's 1px
+             * ring. Figma's rail (`Live Display Improvements`, the `Right container`) draws its card
+             * with a `#f0f0f0` stroke that is invisible on the page colour and a soft drop shadow
+             * — the same treatment as the pill — and a grey outline under a shadowed pill read as
+             * two different kinds of surface stacked in one column. One rule here rather than a
+             * `className` at five call sites: `PromoCard` and `ProgramCard` keep their ring
+             * everywhere else (`/monetization`'s *Start earning* sits on a surface, where a shadow
+             * would not separate it), and the `data-slot` each already publishes is the hook.
+             */}
+            <div className="flex flex-col gap-3 pt-[18px] pb-6 [&_[data-slot=program-card]]:shadow-md [&_[data-slot=promo-card]]:shadow-md">
                 <LoginBanner />
                 <PremiumBanner />
                 {showCampaigns && (

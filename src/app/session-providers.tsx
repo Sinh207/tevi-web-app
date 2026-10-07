@@ -10,6 +10,7 @@ import { PermissionProvider } from '@features/permission'
 import { RealtimeProvider } from '@features/realtime'
 import { ShareInMessageProvider } from '@features/share'
 import { useTrackInAppRoute } from '@shared/lib/in-app-referrer'
+import { FaviconBadgeHost } from './favicon-badge-host'
 import { PostComposerHost } from './post-composer-host'
 import { ReplyDialogHost } from './reply-dialog-host'
 
@@ -153,6 +154,11 @@ export function SessionProviders({
                                     player is `z-40` against their `z-50`, so an application is
                                     never drawn on top of the question it just asked. */}
                                     <MiniAppHost />
+                                    {/* The red dot on the tab's favicon while anything is unread —
+                                    a notification or a message. Inside Realtime because both of its
+                                    signals are kept live by socket frames; in the session tree, so a
+                                    webview (which mounts none) never repaints the host app's icon. */}
+                                    <FaviconBadgeHost />
                                     {/* One mount for two openers — the rail's `+` and the tab bar's
                                     FAB are both in the DOM, so the dialog cannot live beside
                                     either. Inside `MyChannelProvider` because it draws the

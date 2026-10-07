@@ -6,6 +6,7 @@ import {
     formatAmountWithCode,
     formatFiatAmount,
     formatStarAmount,
+    formatStarCompact,
 } from './money'
 
 const USD = DEFAULT_CURRENCY
@@ -176,5 +177,22 @@ describe('formatAmountWithCode', () => {
     it('reads an unusable amount as zero, never as NaN on a money row', () => {
         expect(formatAmountWithCode(null, 'USD')).toBe('0.00 USD')
         expect(formatAmountWithCode(Number.NaN, 'USD')).toBe('0.00 USD')
+    })
+})
+
+describe('formatStarCompact', () => {
+    it('stays exact below a million', () => {
+        expect(formatStarCompact(120_018)).toBe('120,018')
+        expect(formatStarCompact(999_999)).toBe('999,999')
+    })
+
+    it('abbreviates from a million, in the reader’s own notation', () => {
+        expect(formatStarCompact(1_200_018)).toBe('1.2M')
+        expect(formatStarCompact(1_200_018, 'vi')).toMatch(/^1,2\s?Tr$/)
+    })
+
+    // The pill must never show more Star than the account holds.
+    it('rounds down, never up', () => {
+        expect(formatStarCompact(1_999_999)).toBe('1.9M')
     })
 })

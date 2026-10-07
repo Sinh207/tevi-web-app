@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-1079 ids across 30 surfaces.
+1084 ids across 30 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -219,11 +219,11 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-crop-zoom-out` | — | `src/features/channel/components/edit-profile/image-crop-dialog.tsx:459` |
 | `channel-description-expand` | — | `src/features/channel/components/channel-description.tsx:32` |
 | `channel-error-retry` | — | `src/app/(web)/(main)/(rail)/[slug]/error.tsx:36` |
-| `channel-event-cancel` | — | `src/features/channel/components/channel-event-menu.tsx:107` |
-| `channel-event-cancel-confirm` | — | `src/features/channel/components/channel-event-menu.tsx:132` |
+| `channel-event-cancel` | — | `src/features/channel/components/channel-event-menu.tsx:123` |
+| `channel-event-cancel-confirm` | — | `src/features/channel/components/channel-event-menu.tsx:148` |
 | `channel-event-link` | — | `src/features/channel/components/channel-event-card.tsx:109` |
-| `channel-event-qr` | — | `src/features/channel/components/channel-event-menu.tsx:98` |
-| `channel-event-share` | — | `src/features/channel/components/channel-event-menu.tsx:90` |
+| `channel-event-qr` | — | `src/features/channel/components/channel-event-menu.tsx:114` |
+| `channel-event-share` | — | `src/features/channel/components/channel-event-menu.tsx:106` |
 | `channel-follow` | — | `src/features/channel/components/channel-viewer-actions.tsx:251` |
 | `channel-follow-request-action` | `data-row-key` | `src/features/channel/components/follow-request-row.tsx:226` |
 | `channel-follow-request-link` | `data-channel-slug` | `src/features/channel/components/follow-request-row.tsx:204` |
@@ -234,19 +234,24 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-follow-requests-loading` | — | `src/features/channel/components/follow-requests-skeleton.tsx:32` |
 | `channel-follow-requests-retry` | — | `src/features/channel/components/follow-requests-view.tsx:182` |
 | `channel-follow-requests-sign-in` | — | `src/features/channel/components/follow-requests-view.tsx:162` |
-| `channel-following-filter` | — | `src/features/channel/components/following-view.tsx:429` |
-| `channel-following-find-people` | — | `src/features/channel/components/following-view.tsx:307` |
-| `channel-following-live` | — | `src/features/channel/components/following-view.tsx:208` |
+| `channel-followed-live-channel-link` | — | `src/features/channel/components/followed-live-card.tsx:129` |
+| `channel-followed-live-restricted` | — | `src/features/channel/components/followed-live-card.tsx:195` |
+| `channel-followed-live-tile-channel-link` | — | `src/features/channel/components/followed-live-card.tsx:340` |
+| `channel-followed-live-tile-title-link` | — | `src/features/channel/components/followed-live-card.tsx:373` |
+| `channel-followed-live-title-link` | — | `src/features/channel/components/followed-live-card.tsx:187` |
+| `channel-following-filter` | — | `src/features/channel/components/following-view.tsx:439` |
+| `channel-following-find-people` | — | `src/features/channel/components/following-view.tsx:317` |
+| `channel-following-live` | — | `src/features/channel/components/following-view.tsx:218` |
 | `channel-following-live-link` | — | `src/features/channel/components/following-live-row.tsx:451` |
 | `channel-following-live-restricted` | — | `src/features/channel/components/following-live-row.tsx:461` |
-| `channel-following-lives-toggle` | — | `src/features/channel/components/following-view.tsx:232` |
+| `channel-following-lives-toggle` | — | `src/features/channel/components/following-view.tsx:242` |
 | `channel-following-loading` | — | `src/features/channel/components/following-skeleton.tsx:36` |
 | `channel-following-menu-item` | `data-row-key` | `src/features/channel/components/following-row-menu.tsx:135` |
-| `channel-following-retry` | — | `src/features/channel/components/following-view.tsx:281` |
-| `channel-following-row` | — | `src/features/channel/components/following-view.tsx:359` |
+| `channel-following-retry` | — | `src/features/channel/components/following-view.tsx:291` |
+| `channel-following-row` | — | `src/features/channel/components/following-view.tsx:369` |
 | `channel-following-row-link` | `data-channel-slug` | `src/features/channel/components/following-channel-row.tsx:282` |
-| `channel-following-sign-in` | — | `src/features/channel/components/following-view.tsx:261` |
-| `channel-following-sort` | — | `src/features/channel/components/following-view.tsx:454` |
+| `channel-following-sign-in` | — | `src/features/channel/components/following-view.tsx:271` |
+| `channel-following-sort` | — | `src/features/channel/components/following-view.tsx:464` |
 | `channel-header-loading` | — | `src/features/channel/components/channel-header-skeleton.tsx:26` |
 | `channel-invitation-accept` | — | `src/features/channel/components/mcn-invitation-view.tsx:616` |
 | `channel-invitation-error` | — | `src/features/channel/components/mcn-invitation-view.tsx:96` |
@@ -259,8 +264,8 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-invitation-retry` | — | `src/features/channel/components/mcn-invitation-view.tsx:104` |
 | `channel-invitation-sign-in` | — | `src/features/channel/components/mcn-invitation-view.tsx:85` |
 | `channel-invitation-signed-out` | — | `src/features/channel/components/mcn-invitation-view.tsx:75` |
-| `channel-live-card-link` | — | `src/features/channel/components/channel-live-now.tsx:275` |
-| `channel-live-card-restricted` | — | `src/features/channel/components/channel-live-now.tsx:263` |
+| `channel-live-card-link` | — | `src/features/channel/components/channel-live-now.tsx:279` |
+| `channel-live-card-restricted` | — | `src/features/channel/components/channel-live-now.tsx:267` |
 | `channel-live-channel-link` | — | `src/features/channel/components/channel-live-now.tsx:122` |
 | `channel-live-filter` | — | `src/features/channel/components/channel-live-filter.tsx:108` |
 | `channel-live-filter-option` | `data-option-value` | `src/features/channel/components/channel-live-filter.tsx:114` |
@@ -458,7 +463,7 @@ Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
 | `event-mobile-live` | — | `src/features/event/components/event-mobile-live-notice.tsx:54` |
 | `event-mobile-live-app` | — | `src/features/event/components/event-mobile-live-notice.tsx:154` |
 | `event-mobile-live-back` | — | `src/features/event/components/event-mobile-live-notice.tsx:77` |
-| `event-mobile-live-stores` | — | `src/features/event/components/event-mobile-live-notice.tsx:171` |
+| `event-mobile-live-stores` | — | `src/features/event/components/event-mobile-live-notice.tsx:173` |
 | `event-new-members` | — | `src/features/event/components/event-analytics-cards.tsx:300` |
 | `event-not-enough-stars` | — | `src/features/event/components/event-not-enough-stars-dialog.tsx:46` |
 | `event-not-enough-stars-cancel` | — | `src/features/event/components/event-not-enough-stars-dialog.tsx:74` |
@@ -935,38 +940,38 @@ Also present on every route it is mounted under — `src/app/(web)/(main)/layout
 | `navigation-menu-sign-out-confirm` | — | `src/features/navigation/components/menu/menu-drawer.tsx:880` |
 | `navigation-menu-storage-row` | `data-row-key` | `src/features/navigation/components/menu/data-storage-screen.tsx:129` |
 | `navigation-menu-withdraw` | — | `src/features/navigation/components/menu/menu-drawer.tsx:621` |
-| `navigation-navbar` | — | `src/features/navigation/components/app-navbar.tsx:64` |
-| `navigation-navbar-chat` | — | `src/features/navigation/components/app-navbar.tsx:145` |
-| `navigation-navbar-create` | — | `src/features/navigation/components/create-rail-entry.tsx:69` |
-| `navigation-navbar-create-menu` | — | `src/features/navigation/components/create-rail-entry.tsx:106` |
-| `navigation-navbar-create-menu-item` | `data-option-value` | `src/features/navigation/components/create-rail-entry.tsx:111` |
-| `navigation-navbar-create-prompt` | — | `src/features/navigation/components/create-rail-entry.tsx:134` |
-| `navigation-navbar-following` | — | `src/features/navigation/components/app-navbar.tsx:92` |
-| `navigation-navbar-home` | — | `src/features/navigation/components/app-navbar.tsx:77` |
-| `navigation-navbar-language` | — | `src/features/navigation/components/app-navbar.tsx:269` |
-| `navigation-navbar-menu` | — | `src/features/navigation/components/app-navbar.tsx:251` |
-| `navigation-navbar-notifications` | — | `src/features/navigation/components/app-navbar.tsx:188` |
-| `navigation-navbar-profile` | — | `src/features/navigation/components/app-navbar.tsx:223` |
-| `navigation-navbar-search` | — | `src/features/navigation/components/app-navbar.tsx:172` |
+| `navigation-navbar` | — | `src/features/navigation/components/app-navbar.tsx:181` |
+| `navigation-navbar-chat` | — | `src/features/navigation/components/app-navbar.tsx:269` |
+| `navigation-navbar-create` | — | `src/features/navigation/components/create-rail-entry.tsx:68` |
+| `navigation-navbar-create-menu` | — | `src/features/navigation/components/create-rail-entry.tsx:133` |
+| `navigation-navbar-create-menu-item` | `data-option-value` | `src/features/navigation/components/create-rail-entry.tsx:138` |
+| `navigation-navbar-create-prompt` | — | `src/features/navigation/components/create-rail-entry.tsx:161` |
+| `navigation-navbar-following` | — | `src/features/navigation/components/app-navbar.tsx:248` |
+| `navigation-navbar-home` | — | `src/features/navigation/components/app-navbar.tsx:223` |
+| `navigation-navbar-language` | — | `src/features/navigation/components/app-navbar.tsx:440` |
+| `navigation-navbar-menu` | — | `src/features/navigation/components/app-navbar.tsx:411` |
+| `navigation-navbar-notifications` | — | `src/features/navigation/components/app-navbar.tsx:327` |
+| `navigation-navbar-profile` | — | `src/features/navigation/components/app-navbar.tsx:366` |
+| `navigation-navbar-search` | — | `src/features/navigation/components/app-navbar.tsx:300` |
 | `navigation-page-back` | — | `src/features/navigation/components/page-back-bar.tsx:131` |
-| `navigation-tab-bar` | — | `src/features/navigation/components/app-tab-bar.tsx:33` |
-| `navigation-tab-bar-create` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:57` |
-| `navigation-tab-bar-create-dialog` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:64` |
-| `navigation-tab-bar-create-dialog-close` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:108` |
-| `navigation-tab-bar-create-list` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:70` |
-| `navigation-tab-bar-create-list-row` | `data-row-key` | `src/features/navigation/components/create-tab-bar-fab.tsx:80` |
-| `navigation-tab-bar-create-prompt` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:115` |
-| `navigation-tab-bar-following` | — | `src/features/navigation/components/app-tab-bar.tsx:49` |
-| `navigation-tab-bar-home` | — | `src/features/navigation/components/app-tab-bar.tsx:35` |
-| `navigation-tab-bar-messages` | — | `src/features/navigation/components/app-tab-bar.tsx:63` |
-| `navigation-tab-bar-my-space` | — | `src/features/navigation/components/app-tab-bar.tsx:77` |
-| `navigation-top-bar` | — | `src/features/navigation/components/app-top-bar.tsx:62` |
-| `navigation-top-bar-menu` | — | `src/features/navigation/components/app-top-bar.tsx:65` |
-| `navigation-top-bar-notifications` | — | `src/features/navigation/components/app-top-bar.tsx:151` |
-| `navigation-top-bar-premium` | — | `src/features/navigation/components/app-top-bar.tsx:141` |
-| `navigation-top-bar-search` | — | `src/features/navigation/components/app-top-bar.tsx:183` |
-| `navigation-top-bar-star-balance` | — | `src/features/navigation/components/app-top-bar.tsx:117` |
-| `navigation-top-bar-star-count` | — | `src/features/navigation/components/app-top-bar.tsx:124` |
+| `navigation-tab-bar` | — | `src/features/navigation/components/app-tab-bar.tsx:84` |
+| `navigation-tab-bar-create` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:88` |
+| `navigation-tab-bar-create-dialog` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:120` |
+| `navigation-tab-bar-create-dialog-close` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:153` |
+| `navigation-tab-bar-create-list` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:135` |
+| `navigation-tab-bar-create-list-row` | `data-row-key` | `src/features/navigation/components/create-tab-bar-fab.tsx:181` |
+| `navigation-tab-bar-create-prompt` | — | `src/features/navigation/components/create-tab-bar-fab.tsx:160` |
+| `navigation-tab-bar-following` | — | `src/features/navigation/components/app-tab-bar.tsx:128` |
+| `navigation-tab-bar-home` | — | `src/features/navigation/components/app-tab-bar.tsx:110` |
+| `navigation-tab-bar-messages` | — | `src/features/navigation/components/app-tab-bar.tsx:141` |
+| `navigation-tab-bar-my-space` | — | `src/features/navigation/components/app-tab-bar.tsx:161` |
+| `navigation-top-bar` | — | `src/features/navigation/components/app-top-bar.tsx:89` |
+| `navigation-top-bar-menu` | — | `src/features/navigation/components/app-top-bar.tsx:92` |
+| `navigation-top-bar-notifications` | — | `src/features/navigation/components/app-top-bar.tsx:203` |
+| `navigation-top-bar-premium` | — | `src/features/navigation/components/app-top-bar.tsx:191` |
+| `navigation-top-bar-search` | — | `src/features/navigation/components/app-top-bar.tsx:222` |
+| `navigation-top-bar-star-balance` | — | `src/features/navigation/components/app-top-bar.tsx:145` |
+| `navigation-top-bar-star-count` | — | `src/features/navigation/components/app-top-bar.tsx:169` |
 
 ## `notification` — Notifications
 
@@ -1053,7 +1058,7 @@ Routes: `/app/dev-checkout`, `/card-management`, `/get-star`, `/get-star/transac
 | `payment-checkout-view-star` | — | `src/features/payment/components/checkout-status-dialog.tsx:215` |
 | `payment-default-expired` | — | `src/features/payment/components/saved-card-list.tsx:149` |
 | `payment-gateway` | `data-option-value` | `src/features/payment/components/gateway-list.tsx:63` |
-| `payment-get-star-gateway` | `data-option-value` | `src/features/payment/components/gateway-accordion.tsx:153` |
+| `payment-get-star-gateway` | `data-option-value` | `src/features/payment/components/gateway-accordion.tsx:174` |
 | `payment-get-star-get-app` | — | `src/features/payment/components/get-star-view.tsx:350` |
 | `payment-get-star-get-app-cta` | — | `src/features/payment/components/get-star-view.tsx:335` |
 | `payment-get-star-history-link` | — | `src/features/payment/components/get-star-header.tsx:133` |
@@ -1325,6 +1330,7 @@ name; you need it to know the element exists.
 | `EventReportCard` | `src/features/event/components/event-report-card.tsx` | `-hint` `-trigger` |
 | `HomeEmptyState` | `src/features/home/components/home-empty-state.tsx` | `-retry` `-title` `-trigger` |
 | `HomeLiveFeed` | `src/features/home/components/home-live-feed.tsx` | `-row` |
+| `HomeLiveStrip` | `src/features/home/components/home-live-strip.tsx` | `-item` |
 | `HomePostFeed` | `src/features/home/components/home-post-feed.tsx` | `-item` |
 | `ShareInMessage` | `src/features/message/components/share-in-message.tsx` | `-input` `-item` `-list` `-message` `-option` `-panel` `-retry` `-search` `-submit` |
 | `TotalBalanceCard` | `src/features/my-wallet/components/total-balance-card.tsx` | `-count` |

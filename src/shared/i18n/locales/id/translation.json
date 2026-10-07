@@ -2051,8 +2051,8 @@
     "home_feed_empty_title": "Belum ada apa-apa",
     "home_feed_empty_body": "Space yang kamu ikuti belum memposting apa pun. Cari kreator untuk mengisi feed kamu.",
     "home_feed_discover": "Jelajahi kreator",
-    "home_lives_empty_title": "Belum ada yang live saat ini",
-    "home_lives_empty_body": "Saat space yang kamu ikuti mulai live, akan muncul di sini.",
+    "home_lives_empty_title": "Belum Ada yang Live... Untuk Saat Ini",
+    "home_lives_empty_body": "Kreator Anda tidak sedang live saat ini, tetapi jangan khawatir, keseruan akan segera dimulai. Ikuti lebih banyak kreator untuk menonton siaran langsung saat berlangsung.",
     "home_feed_error_title": "Tidak dapat memuat feed kamu",
     "home_feed_error_body": "Terjadi kesalahan di sisi kami. Coba lagi sebentar.",
     "post_reply_title": "Balas",
@@ -2596,5 +2596,7 @@
     "channel_protected_view_space": "Lihat ruang",
     "event_banned_body": "Kamu tidak bisa lagi menonton live kreator ini atau berinteraksi dengan ruangnya. Temukan kreator lain agar keseruan berlanjut.",
     "event_account_banned_title": "Kamu tidak dapat bergabung ke livestream ini",
-    "event_account_banned_body": "Akunmu saat ini tidak dapat ikut serta dalam livestream."
+    "event_account_banned_body": "Akunmu saat ini tidak dapat ikut serta dalam livestream.",
+    "following_live_happening_now": "Sedang berlangsung",
+    "nav_create_event_badge": "Aplikasi"
 }

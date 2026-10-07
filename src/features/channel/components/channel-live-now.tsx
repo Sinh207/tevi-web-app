@@ -192,7 +192,11 @@ function LiveTitle({ title }: { title: string }) {
     return <p className="type-body-strong line-clamp-2 min-w-0 text-(--text-title)">{title}</p>
 }
 
-function LiveMedia({
+/**
+ * Exported for `FollowedLiveCard` (the home page's Lives tab), which draws the same banner with the
+ * same gating chip — one copy of the access label, not two that can disagree about a price.
+ */
+export function LiveMedia({
     event,
     href,
     onRestricted,

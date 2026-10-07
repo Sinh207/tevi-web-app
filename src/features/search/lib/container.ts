@@ -34,7 +34,7 @@ export const SEARCH_CONTAINER = 'mx-auto w-full md:max-w-[612px]'
  * `min-h-[var(--window-height)]` → `<main>` is `flex-1` → the page's column is `flex-1`, so the
  * panel measures **viewport − bar** by claiming what is left instead of by arithmetic that
  * hardcodes the bar's 60px. `app/(web)/(main)/layout.tsx` also says in writing not to put a
- * viewport min-height inside its 84px tab-bar reserve — the two add up and put a scrollbar on
+ * viewport min-height inside its tab-bar reserve (`--tab-bar-reserve`) — the two add up and put a scrollbar on
  * every mobile page.
  *
  * All four corners are rounded from `md`, with the page's own `md:pb-6` behind the bottom two so

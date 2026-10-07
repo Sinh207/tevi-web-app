@@ -37,7 +37,10 @@
  * last one's payload is read.
  *
  * Deliberately **not** exported: `messageApi` and the hooks. Each hook writes to this feature's
- * caches, and a second screen mounting one is a second owner of that state.
+ * caches, and a second screen mounting one is a second owner of that state. The one exception is
+ * `useLiveUnreadConversations` — the unread count for chrome outside this screen (the favicon dot,
+ * the tab title, the Chat entry's dot), which owns no cache and only ever refetches that count. The
+ * shell reads it through `./shell`, the leaf barrel, never through this one.
  */
 
 export { messageKeys } from './api/message-api'

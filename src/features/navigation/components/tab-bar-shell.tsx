@@ -11,12 +11,22 @@ import { AppTabBar } from './app-tab-bar'
 /**
  * The mobile tab bar and the space it occupies — together, because they are one decision.
  *
- * The bar is `fixed` and translucent, so it overlays the page rather than sitting in flow,
- * and the content column reserves its height instead: 48 item + 4 top + 32 home indicator =
- * 84. Those two things must agree on every route or the page is wrong in one of two visible
- * ways — a bar over the last line of content, or 84px of dead space under a page that has no
- * bar. Splitting them across a layout and a component is how they come to disagree, so this
- * owns both and answers once.
+ * The bar is a `fixed` floating pill (`AppTabBar`), so it overlays the page rather than sitting in
+ * flow, and the content column reserves room for it instead. Those two must agree on every route
+ * or the page is wrong in one of two visible ways — a bar over the last line of content, or dead
+ * space under a page that has no bar. Splitting them across a layout and a component is how they
+ * come to disagree, so this owns both and answers once.
+ *
+ * ## The geometry, and the one variable that carries it
+ *
+ * The pill floats above the bottom edge by 12px, or the device's safe area plus 4
+ * where that is larger (an iPhone's home indicator is 34), so it never sits on the indicator and is
+ * not lifted for one on a device that has none — the DS bar padded a fixed 32px for every device.
+ * The reserve is that lift + the 64px pill + 12px of air, published as **`--tab-bar-reserve`** on
+ * the content wrapper. It is the only spelling of the number: the wrapper pads by it, and a screen
+ * that sizes itself to the window (`MessagesShell`) subtracts it — where it used to subtract a
+ * literal 84 that had to be kept in step by hand. Unset off the four destinations and from `md`, so
+ * a reader falls back to `0px`.
  *
  * **Why a runtime check and not a route group**, against this app's rule everywhere else:
  * one of the four destinations is *your own* channel, which shares a route with everybody
@@ -42,7 +52,7 @@ export function TabBarShell({ children }: { children: ReactNode }) {
      * version is that the two z-indices cannot both be right and this is the one that yields.
      *
      * Reserving no space is the other half: the player is `fixed`, so the page underneath is not
-     * being read, and leaving 84px of padding under it would show as a gap the moment the player
+     * being read, and leaving the bar's padding under it would show as a gap the moment the player
      * closes and the bar comes back — which happens in the same commit.
      */
     const coveredByMiniApp = useMiniAppCoversScreen()
@@ -92,7 +102,8 @@ export function TabBarShell({ children }: { children: ReactNode }) {
                     // `print:pb-0` on the reserve for the same reason the bar itself is
                     // `print:hidden`: navigation is not part of the page on paper, and the
                     // policy pages are printed.
-                    show && 'pb-[84px] md:pb-0 print:pb-0',
+                    show &&
+                        '[--tab-bar-reserve:calc(76px_+_max(12px,_calc(env(safe-area-inset-bottom)_+_4px)))] pb-(--tab-bar-reserve) md:pb-0 md:[--tab-bar-reserve:0px] print:pb-0',
                 )}
             >
                 {children}
@@ -100,7 +111,7 @@ export function TabBarShell({ children }: { children: ReactNode }) {
             {show && (
                 <div
                     data-viewport="md-down"
-                    className="fixed inset-x-0 bottom-0 z-50 md:hidden print:hidden"
+                    className="fixed inset-x-3 bottom-[max(12px,_calc(env(safe-area-inset-bottom)_+_4px))] z-50 md:hidden print:hidden"
                 >
                     <AppTabBar />
                 </div>

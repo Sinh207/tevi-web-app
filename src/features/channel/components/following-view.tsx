@@ -64,6 +64,11 @@ const SURFACE =
  * carried off with it; "Following" is a direct child of the card, so it takes the slot over as the
  * strip leaves. That hand-off is what legacy's three stacked offsets were trying to fake.
  *
+ * **Below `md` the bar above slides away on a scroll down** (`AppTopBarDock`), so the offset is not a
+ * constant there: the dock publishes its bottom edge as `--top-bar-inset` and the headers park at it,
+ * on the dock's own 240ms curve so the two travel as one. From `md` the property is unset and the
+ * `60px` fallback is `PageBackBar`, which never moves — `FOLLOWING_STICKY_HEADER` below.
+ *
  * ## The Live now strip fails quietly
  *
  * `useFollowedLives` publishes `isError` and this drops the whole block on it. An error card over a
@@ -93,6 +98,11 @@ const SURFACE =
  * otherwise silent: the row is `aria-hidden` while it plays its exit, so without it the only feedback
  * is the toast.
  */
+
+/** Both sticky headers — parked under the top bar, following it when it slides (see the header). */
+const FOLLOWING_STICKY_HEADER =
+    'sticky top-[var(--top-bar-inset,60px)] z-10 bg-(--background-surface) transition-[top] duration-240 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none'
+
 export function FollowingView({ className }: { className?: string }) {
     const { t, currentLanguage } = useTranslation()
     const { isBootstrapping } = useAuth()
@@ -198,8 +208,8 @@ export function FollowingView({ className }: { className?: string }) {
         lives.isLoading ||
         lives.total === 0 ? null : (
             <div className={RISE}>
-                {/* Sticks at the same `top-[60px]` as the list header — see "Both headers stick". */}
-                <ListHeader className="sticky top-[60px] z-10 bg-(--background-surface)">
+                {/* Sticks at the same offset as the list header — see "Both headers stick". */}
+                <ListHeader className={FOLLOWING_STICKY_HEADER}>
                     <ListHeaderTitle as="h2">{t('following_live_now')}</ListHeaderTitle>
                 </ListHeader>
                 <ul className="flex list-none flex-col gap-3 p-4">
@@ -422,7 +432,7 @@ export function FollowingView({ className }: { className?: string }) {
                 /* `sticky top-[60px]` clears the 60px bar above — see "Both headers stick". It
                    needs its own surface fill or the rows scroll visibly through it, and `z-10` keeps
                    it over the rows' entrance animations, which create stacking contexts. */
-                <ListHeader className="sticky top-[60px] z-10 bg-(--background-surface)">
+                <ListHeader className={FOLLOWING_STICKY_HEADER}>
                     <ListHeaderTitle as="h2">{t('following_title')}</ListHeaderTitle>
                     <ListHeaderAction>
                         <FilterMenu
