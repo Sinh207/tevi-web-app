@@ -1,5 +1,6 @@
 import { LEGAL_CONTAINER, LegalPageView, TERMS_MINI_APP } from '@features/legal'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -27,12 +28,11 @@ export async function generateMetadata(): Promise<Metadata> {
         description: t('terms_miniapp_meta_description'),
         alternates: { canonical: '/tos/mini-app' },
         robots: { index: true, follow: true },
-        openGraph: {
-            type: 'website',
+        openGraph: siteOpenGraph({
             url: '/tos/mini-app',
             title: t('terms_miniapp_title'),
             description: t('terms_miniapp_meta_description'),
-        },
+        }),
     }
 }
 

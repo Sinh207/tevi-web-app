@@ -1,5 +1,6 @@
 import { LEGAL_CONTAINER, LegalPageView, PRIVACY_POLICY } from '@features/legal'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -22,12 +23,11 @@ export async function generateMetadata(): Promise<Metadata> {
         description: t('privacy_meta_description'),
         alternates: { canonical: '/privacy' },
         robots: { index: true, follow: true },
-        openGraph: {
-            type: 'website',
+        openGraph: siteOpenGraph({
             url: '/privacy',
             title: t('menu_privacy_policy'),
             description: t('privacy_meta_description'),
-        },
+        }),
     }
 }
 

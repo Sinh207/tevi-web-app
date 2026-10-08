@@ -4,6 +4,7 @@ import { useAuth } from '@features/auth'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatStarAmount } from '@shared/lib/money'
 import { useWebConfig } from '@shared/lib/remote-config'
@@ -367,9 +368,12 @@ export function ReplyComposer({
                             <span className="type-dense-emphasis max-w-[200px] truncate text-(--text-title)">
                                 {author.name}
                             </span>
-                            <VerifiedBadge image={author.verifiedBadge} size={16} />
+                            <VerifiedBadge image={author.verifiedBadge} size="dense" />
                             {author.isPremium ? (
-                                <PremiumBadge size={16} className="flex-none" />
+                                <PremiumBadge
+                                    size={VERIFIED_BADGE_CROWN.dense}
+                                    className="flex-none"
+                                />
                             ) : null}
                             {author.slug ? (
                                 <span className="type-caption-meta max-w-[140px] truncate text-(--text-placeholder)">

@@ -198,7 +198,7 @@ export function EventStudioChannelActions({
                                     {channel.verified_tick_badge?.image && (
                                         <VerifiedBadge
                                             image={channel.verified_tick_badge.image}
-                                            size={16}
+                                            size="dense"
                                             label={name}
                                         />
                                     )}

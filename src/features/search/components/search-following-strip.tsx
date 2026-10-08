@@ -4,6 +4,7 @@ import { toChannelPath } from '@features/channel'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
@@ -412,9 +413,13 @@ function FollowingTile({
                     >
                         {label}
                     </span>
-                    <VerifiedBadge image={verifiedImage} size={16} label={verifiedLabel} />
+                    <VerifiedBadge image={verifiedImage} size="dense" label={verifiedLabel} />
                     {channel.is_premium && (
-                        <PremiumBadge size={12} label={premiumLabel} className="flex-none" />
+                        <PremiumBadge
+                            size={VERIFIED_BADGE_CROWN.dense}
+                            label={premiumLabel}
+                            className="flex-none"
+                        />
                     )}
                 </span>
                 <span className="type-caption-meta w-full min-w-0 truncate text-center text-(--text-subtitle)">

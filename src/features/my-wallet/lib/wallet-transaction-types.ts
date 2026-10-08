@@ -100,21 +100,13 @@ const WALLET_TYPES: readonly WalletTransactionType[] = [
  * reading — `arrows-retweet` says *share* and `arrows-rotate` says *refresh*, neither of which is
  * what an exchange between Star and USD is. The DS's own exchange mark exists but only fused into
  * `bell-exchange` and `search-exchange`; it ships no standalone form, and this is not the case that
- * warrants taking one from upstream Zappicon. *
+ * warrants taking one from upstream Zappicon.
+ *
  * Four were wrong before this was checked: `bonus` had the gift box (which is `consumption`'s), so
  * `consumption` had been given a `heart`; `refund` had `arrow-turn-down-left`, a *turn* rather than an
  * undo; `reward` had the plain `trophy-simple`; and `conversion` had `arrows-repeat`, two arrows in a
  * cycle rather than the pair legacy draws. None of them is a wrong *concept*, which is exactly why a
  * reading of the source rather than of the export names was needed.
- *
- * ## Where this is still richer than legacy, and that part was true
- *
- * The five currency-only types — `charge`, `commission`, `payout`, `payout_failure`,
- * `platform_earning` — have **no** entry in legacy's table, so all five fall through to its dollar
- * mark and a wallet ledger draws the same glyph five times. Those keep a glyph each here. Two are
- * approximations the DS forces, both re-checked against all 555 glyphs: there is no percent glyph at
- * all, so `commission` borrows `badge-dollar`; and the only card marks are `address-card` and
- * `wallet`, so `charge` — a card charge — takes the former.
  *
  * Every name is from the DS sprite subset and nothing is hand-drawn.
  */
@@ -155,16 +147,16 @@ export function walletTransactionLabelKey(type: string): TranslationKey | null {
  * The table above holds only the types `web-app` draws a glyph for. Everything else falls back **by
  * unit**, exactly as `TransactionIcon.js` does: a Star row gets the Star mark, anything else gets
  * `USDIcon`. So `charge`, `commission`, `payout`, `payout_failure` and `platform_earning` all render
- * `dollar-circle` — the same mark, on purpose, because that is what the app they came from shows.
+ * `dollar-arrow-down` — the same mark, on purpose, because that is what the app they came from shows.
  *
- * `dollar-circle` and not `dollar-arrow-up`: `USDIcon` draws the dollar disc with the arrow pointing
- * **down** (money in), and the DS ships only the up variant — checked against all 1581 symbols. Taking
- * a down arrow from upstream Zappicon is not warranted here; `dollar-circle` is the same disc without
- * the arrow, so the row still reads as "an amount of currency" and nothing is hand-drawn.
+ * `USDIcon` **is** the DS's `dollar-arrow-down--regular` (the bare id's weight): an outlined disc
+ * opened at the top-right for a down arrow, verified by rendering the two side by side. Until the
+ * full-library import (2026-10-08) the sprite had only the up variant and this drew `dollar-circle`,
+ * whose bare id is the **filled** disc — a second difference from legacy, not just a missing arrow.
  *
  * `document-list` is gone. It was a *third* answer for "unknown", which meant an unlisted type drew
  * neither of the two marks legacy uses and looked like a different kind of row.
  */
 export function walletTransactionIcon(type: string, isStar = false): TeviIconName {
-    return WALLET_ICONS[type] ?? (isStar ? 'star' : 'dollar-circle')
+    return WALLET_ICONS[type] ?? (isStar ? 'star' : 'dollar-arrow-down')
 }

@@ -348,7 +348,7 @@ function FollowingTile({
                     )}
                     <VerifiedBadge
                         image={recipient.verified_tick_badge?.image ?? null}
-                        size={16}
+                        size="caption"
                         label={verifiedLabel}
                         className="absolute bottom-0 end-0 rounded-(--radius-fill) bg-(--background-surface) ring-2 ring-(--background-surface)"
                     />

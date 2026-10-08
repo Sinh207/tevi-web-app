@@ -1,6 +1,6 @@
 import 'server-only'
 import { env } from '@shared/config/env'
-import { serverEnv } from '@shared/config/server-env'
+import { internalApiBase } from '@shared/config/server-env'
 import { createServerApiModel } from '@shared/lib/api/server-client'
 import { cache } from 'react'
 import { type PostFetchStatus, resolvePostFetchStatus } from '../lib/post-seo'
@@ -25,7 +25,9 @@ import { normalizePost, type Post } from './types'
  * container this is per pod, not per cluster.
  */
 function model() {
-    const internal = serverEnv().INTERNAL_CHANNEL_API
+    // The **post** service, not the channel one — legacy reads `http://tevi-post/tevi-post/v1/posts`,
+    // and the channel service answers a post id with a 404 that this page would call "deleted".
+    const internal = internalApiBase('post')
     return internal
         ? createServerApiModel({ apiBase: internal, revalidate: 60, unwrapEnvelope: true })
         : createServerApiModel({

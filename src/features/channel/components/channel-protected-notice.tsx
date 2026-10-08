@@ -138,7 +138,7 @@ export function ChannelProtectedNotice({
                             {name}
                         </span>
                         {channel.verified_tick_badge?.image && (
-                            <VerifiedBadge image={channel.verified_tick_badge.image} size={16} />
+                            <VerifiedBadge image={channel.verified_tick_badge.image} size="body" />
                         )}
                     </span>
                     <span className="type-caption-label-strong inline-flex h-6 items-center gap-1 rounded-full bg-(--background-segment) px-2.5 text-(--text-subtitle)">

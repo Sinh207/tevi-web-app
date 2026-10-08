@@ -171,9 +171,9 @@ export default function NavbarPage() {
                             square, not a purple button.
                         </p>
                         <p>
-                            Selected swaps the glyph to its <code>filled</code> weight. The sprite
-                            has no filled <code>user-heart-alt</code> or <code>comment-dots</code>,
-                            so Following and Chat keep the default weight and change colour only.
+                            Selected swaps the glyph to its <code>filled</code> weight — Following
+                            and Chat included, since the full library import brought their filled
+                            weights.
                         </p>
                     </div>
 

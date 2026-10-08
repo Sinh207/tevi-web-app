@@ -14,8 +14,8 @@ import { useCreateAction } from './use-create-action'
  *   both navigation shells are in the DOM at once, so a dialog rendered from this hook would be two
  *   dialogs with two drafts. It also closes the options surface first — the composer's backdrop
  *   would otherwise land on the list it came from.
- * - The gate is on the surface, not the rows: a guest gets the login dialog and no menu. The rail's
- *   `+` is on every desktop page, so this is one of the most-pressed controls in the app.
+ * - The gate is on the `post` row, not the surface: a guest gets the menu, and the login dialog
+ *   only once they pick Create a post — legacy's shape. `event` stays ungated, as in legacy.
  * - `GetAppDialog`'s `title` and `body` are **optional and fall back** to the generic "Get the Tevi
  *   app" copy, so a renamed key does not throw, does not log, and does not render an empty dialog:
  *   it renders a different, plausible one that says nothing about live events.
@@ -127,15 +127,30 @@ describe('useCreateAction', () => {
 
     /** A guest here includes the anonymous session every visitor carries — `isAuthenticated` is
      *  `id && !anonymous`, which is what the mocked `useRequireAuth` stands in for. */
-    it('raises the login dialog for a guest, and opens nothing', () => {
+    it('opens the options surface for a guest, and raises login only from the post row', () => {
         authed.value = false
         const probe = renderHook()
 
         probe.run(a => a.onOpenChange(true))
+        expect(probe.read().open).toBe(true)
+        expect(openLoginDialog).not.toHaveBeenCalled()
+
+        probe.run(a => a.options.find(o => o.key === 'post')?.onSelect?.())
 
         expect(openLoginDialog).toHaveBeenCalledTimes(1)
+        expect(openComposer).not.toHaveBeenCalled()
+        // Closed first — the login dialog's backdrop must not land on the list behind it.
         expect(probe.read().open).toBe(false)
-        expect(probe.read().appPrompt.open).toBe(false)
+    })
+
+    it('opens the app prompt from the event row for a guest, without asking to sign in', () => {
+        authed.value = false
+        const probe = renderHook()
+
+        probe.run(a => a.options.find(o => o.key === 'event')?.onSelect?.())
+
+        expect(probe.read().appPrompt.open).toBe(true)
+        expect(openLoginDialog).not.toHaveBeenCalled()
     })
 
     it('names both halves of the prompt copy, so neither falls back to the generic get-app text', () => {

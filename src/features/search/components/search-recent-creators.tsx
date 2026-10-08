@@ -4,6 +4,7 @@ import { toChannelPath } from '@features/channel'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import type { RecentCreator } from '@shared/lib/search-recent-creators'
 import { cn } from '@shared/lib/utils'
@@ -101,12 +102,12 @@ export function SearchRecentCreators({
                                         </span>
                                         <VerifiedBadge
                                             image={creator.verifiedImage}
-                                            size={16}
+                                            size="caption"
                                             label={t('channel_verified')}
                                         />
                                         {creator.isPremium && (
                                             <PremiumBadge
-                                                size={12}
+                                                size={VERIFIED_BADGE_CROWN.caption}
                                                 label={t('channel_premium')}
                                                 className="flex-none"
                                             />

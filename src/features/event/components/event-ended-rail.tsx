@@ -216,7 +216,7 @@ function EndedLiveCard({ live, locale }: { live: FollowedLive; locale: string })
                 </Avatar>
                 <span className="type-caption-label truncate text-[#E0E0E0]">{name}</span>
                 {channel.verified_tick_badge?.image && (
-                    <VerifiedBadge image={channel.verified_tick_badge.image} size={14} />
+                    <VerifiedBadge image={channel.verified_tick_badge.image} size="caption" />
                 )}
             </Link>
         </div>

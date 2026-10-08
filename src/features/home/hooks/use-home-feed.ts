@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@features/auth'
+import type { Post } from '@features/post'
 import { nextPageParam, type PageCursor } from '@shared/lib/api/page-cursor'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -44,8 +45,20 @@ import { groupPosts, type PostGroup, reuseGroups, visibleCount } from '../lib/po
  */
 const MIN_CARDS = 4
 
-export function useHomeFeed() {
-    const { activeId } = useAuth()
+/**
+ * `publicFeed` is the server's anonymous read of the same endpoint (`getPublicFeedForRequest`),
+ * shown to a reader who is **not signed in** — the guest and the crawler, who otherwise got a sign-in
+ * prompt and nothing else. It is one page, and deliberately stays one: the browser cannot ask for a
+ * second, because the public gateway answers this path with an empty list for a guest's anonymous
+ * bearer. A signed-in reader never sees it — their feed is theirs, fetched as them.
+ *
+ * Read as `!isAuthenticated`, which includes the bootstrap: the server renders before anyone is
+ * known, so that is the branch the HTML is built from, and the first client render has to agree with
+ * it. A signed-in reader spends the bootstrap behind the splash, as they did before.
+ */
+export function useHomeFeed({ publicFeed = null }: { publicFeed?: readonly Post[] | null } = {}) {
+    const { activeId, isAuthenticated } = useAuth()
+    const showPublic = !isAuthenticated && !!publicFeed && publicFeed.length > 0
 
     /**
      * Groups the reader has opened with *See more*, by `groupKey` — **not** by index.
@@ -70,18 +83,13 @@ export function useHomeFeed() {
          */
         getNextPageParam: last => nextPageParam(last.next),
         /*
-         * ⚠ **Every session asks — the anonymous one included.** Legacy's `useTabPosts` fetches
-         * `followed-channels/threads/` with whatever bearer the visitor carries and draws what comes
-         * back, so a guest on home sees posts whenever the backend has some for that session. This
-         * used to be `enabled: isAuthenticated` on the reasoning that an anonymous account "cannot
-         * have" a feed, which made the decision for the backend and showed every guest a sign-in
-         * prompt in place of a feed legacy shows them. What a guest's feed holds is the API's answer
-         * (B-question territory), not this client's assumption.
-         *
-         * The one wait is for a session to exist at all: bootstrap mints the anonymous one, and
-         * until then there is no `activeId` to scope the request — or its cache entry — to.
+         * **Accounts only.** Legacy asks with whatever bearer the visitor carries, and a guest does
+         * see posts there — but not from this request: the public gateway answers
+         * `followed-channels/threads/` with an empty list for an anonymous bearer (measured on
+         * staging). A guest's page is `publicFeed`, read by the server inside the cluster, so asking
+         * again from the browser would only cost a request.
          */
-        enabled: activeId !== null,
+        enabled: isAuthenticated,
     })
 
     /* The last answer, so an unchanged group keeps its identity — `reuseGroups` says why. */
@@ -95,7 +103,7 @@ export function useHomeFeed() {
          */
         const all = groupPosts(
             [],
-            pages.flatMap(page => page.results),
+            showPublic ? [...publicFeed] : pages.flatMap(page => page.results),
         )
         const next = reuseGroups(
             previousGroups.current,
@@ -103,7 +111,7 @@ export function useHomeFeed() {
         )
         previousGroups.current = next
         return next
-    }, [query.data, blocked])
+    }, [query.data, blocked, showPublic, publicFeed])
 
     const cards = visibleCount(groups, expanded)
 
@@ -124,12 +132,13 @@ export function useHomeFeed() {
         expanded,
         toggleGroup,
         hideChannel,
-        // No session yet is still loading: bootstrap is about to mint one and this query will run.
-        isLoading: activeId === null || query.isLoading,
+        // A guest never waits on this query — their page, if any, came from the server.
+        isLoading: isAuthenticated && query.isLoading,
         isError: query.isError,
         refetch: query.refetch,
         fetchNextPage: query.fetchNextPage,
-        hasNextPage: query.hasNextPage,
+        // The public page is the only one there is — see `publicFeed` above.
+        hasNextPage: showPublic ? false : query.hasNextPage,
         isFetchingNextPage: query.isFetchingNextPage,
         /**
          * Too few cards on screen to scroll, and there is another page to ask for.
@@ -138,17 +147,25 @@ export function useHomeFeed() {
          * for the same reason, one triggered by geometry and one by arithmetic.
          */
         needsMore:
-            cards < MIN_CARDS && query.hasNextPage && !query.isLoading && !query.isFetchingNextPage,
+            !showPublic &&
+            cards < MIN_CARDS &&
+            query.hasNextPage &&
+            !query.isLoading &&
+            !query.isFetchingNextPage,
         /**
          * `true` only once the first page has come back **and** held nothing. Distinct from
          * `isLoading`: an empty state shown while a request is in flight tells the reader there is
          * nothing here when nobody knows that yet.
          */
         /*
-         * The same for a guest as for an account: legacy's `NoPost` ("Oops, your Home is a little
-         * lonely.", *Discover creators*) is what an anonymous visitor with nothing to read gets too —
-         * there is no separate signed-out state on this tab.
+         * Empty is legacy's `NoPost` ("Oops, your Home is a little lonely.", *Discover creators*)
+         * for **everybody** — a guest included. An account's feed is empty once its first page came
+         * back with nothing; a guest's is empty when the server had no public page to show
+         * (`publicFeed`), since the browser does not ask on a guest's behalf. There is no separate
+         * signed-out state on this tab.
          */
-        isEmpty: query.isSuccess && groups.length === 0,
+        isEmpty: groups.length === 0 && (isAuthenticated ? query.isSuccess : !showPublic),
+        /** Showing the server's anonymous page rather than this reader's own feed. */
+        isPublic: showPublic,
     }
 }

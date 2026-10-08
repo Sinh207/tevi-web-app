@@ -1,10 +1,11 @@
 'use client'
 
+import { isWebviewPath } from '@shared/config/webview'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { I18nextProvider } from 'react-i18next'
 import { i18next, initI18nClient } from './client'
-import { htmlDir, type TranslationBundle, toLocale } from './settings'
+import { htmlDir, type TranslationBundle, toLocale, URL_LOCALE_PARAM } from './settings'
 
 /** Boots the client i18next instance with the server-resolved locale. */
 export function LocaleProvider({
@@ -62,7 +63,24 @@ export function LocaleProvider({
     useEffect(() => {
         const served = toLocale(locale)
         const onLanguageChanged = (lng: string) => {
-            if (toLocale(lng) !== served) router.refresh()
+            if (toLocale(lng) === served) return
+            /*
+             * On an address that names a language (`/premium?lang=vi`), a refresh would re-render
+             * in *that* language — `?lang=` outranks the cookie on the server, and `proxy.ts` would
+             * write it back into the cookie as well. The reader's pick wins over the link they
+             * arrived by, so the parameter goes, and changing the URL is itself the re-request.
+             *
+             * A navigation, not `history.replaceState` + `refresh()`: the router has not taken in
+             * a native history change by the time the refresh commits, and puts the old URL back.
+             * The webview's own `?lang=` is the app's to send and is left alone.
+             */
+            const url = new URL(window.location.href)
+            if (url.searchParams.has(URL_LOCALE_PARAM) && !isWebviewPath(url.pathname)) {
+                url.searchParams.delete(URL_LOCALE_PARAM)
+                router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false })
+                return
+            }
+            router.refresh()
         }
         instance.on('languageChanged', onLanguageChanged)
         return () => {

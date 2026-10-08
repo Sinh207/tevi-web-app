@@ -151,7 +151,7 @@ describe('channelProfileJsonLd', () => {
         expect(jsonLd).toMatchObject({
             '@context': 'https://schema.org',
             '@type': 'ProfilePage',
-            url: '/@ada',
+            url: 'https://tevi.dev/@ada',
             mainEntity: { '@type': 'Person', name: 'Ada', alternateName: '@ada' },
         })
     })

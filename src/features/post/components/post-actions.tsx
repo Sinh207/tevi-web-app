@@ -352,12 +352,10 @@ export { REACTED_FRAME, REACTION_ART } from './reaction-star'
  * Its state comes from `usePostBookmark` rather than straight off the post, because the flip lands
  * **after** the server confirms — so the prop is the starting value, not the current one.
  *
- * ⚠ **The glyph is the sprite's `bookmark-simple`, and the library draws it slashed.** Both of its
- * weights carry the same diagonal `bell-slash` does (verified against upstream Zappicon v1.2.0, whose
- * `bookmark-simple` has one path where the Tevi export has two), so an unsaved post shows a
- * crossed-out bookmark. Legacy's own path stood in for it until icons were held to the library alone
- * (`/dev/icons`); now this is a **library defect raised with Brand** — the fix is the export, and
- * nothing here changes when it lands. `docs/DESIGN_SYSTEM.md` lists it.
+ * `bookmark-simple`, hollow until saved and solid after — two literal tags rather than a computed
+ * `weight`, so the sprite scan ships both. Until 2026-10-08 this was legacy's own path, because the
+ * sprite's `bookmark-simple` carried a **slash**: Figma ships two glyphs under that name and the
+ * first export gave it to the slashed one (`DUPLICATE_BARE` in `scripts/import-figma-icons.mjs`).
  */
 function BookmarkButton({ post, testId }: { post: Post; testId?: string }) {
     const { t } = useTranslation()

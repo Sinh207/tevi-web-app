@@ -8,8 +8,10 @@ import {
     FALLBACK_LNG,
     type Locale,
     NAMESPACES,
+    parseUrlLocale,
     resolveInitialLocale,
     toLocale,
+    URL_LOCALE_HEADER,
 } from './settings'
 
 /**
@@ -55,6 +57,7 @@ export async function getServerLocale(): Promise<Locale> {
     return (
         (webview.locale ? toLocale(webview.locale) : null) ??
         resolveInitialLocale({
+            urlValue: headerStore.get(URL_LOCALE_HEADER),
             cookieValue: cookieStore.get(COOKIE_NAME)?.value,
             acceptLanguage: headerStore.get('accept-language'),
         })
@@ -64,4 +67,13 @@ export async function getServerLocale(): Promise<Locale> {
 /** The request locale's `t`. See `getServerLocale` for the chain. */
 export async function getServerT(): Promise<TFunction> {
     return getT(await getServerLocale())
+}
+
+/**
+ * The locale the **URL** names (`?lang=`), or `null` when it names none — as opposed to the one
+ * this request renders in, which may come from a cookie. Only the URL's is a fact about the
+ * address, so it is what decides a page's canonical and `hreflang` (`siteAlternates`).
+ */
+export async function getUrlLocale(): Promise<Locale | null> {
+    return parseUrlLocale((await headers()).get(URL_LOCALE_HEADER))
 }

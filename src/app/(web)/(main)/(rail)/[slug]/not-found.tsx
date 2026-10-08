@@ -16,12 +16,12 @@ import Link from 'next/link'
 const DISCOVER_PATH = '/search'
 
 /**
- * No such channel — a **real 404**, not a 200 with a sad face.
+ * No such channel.
  *
- * `notFound()` on a dynamic route does set the status correctly, unlike a page that merely renders
- * "not found" content. Which is why `resolveChannelFetchStatus` is careful that only a definitive
- * upstream 404 reaches here: a 5xx routed to this page would tell a crawler a live profile had been
- * deleted.
+ * ⚠ On the wire this is **200 + `noindex`**, not a 404 — `[slug]/page.tsx` measures it and says why
+ * it is left alone. The `noindex` is what a crawler acts on, which is why `resolveChannelFetchStatus`
+ * is careful that only a definitive upstream 404 reaches here: a 5xx routed to this page would tell
+ * a crawler to drop a live profile.
  *
  * Rendered inside the `(main)` shell, so the rail and the tab bar stay put and the visitor can go
  * somewhere else without using the browser's back button.

@@ -4,6 +4,7 @@ import { useRequireStars } from '@features/balance'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatCompactCount } from '@shared/lib/format-count'
 import { useWebConfig } from '@shared/lib/remote-config'
@@ -19,10 +20,10 @@ import { usePostBookmark } from '../hooks/use-post-bookmark'
 import { usePostReaction } from '../hooks/use-post-reaction'
 import type { SliderFilter } from '../hooks/use-post-slider'
 import { usePostUnlock } from '../hooks/use-post-unlock'
-import { LOCK_MEDIA_GLYPH } from '../lib/media-glyph'
 import { isGated, postActionVisibility, postDisplay, replyCost } from '../lib/post-access'
 import { formatPostTimestamp, truncateSliderCaption } from '../lib/post-format'
 import { isLocalImageSrc, videoSrc } from '../lib/post-media'
+import { LockMediaIcon } from './lock-media-icon'
 import { PostLockPanel } from './post-lock-panel'
 import { PostUnlockDialogs } from './post-unlock-dialogs'
 
@@ -481,7 +482,7 @@ function PostSliderSlide({
                         data-testid={subTestId(testId, 'label-data')}
                         className="type-caption-meta absolute start-2 top-2 z-10 flex items-center gap-1 rounded-[40px] bg-black/50 px-2 py-1 text-white md:start-3 md:top-3"
                     >
-                        <Icon name={LOCK_MEDIA_GLYPH.images} size={16} />
+                        <LockMediaIcon kind="images" size={16} />
                         {t('post_slider_picture_count', {
                             index: picture + 1,
                             total: images.length,
@@ -570,10 +571,10 @@ function PostSliderInfo({
                         </span>
                         <VerifiedBadge
                             image={channel?.verified_tick_badge?.image ?? null}
-                            size={16}
+                            size="dense"
                         />
                         {channel?.is_premium ? (
-                            <PremiumBadge size={18} className="flex-none" />
+                            <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} className="flex-none" />
                         ) : null}
                         {channel?.slug ? (
                             <span className="type-caption-meta max-w-[100px] truncate text-white/80 md:max-w-[200px]">

@@ -1,5 +1,6 @@
 import { LEGAL_CONTAINER, LegalPageView, MODERATION_POLICY } from '@features/legal'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -26,12 +27,11 @@ export async function generateMetadata(): Promise<Metadata> {
         description: t('moderation_meta_description'),
         alternates: { canonical: '/moderation' },
         robots: { index: true, follow: true },
-        openGraph: {
-            type: 'website',
+        openGraph: siteOpenGraph({
             url: '/moderation',
             title: t('menu_moderation'),
             description: t('moderation_meta_description'),
-        },
+        }),
     }
 }
 

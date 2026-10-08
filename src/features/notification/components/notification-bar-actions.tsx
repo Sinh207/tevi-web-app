@@ -133,7 +133,7 @@ export function NotificationBarActions() {
                     >
                         {t('notification_mark_all_read')}
                         {/*
-                         * `check-double`, not the row menu's `bell-check`. Both rows mean "read";
+                         * `check-double`, not the row menu's `envelope-check`. Both rows mean "read";
                          * the doubled tick is what carries **all of them** — the same mark the DS
                          * uses for a selection, and the one a reader already associates with a
                          * bulk read.

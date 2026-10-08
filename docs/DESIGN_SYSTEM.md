@@ -35,7 +35,7 @@ What's in there and when you want it:
 | `components.md` | Generated HTML API: root class, data attributes, allowed values |
 | `preview/<name>.html` | **The real markup for each component — copy from here** |
 | `colors_and_type.css` | Every token, both themes — what `globals.css` mirrors |
-| `icons.md` | The 554 glyph names |
+| `icons.md` | The glyph names of the **first** export (554) — the Figma library now has 4626; `design-system/tevi-icons.svg` is the current list |
 
 Values in that project are asserted against the Figma API (260/260 tokens, 4451/4451 geometry
 checks). They are not a style guide to interpret — they are what the file says. Don't round them.
@@ -61,7 +61,7 @@ Upstream assets that are **inputs to a build step, never served to a browser**.
 
 ```
 design-system/
-  tevi-icons.svg        1.6 MB, 554 glyphs / 1579 symbols — the Figma export, pristine, and
+  tevi-icons.svg        60 MB, 4626 glyphs / 27 699 symbols — the Figma export, pristine, and
                         the ONLY source of icons (what /dev/icons shows)
   tevi-logo.svg         the app mark
 ```
@@ -75,24 +75,9 @@ icon package anywhere outside its `ALLOWED` list of non-icon marks (third-party 
 App's phone, the splash, a chart, a progress ring). `icon-names.test.ts` fails if the overlay
 file comes back.
 
-**A missing glyph is a request to Brand, and a stand-in until then** — never a path you drew and
-never a neighbouring glyph adapted into the shape you need. The stand-ins in use, each named at its
-call site:
-
-| Wanted | Stands in | Where |
-| --- | --- | --- |
-| envelope | `send` | the email steps of two-step verification, password and sign-in, the MCN invitation walls, share-by-email |
-| slashed eye | `nsfw` / one `eye` | the sensitive-content cover / the password reveal (state in ink + `aria-pressed`) |
-| slashed heart | `heart` | the space menu's Follow / Unfollow (the label carries the state) |
-| slashed microphone | `volume-off-slash` | a muted seat in the Live studio |
-| smiley | `sparkles` | the Live chat's emoji button |
-| paperclip | `image` | the DM composer's attach (photos are all it attaches) |
-| person | `user-simple-alt` | the DM menus' space row |
-| legacy's lock, media and list marks | `lock-simple`, `image` / `film-play` / `document`, `document-list` | the paywall pill, media tiles, collection cards |
-
-**Library defect, raised with Brand:** `bookmark-simple` is drawn **slashed** in both weights (the
-`bell-slash` diagonal; upstream Zappicon's has none), so an unsaved post shows a crossed-out
-bookmark. It is used as is — the fix is the export, and nothing in the app changes when it lands.
+**A missing glyph is a request to Brand** — never a path you drew, never an upstream glyph pulled
+in beside the export. Until it lands, use the nearest glyph in the set and name the stand-in in a
+comment at the call site, so the swap is one line when the library catches up.
 
 Nothing here reaches the client. Everything shipped is generated from it:
 
@@ -134,7 +119,7 @@ import { Icon } from '@shared/ui/icon'
 Glyphs paint with `currentColor` — set the colour on the element. Tevi uses **16 / 18 / 20 / 24**
 depending on the host component.
 
-Browse all 554 at **`/dev/icons`** (`pnpm dev`, dev-only, 404s in production): filter by name,
+Browse all 4626 at **`/dev/icons`** (`pnpm dev`, dev-only, 404s in production): filter by name,
 switch weight and size, click a tile to copy its name.
 
 **Weights are typed per glyph.** Figma drew `filled` for 519 glyphs but `light` for only 5, so
@@ -725,6 +710,28 @@ pnpm build          # same
 `design-system/`, run `pnpm icons` and/or `pnpm brand`, then `pnpm test`. Diff `globals.css`
 against the project's `colors_and_type.css` by hand — token values are not generated.
 
+**Re-exporting the icons from Figma** — the icon library is read straight off the `↳ Icons` page of
+`Tevi Design system - Mobile` (`WVfz0MwBGyGt67LfNEY2pW`, 4613 component sets × 5 styles + 13 brand
+marks), through the figma-console MCP's Desktop Bridge. 23 000 SVGs cannot travel back as tool
+results, so the plugin POSTs them to a throwaway receiver on `http://localhost:9231` (a port in the
+plugin's `allowedDomains`) that writes `part-*.json` into a scratch directory; then
+`node scripts/import-figma-icons.mjs <dir> && pnpm icons`. The script's header holds every rule it
+applies (names, the ~70 duplicate names, ink → `currentColor`, id prefixing, alias targets kept,
+`premium` kept). Two traps in the export itself:
+
+- **Restart the Desktop Bridge plugin first if a long session has been using it.** On 2026-10-08
+  a stale plugin stalled every third sequential `await c.exportAsync()` until the 30 s timeout;
+  after a restart, 100 sequential exports took 1.6 s. Parallel is faster either way —
+  `Promise.all(children.map(c => c.exportAsync({ format: 'SVG_STRING' })))` over 6000 variants
+  returns in ~2 s — so batch ~1200 sets per call, one `fetch` per batch.
+- **A timed-out job is not dead.** The stalled loop resumes later and keeps POSTing — over a newer
+  dump if it uses the same file names. Give every attempt its own file prefix, and have the
+  receiver accept only that prefix.
+
+Before committing, diff the rendered glyphs that already exist, not the bytes: Figma re-serialises
+paths, so 44 of 1025 symbols differed by bytes on 2026-10-08 and 3 by drawing (`menu-bars`,
+`more-horizontal` redrawn in Figma; `premium` turned into a 2.5 MB raster, hence `KEEP_PREVIOUS`).
+
 Generated files are **committed** so a fresh clone typechecks without a build. That means they can
 go stale, so tests regenerate in memory and compare:
 
@@ -804,7 +811,7 @@ Each of these shipped once and produced **no error** — just a wrong pixel or a
 - **Bare symbols in the sprite are aliases.** `<symbol id="angle-left"><use href="#angle-left--regular"/></symbol>`.
   Copy the alias without its target and the `<svg>` renders nothing, silently. The subset builder
   walks internal `<use>` references transitively; `sprite.test.ts` guards it.
-- **…and 65 of those aliases point at `--filled`, so the glyph has one drawing, not two.**
+- **…and 67 of those aliases point at `--filled`, so the glyph has one drawing, not two.**
   `<symbol id="eye"><use href="#eye--filled"/></symbol>` — `icons.md` spells this out as
   `eye *(filled only)*`. `weight={active ? 'filled' : undefined}` on such a glyph resolves to the
   same paths in both states: no error, no blank box, just a control that never changes. That

@@ -94,7 +94,9 @@ fetched, so the directive is never read).
 stream comes back `purchased: true`, and the wrong order blanked the badge on it.
 
 One endpoint feeds all of it — `GET core/v4/public/events/{code}/` — read twice: once on the server
-with no bearer (metadata, the JSON-LD, the first paint) and once in the browser as the reader
+with no bearer (metadata, the JSON-LD, the first paint; in the cluster that read goes to the
+livestream service directly, `http://tevi-livestream/live` + `v1/public-events/{code}/`, legacy's own
+server path) and once in the browser as the reader
 (`purchased`, `need_unlock_package`). The second is the only one anything may be authorised from;
 `api/event-server-api.ts` says why at length.
 
@@ -375,17 +377,18 @@ Three things worth knowing about behaviour that **is** built:
   It matters beyond tidiness on `/report`, where the URL's handle is read back out
   to build the back destination and the non-host bounce — a stale handle there sends a host to a
   space page that does not resolve.
-- **⚠ That redirect is not a 308 on the wire.** Same cause as the soft 404 below: the document
-  streams, so `permanentRedirect` cannot set a status either and Next emits a
+- **⚠ That redirect is not a 308 on the wire.** Same cause as the soft 404 below: a `loading.tsx`
+  fallback has streamed before it runs, so `permanentRedirect` cannot set a status either and Next emits a
   `<meta http-equiv="refresh" content="0;url=…">` inside a **200**. Measured — a browser does land on
   the canonical URL, so the correction works; what is lost is the machine-readable half, since a meta
-  refresh is weaker than a 308 and not every proxy or unfurler follows it. `alternates.canonical`
+  refresh is not followed by every proxy or unfurler (Google does read a zero-delay one as permanent). `alternates.canonical`
   carries more of the duplicate-folding weight than the redirect does. `[slug]/page.tsx`'s
   `canonicalChannelRedirect` is subject to exactly the same thing.
-- **The `notFound()` on this route is a soft 404** — 200 with the not-found body. Not this route's
-  doing: every route in this app is dynamically rendered because the root layout awaits `cookies()`
-  and `headers()`. `(main)/[slug]/page.tsx` carries the measurement and the two ways out, neither
-  free. Which is also why `generateMetadata` returns **no `robots`** on that path.
+- **The `notFound()` on this route is a soft 404** — 200 with the not-found body, plus the `noindex`
+  Next adds. The cause is streaming: this route, `[slug]` and the app root each have a `loading.tsx`,
+  and once a fallback has gone out the status line is sent. `(main)/[slug]/page.tsx` carries the
+  measurement and why it is left alone. Which is also why `generateMetadata` returns **no `robots`**
+  on that path.
 - **A sticky card must not reserve space for a bar this route does not draw.** `EventTotalRevenueCard`
   shipped with legacy's `bottom: 56px`, which clears legacy's persistent bottom navigation. This app
   shows the tab bar **only on the four tab destinations** — an event page is not one — so 56 was a

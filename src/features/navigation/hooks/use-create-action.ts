@@ -49,12 +49,15 @@ export interface CreateOption {
  * once (`docs/TEST_IDS.md` §5) and a leaf name reused across two of them is a lookup that silently
  * takes whichever comes first in document order.
  *
- * ## The gate is on the trigger, not on the rows
+ * ## The gate is on the row, not on the trigger
  *
- * Legacy opens its create menu for anybody and raises the login prompt from the *row* inside it
- * (`iconBtnCreate/createPost/index.js`), so a guest gets a menu, picks something, and is only then
- * told to sign in. `requestOpen` gates the surface instead: one prompt at the press, and never a
- * menu whose rows are all dead ends. It is what every other gated rail entry does.
+ * The menu opens for anybody, and the login prompt is raised by the *row* that needs an account —
+ * legacy's own shape (`iconBtnCreate/createPost/index.js`): a guest sees what Create offers first,
+ * and is asked to sign in only when they pick something that needs it. The surface closes before
+ * the login dialog opens, for the same no-stacked-dialogs reason as below.
+ *
+ * Only `post` is gated. `event` raises the get-the-app prompt for anybody, as legacy's
+ * `createLive` does — it creates nothing on the web, so there is nothing to sign in for.
  *
  * An anonymous session is not an account — `isAuthenticated` is `id && !anonymous` — so the
  * visitor every page silently carries still gets the prompt.
@@ -67,7 +70,7 @@ export function useCreateAction() {
     /** The app-only prompt, raised by the `event` option. */
     const [appPromptOpen, setAppPromptOpen] = useState(false)
 
-    const requestOpen = requireAuth(() => setOpen(true))
+    const composePost = requireAuth(() => openPostComposer())
 
     const options: CreateOption[] = [
         {
@@ -87,7 +90,7 @@ export function useCreateAction() {
                  * DOM at once, so a dialog rendered by this hook would be two dialogs.
                  */
                 setOpen(false)
-                openPostComposer()
+                composePost()
             },
         },
         {
@@ -124,10 +127,10 @@ export function useCreateAction() {
         unavailableLabel: t('nav_create_post_unavailable'),
         open,
         /**
-         * For the controlled `open` of a `Menu` or `Dialog` root. Opening runs through the auth
-         * gate, so a guest sees the login dialog and the surface stays shut; closing always works.
+         * For the controlled `open` of a `Menu` or `Dialog` root. Not gated — a guest sees the
+         * options too; the gate is on the `post` row.
          */
-        onOpenChange: (next: boolean) => (next ? requestOpen() : setOpen(false)),
+        onOpenChange: setOpen,
         /** Spread onto `GetAppDialog`, which takes `open` / `onOpenChange` / `title` / `body`. */
         appPrompt: {
             open: appPromptOpen,

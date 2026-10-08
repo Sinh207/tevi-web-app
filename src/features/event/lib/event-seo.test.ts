@@ -7,6 +7,7 @@ import {
     eventCanonicalPath,
     eventJsonLd,
     formatEventDateForSeo,
+    mayDescribeEventForCrawler,
     truncateForSeo,
 } from './event-seo'
 
@@ -189,5 +190,23 @@ describe('eventJsonLd', () => {
             '@type': 'Organization',
             name: 'Ada',
         })
+    })
+})
+
+describe('mayDescribeEventForCrawler', () => {
+    it('describes an ordinary stream', () => {
+        expect(mayDescribeEventForCrawler(event())).toBe(true)
+    })
+
+    it('withholds a stream on an NSFW space', () => {
+        expect(
+            mayDescribeEventForCrawler(
+                event({ channel: { id: '1', slug: 'ada', name: 'Ada', is_nsfw: true } }),
+            ),
+        ).toBe(false)
+    })
+
+    it('withholds an 18+ stream, whose banner the page itself gates', () => {
+        expect(mayDescribeEventForCrawler(event({ age_restriction: true }))).toBe(false)
     })
 })

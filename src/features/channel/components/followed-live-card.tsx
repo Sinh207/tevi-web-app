@@ -132,7 +132,7 @@ export function FollowedLiveCard({
                         >
                             {name}
                         </Link>
-                        <VerifiedBadge image={channel.verified_tick_badge?.image} size={16} />
+                        <VerifiedBadge image={channel.verified_tick_badge?.image} size="dense" />
                         <span className="type-caption-meta min-w-0 truncate text-(--text-body)">
                             @{slug}
                         </span>
@@ -343,7 +343,7 @@ export function FollowedLiveTile({
                         >
                             {name}
                         </Link>
-                        <VerifiedBadge image={channel.verified_tick_badge?.image} size={14} />
+                        <VerifiedBadge image={channel.verified_tick_badge?.image} size="dense" />
                     </div>
                     {since && (
                         <time

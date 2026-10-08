@@ -110,6 +110,9 @@ jobs:
       - run: pnpm test:e2e
         env:
           NEXT_PUBLIC_ENV: development
+          # A runner is outside the cluster: the server's metadata reads go through the public
+          # gateway instead of the in-cluster services (`shared/config/server-env.ts`).
+          SERVER_API_VIA_GATEWAY: '1'
           NEXT_PUBLIC_BASE_URL: https://tevi.dev
           NEXT_PUBLIC_W_API_DOMAIN: https://wapi.tevi.dev
           NEXT_PUBLIC_DOORMAN_DOMAIN: https://doorman.tevi.dev

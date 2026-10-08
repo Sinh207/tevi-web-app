@@ -199,7 +199,7 @@ function EventStudioSeat({
             )}
             <span className="type-caption-label-strong truncate text-white">{name}</span>
             {publisher.verified_tick_badge?.image && (
-                <VerifiedBadge image={publisher.verified_tick_badge.image} size={14} />
+                <VerifiedBadge image={publisher.verified_tick_badge.image} size="caption" />
             )}
         </span>
     )

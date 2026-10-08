@@ -148,3 +148,55 @@ describe('proxy — the add-to-home-screen screen', () => {
         expect(rewriteTarget(proxy(get('/add-home-screen/@ada')))).toBeNull()
     })
 })
+
+describe('proxy — what search engines are told', () => {
+    it('moves a legacy path with a permanent redirect', () => {
+        // A 307 asks a crawler to keep the old URL indexed and to come back to it.
+        expect(proxy(get('/privacy/miniapp')).status).toBe(308)
+    })
+
+    it('says noindex in a header on every route robots.txt used to disallow', () => {
+        for (const path of ['/app', '/app/privacy', '/my-space', '/login', '/signup']) {
+            expect(proxy(get(path)).headers.get('x-robots-tag'), path).toBe('noindex')
+        }
+    })
+
+    it('says it on the add-to-home-screen rewrite, which keeps the space address', () => {
+        // The request URL is the space's own; only the rewrite target says what is rendered.
+        expect(proxy(get('/@ada?startapp&addToHomeScreen')).headers.get('x-robots-tag')).toBe(
+            'noindex',
+        )
+        expect(proxy(get('/add-home-screen/@ada')).headers.get('x-robots-tag')).toBe('noindex')
+    })
+
+    it('leaves indexable pages alone', () => {
+        for (const path of ['/', '/@ada', '/@ada?startapp', '/premium', '/application']) {
+            expect(proxy(get(path)).headers.get('x-robots-tag'), path).toBeNull()
+        }
+    })
+})
+
+describe('proxy — ?lang= on the website', () => {
+    it('renders the language the URL names, and keeps the reader in it', () => {
+        const response = proxy(get('/premium?lang=vi'))
+        // The request header the root layout reads — on the forwarded request, not the response.
+        expect(response.headers.get('x-middleware-request-x-tevi-url-locale')).toBe('vi')
+        expect(response.cookies.get('tevi.locale')?.value).toBe('vi')
+    })
+
+    it('writes the cookie on the domain the language switcher uses, so there is one of it', () => {
+        // Host-only here and `.tevi.com` from the switcher is two cookies of one name.
+        expect(proxy(get('/premium?lang=vi')).headers.get('set-cookie')).toContain(
+            'Domain=.tevi.com',
+        )
+    })
+
+    it('ignores a language it does not ship, and a client claiming the header', () => {
+        const forged = new NextRequest(new URL('/premium?lang=fr', 'https://tevi.com'), {
+            headers: { 'x-tevi-url-locale': 'ko' },
+        })
+        const response = proxy(forged)
+        expect(response.headers.get('x-middleware-request-x-tevi-url-locale')).toBeNull()
+        expect(response.cookies.get('tevi.locale')).toBeUndefined()
+    })
+})

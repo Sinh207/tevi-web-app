@@ -14,7 +14,6 @@ const generated = readFileSync(join(root, 'src/shared/ui/icon-names.ts'), 'utf8'
 
 const idsIn = (svg: string) => [...svg.matchAll(/<symbol id="([^"]+)"/g)].map(m => m[1])
 const figmaIds = idsIn(figma)
-/** The Figma export is the **only** source — what `/dev/icons` shows. */
 const symbolIds = new Set(figmaIds)
 
 /** Pull the `| 'name'` members out of one exported type alias. */
@@ -27,6 +26,7 @@ function unionMembers(typeName: string): string[] {
 }
 
 const WEIGHTS = [
+    ['TeviIconNameRegular', 'regular'],
     ['TeviIconNameFilled', 'filled'],
     ['TeviIconNameLight', 'light'],
     ['TeviIconNameDuotone', 'duotone'],
@@ -67,25 +67,33 @@ describe('tevi icon sprite', () => {
         expect(missing).toEqual([])
     })
 
-    it('keeps exactly the 554 glyphs the design system documents', () => {
-        expect(unionMembers('TeviIconName')).toHaveLength(554)
+    it('keeps the 4626 glyphs of the Figma library', () => {
+        // The 2026-10-08 export (scripts/import-figma-icons.mjs) — the whole `↳ Icons` page, where
+        // the first export carried 554. A truncated sprite fails here before it fails on a screen.
+        expect(unionMembers('TeviIconName')).toHaveLength(4626)
+    })
+
+    it('carries eye-slash, which the password reveal toggle needs', () => {
+        // Two states, two glyphs. `eye`'s bare id is an alias onto `eye--filled`, so a weight
+        // toggle draws it twice. The import keeps `eye-slash`'s alias on `--filled` so the pair
+        // still matches.
+        expect(symbolIds).toContain('eye-slash--filled')
+        expect(figma).toContain('<symbol id="eye-slash" viewBox="0 0 24 24" fill="none"><use href="#eye-slash--filled">')
     })
 })
 
 /**
- * **Icons come only from the library** — the glyphs `/dev/icons` shows, which is
- * `design-system/tevi-icons.svg` and nothing else. An overlay of upstream Zappicon glyphs
- * (`tevi-icons.extra.svg`) used to be merged into both the sprite and these types; it was removed
- * so that `<Icon name>` itself refuses a glyph design never put in the library. A missing glyph is
- * a request to Brand, stood in for from this set until it lands — not a file beside the export.
+ * **Icons come only from the library `/dev/icons` shows** — the Figma export, and nothing beside
+ * it. There used to be an overlay of upstream glyphs merged in by `pnpm icons`; it is gone, and a
+ * second source coming back is the regression this pins. A missing glyph goes to Brand, not here.
  */
-describe('the icon set is the library, and only the library', () => {
+describe('one icon source', () => {
     it('has no overlay beside the Figma export', () => {
         expect(existsSync(join(root, 'design-system/tevi-icons.extra.svg'))).toBe(false)
     })
 
-    it('generates nothing the export does not define', () => {
-        const inFigma = new Set(figmaIds)
-        expect(unionMembers('TeviIconName').filter(name => !inFigma.has(name))).toEqual([])
+    it('generates names from the Figma export alone', () => {
+        const script = readFileSync(join(root, 'scripts/generate-icon-names.mjs'), 'utf8')
+        expect(script).not.toContain('extra')
     })
 })

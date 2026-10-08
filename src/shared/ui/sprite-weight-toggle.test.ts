@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 /**
  * A weight toggle on an aliased glyph draws the same thing twice.
  *
- * 65 of the sprite's bare ids are not drawings — they are `<use>` aliases onto one weighted
+ * 67 of the sprite's bare ids are not drawings — they are `<use>` aliases onto one weighted
  * symbol, and where that target is `--filled`, the glyph has exactly one rendering. `eye` is
  * one of those (`icons.md`: `eye *(filled only)*`), so the password field's
  * `weight={revealed ? 'filled' : undefined}` toggled between `#eye` and `#eye--filled` —

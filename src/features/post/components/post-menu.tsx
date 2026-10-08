@@ -42,14 +42,12 @@ import { PostReportDialog } from './post-report-dialog'
  * nothing and acts at once. Legacy does not know whether a pin exists when it asks, and neither
  * does a card, so the question is worded to be true either way.
  *
- * ## Pin's glyph does not change and its label does
+ * ## Pin's glyph changes with its label
  *
- * The sprite ships `thumbtack` and `thumbtack-slanted`, and slanted is a *drawing*, not the negative
- * of the first — there is no `thumbtack-slash`. A menu row is labelled text, so unlike the bare
- * icon buttons in the action row its state is already said in words ("Pin" / "Unpin"), and a glyph
- * that stays put beside a label that moves is honest. The bell and heart rows in
- * `ChannelViewerMenu` can do better only because the library draws both halves of those pairs. Swap
- * this the day Brand ships the slashed one.
+ * `thumbtack` for Pin, `thumbtack-slash` for Unpin — the pair the bell and heart rows in
+ * `ChannelViewerMenu` already draw. Both at `filled`, the weight the bare `thumbtack` has always
+ * been here. Until the 2026-10-08 library import the sprite had no `thumbtack-slash` (`-slanted` is
+ * a different drawing, not the negative), so the glyph stayed put while the label moved.
  *
  * ## The trigger is absent on a deleted post, not disabled
  *
@@ -142,7 +140,16 @@ export function PostMenu({
                             onClick={() => (pinned ? pin.run(false) : setConfirmPin(true))}
                         >
                             {pinned ? t('post_menu_unpin') : t('post_menu_pin')}
-                            <Icon name="thumbtack" size={20} className="flex-none" />
+                            {pinned ? (
+                                <Icon
+                                    name="thumbtack-slash"
+                                    weight="filled"
+                                    size={20}
+                                    className="flex-none"
+                                />
+                            ) : (
+                                <Icon name="thumbtack" size={20} className="flex-none" />
+                            )}
                         </ActionMenuItem>
                     )}
                     {shows.delete && (

@@ -55,7 +55,7 @@ export function EventOrderRow({ order }: { order: EventOrder }) {
                         {name}
                     </span>
                     {person?.verifiedBadge && (
-                        <VerifiedBadge image={person.verifiedBadge} size={16} />
+                        <VerifiedBadge image={person.verifiedBadge} size="dense" />
                     )}
                     {slug && (
                         <span className="type-caption-meta min-w-0 truncate text-(--text-placeholder)">

@@ -142,9 +142,9 @@ export function PasswordField({
                  * never changed, worst on `settings/password` where the field starts empty
                  * so the masked dots were not there to change either.
                  *
-                 * The library has no `eye-slash`, and icons come only from it (`/dev/icons`),
-                 * so one glyph serves both states and the ink carries the difference — see
-                 * the `Icon` below.
+                 * `eye-slash` is the pair: from the Figma library since the 2026-10-08 import
+                 * (from the upstream-Zappicon overlay before that), aliased onto `--filled`
+                 * like `eye`, so the two weights agree.
                  *
                  * The words travel on `aria-label`; `aria-pressed` states it again for a
                  * screen reader. `tabIndex={-1}` deliberately: tabbing out of a password
@@ -163,19 +163,11 @@ export function PasswordField({
                     title={revealed ? t('auth_password_hide') : t('auth_password_show')}
                     className={cn(
                         'absolute end-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center',
-                        'cursor-pointer rounded-md transition-colors',
+                        'cursor-pointer rounded-md text-(--text-body) transition-colors',
                         'hover:bg-(--background-subtle) hover:text-(--text-title)',
-                        // The state is in the ink, not the glyph — see the `Icon` below.
-                        revealed ? 'text-(--text-title)' : 'text-(--text-placeholder)',
                     )}
                 >
-                    {/*
-                     * One glyph for both states: icons come only from the DS sprite (`/dev/icons`),
-                     * and it has an eye but no slashed eye (`eye` and `eye--filled` are one drawing).
-                     * So revealed is the eye in title ink and hidden is the same eye faded, with
-                     * `aria-pressed` and the label carrying the state in words.
-                     */}
-                    <Icon name="eye" size={18} />
+                    <Icon name={revealed ? 'eye' : 'eye-slash'} size={18} />
                 </button>
             </div>
 

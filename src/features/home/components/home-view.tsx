@@ -1,6 +1,7 @@
 'use client'
 
 import { useFollowedLives } from '@features/channel'
+import type { Post } from '@features/post'
 import { LiveDot } from '@shared/components/live-dot'
 import { StickyTabs } from '@shared/components/sticky-tabs'
 import { useMediaQuery } from '@shared/hooks/use-media-query'
@@ -9,6 +10,12 @@ import { useEffect, useState } from 'react'
 import { HOME_LIVE_LIMIT, HomeLiveFeed } from './home-live-feed'
 import { HomeLiveStrip } from './home-live-strip'
 import { HomePostFeed } from './home-post-feed'
+
+/**
+ * `publicFeed` is the first page of the feed as the server read it, anonymously — shown only while
+ * nobody is signed in. `null` when the server had none, which leaves the sign-in prompt in its place.
+ */
+type HomeViewProps = { testId?: string; publicFeed?: readonly Post[] | null }
 
 /**
  * Home — the feed of the spaces this account follows, in legacy's two tabs.
@@ -60,7 +67,7 @@ import { HomePostFeed } from './home-post-feed'
  * This read `0` before, which parked the row *under* the bar where the bar's `z-20` hid it once
  * stuck. From `md` there is no bar and the property is unset, so the fallback `0px` is right.
  */
-export function HomeView({ testId = 'home' }: { testId?: string }) {
+export function HomeView({ testId = 'home', publicFeed = null }: HomeViewProps) {
     const { t } = useTranslation()
     const { total: liveCount } = useFollowedLives({ limit: HOME_LIVE_LIMIT, collapsible: false })
     const [tab, setTab] = useState('posts')
@@ -104,7 +111,7 @@ export function HomeView({ testId = 'home' }: { testId?: string }) {
                     panel: (
                         <>
                             <HomeLiveStrip />
-                            <HomePostFeed />
+                            <HomePostFeed publicFeed={publicFeed} />
                         </>
                     ),
                 },

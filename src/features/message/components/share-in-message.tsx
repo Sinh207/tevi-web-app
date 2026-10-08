@@ -6,6 +6,7 @@ import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { ScrollRow } from '@shared/components/scroll-row'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { useWebConfig } from '@shared/lib/remote-config'
@@ -398,8 +399,10 @@ function PickerRow({
                     <span className="type-dense-strong truncate text-(--text-title)">
                         {view.name}
                     </span>
-                    <VerifiedBadge image={view.verifiedImage} size={16} />
-                    {view.premium && <PremiumBadge size={16} className="flex-none" />}
+                    <VerifiedBadge image={view.verifiedImage} size="dense" />
+                    {view.premium && (
+                        <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} className="flex-none" />
+                    )}
                 </span>
                 <span className="type-caption-meta truncate text-(--text-subtitle)">
                     @{view.slug}

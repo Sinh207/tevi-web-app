@@ -273,7 +273,7 @@ export function CardManagementView() {
                 <Message>
                     <ChannelEmptyState
                         className={RISE}
-                        icon="address-card"
+                        icon="credit-card"
                         title={t('payment_cards_signed_out_title')}
                         body={t('payment_cards_signed_out_body')}
                         action={

@@ -5,6 +5,7 @@ import { PremiumBadge } from '@shared/components/premium-badge'
 import { Sheen } from '@shared/components/sheen'
 import { StarMark } from '@shared/components/star-mark'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatStarAmount } from '@shared/lib/money'
 import { LIVE_BREATH, POP, RISE } from '@shared/lib/motion'
@@ -129,12 +130,15 @@ export function EventSeatCard({
                     <span className="flex min-w-0 items-center gap-1.5">
                         <span className="type-body-strong min-w-0 truncate text-white">{name}</span>
                         {publisher.verified_tick_badge?.image && (
-                            <VerifiedBadge image={publisher.verified_tick_badge.image} size={16} />
+                            <VerifiedBadge
+                                image={publisher.verified_tick_badge.image}
+                                size="body"
+                            />
                         )}
                         {/* Premium, as legacy reads it off the publisher — the animated crown. */}
                         {publisher.premium_badge && (
                             <span className="flex flex-none">
-                                <PremiumBadge size={16} />
+                                <PremiumBadge size={VERIFIED_BADGE_CROWN.body} />
                             </span>
                         )}
                         {publisher.is_host && <EventHostBadge />}
@@ -142,15 +146,14 @@ export function EventSeatCard({
                     {/* What is live on the wire, and what they have been given here. */}
                     <span className="flex flex-wrap items-center gap-1.5">
                         <StatusChip
-                            icon={publisher.audio ? 'microphone' : 'volume-off-slash'}
+                            icon={publisher.audio ? 'microphone' : 'microphone-slash'}
                             label={t(
                                 publisher.audio ? 'event_studio_mic_on' : 'event_studio_mic_off',
                             )}
                             on={publisher.audio}
                         />
                         <StatusChip
-                            // The sprite has no struck camera; the label and the muted chip say "off".
-                            icon="video"
+                            icon={publisher.video ? 'video' : 'video-slash'}
                             label={t(
                                 publisher.video ? 'event_seat_camera_on' : 'event_seat_camera_off',
                             )}
@@ -219,8 +222,7 @@ function StatusChip({
     label,
     on,
 }: {
-    /** `volume-off-slash` for a muted mic: the sprite (`/dev/icons`) has no slashed microphone. */
-    icon: 'microphone' | 'volume-off-slash' | 'video'
+    icon: 'microphone' | 'microphone-slash' | 'video' | 'video-slash'
     label: string
     on: boolean
 }) {
@@ -236,7 +238,16 @@ function StatusChip({
                     : 'bg-white/[0.04] text-white/40 ring-white/10',
             )}
         >
-            <Icon name={icon} size={16} className="size-3.5" />
+            {/*
+             * Literal tags, and `video` at `regular`: its bare id is the solid camera, beside an
+             * outlined microphone and an outlined `video-slash`. The sprite subset is scanned from
+             * source, so a weight chosen at runtime would ship without its drawing.
+             */}
+            {icon === 'video' ? (
+                <Icon name="video" weight="regular" size={16} className="size-3.5" />
+            ) : (
+                <Icon name={icon} size={16} className="size-3.5" />
+            )}
         </span>
     )
 }

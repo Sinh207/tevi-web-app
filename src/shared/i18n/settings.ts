@@ -148,11 +148,44 @@ function fromAcceptLanguage(header?: string | null): Locale | null {
     return null
 }
 
-/** First-visit chain: cookie → Accept-Language → English. */
+/**
+ * `?lang=` on a website URL — the one place a locale is part of the **address**.
+ *
+ * It exists for search engines: every other signal (the cookie, `Accept-Language`) is invisible to a
+ * crawler, which sends neither, so without it each URL has exactly one indexable language. With it,
+ * `/premium?lang=vi` is a distinct URL that always renders Vietnamese, which is what `hreflang` needs
+ * to point at (`shared/config/seo.ts`).
+ *
+ * The same name the webview contract uses, and the one legacy read (`?lang=` / `?lng=`), so links
+ * already in the wild keep working.
+ */
+export const URL_LOCALE_PARAM = 'lang'
+
+/**
+ * Set by `proxy.ts` from `?lang=` — stripped from every incoming request first, like the webview
+ * headers, so a client cannot claim one. Read by the root layout and `getServerLocale`.
+ */
+export const URL_LOCALE_HEADER = 'x-tevi-url-locale'
+
+/**
+ * A shipped locale named by a URL, or `null`. Lenient about spelling (`vi`, `vi-VN`, `vi_VN`,
+ * `zh-tw`) and strict about meaning: an unsupported language is ignored rather than clamped to
+ * English, so `?lang=fr` does not override a French reader's cookie with English.
+ */
+export function parseUrlLocale(value: string | null | undefined): Locale | null {
+    if (!value) return null
+    const locale = toLocale(value)
+    return locale !== DEFAULT_LOCALE || value.toLowerCase().startsWith('en') ? locale : null
+}
+
+/** The chain: URL (`?lang=`) → cookie → Accept-Language → English. */
 export function resolveInitialLocale(opts?: {
+    urlValue?: string | null
     cookieValue?: string | null
     acceptLanguage?: string | null
 }): Locale {
+    const fromUrl = parseUrlLocale(opts?.urlValue)
+    if (fromUrl) return fromUrl
     if (opts?.cookieValue) return toLocale(opts.cookieValue)
     return fromAcceptLanguage(opts?.acceptLanguage) ?? DEFAULT_LOCALE
 }

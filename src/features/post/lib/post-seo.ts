@@ -20,8 +20,6 @@ import { isGated } from './post-access'
 
 /** Google truncates the page title around 60 characters; leave room for the author suffix. */
 const TITLE_SNIPPET = 60
-/** Google caps `headline` at 110 and wants the post's own words, without the site suffix. */
-const HEADLINE_LIMIT = 110
 const DESCRIPTION_LIMIT = 160
 
 /**
@@ -50,10 +48,6 @@ function author(post: Post): string {
 export function buildPostTitle(post: Post): string {
     const snippet = postSnippet(post.text, TITLE_SNIPPET)
     return snippet ? `${snippet} - ${author(post)} | Tevi` : `${author(post)} on Tevi`
-}
-
-export function buildPostHeadline(post: Post): string {
-    return postSnippet(post.text, HEADLINE_LIMIT) || buildPostTitle(post)
 }
 
 /**

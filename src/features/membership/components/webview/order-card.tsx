@@ -102,7 +102,7 @@ export function OrderCard({
                         <span className="min-w-0 truncate">{name}</span>
                         {/* The badge *image* is the fact — an unverified account still sends the
                             object. Mirror of `MembershipRow` and `ChannelVerifiedMark`. */}
-                        <VerifiedBadge image={verified} size={16} />
+                        <VerifiedBadge image={verified} size="dense" />
                     </span>
                     <span className="type-caption-meta min-w-0 truncate text-(--text-subtitle)">
                         {offer.name ?? t('membership_tier_fallback')}

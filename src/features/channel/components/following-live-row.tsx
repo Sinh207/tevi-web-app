@@ -322,7 +322,7 @@ export function FollowingLiveRow({
                     <span className="type-caption-label min-w-0 truncate text-(--text-title)">
                         {name}
                     </span>
-                    <VerifiedBadge image={channel.verified_tick_badge?.image} size={14} />
+                    <VerifiedBadge image={channel.verified_tick_badge?.image} size="caption" />
                     {/* Both text runs truncate rather than taking legacy's fixed 35% caps: with a
                         cap, a short name still surrenders two thirds of the line to nothing. */}
                     <span className="type-caption-meta min-w-0 truncate text-(--text-body)">

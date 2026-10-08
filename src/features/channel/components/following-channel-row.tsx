@@ -4,6 +4,7 @@ import { OpenMiniAppButton } from '@features/mini-app'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
@@ -292,7 +293,7 @@ export function FollowingChannelRow({
                                         present and empty on an ordinary account, so there is
                                         nothing to draw without art. Mirror of
                                         `ChannelVerifiedMark`. */}
-                                    <VerifiedBadge image={verifiedImage} size={16} />
+                                    <VerifiedBadge image={verifiedImage} size="body" />
                                     {/*
                                      * Legacy's `BadgePremium`, in its place after the tick. The
                                      * plain badge, not the `href` one: the whole row is already a
@@ -303,10 +304,10 @@ export function FollowingChannelRow({
                                      */}
                                     {channel.is_premium && (
                                         <PremiumBadge
-                                            /* 12 beside a 16 tick: the tick's PNG is 25%
+                                            /* ¾ of the tick: the tick's PNG is 25%
                                                padding, so this is the pair that draws at one
-                                               visible size — the header's 24 / 18. */
-                                            size={12}
+                                               visible size — see `VERIFIED_BADGE_CROWN`. */
+                                            size={VERIFIED_BADGE_CROWN.body}
                                             label={t('channel_premium')}
                                             className="flex-none"
                                         />

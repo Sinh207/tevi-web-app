@@ -36,36 +36,23 @@ import {
  * question before it. A dialog on top of that would be two gates on one action, and the undo is the
  * better of the two: it costs nothing when the press was intended, which is almost always.
  *
- ## Labels only — **no trailing glyphs**, and that is the considered answer
+ ## A trailing glyph on every row, the same pairs `ChannelViewerMenu` draws
  *
- * Legacy draws six 24px images here from `IMAGES_STATIC.icons` (`iconPinOutlined`,
- * `iconMuteOutlined`, `iconUnfollowOutlined`, …) — six network requests for three rows. This menu
- * shipped once with the DS sprite standing in for them, and two of the three marks were not
- * carrying their weight:
+ * Legacy draws an outlined mark per row (`iconPinOutlined` / `iconUnpinOutlined`,
+ * `iconMuteOutlined` / `iconUnmuteOutlined`, `iconUnfollowOutlined`). This menu shipped with labels
+ * only for a while, because the sprite had no `thumbtack-slash` and nothing for "stop following" —
+ * and a column with a mark on one row of three is worse than none. The 2026-10-08 library import
+ * closed both gaps, so every row has its pair again:
  *
- * - **Unfollow.** The sprite has no `user-xmark` — nothing in this design system says "stop
- *   following" — so the row fell back to a plain `xmark`. Generic, and generic is worse than absent
- *   on the one row that is destructive: a bare cross beside red text reads as "close" or "cancel"
- *   rather than as the verb it sits next to.
- * - **Pin / Unpin.** `thumbtack` and `thumbtack-slanted` both exist, but there is no
- *   `thumbtack-slash`, so the pair only reads as pin-versus-*un*pin if you already know that is the
- *   convention being used. It is not one the DS states anywhere; using it would be **this file**
- *   inventing an affordance out of two shapes that merely differ.
+ * - **Pin / Unpin** — `thumbtack` / `thumbtack-slash`, at `regular` (legacy's are outlines; the bare
+ *   `thumbtack` is the solid one). Legacy's pin is slanted and the DS slash pair is upright; the
+ *   pair has to agree with itself before it agrees with legacy.
+ * - **Mute / Unmute** — `bell-slash` / `bell`: the state the row moves to, as in
+ *   `ChannelViewerMenu`.
+ * - **Unfollow** — `heart-slash`, which is legacy's own drawing here, and the space menu's Unfollow.
  *
- * Only Mute had an exact glyph (`bell-slash`). A menu with a mark on one of three rows and blanks
- * either side is worse than a menu with none, so the column goes rather than going ragged — and the
- * labels are already the whole meaning: three short verbs, one of them in `--text-error`.
- *
- * `MENU_ITEM` keeps its `justify-between`, so the label simply sits at the start. Nothing about the
- * row's geometry is different from `ChannelEventMenu`'s, which **does** keep its glyphs — `share`,
- * `qr-code` and `calendar` are exact for what they label. That is the rule this leaves behind: a
- * glyph earns its place per row, and per menu it is all of them or none.
- *
- * ⚠ Do not "restore" these by reaching for the nearest shape. `heart` reads as un-liking a post,
- * `ban` as blocking the person, `bin` as deleting something of the reader's — all three are wrong in
- * a way that costs more than the blank column. `docs/DESIGN_SYSTEM.md` §3 says it for the whole
- * repo: if the glyph you want does not exist, say so. The day the DS ships `user-xmark` and a
- * pin-slash, this is one line each.
+ * Each glyph is a literal tag, not a name in the table: the sprite subset is found by scanning
+ * source, and a name handed to `<Icon>` at runtime ships without the weight it is drawn in.
  */
 export function FollowingRowMenu({
     channel,
@@ -88,24 +75,36 @@ export function FollowingRowMenu({
     const items: {
         key: string
         label: string
+        glyph: React.ReactNode
         tone: 'action' | 'destructive'
         run: () => void
     }[] = [
         {
             key: 'pin',
             label: t(channel.pin ? 'following_unpin' : 'following_pin'),
+            glyph: channel.pin ? (
+                <Icon name="thumbtack-slash" size={24} className="flex-none" />
+            ) : (
+                <Icon name="thumbtack" weight="regular" size={24} className="flex-none" />
+            ),
             tone: 'action',
             run: onTogglePin,
         },
         {
             key: 'mute',
             label: t(muted ? 'following_unmute' : 'following_mute'),
+            glyph: muted ? (
+                <Icon name="bell" size={24} className="flex-none" />
+            ) : (
+                <Icon name="bell-slash" size={24} className="flex-none" />
+            ),
             tone: 'action',
             run: onToggleMute,
         },
         {
             key: 'unfollow',
             label: t('following_unfollow'),
+            glyph: <Icon name="heart-slash" size={24} className="flex-none" />,
             tone: 'destructive',
             run: onUnfollow,
         },
@@ -144,6 +143,7 @@ export function FollowingRowMenu({
                                 onClick={item.run}
                             >
                                 {item.label}
+                                {item.glyph}
                             </Menu.Item>
                         ))}
                     </Menu.Popup>

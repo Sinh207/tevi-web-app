@@ -24,16 +24,25 @@ import { z } from 'zod'
  *   on the public gateway and means nothing inside the cluster. But envelope unwrapping is
  *   gated on the same predicate, and the internal service *does* wrap in `{ data }`, so its
  *   model must pass `unwrapEnvelope: true`. Legacy unwraps it by hand for the same reason.
- * - Cluster DNS only resolves when the app runs **in** the cluster. Unset, the models fall
- *   back to the public gateway, so a local `pnpm dev` and a non-cluster deploy both keep
- *   working — they just serve whatever the public endpoint gives an anonymous caller.
+ * - Cluster DNS only resolves when the app runs **in** the cluster. A machine outside it —
+ *   `pnpm dev`, the CI e2e job — sets `SERVER_API_VIA_GATEWAY=1`, and the models read the
+ *   public gateway instead, which answers the same content to an anonymous caller.
  */
 const schema = z.object({
     /**
-     * The channel service's in-cluster base, e.g. `http://tevi-channel/tevi-channel`.
-     * Include the path prefix; the model appends `v3/channel/...` to it.
+     * Overrides for the three in-cluster bases in `INTERNAL_API` — set one only to point a service
+     * somewhere other than legacy's host. Include the path prefix; the models append the rest.
      */
     INTERNAL_CHANNEL_API: z.string().url().optional(),
+    INTERNAL_POST_API: z.string().url().optional(),
+    INTERNAL_LIVESTREAM_API: z.string().url().optional(),
+    /**
+     * `1` on a machine **outside the cluster** — `pnpm dev`, the CI e2e job — where the internal
+     * hosts do not resolve. The server reads then go through the public gateway instead, which
+     * answers the same paths anonymously. Never set in a deployment: there the internal service is
+     * the only source, as it is in legacy.
+     */
+    SERVER_API_VIA_GATEWAY: z.enum(['1', 'true']).optional(),
     /**
      * The **image proxy** that resizes a creator's avatar into the square icons a PWA install
      * needs — base URL only, no trailing slash, e.g. `https://imge.cdn.flowstreamx.com/unsafe`.
@@ -54,19 +63,22 @@ let cached: ServerEnv | undefined
 /**
  * Parsed once per process, lazily.
  *
- * Warns rather than throws on a bad value, matching `env.ts`: a malformed internal host
- * should degrade to the public gateway, not take the whole render down. A typo'd URL that
+ * Warns rather than throws on a bad value, matching `env.ts`: a malformed override should
+ * degrade to the default internal host, not take the whole render down. A typo'd URL that
  * hard-failed at import time would break every page, including the ones that never read it.
  */
 export function serverEnv(): ServerEnv {
     if (cached) return cached
     const parsed = schema.safeParse({
         INTERNAL_CHANNEL_API: process.env.INTERNAL_CHANNEL_API,
+        INTERNAL_POST_API: process.env.INTERNAL_POST_API,
+        INTERNAL_LIVESTREAM_API: process.env.INTERNAL_LIVESTREAM_API,
+        SERVER_API_VIA_GATEWAY: process.env.SERVER_API_VIA_GATEWAY,
         THUMBOR_IMAGE_BASE: process.env.THUMBOR_IMAGE_BASE,
     })
     if (!parsed.success) {
         console.warn(
-            '[server-env] invalid server configuration; falling back to the public API.',
+            '[server-env] invalid server configuration; using the in-cluster defaults.',
             parsed.error.flatten().fieldErrors,
         )
         cached = {}
@@ -74,4 +86,39 @@ export function serverEnv(): ServerEnv {
     }
     cached = parsed.data
     return cached
+}
+
+/**
+ * Where the server reads public content from: **the in-cluster services, always** — legacy's three
+ * constants (`services/seo.js`), so a deployment needs no configuration to get them right.
+ *
+ * Every server read of metadata goes here — the space, the post, the event, the home feed. Three
+ * services, and getting the service wrong does not fail loudly: a post asked of the channel
+ * service is a 404 the post page renders as "deleted", an event asked of it is `unavailable` and
+ * a default share card. Which is how two of the three shipped pointing at the channel service.
+ *
+ * The livestream prefix is `live`, not the service name, and it answers an event at
+ * `v1/public-events/{code}/` where the gateway's is `core/v4/public/events/{code}/`.
+ */
+export const INTERNAL_API = {
+    channel: 'http://tevi-channel/tevi-channel',
+    post: 'http://tevi-post/tevi-post',
+    livestream: 'http://tevi-livestream/live',
+} as const
+
+export type InternalService = keyof typeof INTERNAL_API
+
+/**
+ * The in-cluster base for `service`, or `null` on a machine outside the cluster
+ * (`SERVER_API_VIA_GATEWAY`), where the caller reads the public gateway instead.
+ */
+export function internalApiBase(service: InternalService): string | null {
+    const config = serverEnv()
+    if (config.SERVER_API_VIA_GATEWAY) return null
+    const override = {
+        channel: config.INTERNAL_CHANNEL_API,
+        post: config.INTERNAL_POST_API,
+        livestream: config.INTERNAL_LIVESTREAM_API,
+    }[service]
+    return override ?? INTERNAL_API[service]
 }

@@ -211,8 +211,9 @@ documents and `proxy.ts` hard-404s `/dev/*` for).
 One deliberate exception: **`/app` on its own answers 200** with that same body. The folder has a
 layout and no page, so Next renders the not-found *inside* the layout — a dynamic render, hence no
 404 status. It could be hard-404'd in `proxy.ts` like `/dev/*`, at the cost of showing the user a
-blank screen instead of a message. The namespace is `noindex` and disallowed in `robots.ts`, so
-nothing is crawling it and the status is read by no one; the message is read by a person. Body wins.
+blank screen instead of a message. The namespace is `noindex` — the `X-Robots-Tag` from `proxy.ts`
+covers this page-less response too — so the status keeps nothing out of the index that the header
+does not already; the message is read by a person. Body wins.
 
 ## Don't send auth
 
@@ -226,7 +227,9 @@ app's own history.
 Create `src/app/app/<screen>/page.tsx`. Nothing else: the shell, the locale, the theme and
 the safe area are already handled. Give it `robots: { index: false }` and a `canonical`
 pointing at the public equivalent when one exists (`/app/privacy` → `/privacy`); `/app/`
-is disallowed in [`robots.ts`](../src/app/robots.ts) so the two copies never compete. If the
+is `noindex` by an `X-Robots-Tag` from [`proxy.ts`](../src/proxy.ts) as well, so the two copies
+never compete. It is deliberately **not** disallowed in [`robots.ts`](../src/app/robots.ts): a
+disallowed URL is never fetched, so its `noindex` would never be read. If the
 screen reads the signed-in account, add a sub-layout that mounts `SessionProviders` — see above.
 
 ## Checking it by hand

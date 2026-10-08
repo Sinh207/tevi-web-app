@@ -4,11 +4,10 @@
  * ## Why this exists at all
  *
  * Legacy draws a phone on both controls that offer the app — the rail's (`trending/navBar/getApp`)
- * and the Live studio's (`liveView/common/getStarAndApp/getApp`). All 554 base glyphs in the DS sprite were
- * read: there is no phone, mobile, handset or smartphone. The house rule is that a missing glyph is
- * reported rather than approximated, and it was — `qr-code` shipped for a while in its place. This
- * mark is here because that call was overridden deliberately: parity with legacy's control won over
- * waiting on the sprite.
+ * and the Live studio's (`liveView/common/getStarAndApp/getApp`). The first sprite export (554 glyphs)
+ * had no phone at all, and `qr-code` shipped for a while in its place. The full library import of
+ * 2026-10-08 brought `mobile` — but it is upstream Zappicon's taller silhouette, not this one (see
+ * Provenance), so this mark stays.
  *
  * ## Why it is a component and not an `Icon`
  *

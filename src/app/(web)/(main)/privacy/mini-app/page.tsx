@@ -1,5 +1,6 @@
 import { LEGAL_CONTAINER, LegalPageView, PRIVACY_POLICY_MINI_APP } from '@features/legal'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -28,12 +29,11 @@ export async function generateMetadata(): Promise<Metadata> {
         description: t('privacy_miniapp_meta_description'),
         alternates: { canonical: '/privacy/mini-app' },
         robots: { index: true, follow: true },
-        openGraph: {
-            type: 'website',
+        openGraph: siteOpenGraph({
             url: '/privacy/mini-app',
             title: t('privacy_miniapp_title'),
             description: t('privacy_miniapp_meta_description'),
-        },
+        }),
     }
 }
 

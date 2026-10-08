@@ -102,13 +102,13 @@ describe('walletTransactionIcon', () => {
         for (const filter of walletTransactionFilters()) {
             if (filter.key === ALL_WALLET_TRANSACTIONS) continue
             if (UNLISTED.includes(filter.key)) continue
-            expect(walletTransactionIcon(filter.key)).not.toBe('dollar-circle')
+            expect(walletTransactionIcon(filter.key)).not.toBe('dollar-arrow-down')
         }
     })
 
     it('falls back by unit, as legacy dispatches on currency', () => {
         for (const type of [...UNLISTED, 'space_tier_bonus', '']) {
-            expect(walletTransactionIcon(type)).toBe('dollar-circle')
+            expect(walletTransactionIcon(type)).toBe('dollar-arrow-down')
             expect(walletTransactionIcon(type, true)).toBe('star')
         }
     })

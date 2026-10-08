@@ -39,10 +39,10 @@ import {
  * to its `/` home rather than to a space it cannot name. That is the one thing this screen has less
  * of than the client's, and it is a Next constraint rather than a choice.
  *
- * ⚠ Like every `notFound()` in this app it is a **soft 404** — 200 with the not-found body. Not this
- * file's doing: every route is dynamically rendered because `app/layout.tsx` awaits `cookies()` and
- * `headers()` to resolve the locale, and a `notFound()` raised *during* a render can no longer set
- * the status. `(main)/[slug]/page.tsx` carries the measurement and the two ways out.
+ * ⚠ Like every `notFound()` in this app it is a **soft 404** — 200 with the not-found body, plus the
+ * `noindex` Next adds. Not this file's doing: a `loading.tsx` above has streamed before `notFound()`
+ * runs, so the status line is already sent. `(main)/[slug]/page.tsx` carries the measurement and
+ * why it is left alone.
  */
 export default function EventNotFound() {
     return (

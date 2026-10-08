@@ -3,6 +3,7 @@
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import { Icon } from '@shared/ui/icon'
@@ -115,13 +116,17 @@ export function PostHeader({
                         {name}
                     </span>
                     {/*
-                     * Every mark beside the name — verified, Premium, tier — and every mark in the
-                     * meta line under it (audience, *Purchased*) is **16 tall**, so the two lines
-                     * hold one rhythm. They had grown four sizes: verified 16, Premium 18, tier 14,
-                     * *Purchased* a 24px pill.
+                     * Verified and Premium size by the name's text tier (`VERIFIED_BADGE_SIZE`,
+                     * `dense` here). The tier mark and the meta line's marks (audience,
+                     * *Purchased*) are 16 tall.
                      */}
-                    <VerifiedBadge image={channel?.verified_tick_badge?.image ?? null} size={16} />
-                    {channel?.is_premium ? <PremiumBadge size={16} className="flex-none" /> : null}
+                    <VerifiedBadge
+                        image={channel?.verified_tick_badge?.image ?? null}
+                        size="dense"
+                    />
+                    {channel?.is_premium ? (
+                        <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} className="flex-none" />
+                    ) : null}
                     {/*
                      * Height-constrained and `w-auto`: the tier marks are not square and legacy
                      * sizes them by height alone. Non-interactive here — legacy passes

@@ -259,15 +259,18 @@ function StepBody({ flow }: { flow: TwoFaFlow }) {
 /**
  * The glyph each step opens with, or nothing.
  *
- * ⚠ **`send`, a stand-in for the envelope legacy and the comps draw** (Figma `Two-step verification`
- * node `1070:94156`, a rounded open-flap envelope). Icons come only from the DS sprite — what
- * `/dev/icons` shows — and it has no envelope, `mail` or `letter`; the upstream-Zappicon overlay that
- * once carried one is gone. `send` says "a code was sent", which is half of the sentence (the step
- * is about which inbox to open). One line to change when Brand adds an envelope to the library.
+ * ✅ **`envelope`, which legacy draws and this app now has.** It was `send` — "a code was sent" — for
+ * as long as the set had no envelope: not in the committed subset and not in the Figma export either
+ * (`icon-names.ts` had no `mail`, `envelope` or `letter`); then from upstream Zappicon through the
+ * overlay, and since the 2026-10-08 import from the Figma library itself. Confirmed against the comps:
+ * Figma `Two-step verification` node `1070:94156` is a rounded open-flap envelope.
+ *
+ * That matters more than a nicer picture. This step is the one place in the flow that sends the reader
+ * *out of the app*, and `send` named the wrong half of it — the sending, not the inbox to open.
  */
 const MARKS: Record<TwoFaStep, TeviIconNameFilled | null> = {
-    enter: 'lock-simple',
-    recovery: 'send',
+    enter: 'key',
+    recovery: 'envelope',
     new: null,
     reenter: null,
     hint: null,
@@ -296,13 +299,11 @@ function Header({
             <div className="flex flex-col items-center gap-2 text-center">
                 {mark ? (
                     /*
-                     * **`lock-simple`, where legacy draws a key.** The sprite has no `key`, and
-                     * neither does upstream Zappicon v1.2.0 — its `key-simple-square` is a bordered
-                     * card with a keyhole, a different drawing, and the overlay's rules forbid
-                     * adapting one glyph into another's shape. `lock-simple--filled` says the same
-                     * thing (this is secured) and is in the committed subset. The envelope on the
-                     * recovery step *was* the same kind of stand-in and is now the real glyph — see
-                     * `MARKS`.
+                     * **A key**, as legacy and the comps draw it. Until 2026-10-08 this stood in
+                     * `lock-simple`: the library had no key (Figma ships it as `key-message`, renamed
+                     * by `scripts/import-figma-icons.mjs`). `key--filled` is in that script's
+                     * sibling `build-icon-sprite.mjs` KEEP list, because `MARKS` names it at runtime
+                     * and the bare id is the outline.
                      *
                      * ## The disc is **brand**, not `--background-segment`
                      *

@@ -208,7 +208,7 @@ export function MenuProfileCard() {
                             >
                                 {name}
                             </a>
-                            {myChannel && <ChannelVerifiedMark channel={myChannel} size={16} />}
+                            {myChannel && <ChannelVerifiedMark channel={myChannel} size="body" />}
                         </span>
                     }
                     at={myChannel?.slug ? `@${myChannel.slug}` : null}

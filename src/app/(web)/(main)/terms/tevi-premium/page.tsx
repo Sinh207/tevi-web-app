@@ -1,5 +1,6 @@
 import { LEGAL_CONTAINER, LegalPageView, TERMS_PREMIUM } from '@features/legal'
 import { PageBackBar, PageBreadcrumb } from '@features/navigation'
+import { siteOpenGraph } from '@shared/config/seo'
 import { getServerT } from '@shared/i18n/server'
 import type { Metadata } from 'next'
 
@@ -26,12 +27,11 @@ export async function generateMetadata(): Promise<Metadata> {
         description: t('terms_premium_meta_description'),
         alternates: { canonical: '/terms/tevi-premium' },
         robots: { index: true, follow: true },
-        openGraph: {
-            type: 'website',
+        openGraph: siteOpenGraph({
             url: '/terms/tevi-premium',
             title: t('terms_premium_title'),
             description: t('terms_premium_meta_description'),
-        },
+        }),
     }
 }
 

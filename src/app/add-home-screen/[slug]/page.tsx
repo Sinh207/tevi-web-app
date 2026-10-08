@@ -33,8 +33,8 @@ import { notFound, redirect } from 'next/navigation'
  * (QueryClient, theme, i18n) are all it needs, and i18n is the one that matters: the guide is a
  * client component so it can put a glyph inside a translated sentence.
  *
- * `/add-home-screen/@ada` therefore answers directly as well. It is `noindex` here and disallowed in
- * `robots.ts`, which is the same treatment the query-string form gets in both apps.
+ * `/add-home-screen/@ada` therefore answers directly as well. It is `noindex` here and as an
+ * `X-Robots-Tag` from `proxy.ts`, the same treatment the query-string form gets.
  *
  * **No canonical-case redirect**, unlike the space page. `/@ADA?startapp&addToHomeScreen` renders
  * these instructions rather than bouncing first: the screen is `noindex`, so there is no ranking
@@ -79,10 +79,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title: t('channel_add_home_screen_title', { name }),
         /**
          * **`noindex`, and the one branch of this feature that legacy also marks.** Its
-         * `robots.txt` disallows `/*?*startapp` and `/*?*addToHomeScreen`; ours does too (plus this
-         * path), and a meta directive on top of it is the half that works when a crawler reached
-         * the URL from a link rather than from the sitemap. The page is thin by design and its
-         * content belongs to `/@ada`, so an indexed copy would compete with the space itself.
+         * `robots.txt` disallows `/*?*startapp` and `/*?*addToHomeScreen`; ours deliberately does
+         * not — a disallowed URL is never fetched, so this directive would never be read, and this
+         * URL is shared, so it *is* reached from links. The page is thin by design and its content
+         * belongs to `/@ada`, so an indexed copy would compete with the space itself.
          */
         robots: { index: false, follow: false },
         /**

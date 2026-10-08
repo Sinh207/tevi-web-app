@@ -1,4 +1,11 @@
+import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import {
+    VERIFIED_BADGE_CROWN,
+    VERIFIED_BADGE_SIZE,
+    type VerifiedBadgeSize,
+} from '@shared/components/verified-badge-size'
+import { cn } from '@shared/lib/utils'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
@@ -27,6 +34,13 @@ export const metadata: Metadata = {
  */
 const ART = '/illustrations/identification/verified.webp'
 
+const TIERS = [
+    ['caption', 'type-caption-label-strong'],
+    ['dense', 'type-dense-strong'],
+    ['body', 'type-body-strong'],
+    ['title', 'type-title-t2-semibold'],
+] as const satisfies ReadonlyArray<readonly [VerifiedBadgeSize, string]>
+
 export default function VerifiedBadgeHarness() {
     if (process.env.NODE_ENV === 'production') notFound()
 
@@ -36,13 +50,18 @@ export default function VerifiedBadgeHarness() {
 
             <section className="flex flex-col gap-4">
                 <h2 className="type-dense-strong m-0 text-(--text-subtitle)">
-                    Decorative — 14 / 16 / 24
+                    Decorative — one tier per name style, crown at ¾
                 </h2>
-                <div className="flex items-center gap-4">
-                    <VerifiedBadge image={ART} size={14} />
-                    <VerifiedBadge image={ART} size={16} />
-                    <VerifiedBadge image={ART} size={24} />
-                </div>
+                {TIERS.map(([tier, type]) => (
+                    <div key={tier} className="flex items-center gap-1">
+                        <span className={cn(type, 'text-(--text-title)')}>Leslie Alexander</span>
+                        <VerifiedBadge image={ART} size={tier} />
+                        <PremiumBadge size={VERIFIED_BADGE_CROWN[tier]} className="flex-none" />
+                        <span className="type-caption-meta ms-2 text-(--text-placeholder)">
+                            {tier} · {VERIFIED_BADGE_SIZE[tier]}px
+                        </span>
+                    </div>
+                ))}
             </section>
 
             <section className="flex flex-col gap-4">
@@ -53,7 +72,7 @@ export default function VerifiedBadgeHarness() {
                     <span className="type-title-t2-semibold text-(--text-title)">Test app</span>
                     <VerifiedBadge
                         image={ART}
-                        size={24}
+                        size="title"
                         interactive
                         learnMoreHref="/@support/messages"
                     />
@@ -64,7 +83,7 @@ export default function VerifiedBadgeHarness() {
                 <h2 className="type-dense-strong m-0 text-(--text-subtitle)">No art — the gate</h2>
                 {/* An unverified account still sends the object, so this row must be empty. */}
                 <div className="flex h-6 items-center gap-2 text-(--text-body)">
-                    <VerifiedBadge image={null} size={24} />
+                    <VerifiedBadge image={null} />
                     <span className="type-dense-default">nothing should be drawn to my left</span>
                 </div>
             </section>

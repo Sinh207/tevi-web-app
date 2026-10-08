@@ -18,8 +18,8 @@ import type { Metadata } from 'next'
  * ## No `canonical`, and `noindex` twice over
  *
  * Unlike `/app/privacy` this screen has no public twin: buying a membership on the website is a
- * dialog over the space page, not a page of its own. `robots.ts` already disallows the whole
- * namespace; the meta tag says it again for a crawler that reached the URL another way — and this one
+ * dialog over the space page, not a page of its own. `proxy.ts` already sends `X-Robots-Tag:
+ * noindex` for the whole namespace; the meta tag says it again in the document — and this one
  * carries a `packageId` in its path, so it must never be indexed.
  *
  * Everything below is client code and has to be — but not for the usual reason. This screen has **no

@@ -3,6 +3,7 @@
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { StarMark } from '@shared/components/star-mark'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useMayAnimate } from '@shared/hooks/use-may-animate'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatStarAmount } from '@shared/lib/money'
@@ -559,11 +560,11 @@ function PodiumSpot({
                     {row ? name : '—'}
                 </span>
                 {row?.user?.verified_tick_badge?.image && (
-                    <VerifiedBadge image={row.user.verified_tick_badge.image} size={12} />
+                    <VerifiedBadge image={row.user.verified_tick_badge.image} size="caption" />
                 )}
                 {isTopStarPremium(row) && (
                     <span className="flex flex-none">
-                        <PremiumBadge size={14} />
+                        <PremiumBadge size={VERIFIED_BADGE_CROWN.caption} />
                     </span>
                 )}
             </span>
@@ -665,11 +666,11 @@ function LeaderboardRow({
                     {row.user?.display_name ?? ''}
                 </span>
                 {row.user?.verified_tick_badge?.image && (
-                    <VerifiedBadge image={row.user.verified_tick_badge.image} size={14} />
+                    <VerifiedBadge image={row.user.verified_tick_badge.image} size="dense" />
                 )}
                 {isTopStarPremium(row) && (
                     <span className="flex flex-none">
-                        <PremiumBadge size={16} />
+                        <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} />
                     </span>
                 )}
             </span>
@@ -812,7 +813,7 @@ function ChatName({ user, isMember }: { user: LiveChatUser | null; isMember: boo
                 {name}
             </span>
             {user?.verified_tick_badge?.image && (
-                <VerifiedBadge image={user.verified_tick_badge.image} size={16} />
+                <VerifiedBadge image={user.verified_tick_badge.image} size="dense" />
             )}
             {/*
              * Premium, as the app's own animated mark (`PremiumBadge`, sparks and all) rather
@@ -821,7 +822,7 @@ function ChatName({ user, isMember }: { user: LiveChatUser | null; isMember: boo
              */}
             {user?.premium_badge && (
                 <span className="flex flex-none">
-                    <PremiumBadge size={16} />
+                    <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} />
                 </span>
             )}
             {/*
@@ -968,7 +969,7 @@ function ChatLine({ line, channel }: { line: LiveChatLine; channel: EventDetail[
                                         line.gift.recipient_name === channel.name && (
                                             <VerifiedBadge
                                                 image={channel.verified_tick_badge.image}
-                                                size={14}
+                                                size="dense"
                                             />
                                         )}
                                 </span>
@@ -1295,7 +1296,7 @@ function EmojiButton({
                 disabled={disabled}
                 className="flex size-6 flex-none items-center justify-center text-[#C2C2C2] transition-[color,opacity] hover:not-disabled:text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
-                <Icon name="sparkles" size={20} />
+                <Icon name="comment-smile" size={20} />
             </button>
         </>
     )
@@ -2269,12 +2270,12 @@ function PinnedMessage({
                             {pinned.user_name}
                         </span>
                         {host?.verified_tick_badge?.image && (
-                            <VerifiedBadge image={host.verified_tick_badge.image} size={14} />
+                            <VerifiedBadge image={host.verified_tick_badge.image} size="dense" />
                         )}
                         {/* The Premium mark with its spark burst — the one every crown carries. */}
                         {host?.is_premium && (
                             <span className="flex flex-none">
-                                <PremiumBadge size={16} />
+                                <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} />
                             </span>
                         )}
                     </p>

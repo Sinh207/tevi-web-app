@@ -114,7 +114,7 @@ export function MemberRow({
                         {displayName}
                     </span>
                     {user?.channel_verified_tick_badge?.image ? (
-                        <VerifiedBadge image={user.channel_verified_tick_badge.image} size={16} />
+                        <VerifiedBadge image={user.channel_verified_tick_badge.image} size="body" />
                     ) : null}
                     {slug ? (
                         <span className="type-dense-default truncate text-(--text-body)">

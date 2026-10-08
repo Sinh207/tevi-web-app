@@ -206,10 +206,18 @@ test.describe('the instruction screen', () => {
         expect(html).not.toContain('data-testid="channel-add-home-screen"')
     })
 
-    test('is disallowed in robots.txt, in all three of its shapes', async ({ request }) => {
+    /**
+     * Crawlable, and `noindex` in a header. It used to be disallowed in `robots.txt` in all three of
+     * its shapes, which is the setup that indexes a linked URL bare: a disallowed page is never
+     * fetched, so its `noindex` is never read — and this URL is shared.
+     */
+    test('is noindex in a header and not disallowed in robots.txt', async ({ request }) => {
         const robots = await (await request.get('/robots.txt')).text()
-        expect(robots).toContain('/add-home-screen')
-        expect(robots).toContain('/*?*startapp')
-        expect(robots).toContain('/*?*addToHomeScreen')
+        expect(robots).not.toContain('add-home-screen')
+        expect(robots).not.toContain('startapp')
+        expect(robots).not.toContain('addToHomeScreen')
+
+        const response = await request.get(`${SPACE}?startapp&addToHomeScreen`)
+        expect(response.headers()['x-robots-tag']).toBe('noindex')
     })
 })

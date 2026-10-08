@@ -38,8 +38,9 @@ import { PostLockPanel } from './post-lock-panel'
  * - **A live `<video>` for a locked clip.** A paid video post has no playable source for its
  *   audience at all; the cover is what they get, and that is what `postDisplay` routes to here.
  *
- * It is drawn inside the composer itself (`post-composer-dialog.tsx`), as the screen behind
- * *Preview* — this file is the body only, and the title and back control are the composer's.
+ * It is drawn inside the composer's one shared popup (`post-composer-dialogs.tsx`), as the screen
+ * behind *Preview* — this file is the body only, and the shell, title and back control are that
+ * popup's.
  *
  * The card itself: who posted it, the words that survive the paywall, and what stands for the media.
  */

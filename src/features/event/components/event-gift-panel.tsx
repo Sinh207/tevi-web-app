@@ -286,7 +286,7 @@ function RecipientPicker({
                                         {selected.verified_tick_badge?.image && (
                                             <VerifiedBadge
                                                 image={selected.verified_tick_badge.image}
-                                                size={14}
+                                                size="dense"
                                             />
                                         )}
                                     </span>
@@ -385,7 +385,7 @@ function RecipientPicker({
                                     {publisher.verified_tick_badge?.image && (
                                         <VerifiedBadge
                                             image={publisher.verified_tick_badge.image}
-                                            size={16}
+                                            size="dense"
                                         />
                                     )}
                                     {/* Legacy's gold host badge — the one the pinned message wears. */}

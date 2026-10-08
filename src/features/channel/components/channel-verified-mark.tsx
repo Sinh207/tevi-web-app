@@ -1,6 +1,7 @@
 'use client'
 
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import type { VerifiedBadgeSize } from '@shared/components/verified-badge-size'
 import type { Channel } from '../api/types'
 import { SUPPORT_MESSAGES_PATH } from '../lib/routes'
 
@@ -22,14 +23,14 @@ import { SUPPORT_MESSAGES_PATH } from '../lib/routes'
  */
 export function ChannelVerifiedMark({
     channel,
-    /** 24 — the header, the bar and the rows all pass it; the live card passes 14. */
-    size = 24,
+    /** The text style of the name beside it — see `VERIFIED_BADGE_SIZE`. */
+    size = 'body',
     label,
     interactive,
     testId,
 }: {
     channel: Channel
-    size?: 16 | 18 | 20 | 22 | 24
+    size?: VerifiedBadgeSize
     /** Overrides the default `channel_verified` name — a row already holding a `t()` can pass it. */
     label?: string
     /** Press to open the "what does this mean?" dialog. Header only. */

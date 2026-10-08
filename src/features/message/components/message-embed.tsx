@@ -330,7 +330,10 @@ function ChannelRow({
                     <span className="max-w-[200px] truncate type-dense-strong text-(--text-title)">
                         {channel.name}
                     </span>
-                    <VerifiedBadge image={channel.verified_tick_badge?.image ?? null} size={14} />
+                    <VerifiedBadge
+                        image={channel.verified_tick_badge?.image ?? null}
+                        size="dense"
+                    />
                 </span>
                 <bdi className="truncate type-caption-meta text-(--text-body)">@{channel.slug}</bdi>
             </span>

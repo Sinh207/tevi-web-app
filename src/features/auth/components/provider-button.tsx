@@ -179,17 +179,12 @@ export function EmailProviderButton({
         >
             <ProviderRowInner
                 // No plate behind this one in either mode: a plate is what makes an
-                // unrecolourable trademark legible, and this glyph is ours and already
+                // unrecolourable trademark legible, and this mark is ours and already
                 // follows the theme. The 32px box is only so it occupies the same column
                 // as the marks above and below it.
-                //
-                // `send`, standing in for the envelope the native app draws: icons come only
-                // from the DS sprite (`/dev/icons`), which has no envelope, letter or `@` —
-                // the same stand-in as every other email step in this app. A hand-drawn
-                // envelope lived here until that rule was made absolute.
                 mark={
                     <span className="flex size-8 shrink-0 items-center justify-center">
-                        <Icon name="send" size={24} />
+                        <Icon name="envelope" weight="regular" size={24} className="shrink-0" />
                     </span>
                 }
                 label={label}

@@ -201,6 +201,7 @@ below is the figures at conversion time; for the current ones run
 | channel | `add-home-screen.webp` | 17.6 KB (jpeg) | 2.3 KB | re-encode (**the only jpeg source** — `mimeOf` used to throw on one; box keeps the source's aspect because an overlay is positioned as a percentage of it) |
 | earnings / membership / star-transfer | `theo-search.svg` (one shared file) | 9 KB | 9 KB | copy |
 | payment | checkout status art | 1.45 MB (3 gif) | ~144 KB | `art:payment` (white background keyed → alpha) |
+| SEO | `brand/og-default.jpg` | 431 KB (png) | 19 KB | re-encode to **JPEG**, cropped 1.91:1 — the default `og:image`, read by unfurlers rather than browsers, so the one output that is not WebP (`shared/config/seo.ts`) |
 
 ⚠ **The two auth rows are the one case where "committed" is not just about bytes.** Every other
 asset here can 404 and leave a screen that is plainer but still works. `scan-qr-step-{1,2}` are the

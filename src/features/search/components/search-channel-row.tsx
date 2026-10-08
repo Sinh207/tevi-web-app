@@ -4,6 +4,7 @@ import { toChannelPath } from '@features/channel'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatCompactCount, formatExactCount } from '@shared/lib/format-count'
 import { cn } from '@shared/lib/utils'
@@ -115,12 +116,12 @@ export function SearchChannelRow({
                          */}
                         <VerifiedBadge
                             image={verifiedImage}
-                            size={16}
+                            size="dense"
                             label={t('channel_verified')}
                         />
                         {channel.is_premium && (
                             <PremiumBadge
-                                size={12}
+                                size={VERIFIED_BADGE_CROWN.dense}
                                 label={t('channel_premium')}
                                 className="flex-none"
                             />

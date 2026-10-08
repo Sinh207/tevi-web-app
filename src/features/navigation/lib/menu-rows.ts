@@ -270,7 +270,9 @@ export const MENU_SECTIONS: {
             {
                 key: 'menu_card_management',
                 authOnly: true,
-                icon: { name: 'address-card', weight: 'filled' },
+                // A bank card, as legacy draws it — `address-card` (an ID card) stood in until the
+                // 2026-10-08 library import brought `credit-card`.
+                icon: { name: 'credit-card', weight: 'filled' },
                 tile: TILE.success,
                 href: CARD_MANAGEMENT_PATH,
                 requiresAuth: true,
@@ -284,7 +286,8 @@ export const MENU_SECTIONS: {
             {
                 key: 'menu_dashboard_analytics',
                 authOnly: true,
-                icon: { name: 'chart-column-alt', weight: 'filled' },
+                // legacy draws a pie with bars beside it; the library has no such pair, and the pie is the larger half (read off legacy's drawer art, 2026-10-08).
+                icon: { name: 'chart-pie', weight: 'filled' },
                 tile: TILE.indigo,
                 href: DASHBOARD_ANALYTICS_PATH,
                 /*
@@ -297,7 +300,8 @@ export const MENU_SECTIONS: {
             {
                 key: 'menu_monetization',
                 authOnly: true,
-                icon: { name: 'dollar-sign', weight: 'filled' },
+                // legacy's dollar in a disc (read off legacy's drawer art, 2026-10-08).
+                icon: { name: 'dollar-circle', weight: 'filled' },
                 tile: TILE.success,
                 href: MONETIZATION_PATH,
                 /*
@@ -317,7 +321,8 @@ export const MENU_SECTIONS: {
             {
                 key: 'menu_mcn_partnership',
                 authOnly: true,
-                icon: { name: 'document-list', weight: 'filled' },
+                // legacy's briefcase (read off legacy's drawer art, 2026-10-08).
+                icon: { name: 'briefcase', weight: 'filled' },
                 tile: TILE.warning,
                 href: MCN_PARTNERSHIP_PATH,
                 /*
@@ -357,7 +362,8 @@ export const MENU_SECTIONS: {
             {
                 key: 'menu_my_membership',
                 authOnly: true,
-                icon: { name: 'users-simple-alt', weight: 'filled' },
+                // legacy draws a person in a frame with a star badge; no glyph has the frame, `user-star` keeps the person and the star (read off legacy's drawer art, 2026-10-08).
+                icon: { name: 'user-star', weight: 'filled' },
                 tile: TILE.indigo,
                 href: MY_MEMBERSHIP_PATH,
                 /*
@@ -459,17 +465,12 @@ export const MENU_SECTIONS: {
                 authOnly: true,
                 /*
                  * A **star**, not an arrow: legacy's own glyph here is a solid star with three little bars
-                 * over it (`btnStarTransfer`'s inline SVG). It was `arrow-up-right`, which described the
-                 * direction and lost the subject.
-                 *
-                 * `star-star` — a star carrying a second, smaller one — over the plain `star` this briefly
-                 * used, because the drawer already spends `star` twice (Get more Star, My Star) and three
-                 * rows differing only by tile colour is a list you have to read rather than scan. It is
-                 * also the closest thing the sprite has to legacy's star-plus-marks. `star-magic` was the
-                 * third candidate and lost: no filled weight, so it would be the one outline glyph in a
-                 * column of solid ones. All three were rendered at 20px on this tile before choosing.
+                 * over it (`btnStarTransfer`'s inline SVG), and `star-shooting-down` is that drawing —
+                 * rendered side by side with legacy's path. It was `arrow-up-right` first (which
+                 * described the direction and lost the subject), then `star-star` while the sprite had
+                 * nothing closer; the full library import of 2026-10-08 brought the real one.
                  */
-                icon: { name: 'star-star', weight: 'filled' },
+                icon: { name: 'star-shooting-down', weight: 'filled' },
                 tile: TILE.indigo,
                 href: STAR_TRANSFER_PATH,
                 capability: 'star-transfer',
@@ -548,7 +549,8 @@ export const MENU_SECTIONS: {
             {
                 key: 'menu_ask_a_question',
                 authOnly: true,
-                icon: { name: 'comments-text', weight: 'filled' },
+                // legacy's two plain bubbles (read off legacy's drawer art, 2026-10-08).
+                icon: { name: 'comments', weight: 'filled' },
                 tile: TILE.indigo,
             },
             { key: 'menu_faq', icon: { name: 'question-circle' }, tile: TILE.zinc },
@@ -571,14 +573,16 @@ export const MENU_SECTIONS: {
             {
                 key: 'menu_switch_account',
                 authOnly: true,
-                icon: { name: 'user-swich', weight: 'filled' },
+                // legacy's two people between turning arrows (read off legacy's drawer art, 2026-10-08).
+                icon: { name: 'user-swap', weight: 'filled' },
                 tile: TILE.indigo,
                 action: 'switch-account',
             },
             {
                 key: 'menu_logout',
                 authOnly: true,
-                icon: { name: 'logout-bracket' },
+                // legacy's solid door with an arrow out (read off legacy's drawer art, 2026-10-08).
+                icon: { name: 'logout', weight: 'filled' },
                 tile: TILE.error,
                 action: 'sign-out',
             },
@@ -594,8 +598,8 @@ export const MENU_SECTIONS: {
  *
  * **The icons are not the legacy ones.** Legacy draws each as a bespoke 28×28 SVG with
  * the grey tile baked into the path — not sprite glyphs — and this app takes its icons
- * from the DS sprite only. Six are honest matches; three have no sprite equivalent and
- * carry the nearest semantic glyph instead, marked below. Worth a design pass.
+ * from the DS sprite only. Eight are honest matches; one (Privacy policy — a hand over a
+ * shield) has no sprite equivalent and carries the nearest semantic glyph, marked below.
  *
  * The legal documents, the safety policy, the community guidelines, the moderation policy
  * and the brand assets are wired. `/support` does not exist yet, and stays unwired rather
@@ -615,10 +619,10 @@ export const OTHER_SETTINGS_ROWS: Row[] = [
         tile: TILE.zinc,
         href: '/terms',
     },
-    // legacy art is a headset; the sprite has none
+    // legacy art is a headset — `headset`, since the 2026-10-08 library import
     {
         key: 'menu_help_center',
-        icon: { name: 'comment-text-question-circle' },
+        icon: { name: 'headset', weight: 'filled' },
         tile: TILE.zinc,
         external: true,
     },
@@ -628,10 +632,10 @@ export const OTHER_SETTINGS_ROWS: Row[] = [
         tile: TILE.zinc,
         href: '/brand-assets',
     },
-    // legacy art is a shield with a tick; the sprite's shield has no tick
+    // legacy art is a shield with a tick — `shield-check`, since the 2026-10-08 library import
     {
         key: 'menu_safety',
-        icon: { name: 'shield', weight: 'filled' },
+        icon: { name: 'shield-check', weight: 'filled' },
         tile: TILE.zinc,
         href: '/safety',
     },

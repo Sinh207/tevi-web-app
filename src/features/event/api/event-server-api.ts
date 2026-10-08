@@ -1,6 +1,6 @@
 import 'server-only'
 import { env } from '@shared/config/env'
-import { serverEnv } from '@shared/config/server-env'
+import { internalApiBase } from '@shared/config/server-env'
 import { createServerApiModel } from '@shared/lib/api/server-client'
 import { cache } from 'react'
 import { type EventDetail, normalizeEvent } from './types'
@@ -38,14 +38,36 @@ import { type EventDetail, normalizeEvent } from './types'
  * every field would read `undefined`. Forcing it on the public gateway would strip a second level.
  * The trap is written up on `createServerApiModel`; `channel-server-api.ts` has the same pair.
  */
-function model() {
-    const internal = serverEnv().INTERNAL_CHANNEL_API
+function source(code: string) {
+    const id = encodeURIComponent(code)
+    const internal = internalApiBase('livestream')
+    /*
+     * In-cluster, the **livestream** service — legacy's `EVENT_SERVICE`,
+     * `http://tevi-livestream/live/v1/public-events/{code}/`. This used to go to the channel
+     * service, which has no events: every event page in the cluster would have rendered as
+     * `unavailable`, with the site's default card on every shared stream.
+     *
+     * The path differs from the gateway's (`v1/public-events/` against `core/v4/public/events/`).
+     * Legacy hands the v1 body to the same container its client fills from v4, so the shapes are
+     * treated as one — and the client refetches v4 on mount regardless (`use-event.ts`), so the
+     * server's copy only ever paints the first frame and the metadata.
+     */
     return internal
-        ? createServerApiModel({ apiBase: internal, revalidate: 60, unwrapEnvelope: true })
-        : createServerApiModel({
-              apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN}/core`,
-              revalidate: 60,
-          })
+        ? {
+              model: createServerApiModel({
+                  apiBase: internal,
+                  revalidate: 60,
+                  unwrapEnvelope: true,
+              }),
+              path: `v1/public-events/${id}/`,
+          }
+        : {
+              model: createServerApiModel({
+                  apiBase: `${env.NEXT_PUBLIC_W_API_DOMAIN}/core`,
+                  revalidate: 60,
+              }),
+              path: `v4/public/events/${id}/`,
+          }
 }
 
 /**
@@ -79,7 +101,8 @@ function isGone(error: unknown): boolean {
  */
 export const getEventForRequest = cache(async (code: string): Promise<EventFetch> => {
     try {
-        const body = await model().get<unknown>(`v4/public/events/${encodeURIComponent(code)}/`)
+        const { model, path } = source(code)
+        const body = await model.get<unknown>(path)
         const event = normalizeEvent(body)
         /*
          * A 200 whose body cannot be parsed is not a missing event. Treating it as `gone` would 404

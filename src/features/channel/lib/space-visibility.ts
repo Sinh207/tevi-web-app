@@ -67,10 +67,9 @@ export const SPACE_VISIBILITY_OPTIONS: readonly SpaceVisibilityOption[] = [
     },
     {
         value: 'unpublished',
-        // The sprite has no `eye-slash`, which would be the obvious glyph. `lock-simple` is
-        // the nearest honest one and is already the drawer's Password tile; a hand-drawn
-        // struck-through eye is not an option (`shared/ui/icon.tsx`). Worth a design pass.
-        icon: { name: 'lock-simple', weight: 'filled' },
+        // A person behind a padlock — the art legacy's unpublished banner draws, and the same
+        // glyph `ChannelPublishBanner` uses, so the state has one mark wherever it appears.
+        icon: { name: 'user-lock', weight: 'filled' },
         tile: 'var(--zinc-500)',
         titleKey: 'space_visibility_unpublished_title',
         bodyKey: 'space_visibility_unpublished_body',

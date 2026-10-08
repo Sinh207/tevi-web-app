@@ -128,8 +128,9 @@ src/
 ```
 
 **`/app/*` = mobile-app webview screens**, not website pages: no shell, no navigation (the
-native chrome is around them), `noindex` + canonical to the public twin, and `robots.ts`
-disallows the namespace. The app owns their presentation context and sends it on the URL —
+native chrome is around them), `noindex` + canonical to the public twin, said again as an
+`X-Robots-Tag` by `proxy.ts` — and **not** disallowed in `robots.ts`, because a disallowed URL is
+never fetched and its `noindex` never read. The app owns their presentation context and sends it on the URL —
 `?lang=vi&theme=dark&platform=ios&v=3.14.0` — which `proxy.ts` turns into `x-tevi-webview*`
 request headers (stripped from incoming requests first) that `app/layout.tsx` and
 `getServerT()` read, so language/direction/theme are right on the first paint. Contract and
@@ -293,12 +294,15 @@ either may be invented here:
   server-side), HMAC-signed, 10s timeout so a silent upstream can't hold a render. GETs are
   `no-store` unless the model (or the call) opts into ISR with `revalidate` seconds — do that for
   anything public and slow-changing rather than paying W_API latency on every render.
-  It may also point at the **in-cluster service** (`shared/config/server-env.ts`), which needs no
-  credentials. That origin is *not* `NEXT_PUBLIC_W_API_DOMAIN`, so `isApiUrl()` is false for it:
-  signing is skipped (correct — `?verify=` means nothing inside the cluster), but envelope
-  unwrapping is gated on the same predicate and the internal service *does* wrap, so such a model
-  must pass `unwrapEnvelope: true`. Unset, it falls back to the public gateway, so `pnpm dev` and a
-  non-cluster deploy both keep working.
+  **Every server read of metadata goes to the in-cluster services** — `internalApiBase(service)`
+  in `shared/config/server-env.ts`, defaulting to legacy's three hosts (`tevi-channel` for spaces,
+  `tevi-post` for posts and the home feed, `tevi-livestream` at prefix `live` for events), which need
+  no credentials. The service matters and fails quietly: a post asked of the channel service is a
+  404 rendered as "deleted". That origin is *not* `NEXT_PUBLIC_W_API_DOMAIN`, so `isApiUrl()` is
+  false for it: signing is skipped (correct — `?verify=` means nothing inside the cluster), but
+  envelope unwrapping is gated on the same predicate and the internal service *does* wrap, so such a
+  model must pass `unwrapEnvelope: true`. A machine **outside** the cluster — `pnpm dev`, the CI e2e
+  job — sets `SERVER_API_VIA_GATEWAY=1` and the same reads go through the public gateway instead.
 - `query-client.ts` — 60s `staleTime`, no refetch-on-focus, never retries 4xx, opt-in error toasts
   via `meta.showErrorToast`. **On a failed write (POST/PUT/PATCH/DELETE) with a 4xx, the API's own
   message wins and our string is the fallback** — the backend is the only party that knows why *that*
@@ -551,11 +555,12 @@ file, so it was rendered through Figma's image endpoint at 2× its 190×127 box 
 `build-cdn-art.mjs`'s own quality. It is **not** a `SOURCES` row on purpose: that script fetches URLs
 and a Figma render URL expires in 30 days, so the node id is the traceable source instead.
 
-**The step marks stand in for the comps' glyphs**: every passcode step draws a key and both email
-steps an envelope, and the library has neither. Icons come only from the DS sprite (`/dev/icons`),
-so the passcode steps use `lock-simple` and the email steps `send` — `/settings/password`'s
-connect-email step too, so the two screens agree. Each is one line to change when Brand adds the
-glyph to the library.
+**The step marks are the comps' own glyphs**: every passcode step draws a key and both email steps
+an envelope, both from the Figma library since the full import of 2026-10-08. Figma ships the key
+as **`key-message`** — a plain key in all five weights — and `scripts/import-figma-icons.mjs`
+renames it `key`. The `MARKS` tables hand the name to `<Icon weight="filled">` at runtime, so
+`key--filled` sits in `build-icon-sprite.mjs`'s KEEP list; drop it and every passcode step draws an
+empty disc.
 
 The management half is the **guessed** half generally (nothing had ever called those four, and
 `two-fa/` is in no schema): its open contract questions are **B92**.
@@ -666,20 +671,29 @@ executes as us with no click to intercept.
 Self-managed in-repo (no Crowdin): one flat `locales/<lng>/translation.json` per locale, single
 `translation` namespace. 9 `SUPPORTED_LOCALES` (incl. `ar` for RTL), 8 surfaced in the switcher
 (`UI_LOCALES` / `LANGUAGES`). Locale is resolved server-side in `layout.tsx`
-(cookie `tevi.locale` → `Accept-Language` → `en`) and passed down to `AppProviders`.
+(`?lang=` → cookie `tevi.locale` → `Accept-Language` → `en`) and passed down to `AppProviders`.
+`?lang=` is the one place a locale is part of the **address** — `proxy.ts` lifts it into a request
+header, so `/premium?lang=vi` always renders Vietnamese whatever the cookie says. That is what
+`hreflang` needs (`siteAlternates` in `shared/config/seo.ts`, used only by pages whose content is
+translated). The language switcher drops it from the URL, or the URL would outvote the choice.
 Client: `useTranslation()` from `@shared/i18n/use-translation` (adds `changeLanguage`, which syncs
 storage + cookie + `<html lang|dir>`). RSC: `getServerT()` / `getT(locale)`.
 
 ⚠ **That resolution is why every route in this app is dynamically rendered.** `app/layout.tsx`
 awaits `cookies()` and `headers()`, which are Dynamic APIs, and a page cannot opt out of its own
-root layout. The consequence worth knowing before chasing it: a `notFound()` raised **during** a
-render can no longer set the status, so every one of them is a **soft 404** — 200 with the
-not-found body. Measured on four unrelated routes, including one that calls `notFound()` on a pure
-path check with no fetch and no search params (`add-home-screen/[slug]`). Only an **unmatched**
-path (`/a/b/c`) gets a real 404, because Next sets that before any render. `[slug]/page.tsx` has
-table and the two ways out, neither free. Also: a `notFound()` branch must return **no** `robots`
-from `generateMetadata` — Next emits its own `noindex` on that render, and a second tag beside
-it is two tags where one is expected.
+root layout.
+
+**Every `notFound()` is a soft 404 — 200 with the not-found body — and the cause is *not* the
+above.** It is streaming: `app/loading.tsx` wraps the whole app, so a Suspense fallback goes out
+before any page has decided, and the status line goes with it. A `permanentRedirect()` becomes a
+meta refresh in a 200 for the same reason. Only an **unmatched** path (`/a/b/c`) gets a real 404,
+because Next sets that before any render. This note used to blame the Dynamic APIs; that was
+wrong, and a "fix" aimed there changes nothing. It is left alone on purpose — Next adds `noindex`
+to a streamed not-found and Google reads a zero-delay refresh as permanent, so for a crawler it
+costs nothing, while a real status costs the instant skeleton. `[slug]/page.tsx` has the table and
+the two ways out. Also: a `notFound()` branch must return **no** `robots` from `generateMetadata` —
+Next emits its own `noindex` on that render, and a second tag beside it is two tags where one is
+expected.
 
 **One locale reaches the browser, not nine.** `resources.ts` (all nine, ~820 KB of JSON) is
 **server-only**; `client.ts` bundles **English alone** — it is `FALLBACK_LNG`, so it stands behind
@@ -720,14 +734,11 @@ Full pipeline + runbook: [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md).
 - **Icons: only the glyphs at `/dev/icons`** — the DS sprite, `design-system/tevi-icons.svg`, and
   nothing else. `<Icon name="angle-left" size={20} />` from `@shared/ui/icon`; the name is typed
   from that file alone, so a glyph the library lacks is a type error, and weights are typed per
-  glyph. **No exceptions for missing glyphs**: no overlay of upstream Zappicon glyphs (the old
+  glyph. **No exceptions for missing glyphs**: no overlay of upstream glyphs (the old
   `tevi-icons.extra.svg` is gone), no hand-drawn `<svg>`, no icon package. If the glyph you want is
-  missing, stand in the nearest glyph from the set, say so in a comment, and ask Brand to add it to
-  the library — e.g. `send` stands in for an envelope, `nsfw` for a slashed eye. A two-state toggle
-  with no second glyph keeps one glyph and carries the state in ink and `aria-pressed` (the password
-  reveal). Check the weight you toggle actually differs: 65 bare ids are `<use>` aliases onto
-  `--filled` (`sprite-weight-toggle.test.ts`). Known library defect: `bookmark-simple` is drawn
-  slashed in both weights — raised with Brand, used as is.
+  missing, use the nearest glyph from the set, say so in a comment, and ask Brand to add it to the
+  library. Check the weight you toggle actually differs: 67 bare ids are `<use>` aliases onto
+  `--filled`, so `eye` and `eye--filled` are the same drawing (`sprite-weight-toggle.test.ts`).
   `pnpm lint:icons` (`scripts/check-icons.mjs`) fails on an inline `<svg>` or an icon package; its
   `ALLOWED` list is the only place a non-icon mark may be drawn — third-party trademarks (Google /
   Apple sign-in, store badges, Messenger), Get App's phone, the splash, a chart, a progress ring.

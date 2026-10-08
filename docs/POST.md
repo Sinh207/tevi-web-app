@@ -412,10 +412,10 @@ the **post**, not an id. A visit that opens neither costs one store subscription
 - **The draft is component state and is reset on close.** Closing is refused while a publish is
   pending.
 - One picker for both kinds. A video wins, and the button is hidden once a clip is attached (iOS).
-- **One popup.** Audience, *Who can reply*, post settings, collections and the preview are screens
-  **inside** the composer — the header's control becomes a back arrow to the draft, and the action
-  bar shows on the draft only. The draft is parent state, so it survives the trip. The trimmer is the
-  one popup over it.
+- **One popup** over the sheet for audience, *Who can reply*, post settings, collections and the
+  preview — five screens of a single `ResponsiveDialog`, every one dismissed by a back arrow — plus
+  the trimmer. `post-composer-dialogs.tsx` explains why it is a popup rather than screens inside the
+  sheet, and why one rather than five.
 - **The trimmer** is `shared/components/video-trimmer`, dynamically imported because it brings a
   24 MB ffmpeg WASM build. It is hidden below `md` as **a proxy for capability**, not for layout. A
   trim is a stream copy, so it keeps the codec, the poster and the dimensions.

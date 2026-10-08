@@ -5,7 +5,13 @@ import {
     WEBVIEW_HEADERS,
     WEBVIEW_THEME_COOKIE,
 } from '@shared/config/webview'
-import { COOKIE_NAME as LOCALE_COOKIE } from '@shared/i18n/settings'
+import {
+    COOKIE_NAME as LOCALE_COOKIE,
+    parseUrlLocale,
+    URL_LOCALE_HEADER,
+    URL_LOCALE_PARAM,
+} from '@shared/i18n/settings'
+import { cookieDomainFor } from '@shared/lib/cookies'
 import { type NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -131,8 +137,24 @@ function addHomeScreenRewrite(url: {
     return `/add-home-screen/${match[1]}`
 }
 
-/** A year — the app re-sends the params on every open, so this is only a fallback. */
-const WEBVIEW_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+/**
+ * A year — what the language switcher gives the locale cookie too. For the webview the app re-sends
+ * the params on every open, so there it is only a fallback.
+ */
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+
+/**
+ * The locale cookie as **every** writer sets it — the domain especially, which has to match the
+ * switcher's (`cookieDomainFor` says why two spellings of one cookie is a bug).
+ */
+function setLocaleCookie(request: NextRequest, response: NextResponse, locale: string) {
+    response.cookies.set(LOCALE_COOKIE, locale, {
+        path: '/',
+        maxAge: COOKIE_MAX_AGE,
+        sameSite: 'lax',
+        domain: cookieDomainFor(request.nextUrl.hostname),
+    })
+}
 
 const CSP_HEADER = 'content-security-policy'
 /** The Trusted Types trial — see `CSP_REPORT_ONLY`. Reports, never blocks. */
@@ -182,6 +204,26 @@ function withPolicies<T extends NextResponse>(response: T, csp: string | null): 
     return response
 }
 
+/**
+ * Paths no search engine should keep, said in a **header** as well as in the page.
+ *
+ * Each of these already carries `noindex` in its metadata. The header is not a second opinion; it
+ * covers what metadata cannot reach — a not-found render, the bare `/app` that has no page, a
+ * response a crawler reads without parsing the HTML — and it is the half that survives a page
+ * forgetting its `robots` field.
+ *
+ * ⚠ **None of them may be in `robots.ts`'s `disallow`.** That was the setup before, and it inverts
+ * the intent: a disallowed URL is never fetched, so neither this header nor the meta tag is ever
+ * read, and a URL that is linked from elsewhere gets indexed *bare* ("Indexed, though blocked by
+ * robots.txt"). `/@ada?startapp&addToHomeScreen` is exactly that kind — it is shared.
+ */
+const NOINDEX_PATH = /^\/(?:app|my-space|login|signup|add-home-screen)(?:\/|$)/
+
+function withRobots<T extends NextResponse>(response: T, pathname: string): T {
+    if (NOINDEX_PATH.test(pathname)) response.headers.set('x-robots-tag', 'noindex')
+    return response
+}
+
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
 
@@ -190,10 +232,13 @@ export function proxy(request: NextRequest) {
     // context on a normal page.
     const headers = new Headers(request.headers)
     for (const header of Object.values(WEBVIEW_HEADERS)) headers.delete(header)
+    headers.delete(URL_LOCALE_HEADER)
 
     const csp = withCsp(request, headers)
 
-    if (isWebviewPath(pathname)) return withWebviewContext(request, headers, csp)
+    if (isWebviewPath(pathname)) {
+        return withRobots(withWebviewContext(request, headers, csp), pathname)
+    }
 
     // Dev-only tooling (/dev/icons and friends). The pages call notFound()
     // themselves, but that leaves the response at 200 on a dynamic route, so
@@ -210,19 +255,46 @@ export function proxy(request: NextRequest) {
         const url = request.nextUrl.clone()
         url.pathname = to(request.nextUrl.searchParams)
         if (!keepSearch) url.search = ''
-        return NextResponse.redirect(url)
+        // 308, not `redirect()`'s default 307: these addresses moved for good, and a temporary
+        // redirect tells a crawler to keep the old URL indexed and come back to it.
+        return NextResponse.redirect(url, 308)
     }
 
+    const urlLocale = readUrlLocale(request, headers)
+
     const rewrite = addHomeScreenRewrite(request.nextUrl)
+    let response: NextResponse
     if (rewrite) {
         const url = request.nextUrl.clone()
         url.pathname = rewrite
         // The query rides along untouched: it is what got us here, and the screen is reached at
         // its own address too (`/add-home-screen/@ada`), where there is none.
-        return withPolicies(NextResponse.rewrite(url, { request: { headers } }), csp)
+        response = NextResponse.rewrite(url, { request: { headers } })
+    } else {
+        response = NextResponse.next({ request: { headers } })
     }
 
-    return withPolicies(NextResponse.next({ request: { headers } }), csp)
+    withPolicies(response, csp)
+    // The rendered route decides, not the address: the rewrite keeps the space's own URL.
+    withRobots(response, rewrite ?? pathname)
+    if (urlLocale) setLocaleCookie(request, response, urlLocale)
+    return response
+}
+
+/**
+ * `?lang=` on the website: lifted into a request header the root layout reads, so the URL decides
+ * the language of **this** render whatever the cookie says — which is the whole contract `hreflang`
+ * relies on (`URL_LOCALE_PARAM` has the reasoning).
+ *
+ * Also written to the locale cookie, the way the webview's own `?lang=` is: the links a reader
+ * follows from here do not carry the parameter, and a search result in Vietnamese that drops them
+ * back into English on the next tap would be the worse half of this feature. A crawler keeps no
+ * cookies, so this changes nothing for it.
+ */
+function readUrlLocale(request: NextRequest, headers: Headers) {
+    const locale = parseUrlLocale(request.nextUrl.searchParams.get(URL_LOCALE_PARAM))
+    if (locale) headers.set(URL_LOCALE_HEADER, locale)
+    return locale
 }
 
 /**
@@ -249,9 +321,14 @@ function withWebviewContext(request: NextRequest, headers: Headers, csp: string 
     if (context.version) headers.set(WEBVIEW_HEADERS.version, context.version)
 
     const response = withPolicies(NextResponse.next({ request: { headers } }), csp)
-    const options = { path: '/', maxAge: WEBVIEW_COOKIE_MAX_AGE, sameSite: 'lax' } as const
-    if (context.locale) response.cookies.set(LOCALE_COOKIE, context.locale, options)
-    if (context.theme) response.cookies.set(WEBVIEW_THEME_COOKIE, context.theme, options)
+    if (context.locale) setLocaleCookie(request, response, context.locale)
+    if (context.theme) {
+        response.cookies.set(WEBVIEW_THEME_COOKIE, context.theme, {
+            path: '/',
+            maxAge: COOKIE_MAX_AGE,
+            sameSite: 'lax',
+        })
+    }
     return response
 }
 

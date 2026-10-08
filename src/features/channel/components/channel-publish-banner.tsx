@@ -80,17 +80,14 @@ export function ChannelPublishBanner({ channel }: { channel: Channel }) {
              */}
             <Banner tone="warning" className={cn('flex-none', RISE)}>
                 {/*
-                 * **A padlock, and it is the nearest honest glyph rather than the right one.**
-                 * Legacy fills this tile with a hand-drawn person-behind-a-padlock SVG; the DS
-                 * sprite has no such glyph and no `eye-slash` either, and this repo does not
-                 * hand-draw paths (`shared/ui/icon.tsx`). `lock-simple` is what every other
-                 * surface in the app already uses for this state — the padlock beside the
-                 * channel name, the visitor's wall, the `/settings/space-visibility` tile — so
-                 * it is at least the *same* glyph everywhere the state appears. Worth a design
-                 * pass, same as the note in `lib/space-visibility.ts`.
+                 * **A person behind a padlock** — legacy's own tile art for this banner, and the
+                 * library's `user-lock` draws it (rendered side by side). It was `lock-simple`
+                 * until the 2026-10-08 library import; the `/settings/space-visibility` tile moved
+                 * with it. The padlock beside the channel name stays a plain lock, which is what
+                 * legacy draws there (`LockRounded`).
                  */}
                 <BannerTile>
-                    <Icon name="lock-simple" weight="filled" size={24} />
+                    <Icon name="user-lock" weight="filled" size={24} />
                 </BannerTile>
                 <BannerText>
                     <BannerTitle>{t('channel_state_unpublished_title')}</BannerTitle>
