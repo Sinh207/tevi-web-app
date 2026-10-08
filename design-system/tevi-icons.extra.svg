@@ -15,77 +15,21 @@
     - Delete the entry the moment Figma ships the glyph — `icon-names.test.ts` fails on any id
       that exists in both files, so a duplicate cannot sit here unnoticed.
 
-  envelope — the two email steps of `/settings/two-step-verification` draw one, and so does the
-  recovery step of the withdrawal passcode dialog. Verified against the comps: Figma
-  `Two-step verification` node `1070:94156` is a rounded open-flap envelope, which is this glyph.
-  The Tevi library ships no envelope, no `mail` and no `letter` — three screens had been standing in
-  `send` ("a code was sent"), which says the wrong half of the sentence: the step is about *where to
-  go and look*, not about the sending.
-  Filled only, aliased the way the sprite's own 65 bare ids are, because that is the weight the
-  56px step marks draw.
-
-  microphone-slash — the seat tiles in the Live studio show whether a co-host's microphone is open,
-  and that is a two-state indicator one glyph cannot express. The Tevi library ships `microphone`
-  (regular + filled, bare aliased onto regular) and no counterpart. Upstream name matches, so no
-  rename was needed — unlike `heart-slash` above.
-  Provenance checked the way that entry describes: the library's `microphone--filled` is upstream's
-  `microphone` filled, same coordinates (12 1.25 / 4.75 / 7.25 6, then 5.75 12 / 19.7142), with
-  Figma's absolute re-serialisation against the npm build's relative one.
-  Both weights and the bare alias, matching the partner glyph exactly.
-
   face-smile — the Live studio's chat composer has an emoji button, and a face is the only thing
   that says "emoji". The Tevi library ships no smiley of any kind: no `face`, no `smile`, no
-  `emoji`, no `mood` (checked against all 557 glyphs). Upstream name matches, so no rename.
+  `emoji`, no `mood` (checked against all 4626 glyphs of the 2026-10-08 export). Upstream name matches, so no rename.
   ⚠ Note what this button opens: **not** a full picker. `emoji-picker-react`, which legacy mounts,
   is 40MB unpacked, so `EmojiRow` draws a curated grid of native characters instead — the glyph is
   the affordance, the dependency is not worth it. That divergence is argued at the component.
   Both weights and the bare alias, matching how the library ships its other two-state glyphs.
 
-  eye-slash — the reveal toggle in `features/auth/components/auth-fields.tsx` needs two
-  states. The library drew `eye` (filled only) and no counterpart, and in the sprite the
-  bare `eye` is an alias onto `eye--filled`, so a weight toggle drew the same glyph twice.
-  Verified against `bell-slash` / `comment-slash`: same 45° corner-to-corner bar, same
-  0.75-radius caps, same knockout gap.
-  heart-slash — the space menu's Follow / Unfollow row (`channel-viewer-menu.tsx`) is a two-state
-  toggle and the library draws only the positive half. Its neighbour in the same popup is
-  `bell` / `bell-slash`, so the row reads wrong without the matching pair.
-  Upstream name is **`heart-simple-slash`**, renamed here to `heart-slash` because the Figma library
-  ships upstream's `heart-simple` as plain `heart` — same drawing, verified by the coordinates the
-  two share (1.25 / 9.474 / 6.643 / 7.224 in `regular`, 1.5 / 9.474 / 7.893 in `filled`); Figma
-  re-serialises absolute where the npm build is relative, which is why a byte comparison fails and a
-  numeric one does not. Keeping upstream's longer name would have left the sprite with `heart` and
-  `heart-simple-slash` as a pair, which reads as two different families.
-  Regular **and** filled, matching the weights `heart` itself carries, with the bare id aliased onto
-  `--regular` — which is what the library's own `heart` does (`bell-slash` and `comment-slash` alias
-  onto `--filled`, so the alias target is per-glyph and copied from the partner, not assumed).
-
-  user — the Space detail row of a conversation's menu (`conversation-row-menu.tsx`). Legacy draws
-  an outline head-and-shoulders there (`menuItemSpaceDetail`); the library's only single-person
-  glyph is `user-simple-alt`, which is filled only and a different silhouette. Both weights, bare
-  aliased to regular, which is the outline legacy draws.
-
-  paperclip — the conversation composer's attach button (`message-composer.tsx`), which opens the
-  photo sheet. Legacy draws MUI's `Attachment` there, a paperclip; the library has no paperclip,
-  no attach and no clip glyph, and `image` would say "a photo" where the control says "attach".
-  Regular only — the one weight the button draws — with the bare id aliased onto it.
+  Retired, because the Figma library now ships them (2026-10-08 re-export): envelope, eye-slash,
+  heart-slash, microphone-slash, user, paperclip. Each was compared rendered against the Figma
+  drawing before it was dropped, and the bare-id alias each one had here (`envelope` and
+  `eye-slash` onto `--filled`) is carried by `scripts/import-figma-icons.mjs`.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none">
-<symbol id="envelope" viewBox="0 0 24 24" fill="none"><use href="#envelope--filled"></use></symbol>
-<symbol id="envelope--filled" viewBox="0 0 24 24" fill="none"><path d="M6.268 3h11.464c.813 0 1.469 0 2 .043.546.045 1.026.14 1.47.366a3.75 3.75 0 0 1 1.64 1.639q.138.275.219.573c.021.08.032.12.028.164a.3.3 0 0 1-.037.112c-.025.038-.06.065-.133.12l-9.438 7.166c-.748.568-.957.71-1.16.764a1.25 1.25 0 0 1-.643 0c-.204-.054-.413-.196-1.16-.764L1.08 6.02a.5.5 0 0 1-.133-.12.3.3 0 0 1-.038-.112.5.5 0 0 1 .029-.164q.08-.299.22-.575a3.75 3.75 0 0 1 1.639-1.64c.444-.226.924-.32 1.47-.365C4.8 3 5.456 3 6.269 3" fill="currentColor"></path><path d="M1.387 8.134c-.203-.154-.305-.23-.391-.23A.25.25 0 0 0 .803 8c-.053.068-.053.195-.053.45v7.032c0 .813 0 1.469.043 2 .045.546.14 1.026.366 1.47a3.75 3.75 0 0 0 1.639 1.64c.444.226.924.32 1.47.365.531.043 1.187.043 2 .043h11.464c.813 0 1.469 0 2-.043.546-.045 1.026-.14 1.47-.366a3.75 3.75 0 0 0 1.64-1.639c.226-.444.32-.924.365-1.47.043-.531.043-1.187.043-2V8.448c0-.254 0-.381-.053-.45a.25.25 0 0 0-.193-.095c-.086-.001-.188.076-.391.23l-8.331 6.326c-.588.447-1.049.797-1.577.938a2.75 2.75 0 0 1-1.412 0c-.528-.14-.989-.491-1.576-.938z" fill="currentColor"></path></symbol>
-<symbol id="eye-slash" viewBox="0 0 24 24" fill="none"><use href="#eye-slash--filled"></use></symbol>
-<symbol id="eye-slash--filled" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.47 1.47a.75.75 0 0 1 1.06 0l3.935 3.934.005.005L18.59 17.53l.005.004 3.934 3.935a.75.75 0 1 1-1.06 1.06l-3.502-3.501c-5.589 3.55-13.839 1.604-16.51-5.836a3.53 3.53 0 0 1 0-2.386c.74-2.06 1.915-3.71 3.353-4.935L1.47 2.53a.75.75 0 0 1 0-1.06M7.75 12c0-.904.281-1.74.76-2.429l1.088 1.087A2.74 2.74 0 0 0 9.25 12 2.747 2.747 0 0 0 12 14.75c.488 0 .945-.126 1.342-.348l1.087 1.088c-.688.479-1.525.76-2.429.76-2.35 0-4.25-1.9-4.25-4.25M22.543 10.807c-2.324-6.47-8.877-8.788-14.215-6.943a.75.75 0 0 0-.285 1.24l11.529 11.528a.75.75 0 0 0 1.119-.066c.76-.964 1.39-2.09 1.852-3.373a3.53 3.53 0 0 0 0-2.386m-6.3 1.436q.007-.12.007-.243a4.246 4.246 0 0 0-4.493-4.243z" fill="currentColor"></path></symbol>
-<symbol id="heart-slash" viewBox="0 0 24 24" fill="none"><use href="#heart-slash--regular"></use></symbol>
-<symbol id="heart-slash--regular" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.53 1.47a.75.75 0 0 0-1.06 1.06L3.21 4.272C1.954 5.618 1.25 7.49 1.25 9.474c0 3.827 2.31 6.896 4.688 9.02s4.966 3.431 5.825 3.718a.75.75 0 0 0 .474 0c.817-.273 3.206-1.472 5.49-3.425l3.743 3.743a.75.75 0 1 0 1.06-1.06l-4.24-4.24-.005-.006L4.822 3.761l-.012-.012zm1.743 3.864c-.954 1.043-1.523 2.52-1.523 4.14 0 3.2 1.94 5.893 4.187 7.901 2.027 1.81 4.189 2.959 5.063 3.323.818-.34 2.76-1.366 4.662-2.975z" fill="currentColor"></path><path d="M7.163 3.8q.353-.05.73-.05c1.713 0 2.847.92 3.534 1.734a.75.75 0 0 0 1.146 0c.687-.814 1.821-1.734 3.534-1.734 3.02 0 5.143 2.564 5.143 5.724 0 2.164-.884 4.094-2.162 5.749a.75.75 0 1 0 1.187.917c1.413-1.83 2.475-4.075 2.475-6.666 0-3.788-2.608-7.224-6.643-7.224-1.867 0-3.213.82-4.107 1.66-.894-.84-2.24-1.66-4.107-1.66q-.48 0-.94.065a.75.75 0 1 0 .21 1.486" fill="currentColor"></path></symbol>
-<symbol id="heart-slash--filled" viewBox="0 0 24 24" fill="none"><path d="M2.53 1.47a.75.75 0 0 0-1.06 1.06L3.388 4.45C2.182 5.744 1.5 7.55 1.5 9.474c0 3.722 2.249 6.729 4.604 8.833 2.357 2.105 4.915 3.393 5.738 3.667a.5.5 0 0 0 .316 0c.782-.26 3.134-1.437 5.391-3.364l3.92 3.92a.75.75 0 1 0 1.061-1.06zM6.988 2.563q.441-.063.905-.063c1.908 0 3.249.893 4.107 1.76.858-.867 2.199-1.76 4.107-1.76 3.866 0 6.393 3.29 6.393 6.974 0 2.52-1.032 4.713-2.423 6.513a.5.5 0 0 1-.75.048L6.705 3.41a.5.5 0 0 1 .284-.848" fill="currentColor"></path></symbol>
-<symbol id="microphone-slash" viewBox="0 0 24 24" fill="none"><use href="#microphone-slash--regular"></use></symbol>
-<symbol id="microphone-slash--regular" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.53 1.47a.75.75 0 0 0-1.06 1.06l5.78 5.78V12a4.75 4.75 0 0 0 7.537 3.847l1.07 1.071a6.22 6.22 0 0 1-3.851 1.332h-.012A6.25 6.25 0 0 1 5.75 12a.75.75 0 0 0-1.5 0 7.75 7.75 0 0 0 7 7.714v1.536H8a.75.75 0 0 0 0 1.5h8a.75.75 0 0 0 0-1.5h-3.25v-1.536a7.7 7.7 0 0 0 4.174-1.73l4.546 4.546a.75.75 0 1 0 1.06-1.06zm11.176 13.297L8.75 9.81V12a3.25 3.25 0 0 0 4.956 2.767" fill="currentColor"></path> <path d="M12 1.25a4.75 4.75 0 0 0-4.33 2.794.75.75 0 0 0 1.367.619A3.25 3.25 0 0 1 15.25 6v6a.75.75 0 0 0 1.5 0V6A4.75 4.75 0 0 0 12 1.25M19.75 12a.75.75 0 0 0-1.5 0c0 .798-.15 1.559-.42 2.258a.75.75 0 0 0 1.399.542c.337-.87.521-1.814.521-2.8" fill="currentColor"></path></symbol>
-<symbol id="microphone-slash--filled" viewBox="0 0 24 24" fill="none"><path d="M2.53 1.47a.75.75 0 0 0-1.06 1.06l5.78 5.78V12a4.75 4.75 0 0 0 7.537 3.847l1.07 1.071a6.22 6.22 0 0 1-3.851 1.332h-.012A6.25 6.25 0 0 1 5.75 12a.75.75 0 0 0-1.5 0 7.75 7.75 0 0 0 7 7.714v1.536H8a.75.75 0 0 0 0 1.5h8a.75.75 0 0 0 0-1.5h-3.25v-1.536a7.7 7.7 0 0 0 4.174-1.73l4.546 4.546a.75.75 0 1 0 1.06-1.06l-5.05-5.05v-.001zM7.67 4.044A4.75 4.75 0 0 1 16.75 6v6a.75.75 0 0 1-1.28.53L7.823 4.884a.75.75 0 0 1-.153-.84M19.75 12a.75.75 0 0 0-1.5 0c0 .798-.15 1.559-.42 2.258a.75.75 0 0 0 1.399.542c.337-.87.521-1.814.521-2.8" fill="currentColor"></path></symbol>
 <symbol id="face-smile" viewBox="0 0 24 24" fill="none"><use href="#face-smile--regular"></use></symbol>
 <symbol id="face-smile--regular" viewBox="0 0 24 24" fill="none"><path d="M8.6 14.55a.75.75 0 1 0-1.2.9 5.74 5.74 0 0 0 4.6 2.3 5.74 5.74 0 0 0 4.6-2.3.75.75 0 1 0-1.2-.9 4.24 4.24 0 0 1-3.4 1.7 4.24 4.24 0 0 1-3.4-1.7M9 11.25c.575 0 .894-.447 1.024-.707.153-.306.226-.676.226-1.043s-.073-.737-.226-1.043c-.13-.26-.449-.707-1.024-.707s-.894.447-1.024.707A2.4 2.4 0 0 0 7.75 9.5c0 .367.073.737.226 1.043.13.26.449.707 1.024.707M15 11.25c.575 0 .894-.447 1.024-.707.153-.306.226-.676.226-1.043s-.073-.737-.226-1.043c-.13-.26-.449-.707-1.024-.707s-.894.447-1.024.707A2.4 2.4 0 0 0 13.75 9.5c0 .367.073.737.226 1.043.13.26.449.707 1.024.707" fill="currentColor"></path> <path fill-rule="evenodd" clip-rule="evenodd" d="M12 .25C5.51.25.25 5.51.25 12S5.51 23.75 12 23.75 23.75 18.49 23.75 12 18.49.25 12 .25M1.75 12C1.75 6.34 6.34 1.75 12 1.75S22.25 6.34 22.25 12 17.66 22.25 12 22.25 1.75 17.66 1.75 12" fill="currentColor"></path></symbol>
 <symbol id="face-smile--filled" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M.25 12C.25 5.51 5.51.25 12 .25S23.75 5.51 23.75 12 18.49 23.75 12 23.75.25 18.49.25 12M9 11.25c.575 0 .894-.447 1.024-.707.153-.306.226-.676.226-1.043s-.073-.737-.226-1.043c-.13-.26-.449-.707-1.024-.707s-.894.447-1.024.707A2.4 2.4 0 0 0 7.75 9.5c0 .367.073.737.226 1.043.13.26.449.707 1.024.707M7.55 14.4a.75.75 0 0 1 1.05.15 4.24 4.24 0 0 0 3.4 1.7c1.39 0 2.624-.667 3.4-1.7a.75.75 0 1 1 1.2.9 5.74 5.74 0 0 1-4.6 2.3 5.74 5.74 0 0 1-4.6-2.3.75.75 0 0 1 .15-1.05m8.474-3.857c-.13.26-.449.707-1.024.707s-.894-.447-1.024-.707A2.4 2.4 0 0 1 13.75 9.5c0-.367.073-.737.226-1.043.13-.26.449-.707 1.024-.707s.894.447 1.024.707c.153.306.226.676.226 1.043s-.073.737-.226 1.043" fill="currentColor"></path></symbol>
-<symbol id="user" viewBox="0 0 24 24" fill="none"><use href="#user--regular"></use></symbol>
-<symbol id="user--regular" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25a5.25 5.25 0 1 0 0 10.5 5.25 5.25 0 0 0 0-10.5M8.25 7.5a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0" fill="currentColor"></path><path d="M4.742 21.106C5.176 18.073 8.265 15.75 12 15.75s6.824 2.323 7.258 5.356a.75.75 0 0 0 1.484-.212c-.566-3.967-4.475-6.644-8.742-6.644-4.266 0-8.176 2.677-8.742 6.644a.75.75 0 0 0 1.484.212" fill="currentColor"></path></symbol>
-<symbol id="user--filled" viewBox="0 0 24 24" fill="none"><path d="M12 2.25a5.25 5.25 0 1 0 0 10.5 5.25 5.25 0 0 0 0-10.5M12 14.25c-4.265 0-8.176 2.677-8.742 6.644A.75.75 0 0 0 4 21.75h16a.75.75 0 0 0 .742-.856c-.566-3.967-4.475-6.644-8.741-6.644" fill="currentColor"></path><path d="M12 14.25c-4.265 0-8.176 2.677-8.742 6.644A.75.75 0 0 0 4 21.75h16a.75.75 0 0 0 .742-.856c-.566-3.967-4.475-6.644-8.741-6.644" fill="currentColor"></path><path d="M12 2.25a5.25 5.25 0 1 0 0 10.5 5.25 5.25 0 0 0 0-10.5" fill="currentColor"></path></symbol>
-<symbol id="paperclip" viewBox="0 0 24 24" fill="none"><use href="#paperclip--regular"></use></symbol>
-<symbol id="paperclip--regular" viewBox="0 0 24 24" fill="none"><path d="M18.87 3.678a3.275 3.275 0 0 0-4.569 0l-9.03 8.867a5.03 5.03 0 0 0 0 7.206c2.035 1.998 5.34 1.999 7.376.002l.001-.002 7.823-7.783a.75.75 0 0 1 1.058 1.064l-7.83 7.79c-2.619 2.571-6.86 2.571-9.479 0a6.53 6.53 0 0 1 0-9.347l9.03-8.867a4.775 4.775 0 0 1 6.67 0 4.6 4.6 0 0 1 0 6.587l-8.629 8.473a2.76 2.76 0 0 1-3.86 0 2.676 2.676 0 0 1 0-3.829l7.425-7.29a.75.75 0 0 1 1.05 1.07l-7.424 7.29a1.176 1.176 0 0 0 0 1.689 1.26 1.26 0 0 0 1.758 0l8.63-8.473a3.1 3.1 0 0 0 0-4.447" fill="currentColor"></path></symbol>
 </svg>

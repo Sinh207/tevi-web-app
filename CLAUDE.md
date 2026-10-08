@@ -737,7 +737,7 @@ Full pipeline + runbook: [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md).
   from **upstream Zappicon v1.2.0**, the set the Figma library was itself built from, into
   `design-system/tevi-icons.extra.svg`. That overlay is merged by `pnpm icons` and survives a
   Figma re-export; read its header first. Also check the glyph actually *has* the weight you are
-  toggling: 65 bare ids are `<use>` aliases onto `--filled`, so `eye` and `eye--filled` are the
+  toggling: 67 bare ids are `<use>` aliases onto `--filled`, so `eye` and `eye--filled` are the
   same drawing and a weight toggle on one is a no-op (`sprite-weight-toggle.test.ts` guards it).
   Browse at `/dev/icons` (dev-only).
 - Brand: `<Logo size={48} />` from `@shared/ui/logo`. There is **no wordmark** in the DS — the

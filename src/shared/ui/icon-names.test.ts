@@ -73,9 +73,19 @@ describe('tevi icon sprite', () => {
         expect(missing).toEqual([])
     })
 
-    it('keeps the 554 glyphs the design system documents, plus the overlay', () => {
+    it('keeps the 4626 glyphs of the Figma library, plus the overlay', () => {
+        // The 2026-10-08 export (scripts/import-figma-icons.mjs) — the whole `↳ Icons` page, where
+        // the first export carried 554. A truncated sprite fails here before it fails on a screen.
         const overlayNames = extraIds.filter(id => !id.includes('--'))
-        expect(unionMembers('TeviIconName')).toHaveLength(554 + overlayNames.length)
+        expect(unionMembers('TeviIconName')).toHaveLength(4626 + overlayNames.length)
+    })
+
+    it('carries eye-slash, which the password reveal toggle needs', () => {
+        // Two states, two glyphs. `eye`'s bare id is an alias onto `eye--filled`, so a weight
+        // toggle draws it twice. The overlay supplied `eye-slash` until Figma shipped it, and the
+        // import keeps its alias on `--filled` so the pair still matches.
+        expect(symbolIds).toContain('eye-slash--filled')
+        expect(figma).toContain('<symbol id="eye-slash" viewBox="0 0 24 24" fill="none"><use href="#eye-slash--filled">')
     })
 })
 
@@ -96,12 +106,5 @@ describe('upstream glyph overlay', () => {
         const have = new Set([...figmaIds, ...extraIds])
         const refs = [...extra.matchAll(/<use[^>]+href="#([^"]+)"/g)].map(m => m[1])
         expect(refs.filter(id => !have.has(id))).toEqual([])
-    })
-
-    it('still carries eye-slash, which the password reveal toggle needs', () => {
-        // Two states, two glyphs. `eye` alone cannot express them: it is filled-only and its
-        // bare id is an alias onto `eye--filled`, so a weight toggle draws it twice.
-        expect(extraIds).toContain('eye-slash')
-        expect(extraIds).toContain('eye-slash--filled')
     })
 })

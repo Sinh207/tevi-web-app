@@ -9,7 +9,7 @@ import type {
 import { SPRITE_URL } from './sprite'
 
 /**
- * Icon — the Tevi design system sprite (554 glyphs, Zappicon).
+ * Icon — the Tevi design system sprite (4627 glyphs, Zappicon).
  *
  * Glyphs paint with `currentColor`, so set the colour on the element:
  *   <Icon name="angle-left" size={20} className="text-icon-secondary" />
@@ -26,7 +26,7 @@ import { SPRITE_URL } from './sprite'
  * See `scripts/build-icon-sprite.mjs`; the Tab Bar sets both.
  *
  * `SPRITE_URL` points at the content-hashed subset built by
- * `scripts/build-icon-sprite.mjs`, not the 1.6 MB design-system sprite. The
+ * `scripts/build-icon-sprite.mjs`, not the 60 MB design-system sprite. The
  * script finds glyphs by scanning source, so a `name` assembled at runtime from
  * string fragments will not be bundled — add it to that script's KEEP list.
  */

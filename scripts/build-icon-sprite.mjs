@@ -1,7 +1,7 @@
 /**
  * Builds the shipped icon sprite from `design-system/tevi-icons.svg`.
  *
- * The full design-system sprite is 1.6 MB (370 KB gzipped) across 1579 symbols.
+ * The full design-system sprite is 60 MB (9 MB gzipped) across 27 702 symbols.
  * A screen uses ~20 glyphs, so shipping all of them costs ~7.7s before any icon
  * paints on a 400kbps connection. This script keeps only the glyphs the source
  * actually references and writes them to a content-hashed file, which
@@ -57,7 +57,7 @@ const OUT_DIR = 'public'
 
 /**
  * Files that name glyphs without using them. `icon-names.ts` alone lists all
- * 554 as string literals, so leaving it in makes pass 2 select the whole sprite.
+ * 4627 as string literals, so leaving it in makes pass 2 select the whole sprite.
  */
 const EXCLUDE = [/[\\/]icon-names\.ts$/, /[\\/]sprite\.ts$/, /\.test\.tsx?$/]
 
@@ -81,7 +81,7 @@ function sourceFiles(dir) {
  *   --tevi-icon-detail   fill of the detail paths      (default currentColor)
  *
  * The Tab Bar is what needs them: Figma takes the tint to full strength there and repaints
- * the detail White as a knockout (see `shared/ui/tab-bar.tsx`). Only 9 of the 1579 symbols
+ * the detail White as a knockout (see `shared/ui/tab-bar.tsx`). Outside the two duotone weights, only a handful of the 27 702 symbols
  * carry an opacity at all, so this touches almost nothing.
  *
  * `style` rather than a presentation attribute because inline styles unambiguously accept

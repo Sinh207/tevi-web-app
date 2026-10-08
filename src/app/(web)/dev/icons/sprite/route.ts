@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 /**
- * Serves the full 1.6 MB design-system sprite to the dev gallery only.
+ * Serves the full 60 MB design-system sprite to the dev gallery only.
  *
  * It deliberately does not live in `public/` — shipping it would put the whole
  * icon set in the deployment for the sake of one dev page, and the app itself
