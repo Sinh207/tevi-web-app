@@ -67,7 +67,6 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
         isLoading,
         isError,
         isEmpty,
-        isSignedOut,
         refetch,
         fetchNextPage,
         hasNextPage,
@@ -170,12 +169,11 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
      * as a mistake, as legacy's `matchUpSm` gate also says.
      */
     const whatsNew = <WhatsNewBar testId="home-composer" className="md:rounded-t-xl" />
-    if (isSignedOut) return withWhatsNew(whatsNew, <HomeEmptyState kind="signed-out" />)
     if (isLoading) return withWhatsNew(whatsNew, <FeedSkeleton className="md:pt-0" />)
     if (isError) {
-        return withWhatsNew(whatsNew, <HomeEmptyState kind="error" onRetry={() => refetch()} />)
+        return withEmptyPanel(whatsNew, <HomeEmptyState kind="error" onRetry={() => refetch()} />)
     }
-    if (isEmpty) return withWhatsNew(whatsNew, <HomeEmptyState kind="empty" />)
+    if (isEmpty) return withEmptyPanel(whatsNew, <HomeEmptyState kind="empty" />)
 
     return (
         <div data-testid={testId} className={FEED_LIST}>
@@ -250,7 +248,29 @@ export function HomePostFeed({ testId = 'home-feed' }: { testId?: string }) {
  */
 const FEED_LIST = 'flex min-w-0 flex-col gap-px md:py-6'
 
-/** The bar above one of the feed's non-list states, a hairline apart — the list draws its own. */
+/**
+ * The bar above a feed with **nothing to list** — empty, signed out, failed — as one surface.
+ *
+ * The state sits in a white panel under the bar, one hairline below it — the same 1px of page colour
+ * that separates every row of this feed — so the screen reads as one card rather than a white bar
+ * over a state floating on the page colour (which is how it first shipped: the state sat under the
+ * bar, flush to it, on grey). The panel takes the rest of
+ * the column (`flex-1`, through `HomeView`'s stretched panel — never a viewport `min-height`, which
+ * `(main)/layout.tsx` explains) and centres the state in it, as legacy's `NoPost` sits in the middle
+ * of its screen. From `md` its bottom corners round to meet the bar's top ones: one 16px card.
+ */
+function withEmptyPanel(bar: React.ReactNode, state: React.ReactNode) {
+    return (
+        <div className="flex min-w-0 flex-1 flex-col gap-px md:py-6">
+            {bar}
+            <div className="flex flex-1 flex-col items-center justify-center bg-(--background-surface) md:rounded-b-xl">
+                {state}
+            </div>
+        </div>
+    )
+}
+
+/** The bar above the loading skeleton, a hairline apart — the list draws its own. */
 function withWhatsNew(bar: React.ReactNode, state: React.ReactNode) {
     return (
         <div className={cn(FEED_LIST, 'md:pb-0')}>

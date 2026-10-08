@@ -89,6 +89,13 @@ export function HomeView({ testId = 'home' }: { testId?: string }) {
              * publishes where its edge is. Unset from `md`, where there is no bar: `0px`.
              */
             stickyOffset="var(--top-bar-inset, 0px)"
+            /*
+             * Both stretch, so a feed with nothing to list can fill the column and centre its empty
+             * state in it (`HomePostFeed`'s `withWhatsNew`) instead of stopping under the bar. The
+             * chain starts at `page.tsx`'s `<main flex-1>`.
+             */
+            className="flex-1"
+            panelClassName="flex flex-1 flex-col"
             barClassName="hidden sm:block sm:bg-(--background-surface) md:bg-(--background) md:py-2 transition-[top] duration-240 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
             tabs={[
                 {

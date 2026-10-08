@@ -45,7 +45,7 @@ import { groupPosts, type PostGroup, reuseGroups, visibleCount } from '../lib/po
 const MIN_CARDS = 4
 
 export function useHomeFeed() {
-    const { activeId, isAuthenticated } = useAuth()
+    const { activeId } = useAuth()
 
     /**
      * Groups the reader has opened with *See more*, by `groupKey` — **not** by index.
@@ -70,12 +70,18 @@ export function useHomeFeed() {
          */
         getNextPageParam: last => nextPageParam(last.next),
         /*
-         * The feed is "spaces you follow", so a guest has no feed to fetch — not an empty one. The
-         * view shows them the signed-out state instead, and no request goes out. Every visitor
-         * carries an anonymous session, so without this gate the app would ask for a follow list on
-         * behalf of an account that cannot have one.
+         * ⚠ **Every session asks — the anonymous one included.** Legacy's `useTabPosts` fetches
+         * `followed-channels/threads/` with whatever bearer the visitor carries and draws what comes
+         * back, so a guest on home sees posts whenever the backend has some for that session. This
+         * used to be `enabled: isAuthenticated` on the reasoning that an anonymous account "cannot
+         * have" a feed, which made the decision for the backend and showed every guest a sign-in
+         * prompt in place of a feed legacy shows them. What a guest's feed holds is the API's answer
+         * (B-question territory), not this client's assumption.
+         *
+         * The one wait is for a session to exist at all: bootstrap mints the anonymous one, and
+         * until then there is no `activeId` to scope the request — or its cache entry — to.
          */
-        enabled: isAuthenticated,
+        enabled: activeId !== null,
     })
 
     /* The last answer, so an unchanged group keeps its identity — `reuseGroups` says why. */
@@ -118,7 +124,8 @@ export function useHomeFeed() {
         expanded,
         toggleGroup,
         hideChannel,
-        isLoading: query.isLoading,
+        // No session yet is still loading: bootstrap is about to mint one and this query will run.
+        isLoading: activeId === null || query.isLoading,
         isError: query.isError,
         refetch: query.refetch,
         fetchNextPage: query.fetchNextPage,
@@ -137,8 +144,11 @@ export function useHomeFeed() {
          * `isLoading`: an empty state shown while a request is in flight tells the reader there is
          * nothing here when nobody knows that yet.
          */
-        isEmpty: !query.isLoading && !query.isError && groups.length === 0,
-        /** No account, so no follow list — a different state from an empty feed. */
-        isSignedOut: !isAuthenticated,
+        /*
+         * The same for a guest as for an account: legacy's `NoPost` ("Oops, your Home is a little
+         * lonely.", *Discover creators*) is what an anonymous visitor with nothing to read gets too —
+         * there is no separate signed-out state on this tab.
+         */
+        isEmpty: query.isSuccess && groups.length === 0,
     }
 }

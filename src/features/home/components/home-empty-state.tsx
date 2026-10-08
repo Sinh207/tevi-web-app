@@ -219,6 +219,14 @@ export function HomeEmptyState({
             <div className={RISE}>
                 {kind === 'no-lives' ? (
                     <StageArt />
+                ) : kind === 'empty' ? (
+                    /* Legacy's `NoPost` picture, at its size — decoration beside a title that says it. */
+                    <Image
+                        src={HOME_ART.lonely.src}
+                        alt=""
+                        width={HOME_ART.lonely.width}
+                        height={HOME_ART.lonely.height}
+                    />
                 ) : (
                     <span className="flex size-12 items-center justify-center rounded-full bg-(--background-segment) text-(--icon-secondary)">
                         <Icon name={icon} size={24} />

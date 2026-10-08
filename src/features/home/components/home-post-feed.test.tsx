@@ -26,7 +26,6 @@ vi.mock('../hooks/use-home-feed', () => ({
         isLoading: false,
         isError: false,
         isEmpty: false,
-        isSignedOut: false,
         refetch: () => {},
         fetchNextPage: () => {},
         hasNextPage: false,

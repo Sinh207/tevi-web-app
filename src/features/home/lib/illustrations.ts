@@ -10,4 +10,11 @@
  */
 export const HOME_ART = {
     noLives: { src: '/illustrations/no-live-events.png', width: 154, height: 183 },
+    /**
+     * The empty feed — legacy's `NoPost` (`IMAGES_STATIC.post.isolation`), drawn at its 93 × 117.
+     * The same committed file as `COLLECTION_ART.noPosts` (`collection/no-posts.svg`, 94 × 118
+     * native): one upstream vector, so one copy on disk; the path is repeated rather than imported
+     * for the reason given for `noLives` above.
+     */
+    lonely: { src: '/illustrations/collection/no-posts.svg', width: 93, height: 117 },
 } as const

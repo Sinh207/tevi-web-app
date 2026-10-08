@@ -9,8 +9,8 @@ import { groupKey, type PostGroup } from '../lib/post-groups'
  * The claims here are the ones the pure `post-groups` tests cannot make, because each is about the
  * hook's behaviour **over time or over pages** rather than about a fold:
  *
- * - a guest fires no request at all (the `enabled` gate — an anonymous session exists, so without
- *   it the app would ask for somebody's follow list on behalf of an account that has none)
+ * - a guest's **anonymous session asks too**, as legacy's `useTabPosts` does, and sees whatever the
+ *   backend returns; only the beat before any session exists sends nothing
  * - a run of posts that straddles a page boundary is **one** group (the fold is across all pages,
  *   not per page and concatenated)
  * - `needsMore` is expressed in *cards drawn* — the number legacy computes inconsistently with its
@@ -74,16 +74,42 @@ beforeEach(() => {
 })
 
 describe('useHomeFeed', () => {
-    it('fires no request for a guest and reports signed out rather than empty', async () => {
+    it('waits, rather than reporting anything, until a session exists', async () => {
         auth.isAuthenticated = false
         auth.activeId = null
 
         const probe = mount()
 
-        await waitFor(() => expect(probe.current?.isSignedOut).toBe(true))
+        await waitFor(() => expect(probe.current).not.toBeNull())
         expect(getFeed).not.toHaveBeenCalled()
-        // The distinction the empty state depends on: a guest is not somebody with an empty feed.
-        expect(probe.current?.isLoading).toBe(false)
+        // Bootstrap is about to mint the anonymous session: loading, never "empty" or "signed out".
+        expect(probe.current?.isLoading).toBe(true)
+        expect(probe.current?.isEmpty).toBe(false)
+    })
+
+    it('asks with a guest’s anonymous session and shows the posts that come back', async () => {
+        auth.isAuthenticated = false
+        auth.activeId = 'anon-1'
+        getFeed.mockResolvedValue({
+            results: [post('a'), post('b', 'ch-2', MINUTES(-30))],
+            next: null,
+        })
+
+        const probe = mount()
+
+        await waitFor(() => expect(probe.current?.groups).toHaveLength(2))
+        expect(getFeed.mock.calls[0][0]).toMatchObject({ accountId: 'anon-1' })
+        expect(probe.current?.isEmpty).toBe(false)
+    })
+
+    it('gives a guest whose feed is empty the same empty state as anybody — legacy’s NoPost', async () => {
+        auth.isAuthenticated = false
+        auth.activeId = 'anon-1'
+
+        const probe = mount()
+
+        await waitFor(() => expect(probe.current?.isEmpty).toBe(true))
+        expect(getFeed).toHaveBeenCalledTimes(1)
     })
 
     it('asks for the first page with no cursor, scoped to the active account', async () => {

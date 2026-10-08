@@ -9,4 +9,11 @@ describe('home illustrations', () => {
         expect(art.isDeclaredFormat).toBe(true)
         expect(art.bytes).toBeGreaterThan(512)
     })
+
+    it('the empty feed’s picture is committed too', () => {
+        const art = committedArt(HOME_ART.lonely.src)
+        expect(art.isLocal).toBe(true)
+        expect(art.isDeclaredFormat).toBe(true)
+        expect(art.bytes).toBeGreaterThan(512)
+    })
 })

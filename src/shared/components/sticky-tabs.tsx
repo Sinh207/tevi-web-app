@@ -78,6 +78,15 @@ export type StickyTabsProps = {
     /** Extra classes for the sticky wrapper — e.g. horizontal padding matching the page. */
     barClassName?: string
     /**
+     * Extra classes for each tab **panel** — `flex flex-1 flex-col` for a panel that has to fill the
+     * rest of the column (home's empty feed centres itself in it). The panel is a bare `div`
+     * otherwise, which no child can stretch.
+     *
+     * ⚠ A `display` class here beats the panel's `hidden` attribute, so with `mountAll` an inactive
+     * panel would show. That is why the `hidden` variant is re-applied below; keep it if this changes.
+     */
+    panelClassName?: string
+    /**
      * Base `data-testid`. Each tab is `${testId}-tab` and each panel `${testId}-panel`, both
      * carrying `data-tab-id={tab.id}`.
      *
@@ -99,6 +108,7 @@ export function StickyTabs({
     mountAll = true,
     className,
     barClassName,
+    panelClassName,
     testId,
 }: StickyTabsProps) {
     const [uncontrolled, setUncontrolled] = useState(tabs[0]?.id)
@@ -219,6 +229,7 @@ export function StickyTabs({
                         id={`${tab.id}-panel`}
                         aria-labelledby={`${tab.id}-tab`}
                         hidden={tab.id !== active}
+                        className={panelClassName && cn(panelClassName, '[&[hidden]]:hidden')}
                     >
                         {tab.panel}
                     </div>
