@@ -3,6 +3,7 @@
 import { StarMark } from '@shared/components/star-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
+import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import type { Post } from '../api/types'
 import { postGate } from '../lib/post-access'
@@ -13,7 +14,7 @@ import {
     lockCoverAspectRatio,
     POST_COLUMN_SIZES,
 } from '../lib/post-media'
-import { LockIcon, LockMediaIcon } from './legacy-icons'
+import { LockMediaIcon } from './lock-media-icon'
 
 /**
  * What a locked post shows instead of its body — legacy's paywall, ported.
@@ -144,7 +145,7 @@ export function PostLockPanel({
                  * how it says it.
                  */}
                 <LockPill testId={subTestId(testId, 'title')}>
-                    <LockIcon size={16} />
+                    <Icon name="lock-keyhole" size={16} className="flex-none" />
                     <span className="type-caption-label-strong">{label}</span>
                     <StarMark size={16} />
                 </LockPill>

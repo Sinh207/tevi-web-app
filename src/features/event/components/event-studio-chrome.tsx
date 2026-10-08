@@ -254,8 +254,8 @@ export function EventStudioChannelBar({
  * ## The phone is `PhoneMark`, not a sprite glyph
  *
  * The same mark the end rail's *Get App* draws, which is why it moved to `shared/components`. The
- * DS has no phone and the comps' own `Get App` instantiates this very path — see that file, which
- * also records the upstream `mobile` glyph that was tried and reverted for disagreeing with it.
+ * comps' own `Get App` instantiates this very path; the library's `mobile` is a different, taller
+ * silhouette — see that file.
  *
  * ## One case legacy has that this does not
  *

@@ -5,9 +5,9 @@ import type { SavedCard } from '../api/types'
  *
  * ## The design system has no card art
  *
- * The DS sprite carries **`address-card`** and nothing else — no `credit-card`, and no Visa /
- * Mastercard / Amex / JCB marks (`docs/DESIGN_SYSTEM.md`: if a glyph is missing, say so; never
- * substitute a shape). So a row is **text**: `Visa ···· 4242`. When brand marks are supplied they
+ * The DS sprite carries a generic `credit-card` (since the 2026-10-08 library import) but no Visa /
+ * Mastercard / Amex / JCB marks — and those are trademarks, not DS iconography (`docs/PAYMENT.md`
+ * §4.7). So a row is **text**: `Visa ···· 4242`. When brand marks are supplied they
  * become assets under `public/`, and only `brandAssetName` below changes.
  *
  * ## Brands are an open set

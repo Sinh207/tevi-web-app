@@ -554,12 +554,12 @@ file, so it was rendered through Figma's image endpoint at 2× its 190×127 box 
 `build-cdn-art.mjs`'s own quality. It is **not** a `SOURCES` row on purpose: that script fetches URLs
 and a Figma render URL expires in 30 days, so the node id is the traceable source instead.
 
-**The step marks are the comps' own glyphs**, which took a sprite change: every passcode step draws a
-key and both email steps an envelope. `envelope` was missing from the Figma library, so it came from
-upstream **Zappicon v1.2.0** into `design-system/tevi-icons.extra.svg` — the second entry there — and
-`/settings/password`'s connect-email step moved onto it too, so the two screens do not disagree.
-`key` has no upstream either (Zappicon's `key-simple-square` is a different drawing), so the passcode
-steps still stand in `lock-simple` and that one line waits on Brand.
+**The step marks are the comps' own glyphs**: every passcode step draws a key and both email steps
+an envelope, both from the Figma library since the full import of 2026-10-08 (`envelope` had come
+from upstream Zappicon through the overlay before that). Figma ships the key as **`key-message`** —
+a plain key in all five weights — and `scripts/import-figma-icons.mjs` renames it `key`. The `MARKS`
+tables hand the name to `<Icon weight="filled">` at runtime, so `key--filled` sits in
+`build-icon-sprite.mjs`'s KEEP list; drop it and every passcode step draws an empty disc.
 
 The management half is the **guessed** half generally (nothing had ever called those four, and
 `two-fa/` is in no schema): its open contract questions are **B92**.

@@ -53,9 +53,9 @@ import { TILE } from '../../lib/menu-tiles'
  * and then agreement.
  *
  * **Icons are DS sprite glyphs, not legacy's bespoke SVGs.** Legacy draws each row's mark
- * as a hand-authored 28×28 with the tile colour baked into the path. Three are honest
- * matches (person, bolt, warning diamond); two are the nearest glyph the sprite has and
- * are marked below. Worth a design pass.
+ * as a hand-authored 28×28 with the tile colour baked into the path. Each row now draws
+ * the DS glyph of legacy's object (key, struck-through person, person, bolt, warning
+ * diamond) — the first two waited on the 2026-10-08 library import.
  *
  * ── where the three link rows go ──────────────────────────────────────────────────────
  * All four destinations now exist — `/settings/password`, `/settings/two-step-verification`,
@@ -136,8 +136,9 @@ export function PrivacySecurityScreen({ active }: { active: boolean }) {
     const linkRows: LinkRow[] = [
         {
             key: 'privacy_security_password',
-            // Legacy's art is a keyhole with a floating dot; the sprite has no key glyph.
-            icon: { name: 'lock-simple', weight: 'filled' },
+            // Legacy's art is a key — the library's `key` (Figma names it `key-message`; see
+            // `RENAME` in scripts/import-figma-icons.mjs).
+            icon: { name: 'key', weight: 'filled' },
             tile: TILE.success,
             /*
              * "Add" rather than a mask when the account has no password — legacy reads
@@ -205,8 +206,8 @@ export function PrivacySecurityScreen({ active }: { active: boolean }) {
         },
         {
             key: 'privacy_security_blocked_accounts',
-            // Legacy's art is a person struck through; the sprite has no `user-slash`.
-            icon: { name: 'ban', weight: 'filled' },
+            // Legacy's art is a person struck through: `user-slash`.
+            icon: { name: 'user-slash', weight: 'filled' },
             tile: TILE.zinc,
             /*
              * No `value`. The row could report a count, and legacy does not — deliberately

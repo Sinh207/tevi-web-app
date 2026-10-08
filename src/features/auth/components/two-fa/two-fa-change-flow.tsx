@@ -150,13 +150,12 @@ export function TwoFaChangeFlow({ change }: { change: TwoFaChange }) {
  * All three steps draw the same mark, because the comps do: `Icon key` on the two code steps and on
  * *Create hint* as well (`1082:138780`) — the subject is the passcode throughout.
  *
- * ⚠ `lock-simple` where that key should be; the library has no `key` and neither does upstream
- * Zappicon. `TwoFaSetupFlow`'s `MARKS` carries the reasoning and the one line to change.
+ * `TwoFaSetupFlow`'s `MARKS` carries where `key` comes from and why `key--filled` is kept by hand.
  */
 const MARKS: Record<TwoFaChangeStep, TeviIconNameFilled> = {
-    new: 'lock-simple',
-    reenter: 'lock-simple',
-    hint: 'lock-simple',
+    new: 'key',
+    reenter: 'key',
+    hint: 'key',
 }
 
 const COPY: Record<TwoFaChangeStep, { title: string; body: string }> = {

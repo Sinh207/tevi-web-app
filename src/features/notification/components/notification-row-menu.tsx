@@ -25,19 +25,18 @@ import { Icon } from '@shared/ui/icon'
  * feature can reach it without importing another feature's internals. When the DS dropdown is
  * adopted for real, it is that file to change and not this one.
  *
- * ## The glyphs, and the one the sprite does not have
+ * ## The glyphs
  *
  * Trailing at 20px, which is where this skin's `justify-between` puts them and the size a 14px row
  * calls for — `ActionMenuContent`'s note derives it from the DS's own 24-against-16 ratio. They
  * inherit the row's colour, so Delete's turns red with its label.
  *
- * ⚠ **The sprite has no envelope glyph** — checked: no `envelope`, no `mail`, no `inbox` — and no
- * `eye-slash` either, so the two readings a read/unread pair would normally take are both closed.
- * The pair is drawn from the bell family instead, which is at least the vocabulary this screen is
- * already in: `bell-check` for "mark as read" and `bell-on` for "mark as unread" (an unread
- * notification being a live one). Nothing is hand-drawn and no unrelated shape is pressed into the
- * role — a bare `check` would say "done", which is not the same statement as "read". A standing
- * request to Brand; the day an envelope pair lands, it is two lines here.
+ * *Mark as read* is `envelope-check` — legacy's own mark there is an outlined envelope with a tick
+ * badge. *Mark as unread* is the plain `envelope`: legacy draws the same envelope-and-tick for both
+ * labels, and this takes the glyph off the tick when the label stops saying "read", the way the pin,
+ * bell and heart rows elsewhere move with theirs. Both at `regular` (the bare `envelope` is the
+ * solid one). Until the 2026-10-08 library import the sprite had no envelope at all and the pair was
+ * drawn from the bell family (`bell-check` / `bell-on`).
  *
  * ## The trigger carries the row's title
  *
@@ -84,7 +83,11 @@ export function NotificationRowMenu({
             <ActionMenuContent>
                 <ActionMenuItem data-testid="notification-toggle-read" onClick={onToggleRead}>
                     {t(read ? 'notification_mark_unread' : 'notification_mark_read')}
-                    <Icon name={read ? 'bell-on' : 'bell-check'} size={20} className="flex-none" />
+                    {read ? (
+                        <Icon name="envelope" weight="regular" size={20} className="flex-none" />
+                    ) : (
+                        <Icon name="envelope-check" size={20} className="flex-none" />
+                    )}
                 </ActionMenuItem>
                 {/*
                  * The only destructive row here: the notification goes and this client cannot put it

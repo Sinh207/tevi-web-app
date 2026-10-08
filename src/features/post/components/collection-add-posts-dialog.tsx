@@ -22,7 +22,7 @@ import { useAddPostsToCollection, useCollectionCandidates } from '../hooks/use-c
 import { candidateAudience } from '../lib/post-access'
 import { formatPostTimestamp } from '../lib/post-format'
 import { mediaTileSummary } from '../lib/post-media'
-import { LockMediaIcon } from './legacy-icons'
+import { LockMediaIcon } from './lock-media-icon'
 
 const TAB_LABEL: Record<CollectionCandidateType, string> = {
     ALL: 'collection_add_tab_all',

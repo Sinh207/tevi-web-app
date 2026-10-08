@@ -42,6 +42,11 @@ const KEEP = [
     'check-circle--filled',
     'exclamation-triangle--filled',
     'xmark-circle--filled',
+    // The 2FA screens (`features/auth/components/two-fa/*`, `two-step-verification-dialog.tsx`) pick
+    // the step's glyph from a `MARKS` table and draw it `weight="filled"`. `envelope` and the old
+    // `lock-simple` alias onto `--filled`, so the bare id was enough; `key` aliases onto `--regular`,
+    // and without this every passcode step would draw an empty disc.
+    'key--filled',
 ]
 
 const SOURCE = 'design-system/tevi-icons.svg'

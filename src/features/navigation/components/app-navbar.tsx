@@ -21,7 +21,7 @@ import { usePressedDestination } from '../hooks/use-pressed-destination'
 import { isOwnSpacePath } from '../lib/tab-destinations'
 import { useMenu } from '../providers/menu-state'
 import { CreateRailEntry } from './create-rail-entry'
-import { Knockout, NAV_INDICATOR, NAV_SLIDE, NAV_SPRING, NAV_TINT, NavGlyph } from './nav-glyph'
+import { NAV_INDICATOR, NAV_SLIDE, NAV_SPRING, NAV_TINT, NavGlyph } from './nav-glyph'
 
 /**
  * The app shell's left rail — `Navbar (Web)` from the design system, composed with
@@ -69,7 +69,7 @@ const RAIL_ITEM = cn(
 /**
  * **Off for now** — the rail draws no background behind a selected entry: neither the sliding
  * indicator in the nav group nor the tile behind an open drawer toggle. Selection is carried by the
- * glyph alone (outline → full-tint duotone in `--text-brand`, with its glow), which reads cleaner in
+ * glyph alone (outline → filled, in `--text-brand`, with its glow), which reads cleaner in
  * a column this narrow. Both pieces are kept, and turning this back on restores them exactly — the
  * mobile tab bar keeps its indicator either way.
  */
@@ -222,15 +222,13 @@ export function AppNavbar() {
                             aria-label={t('nav_home')}
                             data-testid="navigation-navbar-home"
                         >
-                            {/* The tab bar's pair: `house` outline, `house-heart` duotone at full tint. */}
+                            {/* `house` filled when selected — the Navbar (Web) comp's `State=Selected`.
+                            The mobile tab bar's `house-heart` duotone is that component's own
+                            drawing, not this one's. */}
                             <NavGlyph
                                 selected={current === 0}
                                 idle={<Icon name="house" size={24} />}
-                                active={
-                                    <Knockout>
-                                        <Icon name="house-heart" weight="duotone" size={24} />
-                                    </Knockout>
-                                }
+                                active={<Icon name="house" weight="filled" size={24} />}
                             />
                         </NavbarItem>
                     </Tooltip>
@@ -250,13 +248,13 @@ export function AppNavbar() {
                             <NavGlyph
                                 selected={current === 1}
                                 idle={<Icon name="user-heart-alt" size={24} />}
-                                active={<Icon name="user-heart-alt" weight="duotone" size={24} />}
+                                active={<Icon name="user-heart-alt" weight="filled" size={24} />}
                             />
                         </NavbarItem>
                     </Tooltip>
                     {/* A real link, like Following: `/messages` renders its own sign-in prompt. Lit
-                    inside a conversation too. `comment-dots` has no filled render either, so
-                    Selected takes the duotone to full tint — Following's note says why. */}
+                    inside a conversation too. Selected is the filled weight, per the Navbar (Web)
+                    comp (`State=Selected` instantiates `Style=Filled`), like Following and the bell. */}
                     <Tooltip label={t('nav_chat')}>
                         <NavbarItem
                             type={unreadChats > 0 ? 'badge' : 'icon'}
@@ -271,11 +269,7 @@ export function AppNavbar() {
                             <NavGlyph
                                 selected={current === 2}
                                 idle={<Icon name="comment-dots" size={24} />}
-                                active={
-                                    <Knockout>
-                                        <Icon name="comment-dots" weight="duotone" size={24} />
-                                    </Knockout>
-                                }
+                                active={<Icon name="comment-dots" weight="filled" size={24} />}
                             />
                         </NavbarItem>
                     </Tooltip>
@@ -299,12 +293,12 @@ export function AppNavbar() {
                             aria-label={t('nav_search')}
                             data-testid="navigation-navbar-search"
                         >
-                            {/* One drawing: the glass has no filled weight, so selection is the colour,
-                            the indicator and the glow. */}
+                            {/* Filled when selected, per the Navbar (Web) comp. The glass had no filled
+                            weight until the 2026-10-08 library import, so it changed colour only. */}
                             <NavGlyph
                                 selected={current === 4}
                                 idle={<Icon name="search" size={24} />}
-                                active={<Icon name="search" size={24} />}
+                                active={<Icon name="search" weight="filled" size={24} />}
                             />
                         </NavbarItem>
                     </Tooltip>
@@ -337,11 +331,10 @@ export function AppNavbar() {
                              * and the sprite subset already carries `bell--filled` (`pnpm icons` keeps any
                              * literal name+weight pair — pass 1 — so this needed no rebuild).
                              *
-                             * Not `duotone` at full tint, which is what Following does directly above.
-                             * That entry needs it because `user-heart-alt` has **no filled weight** and the
-                             * tab bar establishes the tint trick as this DS's stand-in for one. The bell
-                             * has a real filled weight, so using the workaround here would be inventing a
-                             * second way to say the same thing.
+                             * Following and Chat took the tab bar's duotone-at-full-tint until the
+                             * 2026-10-08 library import, because `user-heart-alt` and `comment-dots` had
+                             * no filled weight; they are filled now too, which is what the Navbar (Web)
+                             * comp's `State=Selected` draws.
                              */}
                             <NavGlyph
                                 selected={current === 5}

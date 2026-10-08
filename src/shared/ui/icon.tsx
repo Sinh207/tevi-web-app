@@ -5,6 +5,7 @@ import type {
     TeviIconNameDuotoneLine,
     TeviIconNameFilled,
     TeviIconNameLight,
+    TeviIconNameRegular,
 } from './icon-names'
 import { SPRITE_URL } from './sprite'
 
@@ -46,12 +47,17 @@ type IconBaseProps = Omit<ComponentPropsWithoutRef<'svg'>, 'name' | 'children'> 
 /**
  * A bare name gives the default weight; the rest are opt-in per glyph.
  *
+ * The default is **per glyph** — the bare id is an alias, onto `--regular` for most and onto
+ * `--filled` for some (`video`, `thumbtack`, `envelope`, …). So `weight="regular"` exists for the
+ * outline of a glyph whose default is solid; it is not a synonym for omitting the prop.
+ *
  * Exported so a wrapper can forward the pair **without collapsing the union** — which is what keeps
  * "this glyph has no light weight" a type error rather than an empty box. Splitting it into separate
  * `name` and `weight` props, as `Pick<IconProps, …>` would, throws exactly that away.
  */
 export type IconGlyphProps =
     | { weight?: undefined; name: TeviIconName }
+    | { weight: 'regular'; name: TeviIconNameRegular }
     | { weight: 'filled'; name: TeviIconNameFilled }
     | { weight: 'light'; name: TeviIconNameLight }
     | { weight: 'duotone'; name: TeviIconNameDuotone }

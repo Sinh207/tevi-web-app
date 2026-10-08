@@ -149,8 +149,7 @@ export function EventSeatCard({
                             on={publisher.audio}
                         />
                         <StatusChip
-                            // The sprite has no struck camera; the label and the muted chip say "off".
-                            icon="video"
+                            icon={publisher.video ? 'video' : 'video-slash'}
                             label={t(
                                 publisher.video ? 'event_seat_camera_on' : 'event_seat_camera_off',
                             )}
@@ -219,7 +218,7 @@ function StatusChip({
     label,
     on,
 }: {
-    icon: 'microphone' | 'microphone-slash' | 'video'
+    icon: 'microphone' | 'microphone-slash' | 'video' | 'video-slash'
     label: string
     on: boolean
 }) {
@@ -235,7 +234,16 @@ function StatusChip({
                     : 'bg-white/[0.04] text-white/40 ring-white/10',
             )}
         >
-            <Icon name={icon} size={16} className="size-3.5" />
+            {/*
+             * Literal tags, and `video` at `regular`: its bare id is the solid camera, beside an
+             * outlined microphone and an outlined `video-slash`. The sprite subset is scanned from
+             * source, so a weight chosen at runtime would ship without its drawing.
+             */}
+            {icon === 'video' ? (
+                <Icon name="video" weight="regular" size={16} className="size-3.5" />
+            ) : (
+                <Icon name={icon} size={16} className="size-3.5" />
+            )}
         </span>
     )
 }

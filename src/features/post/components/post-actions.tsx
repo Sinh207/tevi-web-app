@@ -15,7 +15,6 @@ import { usePostReaction } from '../hooks/use-post-reaction'
 import { useOpenAuthorConversation } from '../lib/author-conversation'
 import { postActionVisibility, replyCost } from '../lib/post-access'
 import { mayReply, replyAudience, replyAudienceNotice } from '../lib/who-can-reply'
-import { BookmarkIcon } from './legacy-icons'
 
 /**
  * The row under a post — legacy's six controls, in legacy's two groups.
@@ -370,9 +369,10 @@ export const REACTED_FRAME = 60
  * Its state comes from `usePostBookmark` rather than straight off the post, because the flip lands
  * **after** the server confirms — so the prop is the starting value, not the current one.
  *
- * The glyph is `BookmarkIcon` and not `<Icon name="bookmark-simple" />`: the sprite's only bookmark
- * is the **slashed** variant under a plain name, so the DS glyph drew a crossed-out bookmark on a
- * post that had never been saved. `legacy-icons.tsx` carries the full finding and the condition for deleting it.
+ * `bookmark-simple`, hollow until saved and solid after — two literal tags rather than a computed
+ * `weight`, so the sprite scan ships both. Until 2026-10-08 this was legacy's own path, because the
+ * sprite's `bookmark-simple` carried a **slash**: Figma ships two glyphs under that name and the
+ * first export gave it to the slashed one (`DUPLICATE_BARE` in `scripts/import-figma-icons.mjs`).
  */
 function BookmarkButton({ post, testId }: { post: Post; testId?: string }) {
     const { t } = useTranslation()
@@ -389,7 +389,11 @@ function BookmarkButton({ post, testId }: { post: Post; testId?: string }) {
             data-testid={testId}
             className="relative flex size-8 flex-none items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment)"
         >
-            <BookmarkIcon filled={bookmarked} />
+            {bookmarked ? (
+                <Icon name="bookmark-simple" weight="filled" size={24} />
+            ) : (
+                <Icon name="bookmark-simple" size={24} />
+            )}
         </button>
     )
 }

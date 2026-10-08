@@ -2,8 +2,8 @@
  * Regenerates `src/shared/ui/icon-names.ts` from `design-system/tevi-icons.svg`.
  *
  * The sprite ships one bare `<symbol id="name">` per glyph (the default weight)
- * plus `name--{filled,light,duotone,duotone-line}` — but only for the glyphs
- * Figma actually drew in that weight: 519 have `filled`, just 5 have `light`.
+ * plus `name--{regular,filled,light,duotone,duotone-line}` — but only for the
+ * glyphs Figma actually drew in that weight (a handful lack one or more).
  * So each weight gets its own name union and `Icon` discriminates on it, making
  * a missing weight a type error instead of an `<svg>` that renders nothing.
  *
@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const WEIGHTS = [
+    ['regular', 'Regular'],
     ['filled', 'Filled'],
     ['light', 'Light'],
     ['duotone', 'Duotone'],

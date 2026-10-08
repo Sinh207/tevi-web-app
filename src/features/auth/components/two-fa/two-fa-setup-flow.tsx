@@ -305,16 +305,14 @@ export function TwoFaSetupFlow({ setup }: { setup: TwoFaSetup }) {
  * `pen-line` here until the frames were actually inspected — "write a hint" reads like a pen, and the
  * design says the subject is still the passcode.
  *
- * ⚠ **`lock-simple` where the comps draw a key.** `1075:79081` is a classic key — a round bow with a
- * hole and a toothed shaft — hand-authored in the design file as four vectors rather than an instance
- * of anything. The Tevi library has no `key`, and neither does upstream Zappicon v1.2.0: its only
- * candidate is `key-simple-square`, a bordered card with a keyhole, which is a different drawing.
- * The overlay's rules forbid adapting one glyph into the shape of another, so this stays a
- * substitution and the real fix is Brand adding `key` to the Figma library — one line here.
+ * `1075:79081` is a classic key — a round bow with a hole and a toothed shaft — and since the
+ * 2026-10-08 library import that is the DS's own `key` (Figma names it `key-message`; see `RENAME` in
+ * `scripts/import-figma-icons.mjs`). It was `lock-simple` until then. Because this table hands the
+ * name to `<Icon weight="filled">` at runtime, `key--filled` is in `build-icon-sprite.mjs`'s KEEP list
+ * — the bare `key` is the outline, and the scan alone would ship only that.
  *
- * `envelope` **is** in the overlay now (`design-system/tevi-icons.extra.svg`), taken from Zappicon
- * v1.2.0 where the library has none. It replaced `send`, which said the wrong half of the sentence:
- * the step is about which inbox to open, not about the sending.
+ * `envelope` replaced `send`, which said the wrong half of the sentence: the step is about which
+ * inbox to open, not about the sending.
  *
  * `TeviIconNameFilled` and not the bare name union, deliberately: the disc draws `weight="filled"`,
  * and `Icon` types its `name` per weight precisely so that asking for a glyph with no filled drawing
@@ -322,11 +320,11 @@ export function TwoFaSetupFlow({ setup }: { setup: TwoFaSetup }) {
  * and is outline-only, which is how that was caught.
  */
 const MARKS: Record<TwoFaSetupStep, TeviIconNameFilled> = {
-    passcode: 'lock-simple',
+    passcode: 'key',
     // The same subject as the step before it — a passcode being decided.
-    reenter: 'lock-simple',
+    reenter: 'key',
     // Still the passcode, per the comp. Not a pen.
-    hint: 'lock-simple',
+    hint: 'key',
     email: 'envelope',
     code: 'envelope',
     done: 'check-circle',

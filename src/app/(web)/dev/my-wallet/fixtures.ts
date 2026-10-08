@@ -47,7 +47,7 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '19 Feb 2025, 14:32',
                 amount: '+₫21,391,626',
                 isCredit: true,
-                icon: 'dollar-circle',
+                icon: 'dollar-arrow-down',
                 /*
                  * The Tevi Coin bonus (**B83**) — on this row and not the others, which is the point:
                  * most movements have none, so the harness has to show the trailing column with and
@@ -68,7 +68,7 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '18 Feb 2025, 09:05',
                 amount: '-₫25,400,000',
                 isCredit: false,
-                icon: 'dollar-circle',
+                icon: 'dollar-arrow-down',
             },
             // And one that came back.
             {
@@ -77,7 +77,7 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '18 Feb 2025, 06:30',
                 amount: '+₫25,400,000',
                 isCredit: true,
-                icon: 'dollar-circle',
+                icon: 'dollar-arrow-down',
             },
             /*
              * A **Star** row on the currency ledger — a `conversion` has a leg in each, which is why the
@@ -114,7 +114,7 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '28 Jan 2025, 16:20',
                 amount: '+₫952,500',
                 isCredit: true,
-                icon: 'dollar-circle',
+                icon: 'dollar-arrow-down',
             },
             // An unknown type (B36): kept, with the backend's sentence and the neutral glyph.
             {
@@ -123,7 +123,7 @@ export const WALLET_LEDGER_FIXTURE: LedgerGroupModel[] = [
                 subtitle: '27 Jan 2025, 08:15',
                 amount: '+₫95,250',
                 isCredit: true,
-                icon: 'dollar-circle',
+                icon: 'dollar-arrow-down',
             },
         ],
     },

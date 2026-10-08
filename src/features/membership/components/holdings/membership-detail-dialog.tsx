@@ -648,10 +648,10 @@ function ActionBand({ text, children }: { text: string; children?: ReactNode }) 
 /**
  * The mark beside a payment method. Legacy's three, mapped onto the DS sprite.
  *
- * `address-card` is the fallback rather than a card-specific glyph, and it is the one the account
- * drawer's own Card management row uses — so "paid by card" and "manage your cards" are marked the
- * same way. An unknown future method lands here too, which is right: it is a payment instrument this
- * client has no picture for, and a generic instrument is a truer mark than a guessed one.
+ * `credit-card` is the fallback, and it is the one the account drawer's own Card management row
+ * uses — so "paid by card" and "manage your cards" are marked the same way. (Both were `address-card`,
+ * an ID card, until the 2026-10-08 library import brought a bank card.) An unknown future method lands
+ * here too, which is right: a generic card is a truer mark than a guessed one.
  */
 function paymentMethodGlyph(method: string | null | undefined): TeviIconName {
     switch (method) {
@@ -660,7 +660,7 @@ function paymentMethodGlyph(method: string | null | undefined): TeviIconName {
         case 'star':
             return 'star'
         default:
-            return 'address-card'
+            return 'credit-card'
     }
 }
 

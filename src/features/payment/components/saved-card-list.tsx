@@ -117,9 +117,8 @@ export function SavedCardList({
                      * accent one belongs to the empty state, where adding a card is the only thing to
                      * do. Two accent buttons on one screen and neither is the primary action.
                      *
-                     * The sprite has no card-plus glyph (legacy inlines a custom SVG for it), so this
-                     * is `plus`. Flagged in `docs/PAYMENT.md` §4.7 rather than approximated with a
-                     * different shape.
+                     * `card-plus`, the DS's card-with-a-plus — legacy inlines its own drawing of the
+                     * same thing. It was a bare `plus` until the 2026-10-08 library import.
                      */
                     <Button
                         data-testid="payment-card-list-add"
@@ -129,7 +128,7 @@ export function SavedCardList({
                         disabled={isMutating}
                         onClick={onAdd}
                     >
-                        <Icon name="plus" size={16} />
+                        <Icon name="card-plus" size={16} />
                         {t('payment_add_card')}
                     </Button>
                 )}

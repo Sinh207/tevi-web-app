@@ -746,14 +746,14 @@ From the same payload: one card gateway ships **two** logos (Mastercard *and* Vi
 
 ### 4.7 The asset gaps — stated plainly
 
-- The DS sprite **only has `address-card`**, no `credit-card` and no brand logos. **Solved, and not
-  by drawing anything by hand:** the brand marks come from `react-svg-credit-card-payment-icons` —
+- The DS sprite has a generic `credit-card` (since the 2026-10-08 library import; only `address-card`
+  before) and no brand logos. **Solved, and not by drawing anything by hand:** the brand marks come from `react-svg-credit-card-payment-icons` —
   the very package legacy uses. These are **trademarks**, not DS iconography, so they do not belong
   in the sprite: Visa's mark is Visa's, and the DS has no right to restyle it. Import the 9 specific
   icons rather than `PaymentIcon` (which resolves names at runtime → drags all 6 formats × every
   brand, `dist` 4.8 MB).
-- **Still missing a *card-plus* glyph** for the "Add new card" button (legacy inlines its own SVG) →
-  `plus` for now. That is the only remaining approximation on the card screens.
+- The "Add new card" button draws `card-plus` (legacy inlines its own SVG of the same thing); it was
+  `plus` until the 2026-10-08 library import. No approximation remains on the card screens.
 - The empty-state illustration + the scheme strip **reuse legacy's exact assets**, through
   `lib/illustrations.ts`. Two assets, two treatments, per the rule in
   [`docs/STATIC_ASSETS.md`](STATIC_ASSETS.md):

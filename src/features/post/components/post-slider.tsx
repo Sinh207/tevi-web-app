@@ -22,7 +22,7 @@ import { usePostUnlock } from '../hooks/use-post-unlock'
 import { isGated, postActionVisibility, postDisplay, replyCost } from '../lib/post-access'
 import { formatPostTimestamp, truncateSliderCaption } from '../lib/post-format'
 import { isLocalImageSrc, videoSrc } from '../lib/post-media'
-import { LockMediaIcon } from './legacy-icons'
+import { LockMediaIcon } from './lock-media-icon'
 import { PostLockPanel } from './post-lock-panel'
 import { PostUnlockDialogs } from './post-unlock-dialogs'
 

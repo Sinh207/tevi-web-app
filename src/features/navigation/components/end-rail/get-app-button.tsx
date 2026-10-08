@@ -23,9 +23,9 @@ import { useState } from 'react'
  * ## The mark
  *
  * Legacy's phone, copied verbatim into `PhoneMark` — a plain component rather than an `Icon`,
- * because the DS sprite has no phone glyph and a hand-drawn path must not enter through a door that
- * asserts Figma provenance. That file has the full reasoning, including what to delete when design
- * ships a real glyph.
+ * because the comps draw this path and the library's `mobile` is a different silhouette, and a
+ * foreign path must not enter through a door that asserts Figma provenance. That file has the full
+ * reasoning, including what to delete when design ships a real glyph.
  *
  * It replaced `qr-code`, which shipped here first while the missing glyph was being reported.
  */

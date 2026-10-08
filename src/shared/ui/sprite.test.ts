@@ -46,8 +46,13 @@ describe('shipped icon sprite', () => {
          * subset from 392 to 448 without a single new `<Icon>`: pass 2 keeps any quoted token that
          * is a glyph name, and `'link'`, `'text'`, `'password'`, `'radio'`, `'lock'` all became
          * glyph names. ~56 KB raw, the known price of that pass — not a scanner fault.
+         *
+         * Raised again to 600 the same day, by the audit that replaced every stand-in glyph the
+         * old library forced (`key`, `credit-card`, `user-lock`, the drawer's legacy marks, the
+         * slashed pairs, filled navbar states…): 448 → 500, every one of them a real `<Icon>`.
+         * A scan over-match is still thousands, against 27 702.
          */
-        expect(built.picked.length).toBeLessThan(500)
+        expect(built.picked.length).toBeLessThan(600)
     })
 
     it('keeps a bare fallback for every weighted glyph', () => {

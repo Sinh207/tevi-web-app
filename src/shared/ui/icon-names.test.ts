@@ -33,6 +33,7 @@ function unionMembers(typeName: string): string[] {
 }
 
 const WEIGHTS = [
+    ['TeviIconNameRegular', 'regular'],
     ['TeviIconNameFilled', 'filled'],
     ['TeviIconNameLight', 'light'],
     ['TeviIconNameDuotone', 'duotone'],

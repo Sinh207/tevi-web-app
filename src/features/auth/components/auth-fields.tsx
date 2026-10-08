@@ -142,10 +142,9 @@ export function PasswordField({
                  * never changed, worst on `settings/password` where the field starts empty
                  * so the masked dots were not there to change either.
                  *
-                 * The library has no `eye-slash`, so it comes from the upstream set the
-                 * library itself was built from, in `design-system/tevi-icons.extra.svg`.
-                 * That is the only sanctioned way to add one — read that file's header
-                 * before adding a second.
+                 * `eye-slash` is the pair: from the Figma library since the 2026-10-08 import
+                 * (from the upstream-Zappicon overlay before that), aliased onto `--filled`
+                 * like `eye`, so the two weights agree.
                  *
                  * The words travel on `aria-label`; `aria-pressed` states it again for a
                  * screen reader. `tabIndex={-1}` deliberately: tabbing out of a password

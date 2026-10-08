@@ -14,7 +14,7 @@ import { usePostUnlock } from '../hooks/use-post-unlock'
 import { isGated, postDisplay } from '../lib/post-access'
 import { postHref } from '../lib/post-link'
 import { mediaTileSummary } from '../lib/post-media'
-import { LockMediaIcon } from './legacy-icons'
+import { LockMediaIcon } from './lock-media-icon'
 import { PostMediaLightbox } from './post-media-lightbox'
 import { PostUnlockDialogs } from './post-unlock-dialogs'
 

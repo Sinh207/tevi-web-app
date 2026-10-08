@@ -17,8 +17,8 @@
  *     `aspect-ratio-1:1` → `aspect-ratio-1-1`. An id is a URL fragment and a TS literal.
  *   - **Duplicate names.** The library carries ~70 names used by two (one: three) *different*
  *     drawings. The first in page order keeps the bare name and later ones get `-1`, `-2` — except
- *     where an earlier export already settled it the other way (`DUPLICATE_BARE`), because changing
- *     that would silently redraw every existing call site.
+ *     where the rendered glyphs say the other one is what the name means (`DUPLICATE_BARE`).
+ *   - **Misnamed glyphs** (`RENAME`), checked the same way.
  *   - **Ink.** Figma paints the ink `#09090B` (and NSFW its brand pink); both become `currentColor`
  *     so `className="text-…"` colours the glyph. White knockouts, `black` and gradients are left.
  *   - **Ids.** Every internal id (clipPath, gradient…) is prefixed with the symbol id — Figma's
@@ -46,15 +46,31 @@ const WEIGHTS = {
 const DEFAULT_ORDER = ['regular', 'filled', 'light', 'duotone', 'duotone-line']
 
 /**
- * Names where an earlier export gave the bare id to the Nth drawing (0-based, page order) rather
- * than the first. Kept so `search-unlock` and `check-line-square` mean what they meant.
+ * Duplicate names whose bare id goes to the Nth drawing (0-based, page order) rather than the first,
+ * because that is the drawing the name describes — the other is a mislabelled sibling. Read off the
+ * rendered glyphs, not the page order:
+ *
+ *   location-pin-line   1 — the pin standing on a line; drawing 0 is the plain pin
+ *   search-unlock       1 — the open padlock in the lens; drawing 0 has a gear in it
+ *
+ * And three the first export got the wrong way round, so they now take drawing 0 — the plain
+ * bookmark (1 carries a slash, and `bookmark-simple` had been drawing a crossed-out bookmark in the
+ * drawer's Bookmarks row and the bookmark list), the square checkbox (1 is a circle), the single
+ * page (1 is two stacked sheets): `bookmark-simple`, `check-line-square`, `page`.
  */
 const DUPLICATE_BARE = {
-    'bookmark-simple': 1,
-    'check-line-square': 1,
     'location-pin-line': 1,
-    page: 1,
     'search-unlock': 1,
+}
+
+/**
+ * Figma names that describe a different glyph from the one drawn. `key-message` is a plain key —
+ * no bubble in any of its five weights, and `key-slash` is its slashed twin — while the library has
+ * no `key` at all; legacy's Password row and the 2FA comps both draw exactly this key.
+ * The import throws if Figma ever ships a real glyph under a target name.
+ */
+const RENAME = {
+    'key-message': 'key',
 }
 
 /**
@@ -119,7 +135,11 @@ function main() {
     // name → [{ sid, weights: { regular: svg, … } }] in page order
     const groups = new Map()
     for (const r of rows) {
-        const name = normaliseName(r.set)
+        const figmaName = normaliseName(r.set)
+        const name = RENAME[figmaName] ?? figmaName
+        if (RENAME[figmaName] && rows.some(o => normaliseName(o.set) === name)) {
+            throw new Error(`${figmaName} → ${name}: Figma now ships a real ${name}`)
+        }
         const weight = r.v === null ? 'regular' : WEIGHTS[r.v]
         if (!weight) throw new Error(`${r.set}: unknown variant ${r.v}`)
         if (!groups.has(name)) groups.set(name, new Map())
