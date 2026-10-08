@@ -98,6 +98,7 @@ export function PostCard({
     onOpenMedia,
     attachments = true,
     disableDetail = false,
+    eagerMedia = false,
     className,
     testId = 'post-card',
 }: {
@@ -147,6 +148,13 @@ export function PostCard({
     attachments?: boolean
     /** Already on the post's own page, or rendering it somewhere a navigation would be wrong. */
     disableDetail?: boolean
+    /**
+     * The card is **above the fold** — the post page's own post, or the first row of a feed — so
+     * its media is the likely LCP and must not wait for `next/image`'s default `loading="lazy"`.
+     * `loading="eager"` and not `priority`, for `ChannelEmptyState`'s reason: a preload is a claim
+     * about the document, and a feed's first row is a guess about the viewport.
+     */
+    eagerMedia?: boolean
     className?: string
     testId?: string
 }) {
@@ -232,7 +240,12 @@ export function PostCard({
                                 testId={subTestId(testId, 'panel')}
                             />
                         ) : (
-                            <PostMediaBlock post={post} onOpenMedia={onOpenMedia} testId={testId} />
+                            <PostMediaBlock
+                                post={post}
+                                onOpenMedia={onOpenMedia}
+                                eager={eagerMedia}
+                                testId={testId}
+                            />
                         )}
 
                         {attachments && (
@@ -354,10 +367,13 @@ export function PostMediaBlock({
     post,
     onOpenMedia,
     interactive = true,
+    eager = false,
     testId,
 }: {
     post: Post
     onOpenMedia?: (target: number | 'video') => void
+    /** `PostCard`'s `eagerMedia`. */
+    eager?: boolean
     /**
      * `false` ⇒ the media is a **picture of itself**: nothing to press, and no viewer of its own.
      *
@@ -394,6 +410,7 @@ export function PostMediaBlock({
             {images.length > 0 ? (
                 <PostImageGallery
                     images={images}
+                    eager={eager}
                     onOpen={
                         interactive
                             ? index => (onOpenMedia ? onOpenMedia(index) : setOpened(index))
@@ -405,6 +422,7 @@ export function PostMediaBlock({
             {videoSrc(video) ? (
                 <PostVideoTile
                     post={post}
+                    eager={eager}
                     onOpen={
                         interactive
                             ? () => (onOpenMedia ? onOpenMedia('video') : setOpened('video'))
@@ -475,9 +493,11 @@ const VIDEO_MAX_HEIGHT = 480
 function PostVideoTile({
     post,
     onOpen,
+    eager = false,
     testId,
 }: {
     post: Post
+    eager?: boolean
     /**
      * Absent ⇒ the tile is a **picture**, not a control: a `<div>` with no press and no play
      * affordance. `PostMediaBlock`'s `interactive` is the caller that needs it, and its doc has the
@@ -547,6 +567,7 @@ function PostVideoTile({
                     alt=""
                     fill
                     sizes={POST_COLUMN_SIZES}
+                    loading={eager ? 'eager' : undefined}
                     className="object-cover"
                 />
             ) : null}

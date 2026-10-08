@@ -190,6 +190,7 @@ export function EventStudioCompact({
                         alt=""
                         fill
                         sizes="100vw"
+                        loading="eager"
                         className="object-cover"
                     />
                 </div>
@@ -205,6 +206,7 @@ export function EventStudioCompact({
                         aria-hidden
                         fill
                         sizes="100vw"
+                        loading="eager"
                         className="object-cover"
                     />
                 )}

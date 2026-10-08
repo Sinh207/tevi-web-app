@@ -75,6 +75,7 @@ export function PostImageGallery({
     onOpen,
     onRemove,
     size = 'default',
+    eager = false,
     testId,
 }: {
     images: PostImage[]
@@ -98,6 +99,8 @@ export function PostImageGallery({
     onRemove?: (index: number) => void
     /** `compact` is the composer's 200/300 row, `tight` the reply box's 160/240 — see the note above. */
     size?: 'default' | 'compact' | 'tight'
+    /** The row is above the fold — `PostCard`'s `eagerMedia`. Only the first picture is eager. */
+    eager?: boolean
     testId?: string
 }) {
     const { t } = useTranslation()
@@ -226,6 +229,7 @@ export function PostImageGallery({
                                         alt={t('post_image_alt')}
                                         fill
                                         sizes="(max-width: 768px) 100vw, 33vw"
+                                        loading={eager && index === 0 ? 'eager' : undefined}
                                         unoptimized={isLocalImageSrc(src)}
                                         className="object-cover"
                                     />

@@ -146,11 +146,12 @@ export function ConversationRow({
                     <PremiumBadge size={VERIFIED_BADGE_CROWN.body} className="flex-none" />
                 )}
                 {view.tierImage && (
+                    /* A 2× box, not the drawn one — `PostHeader`'s tier mark says why. */
                     <Image
                         src={view.tierImage}
                         alt={t('message_space_tier', { tier: view.tier ?? 0 })}
-                        width={18}
-                        height={18}
+                        width={36}
+                        height={36}
                         className="h-[18px] w-auto flex-none"
                     />
                 )}
