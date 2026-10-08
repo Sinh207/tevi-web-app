@@ -22,7 +22,11 @@ import { PostMenu } from './post-menu'
  * reader had paid for. Legacy's is a `Chip size='small'` — 24px tall, pill, a 12px tick and a 10/500
  * label, all on a 10%-green fill.
  *
- * Geometry is legacy's; the palette is the design system's. Legacy hard-codes `#2FC062` on
+ * **16 tall here, not legacy's 24**, so it matches the other marks in the header (verified, Premium,
+ * tier, the audience glyph — all 16). The tick and the label keep legacy's 12 and 10/500; only the
+ * pill's own padding shrank.
+ *
+ * The palette is the design system's. Legacy hard-codes `#2FC062` on
  * `rgba(52,199,89,0.10)`; `--text-success` and `--accents-success-bg-active` are the same intent in
  * tokens that have a dark mode, which a raw hex does not — and `CLAUDE.md` bars one outright.
  *
@@ -40,7 +44,7 @@ function PurchasedTag({ testId }: { testId?: string }) {
     return (
         <span
             data-testid={subTestId(testId, 'label')}
-            className="inline-flex h-6 flex-none items-center gap-0.5 rounded-full bg-(--accents-success-bg-active) px-2 text-(--text-success)"
+            className="inline-flex h-4 flex-none items-center gap-0.5 rounded-full bg-(--accents-success-bg-active) px-1.5 text-(--text-success)"
         >
             <Icon name="check-all" size={16} className="size-3 flex-none" />
             {/* 10/500 — the DS's only 10px step, and legacy's size and weight. */}
@@ -110,8 +114,14 @@ export function PostHeader({
                     <span className="type-dense-emphasis max-w-[120px] truncate text-(--text-title) md:max-w-[170px]">
                         {name}
                     </span>
+                    {/*
+                     * Every mark beside the name — verified, Premium, tier — and every mark in the
+                     * meta line under it (audience, *Purchased*) is **16 tall**, so the two lines
+                     * hold one rhythm. They had grown four sizes: verified 16, Premium 18, tier 14,
+                     * *Purchased* a 24px pill.
+                     */}
                     <VerifiedBadge image={channel?.verified_tick_badge?.image ?? null} size={16} />
-                    {channel?.is_premium ? <PremiumBadge size={18} className="flex-none" /> : null}
+                    {channel?.is_premium ? <PremiumBadge size={16} className="flex-none" /> : null}
                     {/*
                      * Height-constrained and `w-auto`: the tier marks are not square and legacy
                      * sizes them by height alone. Non-interactive here — legacy passes
@@ -122,9 +132,9 @@ export function PostHeader({
                         <Image
                             src={tierBadge}
                             alt={t('post_space_tier', { tier: channel?.space_tier ?? 0 })}
-                            height={14}
-                            width={14}
-                            className="h-[14px] w-auto flex-none"
+                            height={16}
+                            width={16}
+                            className="h-4 w-auto flex-none"
                         />
                     ) : null}
                     {channel?.slug ? (
