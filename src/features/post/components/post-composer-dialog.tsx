@@ -31,8 +31,7 @@ import { isAttachableImage } from '../lib/reply-draft'
 import { captureVideoPoster, probeVideo, readVideoCodec } from '../lib/video-file'
 import { usePostComposerStore } from '../store/composer-store'
 import { PostComposerBody } from './post-composer-body'
-import { type ComposerDialog, PostComposerDialogs } from './post-composer-dialogs'
-import { PostPreviewDialog } from './post-preview-dialog'
+import { type ComposerScreen, PostComposerDialogs } from './post-composer-dialogs'
 
 /**
  * **New post** — legacy's `PostForm`, as far as words and pictures go.
@@ -95,28 +94,19 @@ export function PostComposerDialog({
     const _videoRef = useRef<HTMLInputElement>(null)
 
     /**
-     * Which settings dialog is open over the composer, if any.
+     * Which screen the composer's one popup is showing, if any — audience, reply, settings,
+     * collections or the preview.
      *
-     * They are **separate popups**, as legacy has them — `post-composer-dialogs.tsx` carries the
-     * reasoning, including why the first pass folding them into this frame was wrong. The composer
-     * itself never changes shape: its header keeps its close button and the draft stays on screen
-     * behind whichever one is open.
+     * **One popup over the composer**, whose screen changes — `post-composer-dialogs.tsx` carries
+     * the reasoning. The composer itself never changes shape: its header keeps its close button and
+     * the draft stays on screen behind the popup.
      */
-    const [settingsDialog, setSettingsDialog] = useState<ComposerDialog>(null)
-
-    /**
-     * *Your audience view* is open — a fifth dialog, and deliberately not a `ComposerDialog`.
-     *
-     * The other four **edit** the draft and share one shell; this one only reads it, takes a
-     * different body and is opened from the action bar rather than from the chips. Folding it into
-     * that union would make a setting out of something that sets nothing.
-     */
-    const [previewOpen, setPreviewOpen] = useState(false)
+    const [screen, setScreen] = useState<ComposerScreen>(null)
 
     /**
      * The trimmer is open over the composer.
      *
-     * A sixth dialog, and the only one that is not this feature's — `shared/components`, because
+     * A second popup, and the only one that is not this feature's — `shared/components`, because
      * the space's custom-profile screen trims an avatar clip with the same component and neither
      * feature may import the other. Dynamically imported: it pulls in the frame sampler and, once
      * *Save* is pressed, 24 MB of ffmpeg core, and a composer that never attaches a video should
@@ -396,30 +386,21 @@ export function PostComposerDialog({
     const overlays = (
         <>
             {/*
-             * The four settings popups, mounted beside the composer's content so they stack over
-             * it rather than replacing it — `post-composer-dialogs.tsx` says why that is the
-             * right shape and what the earlier arrangement got wrong.
+             * The one popup for every screen over the draft, mounted beside the composer's
+             * content so it stacks over it rather than replacing it. The preview is built **only
+             * while it is the screen**, not on every keystroke: it walks the draft's media and runs
+             * the post parser.
              */}
             <PostComposerDialogs
-                open={settingsDialog}
-                onClose={() => setSettingsDialog(null)}
+                screen={screen}
+                onClose={() => setScreen(null)}
                 draft={draft}
                 onChange={patch}
+                preview={screen === 'preview' ? buildPreviewPost(draft, { author }) : null}
                 minPrice={minPrice}
                 tiers={tiers}
                 disabled={create.isPending}
                 testId={testId}
-            />
-
-            {/*
-             * Built **on open**, not on every keystroke: it walks the draft's media and runs the
-             * post parser, and nothing reads the result until the dialog is up. Mounted here beside
-             * the other four so it stacks over the composer rather than replacing it.
-             */}
-            <PostPreviewDialog
-                open={previewOpen}
-                onClose={() => setPreviewOpen(false)}
-                post={previewOpen ? buildPreviewPost(draft, { author }) : null}
             />
 
             {/*
@@ -442,7 +423,7 @@ export function PostComposerDialog({
                     nested
                     /*
                      * Its **own** scope, like the preview dialog's — `post-composer-…` is spoken
-                     * for by the composer's own backdrop and its four settings popups, and the
+                     * for by the composer's own backdrop and its settings popup, and the
                      * trimmer is a surface rather than a part of the composer.
                      */
                     testId="post-trimmer"
@@ -479,8 +460,7 @@ export function PostComposerDialog({
                 if (!next) {
                     reset()
                     // Any popup over it goes too — reopening should not land on one.
-                    setSettingsDialog(null)
-                    setPreviewOpen(false)
+                    setScreen(null)
                     setTrimOpen(false)
                 }
                 onOpenChange(next)
@@ -488,7 +468,7 @@ export function PostComposerDialog({
             /*
              * `overflow-hidden`, because the body below scrolls itself — `DialogContent` has
              * `overflow-y-auto` of its own and two scrollers leave the inner one unbounded, so the
-             * whole popup scrolls and the action bar goes with it. The settings dialogs carry the
+             * whole popup scrolls and the action bar goes with it. The settings popup carries the
              * same line and the longer account of it. The **sheet** takes none of these: it is
              * already a bounded column, and a width cap means nothing on a full-bleed panel.
              */
@@ -498,7 +478,7 @@ export function PostComposerDialog({
             <div className="relative">
                 {/*
                  * The composer's own header never changes: a close button and one title. The
-                 * settings are separate dialogs over it, so there is no second state for this
+                 * settings are a popup over it, so there is no second state for this
                  * control to be in — an earlier pass turned it into a back arrow, which takes
                  * the way out away and asks the reader to notice that a button changed meaning.
                  */}
@@ -524,14 +504,14 @@ export function PostComposerDialog({
                         icon="history-rectangle-play"
                         label={t('post_collection_title')}
                         disabled={create.isPending}
-                        onPress={() => setSettingsDialog('collections')}
+                        onPress={() => setScreen('collections')}
                         testId={subTestId(testId, 'affix')}
                     />
                     <HeaderAction
                         icon="gear"
                         label={t('post_settings_title')}
                         disabled={create.isPending}
-                        onPress={() => setSettingsDialog('settings')}
+                        onPress={() => setScreen('settings')}
                         testId={subTestId(testId, 'prefix')}
                     />
                 </div>
@@ -590,7 +570,7 @@ export function PostComposerDialog({
                                 : t('post_audience_free')
                         }
                         disabled={create.isPending}
-                        onPress={() => setSettingsDialog('audience')}
+                        onPress={() => setScreen('audience')}
                         testId={subTestId(testId, 'trigger')}
                     />
                     <SettingChip
@@ -603,7 +583,7 @@ export function PostComposerDialog({
                         icon="comments-text"
                         label={t(replyAudienceLabelKey(draft.replyAllowedUser))}
                         disabled={create.isPending}
-                        onPress={() => setSettingsDialog('reply')}
+                        onPress={() => setScreen('reply')}
                         testId={subTestId(testId, 'suffix')}
                     />
                 </div>
@@ -640,7 +620,7 @@ export function PostComposerDialog({
                         variant="secondary"
                         size="medium"
                         disabled={problem === 'empty' || create.isPending}
-                        onClick={() => setPreviewOpen(true)}
+                        onClick={() => setScreen('preview')}
                         data-testid={subTestId(testId, 'reveal')}
                     >
                         <Icon name="eye" size={20} className="flex-none" />

@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-1095 ids across 31 surfaces.
+1096 ids across 31 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -1188,7 +1188,8 @@ Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/po
 | `post-collection-menu` | — | `src/features/post/components/collection-detail.tsx:130` |
 | `post-collections-header` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:31` |
 | `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:46` |
-| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:448` |
+| `post-preview` | — | `src/features/post/components/post-composer-dialogs.tsx:173` |
+| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:429` |
 
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone
 
@@ -1381,7 +1382,7 @@ name; you need it to know the element exists.
 | `PostMediaTile` | `src/features/post/components/post-media-tile.tsx` | `-count` `-label` `-overlay` `-panel` `-slide` `-suffix` |
 | `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-overlay` `-panel` `-remove` `-trigger` |
 | `PostNsfwGuard` | `src/features/post/components/post-nsfw-guard.tsx` | `-close` `-reveal` `-title` `-trigger` |
-| `PostPreviewDialog` | `src/features/post/components/post-preview-dialog.tsx` | `-description` `-header` `-item` `-overlay` `-panel` `-slide` |
+| `PostPreviewCard` | `src/features/post/components/post-preview-card.tsx` | `-description` `-item` `-overlay` `-panel` `-slide` |
 | `PostReportDialog` | `src/features/post/components/post-report-dialog.tsx` | `-close` `-confirm` `-description` `-input` `-option` `-retry` `-submit` `-title` |
 | `PostAudienceScreen`, `PostReplyAudienceScreen`, `PostSettingsScreen` | `src/features/post/components/post-settings-panel.tsx` | `-affix` `-error` `-field` `-input` `-item` `-message` `-option` `-reveal` |
 | `PostSlider` | `src/features/post/components/post-slider.tsx` | `-apply` `-clear` `-close` `-confirm` `-copy` `-description` `-footer` `-group` `-label-data` `-list` `-next` `-overlay` `-panel` `-prev` `-reveal` `-slide` |
