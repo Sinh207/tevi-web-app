@@ -12,6 +12,7 @@ import { PostConversationProvider } from '../lib/author-conversation'
  */
 
 vi.mock('@shared/components/lottie-animation', () => ({ LottieAnimation: () => null }))
+vi.mock('@shared/hooks/use-may-animate', () => ({ useMayAnimate: () => true }))
 vi.mock('@shared/i18n/use-translation', () => ({
     useTranslation: () => ({ t: (key: string) => key, currentLanguage: 'en' }),
 }))

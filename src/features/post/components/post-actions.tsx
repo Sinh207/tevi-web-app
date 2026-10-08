@@ -1,6 +1,5 @@
 'use client'
 
-import { LottieAnimation } from '@shared/components/lottie-animation'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatCompactCount, formatExactCount } from '@shared/lib/format-count'
 import { useWebConfig } from '@shared/lib/remote-config'
@@ -15,6 +14,7 @@ import { usePostReaction } from '../hooks/use-post-reaction'
 import { useOpenAuthorConversation } from '../lib/author-conversation'
 import { postActionVisibility, replyCost } from '../lib/post-access'
 import { mayReply, replyAudience, replyAudienceNotice } from '../lib/who-can-reply'
+import { ReactionStar } from './reaction-star'
 
 /**
  * The row under a post — legacy's six controls, in legacy's two groups.
@@ -272,29 +272,25 @@ function ActionButton({
 }
 
 /**
- * The reaction control — legacy's **Lottie star**, at its 40px target rather than the row's 32.
+ * The reaction control — legacy's star, at the row's 32px target with a 24px glyph like every other
+ * control here. (Legacy's was 40, the Lottie's own box; the burst still draws at 40 around it.)
  *
- * ## Why the artwork is an animation and not a glyph
+ * ## The star is the sprite's; the burst is legacy's
  *
- * One file carries three things: an unpressed star, a pressed star, and the burst between them
- * (`icon_star_reactions.json` — thirteen layers, `Unselect.png` scaling to 0 at frame 18 and
- * `Select` reaching 100 at frame 44). So the resting states are **stills from the same file that
- * animates the transition**, which is the only arrangement in which the two cannot drift apart. A
- * sprite glyph would be a second drawing that merely happens to mean the same thing.
+ * Legacy drew the whole control from one Lottie file (`icon_star_reactions.json`): its resting
+ * states were stills of the file, and the file's star layers carry colours no theme can reach — a
+ * `#1B1B1B` raster outline that vanished on a dark page. `ReactionStar` keeps the file for what a
+ * glyph cannot do (the burst) and draws the star from the DS sprite (`/dev/icons`): outline in the
+ * row's `--icon-secondary`, filled in `--accents-warning-active` once reacted.
  *
  * It is a **star** rather than a heart because Tevi reacts with one, and a star is also its
- * currency — which is what makes the Star cost chip on the corner legible rather than confusing.
+ * currency.
  *
- * ## The three plays, all of them legacy's
+ * ## Only a reacting press bursts
  *
- * | | |
- * |---|---|
- * | at rest | `goToAndStop(reacted ? 60 : 0)` — no rAF, no loop |
- * | on press | `playSegments([0, 60])` reacting, `[60, 0]` taking it back |
- * | on failure | the state snaps back, so the segment plays the other way on the next render |
- *
- * `animate` is off for the first paint and on after the reader has pressed, so a feed scrolling
- * into view does not play twenty bursts at once.
+ * `burstKey` counts presses that **add** a reaction; each one mounts a fresh burst that plays once
+ * and unmounts. The first paint never bursts, so a feed scrolling into view does not play twenty
+ * animations at once, and taking a reaction back just changes the glyph's weight.
  *
  * ## The write is real
  *
@@ -315,19 +311,15 @@ function ReactButton({
 }) {
     const { t } = useTranslation()
     const { reacted, count, toggle, isPending } = usePostReaction(post, { cost })
-    /**
-     * Only a press animates. Held in state rather than derived, because the thing that must not
-     * animate is the **first** paint — and "has the reader pressed yet" is not something the post
-     * can tell us.
-     */
-    const [pressed, setPressed] = useState(false)
+    /** One per reacting press — see the header. */
+    const [burstKey, setBurstKey] = useState(0)
 
     return (
         <span className="flex items-center">
             <button
                 type="button"
                 onClick={() => {
-                    setPressed(true)
+                    if (!reacted) setBurstKey(key => key + 1)
                     toggle()
                 }}
                 aria-label={t('post_action_react')}
@@ -335,13 +327,13 @@ function ReactButton({
                 aria-busy={isPending || undefined}
                 title={t('post_action_react')}
                 data-testid={testId}
-                className="relative flex size-10 flex-none items-center justify-center rounded-full"
+                className="relative flex size-8 flex-none items-center justify-center rounded-full"
             >
-                <LottieAnimation
-                    src={REACTION_ART}
-                    frame={reacted ? REACTED_FRAME : 0}
-                    animate={pressed}
-                    className="size-10"
+                <ReactionStar
+                    reacted={reacted}
+                    burstKey={burstKey}
+                    onBurstEnd={() => setBurstKey(0)}
+                    size="post"
                 />
             </button>
             <span className={COUNT_CLASS} title={formatExactCount(count, locale)}>
@@ -351,17 +343,8 @@ function ReactButton({
     )
 }
 
-/**
- * Legacy's own artwork, committed rather than fetched — **exported** because the reply row draws the
- * same star, and a second constant pointing at the same file is how two surfaces end up animating to
- * different frames. `public/` is where an animation this app
- * ships lives (`docs/STATIC_ASSETS.md`), and `LottieAnimation` loads it by URL so the 117 KB is
- * cached as a file instead of inlined into a JS chunk.
- */
-export const REACTION_ART = '/lotties/icon-star-reactions.json'
-
-/** The artwork's last frame — its `op`, and legacy's own `goToAndStop(60)`. */
-export const REACTED_FRAME = 60
+// The reaction artwork moved with the control's face — `reaction-star.tsx`.
+export { REACTED_FRAME, REACTION_ART } from './reaction-star'
 
 /**
  * The bookmark control.

@@ -8,7 +8,6 @@ import {
     ActionMenuTrigger,
 } from '@shared/components/action-menu'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
-import { LottieAnimation } from '@shared/components/lottie-animation'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
@@ -24,9 +23,10 @@ import { useDeleteReply } from '../hooks/use-delete-reply'
 import { useReplyReaction } from '../hooks/use-reply-reaction'
 import { formatPostTimestamp } from '../lib/post-format'
 import { replyMenuVisibility, replyReactionCost } from '../lib/reply-access'
-import { COUNT_CLASS, REACTED_FRAME, REACTION_ART } from './post-actions'
+import { COUNT_CLASS } from './post-actions'
 import { PostImageGallery } from './post-image-gallery'
 import { PostMediaLightbox } from './post-media-lightbox'
+import { ReactionStar } from './reaction-star'
 
 /**
  * One reply under a post.
@@ -388,7 +388,8 @@ function ReplyActions({
 }) {
     const { t } = useTranslation()
     const { reacted, count, toggle, isPending } = useReplyReaction(reply, { cost })
-    const [pressed, setPressed] = useState(false)
+    /** One per reacting press — `ReactionStar` bursts on each. */
+    const [burstKey, setBurstKey] = useState(0)
 
     return (
         <div className="flex items-center gap-3">
@@ -396,7 +397,7 @@ function ReplyActions({
                 <button
                     type="button"
                     onClick={() => {
-                        setPressed(true)
+                        if (!reacted) setBurstKey(key => key + 1)
                         toggle()
                     }}
                     aria-label={t('post_action_react')}
@@ -406,11 +407,11 @@ function ReplyActions({
                     data-testid={subTestId(testId, 'reveal')}
                     className="relative flex size-8 flex-none items-center justify-center rounded-full"
                 >
-                    <LottieAnimation
-                        src={REACTION_ART}
-                        frame={reacted ? REACTED_FRAME : 0}
-                        animate={pressed}
-                        className="size-8"
+                    <ReactionStar
+                        reacted={reacted}
+                        burstKey={burstKey}
+                        onBurstEnd={() => setBurstKey(0)}
+                        size="reply"
                     />
                 </button>
                 <span className={COUNT_CLASS} title={formatExactCount(count, locale)}>

@@ -47,6 +47,9 @@ export function LottieAnimation({
     ariaLabel,
     frame,
     animate = false,
+    once,
+    hideLayers,
+    onComplete,
 }: {
     /** URL of the animation JSON — a path under `public/`, never an import. */
     src: string
@@ -78,6 +81,20 @@ export function LottieAnimation({
      * twenty animations at once.
      */
     animate?: boolean
+    /**
+     * Play this segment **once**, on load, and stop — a one-shot effect laid over something else
+     * (the reaction burst over the sprite's star). Mount a fresh instance (a new `key`) per play.
+     * Ignored when `frame` is set.
+     */
+    once?: readonly [number, number]
+    /**
+     * Layers to leave out, by their name in the file (`nm`). For an animation whose artwork carries
+     * colours that cannot follow the theme: the reaction star's own two star layers are baked dark
+     * and white, so the post card draws the star from the DS sprite and keeps only the burst.
+     */
+    hideLayers?: readonly string[]
+    /** A `once` segment finished. */
+    onComplete?: () => void
 }) {
     const host = useRef<HTMLDivElement>(null)
     /**
@@ -98,6 +115,14 @@ export function LottieAnimation({
      * A boolean derived during render has no such ordering.
      */
     const isStill = frame !== undefined
+    const playsOnce = !isStill && once !== undefined
+    // Read through refs inside the build: identity-unstable props must not rebuild the player.
+    const onceRef = useRef(once)
+    onceRef.current = once
+    const hiddenRef = useRef(hideLayers)
+    hiddenRef.current = hideLayers
+    const completeRef = useRef(onComplete)
+    completeRef.current = onComplete
 
     useEffect(() => {
         const node = host.current
@@ -117,15 +142,30 @@ export function LottieAnimation({
                      * reference to stop it.
                      */
                     if (cancelled) return
+                    // A copy per player: lottie-web completes the data it is given in place.
+                    const copy = structuredClone(data) as { layers?: { nm?: string }[] }
+                    const hidden = hiddenRef.current
+                    if (hidden?.length && Array.isArray(copy.layers)) {
+                        copy.layers = copy.layers.filter(layer => !hidden.includes(layer.nm ?? ''))
+                    }
                     const player = lottie.loadAnimation({
                         container: node,
                         renderer: 'svg',
-                        loop: !isStill,
-                        autoplay: !isStill,
-                        // A copy per player: lottie-web completes the data it is given in place.
-                        animationData: structuredClone(data),
+                        loop: !isStill && !playsOnce,
+                        autoplay: !isStill && !playsOnce,
+                        animationData: copy,
                     })
                     playerRef.current = player
+                    if (playsOnce) {
+                        const segment = onceRef.current
+                        const play = () => {
+                            if (segment) player.playSegments([segment[0], segment[1]], true)
+                        }
+                        player.addEventListener('complete', () => completeRef.current?.())
+                        if (player.isLoaded) play()
+                        else player.addEventListener('DOMLoaded', play)
+                        return
+                    }
                     /*
                      * Not straight away unless it is already loaded: before the DOM is built the player
                      * does not know how many frames it has, so `goToAndStop` is ignored and the icon
@@ -154,7 +194,7 @@ export function LottieAnimation({
             playerRef.current = null
             lastFrameRef.current = null
         }
-    }, [src, isStill])
+    }, [src, isStill, playsOnce])
 
     useEffect(() => {
         if (frame === undefined) {
