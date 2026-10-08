@@ -259,19 +259,15 @@ function StepBody({ flow }: { flow: TwoFaFlow }) {
 /**
  * The glyph each step opens with, or nothing.
  *
- * ✅ **`envelope`, which legacy draws and this app now has.** It was `send` — "a code was sent" — for
- * as long as the set had no envelope: not in the committed subset and not in the Figma export either
- * (`icon-names.ts` had no `mail`, `envelope` or `letter`). Upstream **Zappicon v1.2.0 does** have one,
- * and `design-system/tevi-icons.extra.svg` is the sanctioned way to carry a glyph the library is
- * missing, so it is there now with its provenance written down. Confirmed against the comps first:
- * Figma `Two-step verification` node `1070:94156` is a rounded open-flap envelope.
- *
- * That matters more than a nicer picture. This step is the one place in the flow that sends the reader
- * *out of the app*, and `send` named the wrong half of it — the sending, not the inbox to open.
+ * ⚠ **`send`, a stand-in for the envelope legacy and the comps draw** (Figma `Two-step verification`
+ * node `1070:94156`, a rounded open-flap envelope). Icons come only from the DS sprite — what
+ * `/dev/icons` shows — and it has no envelope, `mail` or `letter`; the upstream-Zappicon overlay that
+ * once carried one is gone. `send` says "a code was sent", which is half of the sentence (the step
+ * is about which inbox to open). One line to change when Brand adds an envelope to the library.
  */
 const MARKS: Record<TwoFaStep, TeviIconNameFilled | null> = {
     enter: 'lock-simple',
-    recovery: 'envelope',
+    recovery: 'send',
     new: null,
     reenter: null,
     hint: null,

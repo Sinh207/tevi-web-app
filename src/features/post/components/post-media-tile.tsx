@@ -11,10 +11,10 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { Post } from '../api/types'
 import { usePostUnlock } from '../hooks/use-post-unlock'
+import { LOCK_MEDIA_GLYPH } from '../lib/media-glyph'
 import { isGated, postDisplay } from '../lib/post-access'
 import { postHref } from '../lib/post-link'
 import { mediaTileSummary } from '../lib/post-media'
-import { LockMediaIcon } from './legacy-icons'
 import { PostMediaLightbox } from './post-media-lightbox'
 import { PostUnlockDialogs } from './post-unlock-dialogs'
 
@@ -148,7 +148,7 @@ export function PostMediaTile({
                     data-testid={subTestId(testId, 'panel')}
                     className="absolute inset-0 flex items-center justify-center bg-black/30 text-white backdrop-blur-[10px]"
                 >
-                    <Icon name="eye-slash" size={32} />
+                    <Icon name="nsfw" size={32} />
                 </span>
             ) : null}
 
@@ -156,7 +156,7 @@ export function PostMediaTile({
                 <span className="flex justify-end">
                     {summary.images > 1 ? (
                         <TilePill testId={subTestId(testId, 'count')}>
-                            <LockMediaIcon kind="images" size={12} />
+                            <Icon name={LOCK_MEDIA_GLYPH.images} size={16} className="size-3" />
                             <span className="type-caption-meta">
                                 {t('post_media_photos', { count: summary.images })}
                             </span>
@@ -166,7 +166,7 @@ export function PostMediaTile({
                 <span className="flex items-end justify-between gap-1">
                     {summary.duration ? (
                         <TilePill testId={subTestId(testId, 'label')}>
-                            <LockMediaIcon kind="video" size={16} />
+                            <Icon name={LOCK_MEDIA_GLYPH.video} size={16} />
                             <span className="type-caption-label-strong">{summary.duration}</span>
                         </TilePill>
                     ) : (

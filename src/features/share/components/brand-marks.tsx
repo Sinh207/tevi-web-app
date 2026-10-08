@@ -3,15 +3,14 @@
  *
  * ## Why this file is allowed to exist, and what may go in it
  *
- * `CLAUDE.md` is categorical: icons come from the DS sprite, a missing glyph gets **reported**
- * rather than substituted or hand-drawn, and the one sanctioned overlay
- * (`design-system/tevi-icons.extra.svg`) takes glyphs from **upstream Zappicon only**.
+ * `CLAUDE.md` is categorical: icons come **only** from the DS sprite (`/dev/icons`), and a missing
+ * glyph is stood in for from that set, never hand-drawn. This file is on `scripts/check-icons.mjs`'s
+ * `ALLOWED` list because what it draws is not an icon.
  *
  * Neither route covers a third-party *logo*. The Figma library ships six brand marks
  * (`facebook-icon`, `telegram-icon`, `x-icon`, `instagram-icon`, `tiktok-icon`, `linkedin-icon`) and
  * that set is closed; Zappicon v1.2.0 was checked and carries **no brand marks at all** — not
- * Messenger, not WhatsApp, not even the six the library has — so the overlay cannot supply one
- * either. A logo is also not a glyph in the sense those rules are written about: it is not drawn to
+ * Messenger, not WhatsApp, not even the six the library has. A logo is also not a glyph in the sense those rules are written about: it is not drawn to
  * the DS's grid, it cannot be restyled by weight, and its shape is the other company's.
  *
  * So marks of that kind live **beside the feature that needs them**, never in the sprite, and each

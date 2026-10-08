@@ -45,6 +45,7 @@ pnpm lint             # biome check            (lint:fix = --write)
 pnpm lint:rtl         # fails on physical classes: pl/pr, ml/mr, left-/right-
 pnpm format           # biome format --write
 
+pnpm lint:icons       # icons only from the DS sprite (/dev/icons): no inline <svg>, no icon package
 pnpm lint:testids     # data-testid grammar + drift against the committed testids/ catalog
 pnpm testids          # regenerate that catalog
 

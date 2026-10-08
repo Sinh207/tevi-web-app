@@ -19,10 +19,10 @@ import { useEffect, useState } from 'react'
 import { COLLECTION_CANDIDATE_TYPES, type CollectionCandidateType } from '../api/post-api'
 import type { Post } from '../api/types'
 import { useAddPostsToCollection, useCollectionCandidates } from '../hooks/use-collection-add-posts'
+import { LOCK_MEDIA_GLYPH } from '../lib/media-glyph'
 import { candidateAudience } from '../lib/post-access'
 import { formatPostTimestamp } from '../lib/post-format'
 import { mediaTileSummary } from '../lib/post-media'
-import { LockMediaIcon } from './legacy-icons'
 
 const TAB_LABEL: Record<CollectionCandidateType, string> = {
     ALL: 'collection_add_tab_all',
@@ -282,7 +282,7 @@ export function CollectionPostRow({
                     />
                 ) : (
                     <span className="absolute inset-0 flex items-center justify-center text-(--icon-secondary)">
-                        <LockMediaIcon kind="text" size={32} />
+                        <Icon name={LOCK_MEDIA_GLYPH.text} size={32} />
                     </span>
                 )}
             </span>
@@ -326,17 +326,17 @@ export function CollectionPostRow({
                 <span className="type-caption-meta flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-white">
                     {media.images > 0 ? (
                         <>
-                            <LockMediaIcon kind="images" size={12} />
+                            <Icon name={LOCK_MEDIA_GLYPH.images} size={16} className="size-3" />
                             {media.images}
                         </>
                     ) : media.duration ? (
                         <>
-                            <LockMediaIcon kind="video" size={12} />
+                            <Icon name={LOCK_MEDIA_GLYPH.video} size={16} className="size-3" />
                             {media.duration}
                         </>
                     ) : (
                         <>
-                            <LockMediaIcon kind="text" size={12} />
+                            <Icon name={LOCK_MEDIA_GLYPH.text} size={16} className="size-3" />
                             {t('collection_add_tab_text')}
                         </>
                     )}

@@ -29,4 +29,4 @@ Full checklist: [`docs/DEFINITION_OF_DONE.md`](../docs/DEFINITION_OF_DONE.md)
       read, per [`docs/TEST_IDS.md`](../docs/TEST_IDS.md) — no translated text in an id, state in its
       own attribute, per-item identity in a companion attribute. `pnpm testids` re-run and
       `testids/` committed
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm lint:rtl`, `pnpm lint:links`, `pnpm lint:testids` pass
+- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm lint:rtl`, `pnpm lint:links`, `pnpm lint:icons`, `pnpm lint:testids` pass

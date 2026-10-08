@@ -226,13 +226,11 @@ export function PasswordSetupFlow({
     const stepCopy = {
         email: {
             /*
-             * **`envelope`**, which is what this step is about — the inbox to open. It was `send` for
-             * as long as the set had no envelope; upstream Zappicon v1.2.0 does, and it now lives in
-             * `design-system/tevi-icons.extra.svg` (added for the two-step-verification screens,
-             * whose comps draw the same glyph on the same step). Changed here too so the two
-             * connect-email screens in this app are not one real glyph and one stand-in.
+             * **`send`**, standing in for the envelope the comps draw: icons come only from the DS
+             * sprite (`/dev/icons`), which has none. The same stand-in as the two-step-verification
+             * email steps, so the two connect-email screens agree.
              */
-            icon: { name: 'envelope', weight: 'filled' } as const,
+            icon: { name: 'send', weight: 'filled' } as const,
             title: 'password_connect_title',
             description: 'password_connect_description',
         },

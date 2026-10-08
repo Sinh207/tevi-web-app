@@ -60,8 +60,8 @@ export type ShareChannelSpec = {
      * A DS sprite name, or one of the brand marks the library does not carry
      * (`components/brand-marks.tsx` says why those are allowed to live outside the sprite).
      *
-     * Every sprite name below exists in the Figma library except `envelope`, which
-     * `tevi-icons.extra.svg` carries from upstream Zappicon for the two-step-verification steps.
+     * Every sprite name below exists in the Figma library — icons come only from it (`/dev/icons`).
+     * The email row stands in `send` for an envelope the library does not have.
      */
     glyph: TeviIconName | ShareBrandMark
     /**
@@ -200,7 +200,7 @@ export const SHARE_CHANNELS: readonly ShareChannelSpec[] = [
          * sheet, which is `navigator.share` territory rather than a URL.
          */
         labelKey: 'share_gmail',
-        glyph: 'envelope',
+        glyph: 'send',
         brand: null,
         target: (url, { subject }) =>
             `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(

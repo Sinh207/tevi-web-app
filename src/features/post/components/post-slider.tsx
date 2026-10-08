@@ -19,10 +19,10 @@ import { usePostBookmark } from '../hooks/use-post-bookmark'
 import { usePostReaction } from '../hooks/use-post-reaction'
 import type { SliderFilter } from '../hooks/use-post-slider'
 import { usePostUnlock } from '../hooks/use-post-unlock'
+import { LOCK_MEDIA_GLYPH } from '../lib/media-glyph'
 import { isGated, postActionVisibility, postDisplay, replyCost } from '../lib/post-access'
 import { formatPostTimestamp, truncateSliderCaption } from '../lib/post-format'
 import { isLocalImageSrc, videoSrc } from '../lib/post-media'
-import { LockMediaIcon } from './legacy-icons'
 import { PostLockPanel } from './post-lock-panel'
 import { PostUnlockDialogs } from './post-unlock-dialogs'
 
@@ -481,7 +481,7 @@ function PostSliderSlide({
                         data-testid={subTestId(testId, 'label-data')}
                         className="type-caption-meta absolute start-2 top-2 z-10 flex items-center gap-1 rounded-[40px] bg-black/50 px-2 py-1 text-white md:start-3 md:top-3"
                     >
-                        <LockMediaIcon kind="images" size={16} />
+                        <Icon name={LOCK_MEDIA_GLYPH.images} size={16} />
                         {t('post_slider_picture_count', {
                             index: picture + 1,
                             total: images.length,

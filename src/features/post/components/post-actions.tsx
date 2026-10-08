@@ -15,7 +15,6 @@ import { usePostReaction } from '../hooks/use-post-reaction'
 import { useOpenAuthorConversation } from '../lib/author-conversation'
 import { postActionVisibility, replyCost } from '../lib/post-access'
 import { mayReply, replyAudience, replyAudienceNotice } from '../lib/who-can-reply'
-import { BookmarkIcon } from './legacy-icons'
 
 /**
  * The row under a post — legacy's six controls, in legacy's two groups.
@@ -370,9 +369,12 @@ export const REACTED_FRAME = 60
  * Its state comes from `usePostBookmark` rather than straight off the post, because the flip lands
  * **after** the server confirms — so the prop is the starting value, not the current one.
  *
- * The glyph is `BookmarkIcon` and not `<Icon name="bookmark-simple" />`: the sprite's only bookmark
- * is the **slashed** variant under a plain name, so the DS glyph drew a crossed-out bookmark on a
- * post that had never been saved. `legacy-icons.tsx` carries the full finding and the condition for deleting it.
+ * ⚠ **The glyph is the sprite's `bookmark-simple`, and the library draws it slashed.** Both of its
+ * weights carry the same diagonal `bell-slash` does (verified against upstream Zappicon v1.2.0, whose
+ * `bookmark-simple` has one path where the Tevi export has two), so an unsaved post shows a
+ * crossed-out bookmark. Legacy's own path stood in for it until icons were held to the library alone
+ * (`/dev/icons`); now this is a **library defect raised with Brand** — the fix is the export, and
+ * nothing here changes when it lands. `docs/DESIGN_SYSTEM.md` lists it.
  */
 function BookmarkButton({ post, testId }: { post: Post; testId?: string }) {
     const { t } = useTranslation()
@@ -389,7 +391,11 @@ function BookmarkButton({ post, testId }: { post: Post; testId?: string }) {
             data-testid={testId}
             className="relative flex size-8 flex-none items-center justify-center rounded-full text-(--icon-secondary) transition-colors hover:bg-(--background-segment)"
         >
-            <BookmarkIcon filled={bookmarked} />
+            {bookmarked ? (
+                <Icon name="bookmark-simple" weight="filled" size={24} />
+            ) : (
+                <Icon name="bookmark-simple" size={24} />
+            )}
         </button>
     )
 }

@@ -13,6 +13,7 @@
         "lint:fix": "biome check --write",
         "lint:rtl": "bash scripts/check-rtl-classes.sh",
         "lint:links": "node scripts/check-internal-links.mjs",
+        "lint:icons": "node scripts/check-icons.mjs",
         "lint:testids": "node scripts/check-testids.mjs && node scripts/build-testid-catalog.mjs --check",
         "testids": "node scripts/build-testid-catalog.mjs",
         "format": "biome format --write",

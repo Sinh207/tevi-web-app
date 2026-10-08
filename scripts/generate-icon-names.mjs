@@ -19,13 +19,11 @@ const WEIGHTS = [
 ]
 
 /**
- * The Figma export plus the overlay of upstream glyphs it does not carry. Both, because
- * a name only in the overlay still has to be a legal `<Icon name>` — see
- * `design-system/tevi-icons.extra.svg` for what may live there.
+ * The Figma export, and nothing else: a legal `<Icon name>` is a glyph the library has — what
+ * `/dev/icons` shows. (An overlay of upstream Zappicon glyphs used to be merged in here; it was
+ * removed so that the type itself refuses any icon design did not put in the library.)
  */
-const sprite =
-    readFileSync('design-system/tevi-icons.svg', 'utf8') +
-    readFileSync('design-system/tevi-icons.extra.svg', 'utf8')
+const sprite = readFileSync('design-system/tevi-icons.svg', 'utf8')
 const ids = new Set([...sprite.matchAll(/<symbol id="([^"]+)"/g)].map(m => m[1]))
 const names = [...ids].filter(id => !id.includes('--')).sort()
 

@@ -74,7 +74,7 @@ export function McnInvitationView({ token }: { token: string | null }) {
             <ChannelEmptyState
                 testId="channel-invitation-signed-out"
                 className={cn('flex-1', RISE)}
-                icon="envelope"
+                icon="send"
                 title={t('mcn_invitation_signed_out_title')}
                 body={t('mcn_invitation_signed_out_body')}
                 action={

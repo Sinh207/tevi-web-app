@@ -205,7 +205,8 @@ function EventStudioSeat({
     )
 
     const micTitle = t(audio ? 'event_studio_mic_on' : 'event_studio_mic_off')
-    const micIcon = audio ? 'microphone' : 'microphone-slash'
+    // The sprite (`/dev/icons`) has no slashed microphone; a muted seat shows the muted speaker.
+    const micIcon = audio ? 'microphone' : 'volume-off-slash'
 
     return (
         <div

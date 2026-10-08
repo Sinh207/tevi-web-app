@@ -11,7 +11,6 @@ import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
 import type { PostCollection } from '../api/collection-types'
 import { formatPostTimestamp } from '../lib/post-format'
-import { CollectionListGlyph } from './legacy-icons'
 
 /**
  * One collection as legacy draws it — `collection/components/collectionItem`, on both of its
@@ -53,7 +52,8 @@ export function CollectionCard({
             {/* Legacy's tile: the segment fill, 56 tall, a dark pill with the count inside. */}
             <span className="flex h-14 flex-none items-center justify-center rounded-(--radius-lg) bg-(--background-segment) px-2 py-1.5">
                 <span className="flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-white">
-                    <CollectionListGlyph />
+                    {/* The sprite's list glyph (`/dev/icons`); legacy drew bare bullets. */}
+                    <Icon name="document-list" size={16} className="size-3" />
                     <span className="type-dense-emphasis">
                         {formatCompactCount(count, currentLanguage)}
                     </span>

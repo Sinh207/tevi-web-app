@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -10,18 +10,12 @@ import { describe, expect, it } from 'vitest'
  */
 const root = process.cwd()
 const figma = readFileSync(join(root, 'design-system/tevi-icons.svg'), 'utf8')
-/**
- * Glyphs the Figma library does not carry, kept out of the export so a re-export cannot drop
- * them. `pnpm icons` merges the two, so the types are generated from both and so are these
- * assertions. See `design-system/tevi-icons.extra.svg` for what is allowed in it.
- */
-const extra = readFileSync(join(root, 'design-system/tevi-icons.extra.svg'), 'utf8')
 const generated = readFileSync(join(root, 'src/shared/ui/icon-names.ts'), 'utf8')
 
 const idsIn = (svg: string) => [...svg.matchAll(/<symbol id="([^"]+)"/g)].map(m => m[1])
 const figmaIds = idsIn(figma)
-const extraIds = idsIn(extra)
-const symbolIds = new Set([...figmaIds, ...extraIds])
+/** The Figma export is the **only** source — what `/dev/icons` shows. */
+const symbolIds = new Set(figmaIds)
 
 /** Pull the `| 'name'` members out of one exported type alias. */
 function unionMembers(typeName: string): string[] {
@@ -73,35 +67,25 @@ describe('tevi icon sprite', () => {
         expect(missing).toEqual([])
     })
 
-    it('keeps the 554 glyphs the design system documents, plus the overlay', () => {
-        const overlayNames = extraIds.filter(id => !id.includes('--'))
-        expect(unionMembers('TeviIconName')).toHaveLength(554 + overlayNames.length)
+    it('keeps exactly the 554 glyphs the design system documents', () => {
+        expect(unionMembers('TeviIconName')).toHaveLength(554)
     })
 })
 
 /**
- * The overlay is a stopgap, and the failure mode of a stopgap is that it outlives its reason.
- * The day Figma ships one of these glyphs, the export and the overlay both define the id and
- * the merge silently picks one — which is exactly the kind of "renders something, just not the
- * right something" this whole area keeps producing. Fail instead, and the fix is to delete the
- * overlay entry.
+ * **Icons come only from the library** — the glyphs `/dev/icons` shows, which is
+ * `design-system/tevi-icons.svg` and nothing else. An overlay of upstream Zappicon glyphs
+ * (`tevi-icons.extra.svg`) used to be merged into both the sprite and these types; it was removed
+ * so that `<Icon name>` itself refuses a glyph design never put in the library. A missing glyph is
+ * a request to Brand, stood in for from this set until it lands — not a file beside the export.
  */
-describe('upstream glyph overlay', () => {
-    it('defines nothing the Figma export already has', () => {
+describe('the icon set is the library, and only the library', () => {
+    it('has no overlay beside the Figma export', () => {
+        expect(existsSync(join(root, 'design-system/tevi-icons.extra.svg'))).toBe(false)
+    })
+
+    it('generates nothing the export does not define', () => {
         const inFigma = new Set(figmaIds)
-        expect(extraIds.filter(id => inFigma.has(id))).toEqual([])
-    })
-
-    it('keeps every alias in it resolvable', () => {
-        const have = new Set([...figmaIds, ...extraIds])
-        const refs = [...extra.matchAll(/<use[^>]+href="#([^"]+)"/g)].map(m => m[1])
-        expect(refs.filter(id => !have.has(id))).toEqual([])
-    })
-
-    it('still carries eye-slash, which the password reveal toggle needs', () => {
-        // Two states, two glyphs. `eye` alone cannot express them: it is filled-only and its
-        // bare id is an alias onto `eye--filled`, so a weight toggle draws it twice.
-        expect(extraIds).toContain('eye-slash')
-        expect(extraIds).toContain('eye-slash--filled')
+        expect(unionMembers('TeviIconName').filter(name => !inFigma.has(name))).toEqual([])
     })
 })

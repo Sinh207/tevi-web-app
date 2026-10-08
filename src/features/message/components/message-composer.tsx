@@ -186,7 +186,7 @@ export function MessageComposer({
                             onClick={() => setAttach({ files: [] })}
                             className="my-1 size-8 flex-none text-(--icon-default)"
                         >
-                            <Icon name="paperclip" size={24} className="size-6" />
+                            <Icon name="image" size={24} className="size-6" />
                         </Button>
                     )}
                     <textarea

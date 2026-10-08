@@ -53,6 +53,7 @@ NEXT_DEV_DISK_CACHE=0 pnpm dev        # no turbopack disk store at all (slower c
 pnpm lint                             # biome check          (lint:fix = --write)
 pnpm lint:rtl                         # scripts/check-rtl-classes.sh — fails on pl/pr/ml/mr, left-/right-
 pnpm lint:links                       # scripts/check-internal-links.mjs — bare <a> on an internal route
+pnpm lint:icons                       # scripts/check-icons.mjs — icons only from the DS sprite (/dev/icons)
 pnpm lint:testids                     # data-testid grammar + catalog drift (scripts/check-testids.mjs)
 pnpm testids                          # regenerate the committed testids/ catalog for QC
 pnpm test                             # vitest run (src/**/*.{test,spec}.{ts,tsx})
@@ -69,7 +70,7 @@ pnpm fonts                            # Chella → WOFF2            (after Brand
 pnpm format                           # biome format --write
 ```
 
-`pnpm typecheck && pnpm lint && pnpm lint:rtl && pnpm lint:links && pnpm lint:testids` is the
+`pnpm typecheck && pnpm lint && pnpm lint:rtl && pnpm lint:links && pnpm lint:icons && pnpm lint:testids` is the
 pre-PR gate (see `.github/pull_request_template.md`).
 
 ## `docs/` — the thirteen long-form documents
@@ -550,12 +551,11 @@ file, so it was rendered through Figma's image endpoint at 2× its 190×127 box 
 `build-cdn-art.mjs`'s own quality. It is **not** a `SOURCES` row on purpose: that script fetches URLs
 and a Figma render URL expires in 30 days, so the node id is the traceable source instead.
 
-**The step marks are the comps' own glyphs**, which took a sprite change: every passcode step draws a
-key and both email steps an envelope. `envelope` was missing from the Figma library, so it came from
-upstream **Zappicon v1.2.0** into `design-system/tevi-icons.extra.svg` — the second entry there — and
-`/settings/password`'s connect-email step moved onto it too, so the two screens do not disagree.
-`key` has no upstream either (Zappicon's `key-simple-square` is a different drawing), so the passcode
-steps still stand in `lock-simple` and that one line waits on Brand.
+**The step marks stand in for the comps' glyphs**: every passcode step draws a key and both email
+steps an envelope, and the library has neither. Icons come only from the DS sprite (`/dev/icons`),
+so the passcode steps use `lock-simple` and the email steps `send` — `/settings/password`'s
+connect-email step too, so the two screens agree. Each is one line to change when Brand adds the
+glyph to the library.
 
 The management half is the **guessed** half generally (nothing had ever called those four, and
 `two-fa/` is in no schema): its open contract questions are **B92**.
@@ -717,16 +717,20 @@ Full pipeline + runbook: [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md).
   step 5 on, use `p-6` / `p-8` / `p-10` / `p-12` / `p-16` / `p-20` / `p-24`.
 - Shadows are `shadow-xs…3xl` + `shadow-label`, backed by the mode-aware `--elevation-*` ramp;
   blur is `--blur-sm/md/lg` for `backdrop-filter`. Both flip with the theme.
-- Icons: the DS sprite only — `<Icon name="angle-left" size={20} />` from `@shared/ui/icon`.
-  Weights are typed per glyph, so an unavailable one is a type error. Never substitute a shape and
-  never hand-draw a path. If the glyph you need is missing, say so — and if the screen genuinely
-  cannot work without it (a two-state toggle, where one glyph cannot express two states), take it
-  from **upstream Zappicon v1.2.0**, the set the Figma library was itself built from, into
-  `design-system/tevi-icons.extra.svg`. That overlay is merged by `pnpm icons` and survives a
-  Figma re-export; read its header first. Also check the glyph actually *has* the weight you are
-  toggling: 65 bare ids are `<use>` aliases onto `--filled`, so `eye` and `eye--filled` are the
-  same drawing and a weight toggle on one is a no-op (`sprite-weight-toggle.test.ts` guards it).
-  Browse at `/dev/icons` (dev-only).
+- **Icons: only the glyphs at `/dev/icons`** — the DS sprite, `design-system/tevi-icons.svg`, and
+  nothing else. `<Icon name="angle-left" size={20} />` from `@shared/ui/icon`; the name is typed
+  from that file alone, so a glyph the library lacks is a type error, and weights are typed per
+  glyph. **No exceptions for missing glyphs**: no overlay of upstream Zappicon glyphs (the old
+  `tevi-icons.extra.svg` is gone), no hand-drawn `<svg>`, no icon package. If the glyph you want is
+  missing, stand in the nearest glyph from the set, say so in a comment, and ask Brand to add it to
+  the library — e.g. `send` stands in for an envelope, `nsfw` for a slashed eye. A two-state toggle
+  with no second glyph keeps one glyph and carries the state in ink and `aria-pressed` (the password
+  reveal). Check the weight you toggle actually differs: 65 bare ids are `<use>` aliases onto
+  `--filled` (`sprite-weight-toggle.test.ts`). Known library defect: `bookmark-simple` is drawn
+  slashed in both weights — raised with Brand, used as is.
+  `pnpm lint:icons` (`scripts/check-icons.mjs`) fails on an inline `<svg>` or an icon package; its
+  `ALLOWED` list is the only place a non-icon mark may be drawn — third-party trademarks (Google /
+  Apple sign-in, store badges, Messenger), Get App's phone, the splash, a chart, a progress ring.
 - Brand: `<Logo size={48} />` from `@shared/ui/logo`. There is **no wordmark** in the DS — the
   "Tevi" lettering is live text in the Chella font, not an asset.
 - **No static art is fetched from a CDN.** Every illustration, banner, backdrop and brand mark is

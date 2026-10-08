@@ -61,20 +61,38 @@ Upstream assets that are **inputs to a build step, never served to a browser**.
 
 ```
 design-system/
-  tevi-icons.svg        1.6 MB, 554 glyphs / 1579 symbols — the Figma export, pristine
-  tevi-icons.extra.svg  glyphs the Figma library does not carry (2: eye-slash, envelope)
+  tevi-icons.svg        1.6 MB, 554 glyphs / 1579 symbols — the Figma export, pristine, and
+                        the ONLY source of icons (what /dev/icons shows)
   tevi-logo.svg         the app mark
 ```
 
-**`tevi-icons.extra.svg` is an overlay, not a second icon set.** `tevi-icons.svg` is replaced
-wholesale on every re-export, so a glyph added inside it disappears the next time someone pulls
-from Figma. `pnpm icons` merges the overlay over the export instead, which keeps the provenance
-of every glyph legible: everything in the big file came from the Tevi Figma library, everything
-in the small one did not. What may go in it is **upstream Zappicon v1.2.0 only** — the same set
-the library itself was built from, so the geometry matches by construction rather than by eye.
-Never hand-draw a path and never adapt a neighbouring glyph into the shape you need. Delete the
-entry the day Figma ships the glyph; `icon-names.test.ts` fails if both files define the same id,
-so a stale overlay entry cannot sit there quietly.
+**Icons come only from `tevi-icons.svg` — what `/dev/icons` shows.** There is no second icon set.
+An overlay of upstream Zappicon glyphs (`tevi-icons.extra.svg`) used to be merged over the export
+for glyphs the library lacked; it was removed so that the rule has no door in it. `pnpm icons`
+generates `<Icon name>`'s type from the export alone, so a glyph design never put in the library
+is a type error, and `pnpm lint:icons` (`scripts/check-icons.mjs`) fails on an inline `<svg>` or an
+icon package anywhere outside its `ALLOWED` list of non-icon marks (third-party trademarks, Get
+App's phone, the splash, a chart, a progress ring). `icon-names.test.ts` fails if the overlay
+file comes back.
+
+**A missing glyph is a request to Brand, and a stand-in until then** — never a path you drew and
+never a neighbouring glyph adapted into the shape you need. The stand-ins in use, each named at its
+call site:
+
+| Wanted | Stands in | Where |
+| --- | --- | --- |
+| envelope | `send` | the email steps of two-step verification, password and sign-in, the MCN invitation walls, share-by-email |
+| slashed eye | `nsfw` / one `eye` | the sensitive-content cover / the password reveal (state in ink + `aria-pressed`) |
+| slashed heart | `heart` | the space menu's Follow / Unfollow (the label carries the state) |
+| slashed microphone | `volume-off-slash` | a muted seat in the Live studio |
+| smiley | `sparkles` | the Live chat's emoji button |
+| paperclip | `image` | the DM composer's attach (photos are all it attaches) |
+| person | `user-simple-alt` | the DM menus' space row |
+| legacy's lock, media and list marks | `lock-simple`, `image` / `film-play` / `document`, `document-list` | the paywall pill, media tiles, collection cards |
+
+**Library defect, raised with Brand:** `bookmark-simple` is drawn **slashed** in both weights (the
+`bell-slash` diagonal; upstream Zappicon's has none), so an unsaved post shows a crossed-out
+bookmark. It is used as is — the fix is the export, and nothing in the app changes when it lands.
 
 Nothing here reaches the client. Everything shipped is generated from it:
 
@@ -713,7 +731,7 @@ go stale, so tests regenerate in memory and compare:
 | Test | Catches |
 |---|---|
 | `src/shared/ui/sprite.test.ts` | Forgot `pnpm icons`; dangling `<use>`; scan over-matching |
-| `src/shared/ui/icon-names.test.ts` | Name union drifted from the sprite; truncated sprite; an overlay glyph Figma has since shipped |
+| `src/shared/ui/icon-names.test.ts` | Name union drifted from the sprite; truncated sprite; an icon overlay beside the export |
 | `src/shared/ui/sprite-weight-toggle.test.ts` | A `weight={cond ? 'filled' : undefined}` on a glyph whose bare id is an alias of that weight — draws the same thing twice |
 | `src/app/manifest.test.ts` | Manifest icon with no file; scaffold favicon back; wrong theme colour |
 | `src/shared/config/fonts.test.ts` | Forgot `pnpm fonts`; a `.ttf` committed back into `public/`; a weight re-added that the DS scale cannot reach |
@@ -793,8 +811,8 @@ Each of these shipped once and produced **no error** — just a wrong pixel or a
   shipped in the password field's reveal button, where it read as a dead toggle — worst on
   `settings/password`, whose field starts empty, so the masked dots were not there to change
   either. Check `icons.md` before making a weight carry state; `sprite-weight-toggle.test.ts`
-  fails the build on it. Two states need two glyphs, and if the second one is not in the library,
-  it comes from `tevi-icons.extra.svg` (§2) — not from a path you drew.
+  fails the build on it. Two states need two glyphs; if the library has only one, keep it for both
+  and carry the state in ink and `aria-pressed` (§2) — never a path you drew.
 - **Tailwind inlines shadow values.** A plain `@theme { --shadow-md: … }` freezes the light ramp
   into the utility, so `shadow-md` never darkens. Shadows go through `--elevation-*` +
   `@theme inline` so the utility emits a `var()`. Don't "simplify" that indirection.

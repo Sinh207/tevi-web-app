@@ -53,14 +53,10 @@ import { ChannelReportDialog } from './channel-report-dialog'
  * `exclamation-circle` is the same stroke weight as the other three and says the same thing.
  * Swap it back the day Figma ships an outline flag.
  *
- * **The Follow row is `heart` / `heart-slash`, and the second half did not exist.** The Figma
- * library draws only the positive half of the pair — as it does for `eye` — so the row had no way to
- * say *unfollow* in the same weight as the `bell` / `bell-slash` row above it. `heart-slash` was
- * taken from **upstream Zappicon v1.2.0** (`heart-simple-slash`, the slash partner of the
- * `heart-simple` the library ships as `heart`) into `design-system/tevi-icons.extra.svg`, which is
- * the sanctioned route CLAUDE.md names for exactly this case: a two-state toggle where one glyph
- * cannot express two states. Read that file's header before adding a fourth entry. Nothing here is
- * hand-drawn or adapted.
+ * **The Follow row is `heart` in both states.** The Figma library draws only the positive half of
+ * the pair — as it does for `eye` — and icons come only from it (`/dev/icons`), so unlike the
+ * `bell` / `bell-slash` row above it the glyph cannot say *unfollow*. The label does: the same
+ * arrangement as `PostMenu`'s Pin / Unpin row.
  */
 export function ChannelViewerMenu({
     channel,
@@ -158,14 +154,12 @@ export function ChannelViewerMenu({
                                     {followed
                                         ? t('channel_action_unfollow')
                                         : t('channel_action_follow')}
-                                    {/* The heart the space page's own Follow control uses, and its
-                                        slash — the same "state you are leaving" reading as the bell
-                                        above it. */}
-                                    <Icon
-                                        name={followed ? 'heart-slash' : 'heart'}
-                                        size={24}
-                                        className="flex-none"
-                                    />
+                                    {/* The heart the space page's own Follow control uses, for both
+                                        states: the sprite (`/dev/icons`) has no slashed heart, and the
+                                        label beside it already says which way the row goes — the
+                                        arrangement `PostMenu`'s Pin / Unpin row takes for the same
+                                        reason. */}
+                                    <Icon name="heart" size={24} className="flex-none" />
                                 </Menu.Item>
                             )}
                             {showsReport && (

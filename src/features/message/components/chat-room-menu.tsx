@@ -63,7 +63,7 @@ export function ChatRoomMenu({
                         render={<Link href={toChannelPath(channel.slug)} />}
                     >
                         {t('message_space_detail')}
-                        <Icon name="user" size={24} className="size-6 flex-none" />
+                        <Icon name="user-simple-alt" size={24} className="size-6 flex-none" />
                     </ActionMenuItem>
                     <ActionMenuItem
                         data-testid="message-room-menu-mute"

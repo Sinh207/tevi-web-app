@@ -122,7 +122,7 @@ export function PostNsfwGuard({
 
             {covered ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-[8px] bg-(--background-overlay) px-4 text-center">
-                    <Icon name="eye-slash" size={24} className="text-(--icon-secondary)" />
+                    <Icon name="nsfw" size={24} className="text-(--icon-secondary)" />
                     <p
                         data-testid={subTestId(testId, 'title')}
                         className="type-dense-emphasis text-(--text-title)"
@@ -180,7 +180,7 @@ export function PostNsfwGuard({
                     data-testid={subTestId(testId, 'close')}
                     className="absolute end-2 top-2 flex size-8 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70"
                 >
-                    <Icon name="eye-slash" size={16} />
+                    <Icon name="nsfw" size={16} />
                 </button>
             )}
         </div>

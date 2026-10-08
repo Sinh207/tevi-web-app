@@ -13,12 +13,9 @@ import { Icon, type IconProps } from '@shared/ui/icon'
  * baked into the paths — four illustrations that are invisible in dark mode and cannot be
  * recoloured. Here it is a DS sprite glyph on a tinted disc, so it flips with the theme.
  *
- * ✅ **The connect-email step draws a real envelope.** It was `send` — what the step *does* rather
- * than what it is about — for as long as the Tevi library shipped no envelope and no `at`. Upstream
- * Zappicon v1.2.0 has one, so it is in `design-system/tevi-icons.extra.svg` with its provenance;
- * `PasswordSetupFlow`'s `email` step carries the note. Substituting an unrelated shape or
- * hand-drawing a path is still not an option (`CLAUDE.md`) — taking the upstream glyph the library
- * is missing is the sanctioned third way.
+ * ⚠ **The connect-email step stands in `send` for an envelope** — what the step *does* rather than
+ * what it is about — because the Tevi library ships no envelope and no `at`, and icons come only
+ * from it (`/dev/icons`). `PasswordSetupFlow`'s `email` step carries the note.
  */
 
 export type StepTone = 'indigo' | 'success' | 'warning' | 'error' | 'brand'

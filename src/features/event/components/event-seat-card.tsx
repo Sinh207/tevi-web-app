@@ -142,7 +142,7 @@ export function EventSeatCard({
                     {/* What is live on the wire, and what they have been given here. */}
                     <span className="flex flex-wrap items-center gap-1.5">
                         <StatusChip
-                            icon={publisher.audio ? 'microphone' : 'microphone-slash'}
+                            icon={publisher.audio ? 'microphone' : 'volume-off-slash'}
                             label={t(
                                 publisher.audio ? 'event_studio_mic_on' : 'event_studio_mic_off',
                             )}
@@ -219,7 +219,8 @@ function StatusChip({
     label,
     on,
 }: {
-    icon: 'microphone' | 'microphone-slash' | 'video'
+    /** `volume-off-slash` for a muted mic: the sprite (`/dev/icons`) has no slashed microphone. */
+    icon: 'microphone' | 'volume-off-slash' | 'video'
     label: string
     on: boolean
 }) {

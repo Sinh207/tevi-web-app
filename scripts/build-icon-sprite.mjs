@@ -44,14 +44,14 @@ const KEEP = [
     'xmark-circle--filled',
 ]
 
-const SOURCE = 'design-system/tevi-icons.svg'
 /**
- * Glyphs the Figma library does not carry, kept beside the export rather than inside it so a
- * re-export cannot drop them. Merged **after** SOURCE, so if Figma later ships one of these ids
- * the overlay copy is what wins — and `icon-names.test.ts` fails on the duplicate so nobody has to
- * notice on their own. See that file's header for what is allowed in it.
+ * The Figma library's export, and **the only source of glyphs** — exactly what `/dev/icons` shows.
+ *
+ * There used to be a second file merged after it (`tevi-icons.extra.svg`, upstream Zappicon glyphs
+ * the library lacks). It is gone, by rule: an icon this app draws is one design has in the library.
+ * A missing glyph is asked of Brand, and stood in for from this set until it lands.
  */
-const EXTRA = 'design-system/tevi-icons.extra.svg'
+const SOURCE = 'design-system/tevi-icons.svg'
 const SRC_DIR = 'src'
 const OUT_DIR = 'public'
 
@@ -99,7 +99,7 @@ function duotoneHooks(symbol) {
 }
 
 export function collectSprite() {
-    const sprite = readFileSync(SOURCE, 'utf8') + readFileSync(EXTRA, 'utf8')
+    const sprite = readFileSync(SOURCE, 'utf8')
     const symbols = new Map(
         [...sprite.matchAll(/<symbol id="([^"]+)"[\s\S]*?<\/symbol>/g)].map(m => [m[1], m[0]]),
     )

@@ -3,8 +3,10 @@
 import { StarMark } from '@shared/components/star-mark'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
+import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import type { Post } from '../api/types'
+import { LOCK_MEDIA_GLYPH } from '../lib/media-glyph'
 import { postGate } from '../lib/post-access'
 import { postUnlockPrice } from '../lib/post-intent'
 import {
@@ -13,7 +15,6 @@ import {
     lockCoverAspectRatio,
     POST_COLUMN_SIZES,
 } from '../lib/post-media'
-import { LockIcon, LockMediaIcon } from './legacy-icons'
 
 /**
  * What a locked post shows instead of its body — legacy's paywall, ported.
@@ -144,7 +145,7 @@ export function PostLockPanel({
                  * how it says it.
                  */}
                 <LockPill testId={subTestId(testId, 'title')}>
-                    <LockIcon size={16} />
+                    <Icon name="lock-simple" weight="filled" size={16} />
                     <span className="type-caption-label-strong">{label}</span>
                     <StarMark size={16} />
                 </LockPill>
@@ -153,7 +154,7 @@ export function PostLockPanel({
             {media ? (
                 <div className="pointer-events-none absolute bottom-0 start-0 p-4">
                     <LockPill testId={subTestId(testId, 'label')}>
-                        <LockMediaIcon kind={media.kind} size={16} />
+                        <Icon name={LOCK_MEDIA_GLYPH[media.kind]} size={16} />
                         <span className="type-caption-label-strong">{media.text}</span>
                     </LockPill>
                 </div>

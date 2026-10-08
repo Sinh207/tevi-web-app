@@ -312,9 +312,9 @@ export function TwoFaSetupFlow({ setup }: { setup: TwoFaSetup }) {
  * The overlay's rules forbid adapting one glyph into the shape of another, so this stays a
  * substitution and the real fix is Brand adding `key` to the Figma library — one line here.
  *
- * `envelope` **is** in the overlay now (`design-system/tevi-icons.extra.svg`), taken from Zappicon
- * v1.2.0 where the library has none. It replaced `send`, which said the wrong half of the sentence:
- * the step is about which inbox to open, not about the sending.
+ * The email steps stand in **`send`** for the envelope: icons come only from the DS sprite
+ * (`/dev/icons`), which has none — the upstream-Zappicon overlay that carried one is gone. One line
+ * each to change when Brand adds an envelope to the library.
  *
  * `TeviIconNameFilled` and not the bare name union, deliberately: the disc draws `weight="filled"`,
  * and `Icon` types its `name` per weight precisely so that asking for a glyph with no filled drawing
@@ -327,8 +327,8 @@ const MARKS: Record<TwoFaSetupStep, TeviIconNameFilled> = {
     reenter: 'lock-simple',
     // Still the passcode, per the comp. Not a pen.
     hint: 'lock-simple',
-    email: 'envelope',
-    code: 'envelope',
+    email: 'send',
+    code: 'send',
     done: 'check-circle',
 }
 

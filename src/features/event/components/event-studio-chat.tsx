@@ -1295,7 +1295,7 @@ function EmojiButton({
                 disabled={disabled}
                 className="flex size-6 flex-none items-center justify-center text-[#C2C2C2] transition-[color,opacity] hover:not-disabled:text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
-                <Icon name="face-smile" size={20} />
+                <Icon name="sparkles" size={20} />
             </button>
         </>
     )

@@ -260,15 +260,15 @@ function GateActions({ flow }: { flow: TwoFaFlow }) {
  * The glyph each step opens with — see `TwoFaSetupFlow`'s `MARKS` for the full account.
  *
  * The short version: every passcode step, **including the hint**, draws `Icon key` in the comps
- * (`1077:81293`, `1075:80014`), and the recovery step draws an envelope — which is why `envelope`
- * is now in `design-system/tevi-icons.extra.svg` instead of `send` standing in for it.
+ * (`1077:81293`, `1075:80014`), and the recovery step draws an envelope — which `send` stands in
+ * for, since the DS sprite (`/dev/icons`) has none and icons come only from it.
  *
  * ⚠ `lock-simple` where the comps draw a key: the library has no `key` and neither does upstream
  * Zappicon. One line to change when Brand ships it.
  */
 const MARKS: Record<TwoFaStep, TeviIconNameFilled> = {
     enter: 'lock-simple',
-    recovery: 'envelope',
+    recovery: 'send',
     new: 'lock-simple',
     reenter: 'lock-simple',
     hint: 'lock-simple',

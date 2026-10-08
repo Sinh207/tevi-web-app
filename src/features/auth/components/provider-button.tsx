@@ -151,45 +151,6 @@ export function ProviderIcon({ name }: { name: ProviderMarkName }) {
 }
 
 /**
- * ⚠ **A local mark, deliberately outside the design system.**
- *
- * The email row needs an envelope and the DS has none: 554 glyphs, checked against
- * `design-system/tevi-icons.svg` itself, with no envelope, letter or `@` among them. The
- * CDN that serves the provider marks 404s on `icon-email.svg` too, and legacy takes its
- * `@` from MUI, which this app does not ship. So the choice was an envelope drawn here or
- * no envelope at all, and the native app — which has one — is the parity target.
- *
- * It lives **here, not in the sprite**. `design-system/tevi-icons.svg` is the upstream
- * artefact `pnpm icons` subsets from; a glyph added to it would be overwritten on the next
- * run and would fail `sprite.test.ts` before that. Keeping it in the feature that needs it
- * makes it obvious this is not a DS icon, and makes it one deletion when the DS ships one.
- *
- * Geometry follows the native app's: a rounded rectangle with the flap as a single chevron,
- * on the sprite's own 24px box and 1.5 stroke so it sits at the same weight as the marks
- * either side of it. `currentColor`, so it follows the label through both themes.
- */
-function EnvelopeMark() {
-    return (
-        <svg
-            width={24}
-            height={24}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            focusable="false"
-            className="shrink-0"
-        >
-            <rect x="2.75" y="5.25" width="18.5" height="13.5" rx="2.5" />
-            <path d="M4.5 8 12 13.25 19.5 8" />
-        </svg>
-    )
-}
-
-/**
  * Email + password, wearing the same row as the providers — it is one of the ways in, and
  * both legacy and the native app list it among them rather than apart from them.
  */
@@ -218,12 +179,17 @@ export function EmailProviderButton({
         >
             <ProviderRowInner
                 // No plate behind this one in either mode: a plate is what makes an
-                // unrecolourable trademark legible, and this mark is ours and already
+                // unrecolourable trademark legible, and this glyph is ours and already
                 // follows the theme. The 32px box is only so it occupies the same column
                 // as the marks above and below it.
+                //
+                // `send`, standing in for the envelope the native app draws: icons come only
+                // from the DS sprite (`/dev/icons`), which has no envelope, letter or `@` —
+                // the same stand-in as every other email step in this app. A hand-drawn
+                // envelope lived here until that rule was made absolute.
                 mark={
                     <span className="flex size-8 shrink-0 items-center justify-center">
-                        <EnvelopeMark />
+                        <Icon name="send" size={24} />
                     </span>
                 }
                 label={label}

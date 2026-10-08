@@ -64,7 +64,7 @@ export function ConversationRowMenu({
                         {t('message_space_detail')}
                         {/* Legacy's outline head-and-shoulders, 24px — `user` from upstream
                             Zappicon (the library has only the filled `user-simple-alt`). */}
-                        <Icon name="user" size={24} className="size-6 flex-none" />
+                        <Icon name="user-simple-alt" size={24} className="size-6 flex-none" />
                     </ActionMenuItem>
                 )}
                 <ActionMenuItem
