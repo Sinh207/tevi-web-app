@@ -3,6 +3,7 @@
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import { Icon } from '@shared/ui/icon'
@@ -110,8 +111,13 @@ export function PostHeader({
                     <span className="type-dense-emphasis max-w-[120px] truncate text-(--text-title) md:max-w-[170px]">
                         {name}
                     </span>
-                    <VerifiedBadge image={channel?.verified_tick_badge?.image ?? null} size={16} />
-                    {channel?.is_premium ? <PremiumBadge size={18} className="flex-none" /> : null}
+                    <VerifiedBadge
+                        image={channel?.verified_tick_badge?.image ?? null}
+                        size="dense"
+                    />
+                    {channel?.is_premium ? (
+                        <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} className="flex-none" />
+                    ) : null}
                     {/*
                      * Height-constrained and `w-auto`: the tier marks are not square and legacy
                      * sizes them by height alone. Non-interactive here — legacy passes

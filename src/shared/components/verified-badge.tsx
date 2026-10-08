@@ -5,6 +5,7 @@ import { cn } from '@shared/lib/utils'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useState } from 'react'
+import { VERIFIED_BADGE_SIZE, type VerifiedBadgeSize } from './verified-badge-size'
 
 /**
  * The blue tick, wherever a space's name is written — and, where the caller asks for it, the panel
@@ -49,8 +50,8 @@ const VerifiedDialog = dynamic(
 type VerifiedBadgeProps = {
     /** `verified_tick_badge?.image`. Nothing is drawn without it — see above. */
     image: string | null | undefined
-    /** 14 in a live card, 16 in a compact row, 24 beside a display name. */
-    size?: number
+    /** The text style of the name it follows — see `VERIFIED_BADGE_SIZE`. */
+    size?: VerifiedBadgeSize
     /** Defaults to `channel_verified` ("Verified"). Pass one to save a `t()` per row in a long list. */
     label?: string
     className?: string
@@ -78,7 +79,7 @@ type VerifiedBadgeProps = {
 
 export function VerifiedBadge({
     image,
-    size = 24,
+    size: tier = 'body',
     label,
     className,
     'data-testid': testId,
@@ -96,6 +97,7 @@ export function VerifiedBadge({
     if (!image) return null
 
     const name = label ?? t('channel_verified')
+    const size = VERIFIED_BADGE_SIZE[tier]
 
     /*
      * Decorative and interactive differ in **who carries the name**. As a button the name belongs to
@@ -111,7 +113,7 @@ export function VerifiedBadge({
             height={size}
             className={props.interactive ? 'flex-none' : cn('flex-none', className)}
             /* The declared width/height are attributes; a caller's `size-*` or a stylesheet would
-               beat them. Stating the box in `style` is what keeps a 14px tick 14px. */
+               beat them. Stating the box in `style` is what keeps a 20px tick 20px. */
             style={{ width: size, height: size }}
             data-testid={props.interactive ? undefined : testId}
         />

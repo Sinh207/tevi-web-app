@@ -117,7 +117,7 @@ export function GiftRecipientRow({
                                         `{}`, so there is nothing to draw without art. */}
                                     <VerifiedBadge
                                         image={recipient.verified_tick_badge?.image ?? null}
-                                        size={24}
+                                        size="body"
                                     />
                                     {/*
                                      * `title` rather than `aria-hidden`: this mark is information,

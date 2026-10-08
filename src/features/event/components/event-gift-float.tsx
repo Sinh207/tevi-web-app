@@ -141,7 +141,7 @@ function GiftBanner({ burst }: { burst: GiftBurst }) {
                         {name}
                     </span>
                     {burst.user?.verified_tick_badge?.image && (
-                        <VerifiedBadge image={burst.user.verified_tick_badge.image} size={14} />
+                        <VerifiedBadge image={burst.user.verified_tick_badge.image} size="dense" />
                     )}
                 </p>
                 {/* 12/500 — legacy's `fontSize: 12, fontWeight: 500`. */}

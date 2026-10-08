@@ -11,6 +11,7 @@ import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { LottieAnimation } from '@shared/components/lottie-animation'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatCompactCount, formatExactCount } from '@shared/lib/format-count'
 import { subTestId } from '@shared/lib/test-id'
@@ -236,8 +237,13 @@ function ReplyHeader({
                     <span className="type-dense-emphasis max-w-[120px] truncate text-(--text-title) md:max-w-[170px]">
                         {name}
                     </span>
-                    <VerifiedBadge image={author?.verified_tick_badge?.image ?? null} size={16} />
-                    {author?.is_premium ? <PremiumBadge size={18} className="flex-none" /> : null}
+                    <VerifiedBadge
+                        image={author?.verified_tick_badge?.image ?? null}
+                        size="dense"
+                    />
+                    {author?.is_premium ? (
+                        <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} className="flex-none" />
+                    ) : null}
                     {/*
                      * Legacy's `BadgeMember`, drawn from `from_subscriber` — the author pays for the
                      * space this post is in. It is the one mark a reply has that a post card does

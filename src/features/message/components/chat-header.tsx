@@ -4,6 +4,7 @@ import { type Channel, toChannelPath } from '@features/channel'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
@@ -89,11 +90,11 @@ export function ChatHeader({
                     {active && (
                         <VerifiedBadge
                             image={channel?.verified_tick_badge?.image ?? null}
-                            size={16}
+                            size="body"
                         />
                     )}
                     {active && channel?.is_premium && (
-                        <PremiumBadge size={18} className="flex-none" />
+                        <PremiumBadge size={VERIFIED_BADGE_CROWN.body} className="flex-none" />
                     )}
                 </span>
                 <span

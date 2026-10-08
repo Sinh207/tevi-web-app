@@ -3,6 +3,7 @@
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { NotificationBadge } from '@shared/ui/badge'
@@ -140,8 +141,10 @@ export function ConversationRow({
         <>
             <ListUserItemNameRow className="w-full">
                 <ListUserItemName premium={view.premium}>{name}</ListUserItemName>
-                <VerifiedBadge image={view.verifiedImage} size={18} />
-                {view.premium && <PremiumBadge size={18} className="flex-none" />}
+                <VerifiedBadge image={view.verifiedImage} size="body" />
+                {view.premium && (
+                    <PremiumBadge size={VERIFIED_BADGE_CROWN.body} className="flex-none" />
+                )}
                 {view.tierImage && (
                     <Image
                         src={view.tierImage}

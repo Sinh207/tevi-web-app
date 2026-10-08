@@ -2,6 +2,7 @@
 
 import { PREMIUM_PATH } from '@features/premium/routes'
 import { PremiumBadge } from '@shared/components/premium-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import {
     CardUserHeader,
@@ -89,7 +90,7 @@ export function ChannelIdentity({ channel }: { channel: Channel }) {
                  */}
                 <ChannelVerifiedMark
                     channel={channel}
-                    size={24}
+                    size="title"
                     interactive
                     testId="channel-verified-badge"
                 />
@@ -113,7 +114,7 @@ export function ChannelIdentity({ channel }: { channel: Channel }) {
                 {channel.is_premium && (
                     <PremiumBadge
                         data-testid="channel-premium-badge"
-                        size={18}
+                        size={VERIFIED_BADGE_CROWN.title}
                         href={PREMIUM_PATH}
                         label={t('channel_premium')}
                     />

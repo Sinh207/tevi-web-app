@@ -5,6 +5,7 @@ import { PremiumBadge } from '@shared/components/premium-badge'
 import { Sheen } from '@shared/components/sheen'
 import { StarMark } from '@shared/components/star-mark'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatStarAmount } from '@shared/lib/money'
 import { LIVE_BREATH, POP, RISE } from '@shared/lib/motion'
@@ -129,12 +130,15 @@ export function EventSeatCard({
                     <span className="flex min-w-0 items-center gap-1.5">
                         <span className="type-body-strong min-w-0 truncate text-white">{name}</span>
                         {publisher.verified_tick_badge?.image && (
-                            <VerifiedBadge image={publisher.verified_tick_badge.image} size={16} />
+                            <VerifiedBadge
+                                image={publisher.verified_tick_badge.image}
+                                size="body"
+                            />
                         )}
                         {/* Premium, as legacy reads it off the publisher — the animated crown. */}
                         {publisher.premium_badge && (
                             <span className="flex flex-none">
-                                <PremiumBadge size={16} />
+                                <PremiumBadge size={VERIFIED_BADGE_CROWN.body} />
                             </span>
                         )}
                         {publisher.is_host && <EventHostBadge />}

@@ -350,7 +350,7 @@ export function ChannelIntro({ channel }: { channel: Channel }) {
                     {name}
                 </span>
                 {active && (
-                    <VerifiedBadge image={channel.verified_tick_badge?.image ?? null} size={16} />
+                    <VerifiedBadge image={channel.verified_tick_badge?.image ?? null} size="body" />
                 )}
             </span>
             {active && channel.slug && (

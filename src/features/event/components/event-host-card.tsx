@@ -82,7 +82,7 @@ export function EventHostCard({ channel }: { channel: EventChannel }) {
                         {name}
                     </span>
                     {channel.verified_tick_badge?.image && (
-                        <VerifiedBadge image={channel.verified_tick_badge.image} size={16} />
+                        <VerifiedBadge image={channel.verified_tick_badge.image} size="dense" />
                     )}
                     <span className="type-caption-meta flex-none text-(--text-placeholder)">
                         @{channel.slug}

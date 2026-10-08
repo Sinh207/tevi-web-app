@@ -3,6 +3,7 @@
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
+import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import { Icon } from '@shared/ui/icon'
@@ -138,8 +139,10 @@ export function PostComposerBody({
                         <span className="type-dense-emphasis max-w-[200px] truncate text-(--text-title)">
                             {author.name}
                         </span>
-                        <VerifiedBadge image={author.verifiedBadge} size={16} />
-                        {author.isPremium ? <PremiumBadge size={18} className="flex-none" /> : null}
+                        <VerifiedBadge image={author.verifiedBadge} size="dense" />
+                        {author.isPremium ? (
+                            <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} className="flex-none" />
+                        ) : null}
                         {author.slug ? (
                             <span className="type-dense-default truncate text-(--text-placeholder)">
                                 {`@${author.slug}`}

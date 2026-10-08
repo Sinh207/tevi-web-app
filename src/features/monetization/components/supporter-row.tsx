@@ -91,7 +91,7 @@ export function SupporterRow({
             <div className="flex min-w-0 flex-1 items-center gap-1">
                 <span className="type-body-strong truncate text-(--text-title)">{displayName}</span>
                 {user?.channel_verified_tick_badge?.image ? (
-                    <VerifiedBadge image={user.channel_verified_tick_badge.image} size={16} />
+                    <VerifiedBadge image={user.channel_verified_tick_badge.image} size="body" />
                 ) : null}
                 {slug ? (
                     <span className="type-dense-default truncate text-(--text-body)">@{slug}</span>

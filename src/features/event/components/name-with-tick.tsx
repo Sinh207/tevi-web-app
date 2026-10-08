@@ -32,7 +32,7 @@ export function NameWithTick({
             {parts[0]}
             <span className={cn('inline-flex items-center gap-1 align-middle', nameClassName)}>
                 {name}
-                {tick && <VerifiedBadge image={tick} size={14} />}
+                {tick && <VerifiedBadge image={tick} size="caption" />}
             </span>
             {parts[1]}
         </>

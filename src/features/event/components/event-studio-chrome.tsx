@@ -97,9 +97,9 @@ export function EventStudioBackButton({ slug, testId }: { slug: string | null; t
  * already shipped twice in the Live surfaces, and the markup and the pixels are identical either
  * way, so only a network panel shows the full document reload.
  *
- * ⚠ `VerifiedBadge` opens a dialog on press, so it may **not** be nested inside the link — a
- * control inside an anchor is a press that does two things and an invalid tree. It sits as a
- * sibling, which is also what puts it outside the name's truncation.
+ * The verified mark sits on the name's line, right after it and outside its truncation. It is the
+ * **decorative** `VerifiedBadge` (no `interactive`), so it is an `<img>` and may live inside the
+ * anchor; the interactive variant is a button and could not.
  *
  * ## The follower count is absent until it is known, never zero
  *
@@ -191,7 +191,18 @@ export function EventStudioChannelBar({
                 </Avatar>
 
                 <span className="flex min-w-0 flex-col">
-                    <span className="type-caption-label-strong truncate text-white">{name}</span>
+                    <span className="flex min-w-0 items-center gap-1">
+                        <span className="type-caption-label-strong truncate text-white">
+                            {name}
+                        </span>
+                        {channel.verified_tick_badge?.image && (
+                            <VerifiedBadge
+                                image={channel.verified_tick_badge.image}
+                                size="caption"
+                                label={name}
+                            />
+                        )}
+                    </span>
                     {followerCount !== null && followerCount > 0 && (
                         <span className="type-micro-overline truncate text-white/70">
                             {t('event_studio_followers', {
@@ -202,11 +213,6 @@ export function EventStudioChannelBar({
                     )}
                 </span>
             </Link>
-
-            {/* Outside the anchor — it is a button that opens the "what is this tick" dialog. */}
-            {channel.verified_tick_badge?.image && (
-                <VerifiedBadge image={channel.verified_tick_badge.image} size={14} label={name} />
-            )}
 
             {/*
              * Follow and the ⋯ menu, which need the **space** rather than the event — their own

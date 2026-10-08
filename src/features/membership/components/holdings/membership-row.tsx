@@ -113,7 +113,7 @@ export function MembershipRow({
             {/* The badge *image* is the fact, and the gate lives in `VerifiedBadge`: the payload
                 object is present (`{}`) on an ordinary unverified account, so there is nothing to
                 draw without art — no sprite fallback. */}
-            <VerifiedBadge image={verifiedImage} size={24} />
+            <VerifiedBadge image={verifiedImage} size="body" />
             {/* `w-auto` overrides the part's own `w-full`, which is drawn for a handle that owns its
                 line. Here it shares one with the name, so both truncate rather than one winning. */}
             {slug && (

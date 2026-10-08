@@ -313,7 +313,7 @@ function StageAutoFollow({
                 <div className="flex min-w-0 flex-col justify-center pe-1">
                     <p className="flex min-w-0 items-center gap-1">
                         <span className="type-dense-strong truncate text-white">{name}</span>
-                        {tick && <VerifiedBadge image={tick} size={14} />}
+                        {tick && <VerifiedBadge image={tick} size="dense" />}
                     </p>
                     <p className="type-caption-meta truncate text-white/75">
                         {t('channel_auto_follow_prompt')}

@@ -125,7 +125,7 @@ function ChannelLiveItem({ event, channel }: { event: ChannelEvent; channel: Cha
                         >
                             {name}
                         </Link>
-                        <ChannelVerifiedMark channel={channel} size={16} />
+                        <ChannelVerifiedMark channel={channel} size="dense" />
                         <span className="type-caption-meta min-w-0 truncate text-(--text-body)">
                             @{slug}
                         </span>

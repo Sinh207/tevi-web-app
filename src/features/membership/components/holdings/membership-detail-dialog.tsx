@@ -231,7 +231,7 @@ export function MembershipDetailDialog({
             <span className="flex min-w-0 flex-col items-start">
                 <span className="flex min-w-0 items-center gap-1">
                     <span className="type-dense-strong truncate text-(--text-title)">{label}</span>
-                    <VerifiedBadge image={verifiedImage} size={16} />
+                    <VerifiedBadge image={verifiedImage} size="dense" />
                 </span>
                 {slug && (
                     // `dir="ltr"`: `@` is bidi-neutral, so `@ada` renders as `ada@` inside an Arabic

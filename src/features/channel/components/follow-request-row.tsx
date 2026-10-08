@@ -106,7 +106,7 @@ export function FollowRequestRow({
                 {/* The badge *image* is the fact, and the gate lives in `VerifiedBadge`: the
                     payload object is present (`{}`) on an ordinary unverified account, so there is
                     nothing to draw without art — no sprite fallback. */}
-                <VerifiedBadge image={verifiedImage} size={24} />
+                <VerifiedBadge image={verifiedImage} size="body" />
             </ListUserItemNameRow>
             {user.slug && <ListUserItemHandle>@{user.slug}</ListUserItemHandle>}
         </>
