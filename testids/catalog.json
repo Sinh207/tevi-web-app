@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 1095,
+        "ids": 1096,
         "surfaces": 31
     },
     "surfaces": {
@@ -15099,6 +15099,16 @@
             ],
             "source": "src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:46"
         },
+        "post-preview": {
+            "scope": "post",
+            "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/post/[code]",
+                "/bookmarks"
+            ],
+            "source": "src/features/post/components/post-composer-dialogs.tsx:173"
+        },
         "post-trimmer": {
             "scope": "post",
             "routes": [
@@ -15107,7 +15117,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/post-composer-dialog.tsx:448"
+            "source": "src/features/post/components/post-composer-dialog.tsx:429"
         },
         "premium-about": {
             "scope": "premium",
@@ -16383,13 +16393,12 @@
                 "trigger"
             ]
         },
-        "src/features/post/components/post-preview-dialog.tsx": {
+        "src/features/post/components/post-preview-card.tsx": {
             "accepts": [
-                "PostPreviewDialog"
+                "PostPreviewCard"
             ],
             "parts": [
                 "description",
-                "header",
                 "item",
                 "overlay",
                 "panel",

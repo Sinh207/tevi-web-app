@@ -272,12 +272,14 @@ snap; its arrows are desktop-only and hide at the ends.
   is `features/message`'s `useOpenConversation`, handed in through a slot
   (`lib/author-conversation.tsx`, filled by `app/post-conversation-host.tsx`) because message
   imports post. With no provider (a webview, `/dev/post`) the button stays drawn and `disabled`.
-- **The reaction is a Lottie star** (`/lotties/icon-star-reactions.json`). Frame 0 means not
-  reacted and frame 60 means reacted. A press plays `[0, 60]` or `[60, 0]`, and the first paint
-  never animates, so a feed scrolling into view does not play twenty animations at once. The player
-  is shared with the reply row. `LottieAnimation` fetches each file **once per URL** and builds the
-  players in time slices; the header of `shared/components/lottie-animation.tsx` has the
-  measurements.
+- **The reaction star is the sprite's; the burst is legacy's Lottie** (`ReactionStar`, shared
+  with the reply row). At rest it is `<Icon name="star">`: the outline in the row's `--icon-secondary`, the filled
+  weight in `--accents-warning-active` once reacted, so both follow the theme. The Lottie file's own
+  star layers (`Unselect.png`, a `#1B1B1B` raster, and `Select`) are left out with `hideLayers` —
+  the first was invisible in dark mode — and the file plays only its burst, once, on a press that
+  adds a reaction (`once: [0, 60]`), then unmounts. Taking a reaction back plays nothing; reduced
+  motion skips the burst. `LottieAnimation` fetches each file **once per URL** and builds players
+  in time slices; its header has the measurements.
 - **Pin asks first, Unpin does not.** A space has one pinned post, so *Pin* always confirms
   "Replace current pin?" (legacy's `MenuItemPinPost`); *Unpin* replaces nothing.
 - **The menu's owner and stranger sets are disjoint** (`postMenuVisibility`). The owner gets pin,
@@ -410,8 +412,10 @@ the **post**, not an id. A visit that opens neither costs one store subscription
 - **The draft is component state and is reset on close.** Closing is refused while a publish is
   pending.
 - One picker for both kinds. A video wins, and the button is hidden once a clip is attached (iOS).
-- Six stacked dialogs (four settings, preview, trimmer). `post-composer-dialogs.tsx` explains why they
-  are popups rather than screens inside the sheet.
+- **One popup** over the sheet for audience, *Who can reply*, post settings, collections and the
+  preview — five screens of a single `ResponsiveDialog`, every one dismissed by a back arrow — plus
+  the trimmer. `post-composer-dialogs.tsx` explains why it is a popup rather than screens inside the
+  sheet, and why one rather than five.
 - **The trimmer** is `shared/components/video-trimmer`, dynamically imported because it brings a
   24 MB ffmpeg WASM build. It is hidden below `md` as **a proxy for capability**, not for layout. A
   trim is a stream copy, so it keeps the codec, the poster and the dimensions.

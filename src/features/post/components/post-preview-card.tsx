@@ -1,8 +1,5 @@
 'use client'
 
-import { DialogScreenHeader } from '@shared/components/dialog-screen-header'
-import { ResponsiveDialog } from '@shared/components/responsive-dialog'
-import { useTranslation } from '@shared/i18n/use-translation'
 import { subTestId } from '@shared/lib/test-id'
 import type { Post } from '../api/types'
 import { postDisplay } from '../lib/post-access'
@@ -12,7 +9,7 @@ import { PostImageGallery } from './post-image-gallery'
 import { PostLockPanel } from './post-lock-panel'
 
 /**
- * **Your audience view** — the draft as the people it is for would receive it.
+ * **Your audience view** — the card that shows the draft as the people it is for would receive it.
  *
  * ## It is the only place a paywall can be checked before it is charged for
  *
@@ -41,68 +38,27 @@ import { PostLockPanel } from './post-lock-panel'
  * - **A live `<video>` for a locked clip.** A paid video post has no playable source for its
  *   audience at all; the cover is what they get, and that is what `postDisplay` routes to here.
  *
- * The dismiss is `DialogScreenHeader`'s leading control rather than legacy's *Cancel* word: this is
- * the fifth dialog the composer opens and the other four already dismiss that way
- * (`DESIGN_SYSTEM.md` §7). A dialog in a stack that closes differently from its siblings is a
- * control the reader has to re-learn at the one moment they are looking at something else.
+ * It is drawn inside the composer's one shared popup (`post-composer-dialogs.tsx`), as the screen
+ * behind *Preview* — this file is the body only, and the shell, title and back control are that
+ * popup's.
+ *
+ * The card itself: who posted it, the words that survive the paywall, and what stands for the media.
  */
-export function PostPreviewDialog({
-    open,
-    onClose,
+export function PostPreviewCard({
     post,
     /**
      * Its **own** scope, not a part of the composer's.
      *
      * `post-composer-overlay` was the first choice and it collided: `DialogContent` derives its
      * backdrop's id as `${testId}-overlay`, so the composer's own scrim already answers to that
-     * name. A driver asking for the preview got two elements — `docs/TEST_IDS.md` §5's first-match
-     * failure, caught here only because Playwright is strict about it. The four settings dialogs
-     * are parts of the composer and keep its scope; this one is a surface of its own and takes one.
+     * name — `docs/TEST_IDS.md` §5's first-match failure. The card is a surface of its own and keeps
+     * the scope it had when it was a dialog of its own.
      */
     testId = 'post-preview',
 }: {
-    open: boolean
-    onClose: () => void
-    /**
-     * The audience's copy, from `buildPreviewPost`.
-     *
-     * `null` is an ordinary state rather than a caller's mistake — the builder answers `null` for a
-     * draft with nothing in it, and the parse it runs can refuse a shape as well. The dialog draws
-     * nothing at all in that case instead of an empty frame.
-     */
-    post: Post | null
+    post: Post
     testId?: string
 }) {
-    const { t } = useTranslation()
-
-    return (
-        <ResponsiveDialog
-            open={open && post !== null}
-            onOpenChange={next => {
-                if (!next) onClose()
-            }}
-            /* Opened over the composer — see `DialogContent`'s `nested` for what it buys. */
-            nested
-            /* A sheet like the rest of the composer's popups; a long post meets the 90dvh cap. */
-            side="bottom"
-            /* `overflow-hidden` because the body below scrolls itself — see the settings dialogs. */
-            className="flex max-h-[85dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
-            data-testid={testId}
-        >
-            <DialogScreenHeader
-                title={t('post_preview_title')}
-                onClose={onClose}
-                testId={subTestId(testId, 'header')}
-            />
-            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-                {post ? <PreviewCard post={post} testId={testId} /> : null}
-            </div>
-        </ResponsiveDialog>
-    )
-}
-
-/** The card itself: who posted it, the words that survive the paywall, and what stands for the media. */
-function PreviewCard({ post, testId }: { post: Post; testId?: string }) {
     /*
      * The same union the feed branches on, so the preview cannot show a state the card would not.
      * `deleted` cannot arise on a draft and `nsfw` is not gated here (the header says why), which
