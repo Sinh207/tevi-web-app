@@ -58,7 +58,7 @@ export function CollectionEditDialog({
                 if (!next && pending) return
                 onOpenChange(next)
             }}
-            /* The list scrolls itself — `post-composer-dialogs.tsx` on two scrollers and a footer. */
+            /* The list scrolls itself — `post-composer-dialog.tsx` on two scrollers and a footer. */
             className="flex h-[720px] max-h-[90dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
             data-testid={testId}
         >

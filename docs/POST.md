@@ -412,8 +412,10 @@ the **post**, not an id. A visit that opens neither costs one store subscription
 - **The draft is component state and is reset on close.** Closing is refused while a publish is
   pending.
 - One picker for both kinds. A video wins, and the button is hidden once a clip is attached (iOS).
-- Six stacked dialogs (four settings, preview, trimmer). `post-composer-dialogs.tsx` explains why they
-  are popups rather than screens inside the sheet.
+- **One popup.** Audience, *Who can reply*, post settings, collections and the preview are screens
+  **inside** the composer — the header's control becomes a back arrow to the draft, and the action
+  bar shows on the draft only. The draft is parent state, so it survives the trip. The trimmer is the
+  one popup over it.
 - **The trimmer** is `shared/components/video-trimmer`, dynamically imported because it brings a
   24 MB ffmpeg WASM build. It is hidden below `md` as **a proxy for capability**, not for layout. A
   trim is a stream copy, so it keeps the codec, the poster and the dimensions.
@@ -567,7 +569,7 @@ should be updated.
     - still mentions the Star cost chip.
   - `post-media-lightbox.tsx` says there is no paging between posts. `PostSlider` does it.
   - `post-settings-panel.tsx` and `post-collection-picker.tsx` say "this app's dialog draws one
-    layer". `post-composer-dialogs.tsx` refutes that.
+    layer". It does not (base-ui stacks dialogs); the screens are inside the composer by choice.
   - `reply-row.tsx` says the Reply button is missing. `ReplyThread` exists.
   - `post-composer-dialog.tsx`'s preset note implies the draft survives close. `onOpenChange` resets
     it.

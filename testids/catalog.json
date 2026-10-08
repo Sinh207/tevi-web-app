@@ -2,7 +2,7 @@
     "$generatedBy": "scripts/build-testid-catalog.mjs — run `pnpm testids`, do not edit by hand",
     "$contract": "docs/TEST_IDS.md",
     "counts": {
-        "ids": 1095,
+        "ids": 1096,
         "surfaces": 31
     },
     "surfaces": {
@@ -914,7 +914,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/password/password-setup-flow.tsx:426"
+            "source": "src/features/auth/components/password/password-setup-flow.tsx:424"
         },
         "auth-password-new": {
             "scope": "auth",
@@ -940,7 +940,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/password/password-setup-flow.tsx:324"
+            "source": "src/features/auth/components/password/password-setup-flow.tsx:322"
         },
         "auth-password-retry": {
             "scope": "auth",
@@ -966,7 +966,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/password/password-setup-flow.tsx:371"
+            "source": "src/features/auth/components/password/password-setup-flow.tsx:369"
         },
         "auth-password-setup-email": {
             "scope": "auth",
@@ -979,7 +979,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/password/password-setup-flow.tsx:278"
+            "source": "src/features/auth/components/password/password-setup-flow.tsx:276"
         },
         "auth-password-setup-form": {
             "scope": "auth",
@@ -992,7 +992,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/password/password-setup-flow.tsx:259"
+            "source": "src/features/auth/components/password/password-setup-flow.tsx:257"
         },
         "auth-password-setup-new": {
             "scope": "auth",
@@ -1005,7 +1005,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/password/password-setup-flow.tsx:361"
+            "source": "src/features/auth/components/password/password-setup-flow.tsx:359"
         },
         "auth-password-setup-submit": {
             "scope": "auth",
@@ -1018,7 +1018,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/password/password-setup-flow.tsx:403"
+            "source": "src/features/auth/components/password/password-setup-flow.tsx:401"
         },
         "auth-password-sign-in": {
             "scope": "auth",
@@ -1307,7 +1307,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/two-step-verification-dialog.tsx:532"
+            "source": "src/features/auth/components/two-step-verification-dialog.tsx:528"
         },
         "auth-two-fa-forgot": {
             "scope": "auth",
@@ -1320,7 +1320,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/two-step-verification-dialog.tsx:356"
+            "source": "src/features/auth/components/two-step-verification-dialog.tsx:352"
         },
         "auth-two-fa-gate-error": {
             "scope": "auth",
@@ -1424,7 +1424,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/two-step-verification-dialog.tsx:484"
+            "source": "src/features/auth/components/two-step-verification-dialog.tsx:480"
         },
         "auth-two-fa-hint": {
             "scope": "auth",
@@ -1450,7 +1450,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/two-step-verification-dialog.tsx:506"
+            "source": "src/features/auth/components/two-step-verification-dialog.tsx:502"
         },
         "auth-two-fa-recovery-code": {
             "scope": "auth",
@@ -1541,7 +1541,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/two-step-verification-dialog.tsx:386"
+            "source": "src/features/auth/components/two-step-verification-dialog.tsx:382"
         },
         "auth-two-fa-reset-note": {
             "scope": "auth",
@@ -1567,7 +1567,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/two-step-verification-dialog.tsx:426"
+            "source": "src/features/auth/components/two-step-verification-dialog.tsx:422"
         },
         "auth-two-fa-setup": {
             "scope": "auth",
@@ -1736,7 +1736,7 @@
                 "/settings/two-step-verification",
                 "/signup"
             ],
-            "source": "src/features/auth/components/two-step-verification-dialog.tsx:417"
+            "source": "src/features/auth/components/two-step-verification-dialog.tsx:413"
         },
         "brand-assets-copy-hex": {
             "scope": "brand-assets",
@@ -2063,7 +2063,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:187"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:181"
         },
         "channel-block-confirm": {
             "scope": "channel",
@@ -2090,7 +2090,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:220"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:214"
         },
         "channel-blocked-loading": {
             "scope": "channel",
@@ -4970,7 +4970,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:153"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:149"
         },
         "channel-message": {
             "scope": "channel",
@@ -5213,7 +5213,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:134"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:130"
         },
         "channel-owner-edit": {
             "scope": "channel",
@@ -6188,7 +6188,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-viewer-menu.tsx:173"
+            "source": "src/features/channel/components/channel-viewer-menu.tsx:167"
         },
         "channel-report-close": {
             "scope": "channel",
@@ -8201,7 +8201,7 @@
             "companions": [
                 "data-publisher-id"
             ],
-            "source": "src/features/event/components/event-studio-seats.tsx:212"
+            "source": "src/features/event/components/event-studio-seats.tsx:213"
         },
         "event-studio-seat-empty": {
             "scope": "event",
@@ -8220,7 +8220,7 @@
             "companions": [
                 "data-publisher-id"
             ],
-            "source": "src/features/event/components/event-studio-seats.tsx:592"
+            "source": "src/features/event/components/event-studio-seats.tsx:593"
         },
         "event-studio-seats": {
             "scope": "event",
@@ -8228,7 +8228,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-seats.tsx:669"
+            "source": "src/features/event/components/event-studio-seats.tsx:670"
         },
         "event-studio-shell": {
             "scope": "event",
@@ -8437,7 +8437,7 @@
             "routes": [
                 "/"
             ],
-            "source": "src/features/home/components/home-post-feed.tsx:172"
+            "source": "src/features/home/components/home-post-feed.tsx:171"
         },
         "identification-back-to-home": {
             "scope": "identification",
@@ -15099,6 +15099,16 @@
             ],
             "source": "src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:46"
         },
+        "post-preview": {
+            "scope": "post",
+            "routes": [
+                "/[slug]/collections",
+                "/[slug]/collections/[collectionId]",
+                "/[slug]/post/[code]",
+                "/bookmarks"
+            ],
+            "source": "src/features/post/components/post-composer-dialog.tsx:557"
+        },
         "post-trimmer": {
             "scope": "post",
             "routes": [
@@ -15107,7 +15117,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/post-composer-dialog.tsx:448"
+            "source": "src/features/post/components/post-composer-dialog.tsx:423"
         },
         "premium-about": {
             "scope": "premium",
@@ -16254,26 +16264,18 @@
             ],
             "parts": [
                 "affix",
+                "group",
                 "header",
                 "label-data",
+                "list",
                 "panel",
                 "prefix",
                 "reveal",
+                "row",
                 "submit",
                 "suffix",
+                "tab",
                 "trigger"
-            ]
-        },
-        "src/features/post/components/post-composer-dialogs.tsx": {
-            "accepts": [
-                "PostComposerDialogs"
-            ],
-            "parts": [
-                "group",
-                "header",
-                "list",
-                "row",
-                "tab"
             ]
         },
         "src/features/post/components/post-composer-video.tsx": {
@@ -16383,13 +16385,12 @@
                 "trigger"
             ]
         },
-        "src/features/post/components/post-preview-dialog.tsx": {
+        "src/features/post/components/post-preview-card.tsx": {
             "accepts": [
-                "PostPreviewDialog"
+                "PostPreviewCard"
             ],
             "parts": [
                 "description",
-                "header",
                 "item",
                 "overlay",
                 "panel",

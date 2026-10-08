@@ -253,9 +253,13 @@ export function PostCollectionPicker({
              *
              * `--background-subtle`, which is what `DialogContent` paints — `--background-surface`
              * is a shade lighter and the footer read as a separate slab floating over the list.
+             *
+             * `-bottom-3 pb-3`: sticky stops at the scroller's **padding** edge, so `bottom-0` left
+             * the composer's 12px bottom padding open under the bar and the rows scrolled past
+             * through it. Pulling the bar down over that padding and filling it closes the gap.
              */}
             {atLimit ? null : (
-                <div className="sticky bottom-0 flex justify-end border-(--separator-default) border-t bg-(--background-subtle) pt-3">
+                <div className="sticky -bottom-3 flex justify-end border-(--separator-default) border-t bg-(--background-subtle) py-3">
                     <button
                         type="button"
                         disabled={disabled}

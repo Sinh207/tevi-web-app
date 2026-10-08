@@ -6,7 +6,7 @@ The contract, the Selenium idioms and the trap list are in [`../docs/TEST_IDS.md
 Locate **only** by these values plus the state attributes each row names — never by class,
 visible text (nine locales), or DOM position.
 
-1095 ids across 31 surfaces.
+1096 ids across 31 surfaces.
 
 ## `affiliate` — Affiliate programme entry and dialog
 
@@ -92,15 +92,15 @@ Also present on every route it is mounted under — `src/app/session-providers.t
 | `auth-password-confirm` | — | `src/features/auth/components/password/change-password-form.tsx:161` |
 | `auth-password-current` | — | `src/features/auth/components/password/change-password-form.tsx:131` |
 | `auth-password-done` | — | `src/features/auth/components/password/password-done.tsx:71` |
-| `auth-password-edit-email` | — | `src/features/auth/components/password/password-setup-flow.tsx:426` |
+| `auth-password-edit-email` | — | `src/features/auth/components/password/password-setup-flow.tsx:424` |
 | `auth-password-new` | — | `src/features/auth/components/password/change-password-form.tsx:150` |
-| `auth-password-resend` | — | `src/features/auth/components/password/password-setup-flow.tsx:324` |
+| `auth-password-resend` | — | `src/features/auth/components/password/password-setup-flow.tsx:322` |
 | `auth-password-retry` | — | `src/features/auth/components/password/password-settings.tsx:134` |
-| `auth-password-setup-confirm` | — | `src/features/auth/components/password/password-setup-flow.tsx:371` |
-| `auth-password-setup-email` | — | `src/features/auth/components/password/password-setup-flow.tsx:278` |
-| `auth-password-setup-form` | — | `src/features/auth/components/password/password-setup-flow.tsx:259` |
-| `auth-password-setup-new` | — | `src/features/auth/components/password/password-setup-flow.tsx:361` |
-| `auth-password-setup-submit` | — | `src/features/auth/components/password/password-setup-flow.tsx:403` |
+| `auth-password-setup-confirm` | — | `src/features/auth/components/password/password-setup-flow.tsx:369` |
+| `auth-password-setup-email` | — | `src/features/auth/components/password/password-setup-flow.tsx:276` |
+| `auth-password-setup-form` | — | `src/features/auth/components/password/password-setup-flow.tsx:257` |
+| `auth-password-setup-new` | — | `src/features/auth/components/password/password-setup-flow.tsx:359` |
+| `auth-password-setup-submit` | — | `src/features/auth/components/password/password-setup-flow.tsx:401` |
 | `auth-password-sign-in` | — | `src/features/auth/components/password/password-settings.tsx:86` |
 | `auth-privacy` | — | `src/features/auth/components/login-screen.tsx:206` |
 | `auth-provider` | `data-provider-key` | `src/features/auth/components/google-sign-in-button.tsx:164` |
@@ -122,8 +122,8 @@ Also present on every route it is mounted under — `src/app/session-providers.t
 | `auth-two-fa-code` | — | `src/features/auth/components/two-fa/two-fa-setup-flow.tsx:164` |
 | `auth-two-fa-dialog` | — | `src/features/auth/components/two-step-verification-dialog.tsx:133` |
 | `auth-two-fa-disable` | — | `src/features/auth/components/two-fa/two-fa-settings.tsx:476` |
-| `auth-two-fa-error` | — | `src/features/auth/components/two-step-verification-dialog.tsx:532` |
-| `auth-two-fa-forgot` | — | `src/features/auth/components/two-step-verification-dialog.tsx:356` |
+| `auth-two-fa-error` | — | `src/features/auth/components/two-step-verification-dialog.tsx:528` |
+| `auth-two-fa-forgot` | — | `src/features/auth/components/two-step-verification-dialog.tsx:352` |
 | `auth-two-fa-gate-error` | — | `src/features/auth/components/two-fa/two-fa-gate.tsx:153` |
 | `auth-two-fa-gate-forgot` | — | `src/features/auth/components/two-fa/two-fa-gate.tsx:190` |
 | `auth-two-fa-gate-hint` | — | `src/features/auth/components/two-fa/two-fa-gate.tsx:107` |
@@ -131,18 +131,18 @@ Also present on every route it is mounted under — `src/app/session-providers.t
 | `auth-two-fa-gate-resend` | — | `src/features/auth/components/two-fa/two-fa-gate.tsx:210` |
 | `auth-two-fa-gate-save` | — | `src/features/auth/components/two-fa/two-fa-gate.tsx:242` |
 | `auth-two-fa-gate-skip` | — | `src/features/auth/components/two-fa/two-fa-gate.tsx:233` |
-| `auth-two-fa-header` | — | `src/features/auth/components/two-step-verification-dialog.tsx:484` |
+| `auth-two-fa-header` | — | `src/features/auth/components/two-step-verification-dialog.tsx:480` |
 | `auth-two-fa-hint` | — | `src/features/auth/components/two-step-verification-dialog.tsx:164` |
-| `auth-two-fa-note` | — | `src/features/auth/components/two-step-verification-dialog.tsx:506` |
+| `auth-two-fa-note` | — | `src/features/auth/components/two-step-verification-dialog.tsx:502` |
 | `auth-two-fa-recovery-code` | — | `src/features/auth/components/two-fa/two-fa-recovery-email-flow.tsx:74` |
 | `auth-two-fa-recovery-email` | — | `src/features/auth/components/two-fa/two-fa-recovery-email-flow.tsx:119` |
 | `auth-two-fa-recovery-email-error` | — | `src/features/auth/components/two-fa/two-fa-recovery-email-flow.tsx:160` |
 | `auth-two-fa-recovery-email-submit` | — | `src/features/auth/components/two-fa/two-fa-recovery-email-flow.tsx:175` |
 | `auth-two-fa-recovery-resend` | — | `src/features/auth/components/two-fa/two-fa-recovery-email-flow.tsx:108` |
 | `auth-two-fa-reenter` | — | `src/features/auth/components/two-fa/two-fa-setup-flow.tsx:103` |
-| `auth-two-fa-resend` | — | `src/features/auth/components/two-step-verification-dialog.tsx:386` |
+| `auth-two-fa-resend` | — | `src/features/auth/components/two-step-verification-dialog.tsx:382` |
 | `auth-two-fa-reset-note` | — | `src/features/auth/components/two-fa/two-fa-settings.tsx:348` |
-| `auth-two-fa-save` | — | `src/features/auth/components/two-step-verification-dialog.tsx:426` |
+| `auth-two-fa-save` | — | `src/features/auth/components/two-step-verification-dialog.tsx:422` |
 | `auth-two-fa-setup` | — | `src/features/auth/components/two-fa/two-fa-setup-flow.tsx:91` |
 | `auth-two-fa-setup-continue` | — | `src/features/auth/components/two-fa/two-fa-setup-flow.tsx:257` |
 | `auth-two-fa-setup-done` | — | `src/features/auth/components/two-fa/two-fa-settings.tsx:262` |
@@ -155,7 +155,7 @@ Also present on every route it is mounted under — `src/app/session-providers.t
 | `auth-two-fa-setup-skip` | — | `src/features/auth/components/two-fa/two-fa-setup-flow.tsx:248` |
 | `auth-two-fa-setup-start` | — | `src/features/auth/components/two-fa/two-fa-settings.tsx:311` |
 | `auth-two-fa-sign-in` | — | `src/features/auth/components/two-fa/two-fa-settings.tsx:209` |
-| `auth-two-fa-skip` | — | `src/features/auth/components/two-step-verification-dialog.tsx:417` |
+| `auth-two-fa-skip` | — | `src/features/auth/components/two-step-verification-dialog.tsx:413` |
 
 ## `brand-assets` — Brand assets
 
@@ -194,8 +194,8 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-bio-link` | — | `src/features/channel/components/channel-bio.tsx:209` |
 | `channel-bio-nsfw` | — | `src/features/channel/components/channel-bio.tsx:141` |
 | `channel-bio-social` | — | `src/features/channel/components/channel-bio.tsx:259` |
-| `channel-block` | — | `src/features/channel/components/channel-viewer-menu.tsx:187` |
-| `channel-block-confirm` | — | `src/features/channel/components/channel-viewer-menu.tsx:220` |
+| `channel-block` | — | `src/features/channel/components/channel-viewer-menu.tsx:181` |
+| `channel-block-confirm` | — | `src/features/channel/components/channel-viewer-menu.tsx:214` |
 | `channel-blocked-loading` | — | `src/features/channel/components/blocked-accounts-skeleton.tsx:33` |
 | `channel-blocked-retry` | — | `src/features/channel/components/blocked-accounts-view.tsx:224` |
 | `channel-blocked-row-link` | `data-channel-slug` | `src/features/channel/components/blocked-account-row.tsx:186` |
@@ -301,7 +301,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-mcn-partnership-signed-out` | — | `src/features/channel/components/mcn-partnership-view.tsx:95` |
 | `channel-mcn-partnership-space` | — | `src/features/channel/components/mcn-partnership-view.tsx:423` |
 | `channel-media` | — | `src/features/channel/components/channel-thread-list.tsx:236` |
-| `channel-menu-follow` | — | `src/features/channel/components/channel-viewer-menu.tsx:153` |
+| `channel-menu-follow` | — | `src/features/channel/components/channel-viewer-menu.tsx:149` |
 | `channel-message` | — | `src/features/channel/components/channel-viewer-actions.tsx:297` |
 | `channel-my-space-no-channel` | — | `src/features/channel/components/my-space-redirect.tsx:157` |
 | `channel-my-space-retry` | — | `src/features/channel/components/my-space-redirect.tsx:165` |
@@ -310,7 +310,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-not-found` | — | `src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:44` |
 | `channel-not-found-discover` | — | `src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:75` |
 | `channel-not-found-home` | — | `src/app/(web)/(main)/(rail)/[slug]/not-found.tsx:83` |
-| `channel-notify` | — | `src/features/channel/components/channel-viewer-menu.tsx:134` |
+| `channel-notify` | — | `src/features/channel/components/channel-viewer-menu.tsx:130` |
 | `channel-owner-edit` | — | `src/features/channel/components/channel-owner-actions.tsx:77` |
 | `channel-owner-share` | — | `src/features/channel/components/channel-owner-actions.tsx:107` |
 | `channel-pinned` | — | `src/features/channel/components/channel-thread-list.tsx:385` |
@@ -346,7 +346,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-protected-space` | — | `src/features/channel/components/channel-protected-notice.tsx:218` |
 | `channel-publish` | — | `src/features/channel/components/channel-publish-banner.tsx:118` |
 | `channel-publish-confirm` | — | `src/features/channel/components/channel-publish-banner.tsx:130` |
-| `channel-report` | — | `src/features/channel/components/channel-viewer-menu.tsx:173` |
+| `channel-report` | — | `src/features/channel/components/channel-viewer-menu.tsx:167` |
 | `channel-report-close` | — | `src/features/channel/components/channel-report-dialog.tsx:128` |
 | `channel-report-detail` | — | `src/features/channel/components/channel-report-dialog.tsx:227` |
 | `channel-report-guidelines` | — | `src/features/channel/components/channel-report-dialog.tsx:121` |
@@ -554,10 +554,10 @@ Routes: `/[slug]/event/[code]`, `/[slug]/event/[code]/report`
 | `event-studio-pinned` | — | `src/features/event/components/event-studio-chat.tsx:2242` |
 | `event-studio-pinned-close` | — | `src/features/event/components/event-studio-chat.tsx:2289` |
 | `event-studio-report` | — | `src/features/event/components/event-studio-channel-actions.tsx:266` |
-| `event-studio-seat` | `data-publisher-id` | `src/features/event/components/event-studio-seats.tsx:212` |
+| `event-studio-seat` | `data-publisher-id` | `src/features/event/components/event-studio-seats.tsx:213` |
 | `event-studio-seat-empty` | — | `src/features/event/components/event-studio-seats.tsx:105` |
-| `event-studio-seat-trigger` | `data-publisher-id` | `src/features/event/components/event-studio-seats.tsx:592` |
-| `event-studio-seats` | — | `src/features/event/components/event-studio-seats.tsx:669` |
+| `event-studio-seat-trigger` | `data-publisher-id` | `src/features/event/components/event-studio-seats.tsx:593` |
+| `event-studio-seats` | — | `src/features/event/components/event-studio-seats.tsx:670` |
 | `event-studio-shell` | — | `src/features/event/components/event-studio-shell.tsx:58` |
 | `event-studio-skeleton` | — | `src/features/event/components/event-studio-skeleton.tsx:65` |
 | `event-studio-star` | — | `src/features/event/components/event-studio-chrome.tsx:294` |
@@ -598,7 +598,7 @@ Routes: `/`
 
 | testid | companions | source |
 |---|---|---|
-| `home-composer` | — | `src/features/home/components/home-post-feed.tsx:172` |
+| `home-composer` | — | `src/features/home/components/home-post-feed.tsx:171` |
 
 ## `identification` — Identity verification (KYC)
 
@@ -1188,7 +1188,8 @@ Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/po
 | `post-collection-menu` | — | `src/features/post/components/collection-detail.tsx:130` |
 | `post-collections-header` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:31` |
 | `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:46` |
-| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:448` |
+| `post-preview` | — | `src/features/post/components/post-composer-dialog.tsx:557` |
+| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:423` |
 
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone
 
@@ -1370,8 +1371,7 @@ name; you need it to know the element exists.
 | `PostCard`, `PostMediaBlock` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
 | `PostCollectionPicker` | `src/features/post/components/post-collection-picker.tsx` | `-cancel` `-input` `-message` `-option` `-panel` `-retry` `-submit` `-trigger` |
 | `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-error` `-field` `-input` `-list` `-trigger` |
-| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-header` `-label-data` `-panel` `-prefix` `-reveal` `-submit` `-suffix` `-trigger` |
-| `PostComposerDialogs` | `src/features/post/components/post-composer-dialogs.tsx` | `-group` `-header` `-list` `-row` `-tab` |
+| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-group` `-header` `-label-data` `-list` `-panel` `-prefix` `-reveal` `-row` `-submit` `-suffix` `-tab` `-trigger` |
 | `PostComposerVideo` | `src/features/post/components/post-composer-video.tsx` | `-apply` `-clear` `-field` `-item` `-remove` `-reveal` `-slide` `-trigger` |
 | `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` `-label` |
@@ -1381,7 +1381,7 @@ name; you need it to know the element exists.
 | `PostMediaTile` | `src/features/post/components/post-media-tile.tsx` | `-count` `-label` `-overlay` `-panel` `-slide` `-suffix` |
 | `PostMenu` | `src/features/post/components/post-menu.tsx` | `-group` `-item` `-option` `-overlay` `-panel` `-remove` `-trigger` |
 | `PostNsfwGuard` | `src/features/post/components/post-nsfw-guard.tsx` | `-close` `-reveal` `-title` `-trigger` |
-| `PostPreviewDialog` | `src/features/post/components/post-preview-dialog.tsx` | `-description` `-header` `-item` `-overlay` `-panel` `-slide` |
+| `PostPreviewCard` | `src/features/post/components/post-preview-card.tsx` | `-description` `-item` `-overlay` `-panel` `-slide` |
 | `PostReportDialog` | `src/features/post/components/post-report-dialog.tsx` | `-close` `-confirm` `-description` `-input` `-option` `-retry` `-submit` `-title` |
 | `PostAudienceScreen`, `PostReplyAudienceScreen`, `PostSettingsScreen` | `src/features/post/components/post-settings-panel.tsx` | `-affix` `-error` `-field` `-input` `-item` `-message` `-option` `-reveal` |
 | `PostSlider` | `src/features/post/components/post-slider.tsx` | `-apply` `-clear` `-close` `-confirm` `-copy` `-description` `-footer` `-group` `-label-data` `-list` `-next` `-overlay` `-panel` `-prev` `-reveal` `-slide` |
