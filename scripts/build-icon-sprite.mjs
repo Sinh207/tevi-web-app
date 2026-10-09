@@ -103,6 +103,22 @@ function duotoneHooks(symbol) {
         )
 }
 
+/**
+ * The thirteen social marks (`telegram-icon`, `facebook-icon`, `x-icon`, …) are self-contained
+ * badges: a disc or rounded square with the logo **knocked out**, painted a literal `#71717A` that
+ * the Figma importer does not turn into `currentColor` (it only maps the ink, `#09090B`). So
+ * `color` cannot reach them, and the share sheet's `text-white` used to leave a grey badge sitting
+ * inside its own brand disc.
+ *
+ * Same trick as `duotoneHooks`: the fill becomes `var(--tevi-icon-brand, #71717A)`, which renders
+ * byte-identically wherever the property is unset (the channel's social links) and lets a host
+ * paint the badge in the company's own colour, with the knockout showing whatever sits behind it.
+ */
+function brandHooks(id, symbol) {
+    if (!/-icon--regular$/.test(id)) return symbol
+    return symbol.replace(/\sfill="#71717A"/gi, ' style="fill:var(--tevi-icon-brand,#71717A)"')
+}
+
 export function collectSprite() {
     const sprite = readFileSync(SOURCE, 'utf8') + readFileSync(EXTRA, 'utf8')
     const symbols = new Map(
@@ -176,7 +192,7 @@ export function collectSprite() {
     }
 
     const picked = [...wanted].sort()
-    const body = picked.map(id => duotoneHooks(symbols.get(id))).join('\n')
+    const body = picked.map(id => brandHooks(id, duotoneHooks(symbols.get(id)))).join('\n')
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none">\n${body}\n</svg>\n`
     const hash = createHash('sha256').update(svg).digest('hex').slice(0, 8)
 

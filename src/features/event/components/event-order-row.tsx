@@ -1,11 +1,10 @@
 'use client'
 
+import { AvatarStill } from '@shared/components/avatar-still'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
-import { Avatar, AvatarInitials, avatarImageClass } from '@shared/ui/avatar'
 import { Icon } from '@shared/ui/icon'
-import Image from 'next/image'
 import Link from 'next/link'
 import type { EventOrder } from '../api/report-types'
 import { formatEventDateTime } from '../lib/event-format'
@@ -41,13 +40,13 @@ export function EventOrderRow({ order }: { order: EventOrder }) {
 
     const body = (
         <>
-            <Avatar size="large" type={thumb ? 'image' : 'initials'} className="flex-none">
-                {thumb ? (
-                    <Image src={thumb} alt="" width={48} height={48} className={avatarImageClass} />
-                ) : (
-                    <AvatarInitials>{name.slice(0, 2).toUpperCase()}</AvatarInitials>
-                )}
-            </Avatar>
+            <AvatarStill
+                src={thumb}
+                size="large"
+                px={48}
+                initials={name.slice(0, 2).toUpperCase()}
+                className="flex-none"
+            />
 
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="flex min-w-0 items-center gap-1">

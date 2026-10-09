@@ -26,6 +26,7 @@ import { CARD_MANAGEMENT_PATH, GET_STAR_PATH } from '@features/payment/routes'
 import type { Capability } from '@features/permission'
 import { BOOKMARKS_PATH } from '@features/post/routes'
 import { GIFT_PREMIUM_PATH, PREMIUM_PATH } from '@features/premium/routes'
+import { SPACE_TIER_PATH } from '@features/space-tier/routes'
 import { STAR_TRANSFER_PATH } from '@features/star-transfer/routes'
 import type { IconProps } from '@shared/ui/icon'
 import type { DrawerView } from '../providers/menu-state'
@@ -317,6 +318,13 @@ export const MENU_SECTIONS: {
                 authOnly: true,
                 icon: { name: 'award', weight: 'filled' },
                 tile: TILE.warning,
+                /*
+                 * A page, where legacy's `BtnSpaceTier` opens a modal over whatever was underneath —
+                 * see `features/space-tier/routes.ts`. Gated on the *action* like every other
+                 * creator row: the screen is `my-channel/space-tier/` as this bearer.
+                 */
+                href: SPACE_TIER_PATH,
+                requiresAuth: true,
             },
             {
                 key: 'menu_mcn_partnership',

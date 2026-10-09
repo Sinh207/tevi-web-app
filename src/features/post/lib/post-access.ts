@@ -174,28 +174,6 @@ export function hasReacted(post: Pick<Post, 'user_reaction'>): boolean {
 }
 
 /**
- * The space-tier badge to draw beside a channel's name, or `null`.
- *
- * ## Tier 0 is a tier, and it has no badge
- *
- * Legacy's `BadgeSpaceTier` bails on `!image || !Number.isFinite(tier) || tier <= 0`, and the last
- * clause is the one worth porting carefully: every channel has a `space_tier`, most of them are `0`,
- * and the backend still sends a `space_tier_image` alongside it. Gate on the image alone — which is
- * the obvious reading — and every ordinary channel wears a tier-1 badge it has not earned.
- *
- * Returning the image rather than a boolean keeps the two checks in one place; a caller that gets a
- * string has already been told it may draw.
- */
-export function spaceTierBadge(
-    channel: Pick<NonNullable<Post['channel']>, 'space_tier' | 'space_tier_image'> | null,
-): string | null {
-    if (!channel?.space_tier_image) return null
-    const tier = channel.space_tier
-    if (tier === null || !Number.isFinite(tier) || tier <= 0) return null
-    return channel.space_tier_image
-}
-
-/**
  * Which controls the action row draws — legacy's four `return null` guards, in one place.
  *
  * ## Each guard answers a different question, and they are easy to mix up

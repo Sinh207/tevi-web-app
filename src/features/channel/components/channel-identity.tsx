@@ -13,6 +13,7 @@ import {
 import { Icon } from '@shared/ui/icon'
 import type { Channel } from '../api/types'
 import { ChannelCopyLink } from './channel-copy-link'
+import { ChannelTierMark } from './channel-tier-mark'
 import { ChannelVerifiedMark } from './channel-verified-mark'
 
 /**
@@ -121,14 +122,14 @@ export function ChannelIdentity({ channel }: { channel: Channel }) {
                 )}
 
                 {/*
-                 * Space-tier badge is **deliberately absent**. Figma draws it as one bespoke
-                 * raster per level with the number baked in (App Bar/Level, 3464:21429, five
-                 * variants), and `app-bar.css` says in writing that it is NOT the
-                 * `level-hexagon` vector plus a text node — levels 2, 5 and 10 overflow the
-                 * 22×24 box with their own offsets. Only level 1's art is reachable, so
-                 * substituting a shape here would be inventing four of the five. Ship it when
-                 * all five rasters and their offsets are in `design-system/`.
+                 * The space-tier mark, from the image the backend serves for the space's tier —
+                 * the same source the post header, the Following list and the conversation rows
+                 * already draw. (It was left out while the plan was to draw the five levels from
+                 * Figma's App Bar/Level rasters, which are not all reachable; the backend's own
+                 * art is what legacy shows here, so that wait was unnecessary.) Interactive, like
+                 * the tick: see `ChannelTierMark`.
                  */}
+                <ChannelTierMark channel={channel} testId="channel-tier-badge" />
             </CardUserHeaderNameRow>
 
             {channel.shareable_url && (

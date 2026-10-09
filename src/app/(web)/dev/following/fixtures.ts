@@ -5,24 +5,25 @@ import type { FollowedChannel, FollowedLive } from '@features/channel'
  * than for four nice names — same rule as `/dev/follow-requests`.
  *
  * Cast rather than constructed field-by-field: both types come from a `looseObject`, so the real
- * rows carry keys this app does not model (`space_tier`, `space_tier_image`, and whatever lands
- * next) and a fully-spelled literal would be a claim about the payload that this file is not the
- * place to make.
+ * rows carry keys this app does not model and a fully-spelled literal would be a claim about the
+ * payload that this file is not the place to make. The tier pair is spelled on **every** row, `null`
+ * where there is none: one row carrying it and the rest omitting it is enough for `tsc` to call the
+ * whole cast a mistake.
  */
 export const FOLLOWED: FollowedChannel[] = [
     {
         // Pinned **and** verified: the DS row's pin mark over the avatar, the repainted background,
         // and a badge image beside the name. The one row that exercises all three at once.
         //
-        // Flagged sensitive as well, which is the collision case: the pin owns the avatar's top-end
-        // corner and the NSFW mark the bottom-end one, so this row is what says the two never sit
-        // on top of each other.
+        // Flagged sensitive as well, so the 18+ mark sits on the name line beside a pinned avatar.
         id: 'c1',
         slug: 'ada',
         name: 'Ada Lovelace',
         images: { thumb: null, cover: null, avatar_video: null },
         verified_tick_badge: { image: null },
         is_premium: false,
+        space_tier: null,
+        space_tier_image: null,
         is_nsfw: true,
         last_activity_at: '2026-08-23T09:00:00Z',
         pin: true,
@@ -30,14 +31,21 @@ export const FOLLOWED: FollowedChannel[] = [
     },
     {
         // Premium: the name takes the brand gradient, and the avatar is the one place on this screen
-        // that plays a clip. Muted as well, so the bell-slash sits beside a gradient name.
+        // that plays a clip. Muted as well, so the bell-slash disc takes the avatar's bottom-end
+        // corner. Verified, Premium, tier 2 — whose mark is the widest of the five — and sensitive,
+        // so this is the row where all four name marks stand side by side and can be judged against
+        // each other. The tick is the real CDN art: `/dev/*` is exempt from `art:audit`.
         id: 'c2',
         slug: 'grace',
         name: 'Grace Hopper',
         images: { thumb: null, cover: null, avatar_video: null },
-        verified_tick_badge: null,
+        verified_tick_badge: {
+            image: 'https://static.tevicdn.com/Images/Channel/VerifiedTick/verified.png',
+        },
         is_premium: true,
-        is_nsfw: false,
+        space_tier: 2,
+        space_tier_image: 'https://static.stg.tevicdn.com/space-tier/tier-2.png',
+        is_nsfw: true,
         last_activity_at: '2026-07-20T09:00:00Z',
         pin: false,
         notification_settings: { notification: false },
@@ -45,13 +53,18 @@ export const FOLLOWED: FollowedChannel[] = [
     {
         // No `notification_settings` at all — the tri-state legacy reads backwards. This row must
         // show **no** mute glyph; if it does, `isFollowedChannelMuted` has been inlined somewhere.
-        // Sensitive without a pin, so the NSFW mark can be read on its own corner.
+        // Sensitive with a long name, so the 18+ mark is seen holding its place while the name
+        // truncates.
         id: 'c3',
         slug: 'katherine',
         name: 'Katherine Johnson',
         images: { thumb: null, cover: null, avatar_video: null },
         verified_tick_badge: null,
         is_premium: false,
+        // Tier 0 *with* an image — what the backend sends for most spaces. No mark may draw here;
+        // one that does means `spaceTierBadge` was bypassed for an image check.
+        space_tier: 0,
+        space_tier_image: 'https://static.stg.tevicdn.com/space-tier/tier-0.png',
         is_nsfw: true,
         last_activity_at: '2026-08-24T11:30:00Z',
         pin: false,
@@ -66,6 +79,8 @@ export const FOLLOWED: FollowedChannel[] = [
         images: { thumb: null, cover: null, avatar_video: null },
         verified_tick_badge: null,
         is_premium: false,
+        space_tier: null,
+        space_tier_image: null,
         is_nsfw: false,
         last_activity_at: null,
         pin: false,
@@ -81,6 +96,8 @@ export const FOLLOWED: FollowedChannel[] = [
         images: { thumb: null, cover: null, avatar_video: null },
         verified_tick_badge: null,
         is_premium: false,
+        space_tier: null,
+        space_tier_image: null,
         is_nsfw: false,
         last_activity_at: '2026-08-24T06:00:00Z',
         pin: false,
@@ -92,12 +109,21 @@ export const FOLLOWED: FollowedChannel[] = [
     },
     {
         // The flag with nothing behind it — a real payload shape, and it must draw **no** button.
+        //
+        // And a picture that does not load: the URL is real-shaped and 404s, so the avatar must
+        // show the placeholder disc and glyph — not the initials, and not a broken-image icon.
         id: 'c7',
         slug: 'mei',
         name: 'Mei Tanaka',
-        images: { thumb: null, cover: null, avatar_video: null },
+        images: {
+            thumb: 'https://static.tevicdn.com/Images/Channel/missing-avatar-404.jpg',
+            cover: null,
+            avatar_video: null,
+        },
         verified_tick_badge: null,
         is_premium: false,
+        space_tier: null,
+        space_tier_image: null,
         is_nsfw: false,
         last_activity_at: '2026-08-20T06:00:00Z',
         pin: false,
@@ -114,6 +140,8 @@ export const FOLLOWED: FollowedChannel[] = [
         images: { thumb: null, cover: null, avatar_video: null },
         verified_tick_badge: null,
         is_premium: false,
+        space_tier: null,
+        space_tier_image: null,
         is_nsfw: false,
         last_activity_at: '2025-11-02T09:00:00Z',
         pin: false,

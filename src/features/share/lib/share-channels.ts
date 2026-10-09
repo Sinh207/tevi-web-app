@@ -65,7 +65,7 @@ export type ShareChannelSpec = {
      */
     glyph: TeviIconName | ShareBrandMark
     /**
-     * The brand disc's fill, or `null` for the two neutral ones.
+     * The brand badge's fill (fed to the sprite's `--tevi-icon-brand`), or `null` for the neutral ones.
      *
      * A literal hex, and one of the few places that is right rather than lazy: these are other
      * companies' marks, and their colours are theirs — there is no Tevi token for Telegram blue,

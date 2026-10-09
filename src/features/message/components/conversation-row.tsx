@@ -3,7 +3,7 @@
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
-import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
+import { VERIFIED_BADGE_CROWN, VERIFIED_BADGE_TIER } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
 import { NotificationBadge } from '@shared/ui/badge'
@@ -146,13 +146,16 @@ export function ConversationRow({
                     <PremiumBadge size={VERIFIED_BADGE_CROWN.body} className="flex-none" />
                 )}
                 {view.tierImage && (
-                    /* A 2× box, not the drawn one — `PostHeader`'s tier mark says why. */
+                    /* A 2× box, not the drawn one — `PostHeader`'s tier mark says why. Height from
+                       `VERIFIED_BADGE_TIER.body`, the table the tick and crown beside it are sized
+                       by; a hand-picked 18 left it a size smaller than in every other list. */
                     <Image
                         src={view.tierImage}
                         alt={t('message_space_tier', { tier: view.tier ?? 0 })}
-                        width={36}
-                        height={36}
-                        className="h-[18px] w-auto flex-none"
+                        width={VERIFIED_BADGE_TIER.body * 2}
+                        height={VERIFIED_BADGE_TIER.body * 2}
+                        style={{ height: VERIFIED_BADGE_TIER.body }}
+                        className="w-auto flex-none"
                     />
                 )}
                 {view.muted && (

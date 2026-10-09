@@ -22,11 +22,12 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "test:e2e": "playwright test",
-        "art": "pnpm art:cdn && pnpm art:gift-code && pnpm art:star-transfer",
+        "art": "pnpm art:cdn && pnpm art:gift-code && pnpm art:star-transfer && pnpm art:reaction",
         "art:audit": "node scripts/audit-cdn-art.mjs",
         "art:cdn": "node scripts/build-cdn-art.mjs",
         "art:gift-code": "node scripts/build-gift-code-art.mjs",
         "art:payment": "node scripts/build-payment-art.mjs",
+        "art:reaction": "node scripts/build-reaction-stills.mjs",
         "art:star-transfer": "node scripts/build-star-transfer-art.mjs",
         "ffmpeg": "node scripts/copy-ffmpeg-core.mjs"
     },

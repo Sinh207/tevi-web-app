@@ -1,6 +1,5 @@
-import { Avatar, AvatarPlaceholder, avatarImageClass } from '@shared/ui/avatar'
+import { AvatarStill } from '@shared/components/avatar-still'
 import { Icon } from '@shared/ui/icon'
-import Image from 'next/image'
 import type { Program } from '../api/types'
 
 /**
@@ -12,7 +11,8 @@ import type { Program } from '../api/types'
  * raw image. No allow-list can be written ahead of a partner nobody has signed yet. Same call
  * `ProgramCard` makes for the affiliate campaign's own logo.
  *
- * A program with no icon gets the DS placeholder rather than a broken image box.
+ * A program with no icon — or one whose icon does not load — gets the DS placeholder rather than a
+ * broken image box.
  */
 export function ProgramAvatar({
     program,
@@ -25,29 +25,17 @@ export function ProgramAvatar({
     /** The same number in pixels — `next/image` needs it explicitly. */
     px: number
 }) {
-    const icon = program?.icon_url
     return (
-        <Avatar
+        <AvatarStill
+            src={program?.icon_url}
             size={size}
-            type={icon ? 'image' : 'placeholder'}
+            px={px}
+            unoptimized
             // White plate under the icon: mini-app marks are drawn for a light ground and several
             // are transparent PNGs that vanish on this app's dark surface. Legacy pins the same.
-            className={icon ? 'bg-white' : undefined}
-        >
-            {icon ? (
-                <Image
-                    src={icon}
-                    alt=""
-                    width={px}
-                    height={px}
-                    unoptimized
-                    className={avatarImageClass}
-                />
-            ) : (
-                <AvatarPlaceholder size={size} className="flex items-center justify-center">
-                    <Icon name="grid-square" size={24} />
-                </AvatarPlaceholder>
-            )}
-        </Avatar>
+            // Only while the icon shows — a partner's dead URL falls back to the placeholder.
+            imageClassName="bg-white"
+            glyph={<Icon name="grid-square" size={24} />}
+        />
     )
 }

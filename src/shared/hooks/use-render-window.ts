@@ -1,6 +1,14 @@
 'use client'
 
-import { type RefCallback, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+    type RefCallback,
+    startTransition,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 
 /**
  * Keep a long list's DOM bounded: render the rows around the reader and stand the rest down to a
@@ -64,11 +72,24 @@ export interface UseRenderWindowOptions {
      */
     overscan?: number
     /**
-     * How long to wait after the last visibility change before recomputing. An
-     * `IntersectionObserver` fires in bursts during a scroll, and recomputing on each one would
-     * remount rows mid-flick.
+     * The most often the window is recomputed while visibility keeps changing. An
+     * `IntersectionObserver` fires in bursts during a scroll, so changes are batched into one
+     * recompute per interval.
+     *
+     * ⚠ **A throttle, not a debounce.** It was a debounce — every burst restarted the timer — and
+     * a continuous flick therefore never let it fire: the window stayed where the scroll began
+     * until the finger stopped, and everything past the overscan scrolled in as empty boxes. A
+     * throttle loses nothing either: the recompute reads the visible set when it runs, so a change
+     * that lands while one is pending is in it.
      */
     settleMs?: number
+    /**
+     * How far beyond the viewport a row already counts as on screen — `IntersectionObserver`'s
+     * `rootMargin`. With none, the window learns a row is needed only once the reader can see its
+     * empty box; the margin is how far ahead it is mounted instead. Measured in viewports, so it
+     * scales with the screen.
+     */
+    rootMargin?: string
 }
 
 export interface RenderWindow {
@@ -85,7 +106,12 @@ const KEY_ATTRIBUTE = 'data-window-key'
 
 export function useRenderWindow(
     keys: readonly string[],
-    { minimum = 10, overscan = 4, settleMs = 80 }: UseRenderWindowOptions = {},
+    {
+        minimum = 10,
+        overscan = 4,
+        settleMs = 80,
+        rootMargin = DEFAULT_ROOT_MARGIN,
+    }: UseRenderWindowOptions = {},
 ): RenderWindow {
     /**
      * Measured heights, by key. In a ref rather than state on purpose: a height is read only while
@@ -146,12 +172,27 @@ export function useRenderWindow(
         const start = Math.max(0, first - pad)
         const end = Math.max(start + floor, last + pad + 1)
 
-        setSpan(current => (current[0] === start && current[1] === end ? current : [start, end]))
+        /*
+         * A transition, because a move can mount several rows at once — each a `PostCard` with media
+         * and a Lottie player — and as an ordinary update that is one long task in the middle of a
+         * scroll. As a transition React can yield between rows and keep the frames coming. The rows
+         * it mounts are ahead of the viewport (`rootMargin`), so a commit that lands a few frames
+         * later is still in time.
+         */
+        startTransition(() => {
+            setSpan(current =>
+                current[0] === start && current[1] === end ? current : [start, end],
+            )
+        })
     }, [])
 
+    // A throttle — see `settleMs` for why a debounce here never fires during a flick.
     const schedule = useCallback(() => {
-        if (timer.current) clearTimeout(timer.current)
-        timer.current = setTimeout(settle, settleMs)
+        if (timer.current) return
+        timer.current = setTimeout(() => {
+            timer.current = null
+            settle()
+        }, settleMs)
     }, [settle, settleMs])
 
     const observer = useRef<IntersectionObserver | null>(null)
@@ -178,9 +219,9 @@ export function useRenderWindow(
                 else visible.current.delete(key)
             }
             schedule()
-        }, OBSERVER_OPTIONS)
+        }, observerOptions(rootMargin))
         return observer.current
-    }, [schedule])
+    }, [schedule, rootMargin])
 
     const observe = useCallback<RefCallback<HTMLElement>>(
         element => {
@@ -236,13 +277,25 @@ export function useRenderWindow(
 }
 
 /**
- * `threshold: 0` — any pixel on screen counts.
+ * `threshold: 0` — any pixel inside the (margin-expanded) viewport counts.
  *
  * Legacy uses `0.1`, which on a 700px card means 70px must be showing before it is "in view". That
  * is a tenth of a card of dead zone at each edge of the window, and it buys nothing: the question
  * here is "should this stay mounted", not "has the reader seen it".
  */
-const OBSERVER_OPTIONS: IntersectionObserverInit = { threshold: 0 }
+function observerOptions(rootMargin: string): IntersectionObserverInit {
+    return { threshold: 0, rootMargin }
+}
+
+/**
+ * A screen and a half ahead and behind — enough that a fast flick on a phone reaches rows that are
+ * already mounted, and well short of mounting the whole list. Rows are kept for the margin plus
+ * `overscan`, so this is also what a row costs to stay alive off screen.
+ *
+ * Only the viewport is expanded: a list scrolling inside its own element is clipped by that element
+ * before the margin applies, so there the margin is inert rather than wrong.
+ */
+const DEFAULT_ROOT_MARGIN = '150% 0px'
 
 /**
  * A selector for one row's wrapper — for a caller that has to reach a row that may be stood down
@@ -250,6 +303,14 @@ const OBSERVER_OPTIONS: IntersectionObserverInit = { threshold: 0 }
  */
 export function windowKeySelector(key: string): string {
     return `[${KEY_ATTRIBUTE}="${CSS.escape(key)}"]`
+}
+
+/** Every row wrapper of a windowed list, in document order — stood down or not. */
+export const WINDOW_ROW_SELECTOR = `[${KEY_ATTRIBUTE}]`
+
+/** The key a row wrapper published with `windowKeyProps`, or `null` for any other element. */
+export function windowKeyOf(element: Element): string | null {
+    return element.getAttribute(KEY_ATTRIBUTE)
 }
 
 /** The attribute `observe` reads the key from. Exported so the row can publish it. */

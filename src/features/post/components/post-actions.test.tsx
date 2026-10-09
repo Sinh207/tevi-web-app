@@ -11,7 +11,10 @@ import { PostConversationProvider } from '../lib/author-conversation'
  * swallow a press, and an owner must not be offered a conversation with themselves.
  */
 
-vi.mock('@shared/components/lottie-animation', () => ({ LottieAnimation: () => null }))
+vi.mock('@shared/components/lottie-animation', () => ({
+    LottieAnimation: () => null,
+    preloadLottie: () => {},
+}))
 vi.mock('@shared/i18n/use-translation', () => ({
     useTranslation: () => ({ t: (key: string) => key, currentLanguage: 'en' }),
 }))

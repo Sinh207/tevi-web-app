@@ -118,7 +118,8 @@ already busy taking money.
 | `pnpm art:cdn [name…]` | rebuild `public/illustrations/` from `SOURCES` |
 | `pnpm art:gift-code` / `art:star-transfer` | the two pre-existing per-feature scripts |
 | `pnpm art:payment` | GIF → shippable asset. **Needs `ffmpeg`**, so it is not part of `pnpm art` |
-| `pnpm art` | runs `art:cdn` + `art:gift-code` + `art:star-transfer` |
+| `pnpm art:reaction` | the reaction star's two resting frames, rendered out of `public/lotties/icon-star-reactions.json` — **re-run whenever that JSON changes**; nothing detects a stale still |
+| `pnpm art` | runs `art:cdn` + `art:gift-code` + `art:star-transfer` + `art:reaction` |
 
 > ⚠ After rebuilding art, `rm -rf .next/dev/cache/images`. `minimumCacheTTL` is 31 days and the
 > optimiser caches by URL + width + quality, **not by mtime** — a running dev server keeps serving

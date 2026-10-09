@@ -134,7 +134,6 @@ export {
     postGate,
     postMenuVisibility,
     replyCost,
-    spaceTierBadge,
 } from './lib/post-access'
 export { NO_UPLOAD_LIMITS, type PostUploadLimits } from './lib/post-draft'
 export { formatPostTimestamp } from './lib/post-format'

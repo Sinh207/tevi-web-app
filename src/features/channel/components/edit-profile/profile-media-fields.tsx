@@ -2,7 +2,7 @@
 
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
-import { Avatar, AvatarInitials, avatarImageClass } from '@shared/ui/avatar'
+import { Avatar, AvatarInitials, AvatarPlaceholder, avatarImageClass } from '@shared/ui/avatar'
 import { Icon } from '@shared/ui/icon'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -250,7 +250,7 @@ export function ProfileMediaFields({
                          */}
                         <Avatar
                             size="2xl"
-                            type={showsThumb ? 'image' : 'initials'}
+                            type={showsThumb ? 'image' : images.thumb ? 'placeholder' : 'initials'}
                             className="md:size-[120px]"
                         >
                             {showsThumb ? (
@@ -263,8 +263,11 @@ export function ProfileMediaFields({
                                  *
                                  * Two defences, because either alone leaves a hole: the empty alt
                                  * means a broken image draws nothing rather than text, and the
-                                 * error flag swaps in the initials, which is a *correct* avatar
-                                 * rather than an empty circle. Nothing is lost by the empty alt —
+                                 * error flag swaps in the placeholder disc and glyph — the app-wide
+                                 * rule for a picture that did not arrive (`AvatarStill`), and not
+                                 * the initials, which mean "no picture was set". Kept as a raw
+                                 * `<img>` rather than `AvatarStill` because the source can be a
+                                 * `blob:` preview. Nothing is lost by the empty alt —
                                  * the control beside it is labelled "Change profile photo", and
                                  * the name is in the Name field two rows down.
                                  */
@@ -275,6 +278,13 @@ export function ProfileMediaFields({
                                     onError={setThumbFailed}
                                     className={avatarImageClass}
                                 />
+                            ) : images.thumb ? (
+                                <AvatarPlaceholder
+                                    size="2xl"
+                                    className="flex items-center justify-center"
+                                >
+                                    <Icon name="user-simple-alt" weight="filled" size={24} />
+                                </AvatarPlaceholder>
                             ) : (
                                 <AvatarInitials>{name.slice(0, 2).toUpperCase()}</AvatarInitials>
                             )}

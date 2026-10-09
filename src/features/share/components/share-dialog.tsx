@@ -242,15 +242,25 @@ export function ShareDialog({
                                              */
                                             'transition-[opacity,scale] duration-150',
                                             'hover:opacity-85 active:scale-95 motion-reduce:transition-none',
-                                            spec.brand && 'bg-(--share-disc)',
+                                            /*
+                                             * A sprite brand mark **is** the disc: a badge
+                                             * painted in the brand colour with the logo knocked
+                                             * out (`brandHooks` in `build-icon-sprite.mjs`). So the
+                                             * disc is only the paper behind the knockout — white,
+                                             * or black for X's inverse lockup — and the badge is
+                                             * scaled to cover it (below). Drawing the badge *on* a
+                                             * brand disc is how it shipped: a grey badge inside a
+                                             * blue ring.
+                                             */
+                                            spec.brand && 'overflow-clip bg-white',
+                                            spec.brand && spec.invertInDark && 'dark:bg-black',
                                             // Messenger's disc is a gradient, i.e. a
-                                            // `background-image` — a different utility for the
-                                            // same custom property.
-                                            spec.brandGradient && 'bg-[image:var(--share-disc)]',
-                                            spec.brand || spec.brandGradient
-                                                ? 'text-white'
-                                                : 'bg-(--background-segment) text-(--icon-default)',
-                                            spec.invertInDark && 'dark:bg-white dark:text-black',
+                                            // `background-image`.
+                                            spec.brandGradient &&
+                                                'bg-[image:var(--share-disc)] text-white',
+                                            !spec.brand &&
+                                                !spec.brandGradient &&
+                                                'bg-(--background-segment) text-(--icon-default)',
                                         )}
                                         /*
                                          * The inline value is a **custom property**, not the
@@ -278,6 +288,24 @@ export function ShareDialog({
                                                 outside the sprite. */}
                                         {spec.glyph === 'messenger-mark' ? (
                                             <MessengerMark />
+                                        ) : spec.brand ? (
+                                            /*
+                                             * The badge spans 19.2 of the glyph's 24 units, so
+                                             * 60px fills the 48px disc exactly; 62 overshoots by
+                                             * under a pixel a side, which is what keeps a hairline
+                                             * of white paper from showing at the antialiased edge.
+                                             * The disc's clip trims X's rounded square to the
+                                             * same circle as its neighbours.
+                                             */
+                                            <Icon
+                                                name={spec.glyph}
+                                                aria-hidden
+                                                className={cn(
+                                                    'size-[62px] flex-none [--tevi-icon-brand:var(--share-disc)]',
+                                                    spec.invertInDark &&
+                                                        'dark:[--tevi-icon-brand:white]',
+                                                )}
+                                            />
                                         ) : (
                                             <Icon name={spec.glyph} size={24} aria-hidden />
                                         )}

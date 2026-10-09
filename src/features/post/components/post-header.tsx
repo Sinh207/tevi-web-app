@@ -3,15 +3,16 @@
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
-import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
+import { VERIFIED_BADGE_CROWN, VERIFIED_BADGE_TIER } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { spaceTierBadge } from '@shared/lib/space-tier'
 import { subTestId } from '@shared/lib/test-id'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Post } from '../api/types'
 import type { PostActions } from '../hooks/use-post-actions'
-import { isGated, isPurchased, spaceTierBadge } from '../lib/post-access'
+import { isGated, isPurchased } from '../lib/post-access'
 import { formatPostTimestamp } from '../lib/post-format'
 import { PostMenu } from './post-menu'
 
@@ -114,9 +115,16 @@ export function PostHeader({
                     <VerifiedBadge
                         image={channel?.verified_tick_badge?.image ?? null}
                         size="dense"
+                        /* The tick's PNG has 12.5% clear air each side (2.5px at this size); the
+                           2px pull-in evens the visible gaps with the crown and tier marks. */
+                        className="-mx-0.5"
                     />
                     {channel?.is_premium ? (
-                        <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} className="flex-none" />
+                        <PremiumBadge
+                            size={VERIFIED_BADGE_CROWN.dense}
+                            /* Level with the other marks' ink, which centres 0.5px low. */
+                            className="flex-none translate-y-[0.5px]"
+                        />
                     ) : null}
                     {/*
                      * Height-constrained and `w-auto`: the tier marks are not square and legacy
@@ -124,9 +132,13 @@ export function PostHeader({
                      * `showInfoModal={false}` in the post header, so the tier explainer belongs to
                      * the space page, not to every card in a feed.
                      *
-                     * ⚠ The declared box is the **2× resolution** (28), not the drawn one, and on
+                     * The height is `VERIFIED_BADGE_TIER.dense` — the tick's visible height for this
+                     * name's tier plus the optical allowance its pointed hexagon needs (see the
+                     * constant), so the three marks *read* level — rather than legacy's fixed 14px.
+                     *
+                     * ⚠ The declared box is the **2× resolution**, not the drawn one, and on
                      * purpose: the marks' shapes vary (`tier-2` is 547×480, `tier-5` 195×160), so a
-                     * 14×14 box is matched by CSS in height and broken in width on every wide one,
+                     * square box is matched in height and broken in width on every wide one,
                      * and `next/image` warns on exactly that — one axis overridden, the other not.
                      * With both differing from what is drawn, CSS owns the size outright.
                      */}
@@ -134,9 +146,10 @@ export function PostHeader({
                         <Image
                             src={tierBadge}
                             alt={t('post_space_tier', { tier: channel?.space_tier ?? 0 })}
-                            height={28}
-                            width={28}
-                            className="h-[14px] w-auto flex-none"
+                            height={VERIFIED_BADGE_TIER.dense * 2}
+                            width={VERIFIED_BADGE_TIER.dense * 2}
+                            style={{ height: VERIFIED_BADGE_TIER.dense }}
+                            className="w-auto flex-none"
                         />
                     ) : null}
                     {channel?.slug ? (

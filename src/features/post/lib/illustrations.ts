@@ -13,3 +13,15 @@ export const COLLECTION_ART = {
     empty: { src: '/illustrations/collection/empty.webp', width: 225, height: 255 },
     noPosts: { src: '/illustrations/collection/no-posts.svg', width: 80, height: 100 },
 } as const
+
+/**
+ * The reaction star's two resting frames — 0 and `REACTED_FRAME` — rendered out of
+ * `public/lotties/icon-star-reactions.json` by `scripts/build-reaction-stills.mjs`
+ * (`pnpm art:reaction`), at 3× the 40px box. Not from the CDN: they are frames of an animation this
+ * repo already commits, and **must be re-rendered when that JSON changes**. `ReactionStar` says why
+ * the control draws stills at all.
+ */
+export const REACTION_STILLS = {
+    off: { src: '/illustrations/post/reaction-star-off.webp', width: 40, height: 40 },
+    on: { src: '/illustrations/post/reaction-star-on.webp', width: 40, height: 40 },
+} as const

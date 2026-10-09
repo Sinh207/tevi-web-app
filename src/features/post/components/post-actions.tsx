@@ -1,6 +1,6 @@
 'use client'
 
-import { LottieAnimation } from '@shared/components/lottie-animation'
+import { LottieAnimation, preloadLottie } from '@shared/components/lottie-animation'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { formatCompactCount, formatExactCount } from '@shared/lib/format-count'
 import { useWebConfig } from '@shared/lib/remote-config'
@@ -8,11 +8,12 @@ import { subTestId } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
 import type { TeviIconName, TeviIconNameFilled } from '@shared/ui/icon-names'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Post } from '../api/types'
 import { usePostBookmark } from '../hooks/use-post-bookmark'
 import { usePostReaction } from '../hooks/use-post-reaction'
 import { useOpenAuthorConversation } from '../lib/author-conversation'
+import { REACTION_STILLS } from '../lib/illustrations'
 import { postActionVisibility, replyCost } from '../lib/post-access'
 import { mayReply, replyAudience, replyAudienceNotice } from '../lib/who-can-reply'
 
@@ -296,6 +297,8 @@ function ActionButton({
  * `animate` is off for the first paint and on after the reader has pressed, so a feed scrolling
  * into view does not play twenty bursts at once.
  *
+ * At rest it is not a player at all — see `ReactionStar`.
+ *
  * ## The write is real
  *
  * `usePostReaction` flips optimistically and rolls back on failure, and `useRequireAuth` gates the
@@ -321,12 +324,15 @@ function ReactButton({
      * can tell us.
      */
     const [pressed, setPressed] = useState(false)
+    const star = useReactionStar(reacted)
 
     return (
         <span className="flex items-center">
             <button
                 type="button"
+                {...star.warmProps}
                 onClick={() => {
+                    star.warm()
                     setPressed(true)
                     toggle()
                 }}
@@ -337,10 +343,10 @@ function ReactButton({
                 data-testid={testId}
                 className="relative flex size-10 flex-none items-center justify-center rounded-full"
             >
-                <LottieAnimation
-                    src={REACTION_ART}
-                    frame={reacted ? REACTED_FRAME : 0}
+                <ReactionStar
+                    reacted={reacted}
                     animate={pressed}
+                    liveFrom={star.liveFrom}
                     className="size-10"
                 />
             </button>
@@ -362,6 +368,109 @@ export const REACTION_ART = '/lotties/icon-star-reactions.json'
 
 /** The artwork's last frame — its `op`, and legacy's own `goToAndStop(60)`. */
 export const REACTED_FRAME = 60
+
+/**
+ * When the reaction star's player is mounted: the first time the reader **reaches for** the button
+ * — a pointer over it, a touch on it, focus — and never before.
+ *
+ * `liveFrom` is the frame the star showed at that moment, which is what the player starts from. It
+ * is captured in the event rather than derived, because the press that follows a touch flips
+ * `reacted` before the player has finished building, and the animation has to start from the state
+ * the reader pressed, not the one they pressed it into.
+ *
+ * Spread `warmProps` on the button and call `warm()` in its `onClick` too — a keyboard press can
+ * arrive with no pointer and, after a programmatic focus, no focus event either.
+ */
+export function useReactionStar(reacted: boolean) {
+    const [liveFrom, setLiveFrom] = useState<number | null>(null)
+    const frame = reacted ? REACTED_FRAME : 0
+    const warm = useCallback(() => setLiveFrom(current => current ?? frame), [frame])
+    return {
+        liveFrom,
+        warm,
+        warmProps: { onPointerEnter: warm, onPointerDown: warm, onFocus: warm },
+    }
+}
+
+/**
+ * The reaction star: a **still** at rest, the Lottie player only once the reader reaches for it.
+ *
+ * ## Why not the player throughout
+ *
+ * A player is thirteen layers and a decoded PNG, built per button — and the star is on every post
+ * and every reply, inside render windows that tear rows down and rebuild them as the reader
+ * scrolls. So a scroll through the feed was building and destroying players for buttons nobody
+ * touched, which is where the frames went once the window itself was fixed. Two `<img>`s cost
+ * nothing to mount.
+ *
+ * The stills are **rendered from the same JSON** at frames 0 and `REACTED_FRAME`
+ * (`pnpm art:reaction`), so the argument on `ReactButton` — the resting states must come from the
+ * file that animates between them — still holds: nothing was redrawn.
+ *
+ * ## The hand-over
+ *
+ * Once `liveFrom` is set the player mounts **under** the still, which stays until the player has
+ * drawn (`onReady`) — so there is no blank frame while it builds. Until then the still shows
+ * `liveFrom`, not the current state: a quick tap flips `reacted` before the build lands, and the
+ * still jumping ahead would make the burst that follows play a change the reader already saw. If
+ * the player cannot load at all the still simply stays, tracking the state as before.
+ *
+ * The player and the JSON are still **downloaded** early, on idle (`preloadLottie`) — only the build
+ * waits. Otherwise a reader's first tap would wait on 285 KB of network before anything moved.
+ */
+export function ReactionStar({
+    reacted,
+    animate,
+    liveFrom,
+    className,
+}: {
+    reacted: boolean
+    animate: boolean
+    liveFrom: number | null
+    className?: string
+}) {
+    /*
+     * Two booleans, not a string union: `scripts/build-icon-sprite.mjs` ships any quoted token that
+     * names a glyph, and the obvious name for the third state is one.
+     */
+    const [ready, setReady] = useState(false)
+    const [failed, setFailed] = useState(false)
+    // Downloaded on idle, built on reach — see `preloadLottie`. Once per page, not per star.
+    useEffect(() => preloadLottie(REACTION_ART), [])
+    const live = liveFrom !== null && !failed
+    const frame = reacted ? REACTED_FRAME : 0
+    const stillFrame = live && !ready ? liveFrom : frame
+    const still = stillFrame === REACTED_FRAME ? REACTION_STILLS.on : REACTION_STILLS.off
+
+    return (
+        <span className={cn('relative block', className)}>
+            {live ? (
+                <LottieAnimation
+                    src={REACTION_ART}
+                    frame={frame}
+                    animate={animate}
+                    initialFrame={liveFrom}
+                    onReady={() => setReady(true)}
+                    onError={() => setFailed(true)}
+                    className="size-full"
+                />
+            ) : null}
+            {live && ready ? null : (
+                // biome-ignore lint/performance/noImgElement: a 2 KB local still, drawn at 32–40px; the optimiser would add a request per size for nothing.
+                <img
+                    src={still.src}
+                    width={still.width}
+                    height={still.height}
+                    alt=""
+                    aria-hidden="true"
+                    decoding="async"
+                    draggable={false}
+                    className="pointer-events-none absolute inset-0 size-full select-none"
+                />
+            )}
+        </span>
+    )
+}
 
 /**
  * The bookmark control.
