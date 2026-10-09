@@ -5294,7 +5294,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:385"
+            "source": "src/features/channel/components/channel-thread-list.tsx:386"
         },
         "channel-pinned-title": {
             "scope": "channel",
@@ -6623,7 +6623,7 @@
                 "/settings/custom-profile",
                 "/settings/space-visibility"
             ],
-            "source": "src/features/channel/components/channel-thread-list.tsx:431"
+            "source": "src/features/channel/components/channel-thread-list.tsx:433"
         },
         "channel-top-bar": {
             "scope": "channel",
@@ -7319,7 +7319,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:868"
+            "source": "src/features/event/components/event-studio-screen.tsx:872"
         },
         "event-gift-float-item": {
             "scope": "event",
@@ -7338,7 +7338,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:980"
+            "source": "src/features/event/components/event-studio-screen.tsx:984"
         },
         "event-gift-tray": {
             "scope": "event",
@@ -7346,7 +7346,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:947"
+            "source": "src/features/event/components/event-studio-screen.tsx:951"
         },
         "event-host": {
             "scope": "event",
@@ -8043,7 +8043,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-screen.tsx:1031"
+            "source": "src/features/event/components/event-studio-screen.tsx:1035"
         },
         "event-studio-fee-notice": {
             "scope": "event",
@@ -8083,7 +8083,7 @@
                 "/[slug]/event/[code]",
                 "/[slug]/event/[code]/report"
             ],
-            "source": "src/features/event/components/event-studio-compact.tsx:362"
+            "source": "src/features/event/components/event-studio-compact.tsx:364"
         },
         "event-studio-leaderboard": {
             "scope": "event",
@@ -9482,7 +9482,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-row.tsx:212"
+            "source": "src/features/message/components/conversation-row.tsx:213"
         },
         "message-row-menu-delete": {
             "scope": "message",
@@ -9514,7 +9514,7 @@
                 "/[slug]/messages",
                 "/messages"
             ],
-            "source": "src/features/message/components/conversation-row.tsx:197"
+            "source": "src/features/message/components/conversation-row.tsx:198"
         },
         "message-search-empty": {
             "scope": "message",
