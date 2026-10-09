@@ -634,6 +634,9 @@ export function EventStudioScreen({
                         // can ever need is a fraction of the viewport. Anything sharper is bytes
                         // spent on detail the `blur-[20px]` destroys.
                         sizes="50vw"
+                        // The studio's first paint is this art, so it is the LCP whenever the
+                        // stage has nothing playing yet — never `next/image`'s default lazy.
+                        loading="eager"
                         className="object-cover"
                     />
                 </div>
@@ -751,6 +754,7 @@ export function EventStudioScreen({
                                 aria-hidden
                                 fill
                                 sizes="510px"
+                                loading="eager"
                                 className="object-cover"
                             />
                         )}

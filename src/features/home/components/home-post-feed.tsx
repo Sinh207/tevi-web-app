@@ -376,6 +376,7 @@ const FeedGroup = memo(function FeedGroup({
                           onOpenMedia={target => onOpenMedia(post, target)}
                           onChanged={onChanged}
                           onAuthorBlocked={onAuthorBlocked}
+                          eagerMedia={index === 0 && positionInGroup === 0}
                           className="bg-(--background-surface)"
                           testId={subTestId(testId, 'item')}
                       />

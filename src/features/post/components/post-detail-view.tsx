@@ -173,6 +173,7 @@ export function PostDetailView({
                     post={post}
                     isPremiumReader={isPremiumReader}
                     disableDetail
+                    eagerMedia
                     onShare={() => setSharing(post)}
                     onChanged={() => refetch()}
                     testId={subTestId(testId, 'item')}

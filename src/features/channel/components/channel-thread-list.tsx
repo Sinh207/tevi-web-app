@@ -374,11 +374,12 @@ function PinnedThreads({
                 <Icon name="thumbtack" size={16} className="flex-none" />
                 {t('post_pinned')}
             </h3>
-            {posts.map(post => (
+            {posts.map((post, index) => (
                 <PostCard
                     key={post.id}
                     post={post}
                     isPremiumReader={isPremium}
+                    eagerMedia={index === 0}
                     onShare={() => onShare(post)}
                     onChanged={onChanged}
                     className="pt-0 pb-6 md:pt-0 md:pb-6"
@@ -428,6 +429,7 @@ const ThreadRow = memo(function ThreadRow({
                     onShare={() => onShare(thread)}
                     onOpenMedia={target => onOpenMedia(index, target)}
                     onChanged={onChanged}
+                    eagerMedia={index === 0}
                     testId="channel-thread"
                 />
             ) : null}

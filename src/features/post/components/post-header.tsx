@@ -132,13 +132,19 @@ export function PostHeader({
                      * sizes them by height alone. Non-interactive here — legacy passes
                      * `showInfoModal={false}` in the post header, so the tier explainer belongs to
                      * the space page, not to every card in a feed.
+                     *
+                     * ⚠ The declared box is the **2× resolution** (32), not the drawn 16, and on
+                     * purpose: the marks' shapes vary (`tier-2` is 547×480, `tier-5` 195×160), so a
+                     * 16×16 box is matched by CSS in height and broken in width on every wide one,
+                     * and `next/image` warns on exactly that — one axis overridden, the other not.
+                     * With both differing from what is drawn, CSS owns the size outright.
                      */}
                     {tierBadge ? (
                         <Image
                             src={tierBadge}
                             alt={t('post_space_tier', { tier: channel?.space_tier ?? 0 })}
-                            height={16}
-                            width={16}
+                            height={32}
+                            width={32}
                             className="h-4 w-auto flex-none"
                         />
                     ) : null}
