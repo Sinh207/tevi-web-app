@@ -62,7 +62,7 @@ pnpm vitest run -t 'migrates legacy'  # single test by name
 pnpm test:watch
 pnpm test:e2e                         # playwright (config + `e2e/`; builds first, so it is slow)
 pnpm art:audit                        # measure every CDN image src/ points at; fails if over budget
-pnpm art                              # = art:cdn + art:gift-code + art:star-transfer
+pnpm art                              # = art:cdn + art:gift-code + art:star-transfer + art:reaction
 pnpm art:payment                      # GIF → WebP/h264. Needs `ffmpeg`, so deliberately NOT in `pnpm art`
 pnpm icons                            # sprite subset + name types (after editing design-system/tevi-icons*.svg)
 pnpm brand                            # favicon + PWA icons       (after editing tevi-logo.svg)

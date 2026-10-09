@@ -1,5 +1,6 @@
 'use client'
 
+import { useAvatarStill } from '@shared/components/avatar-still'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useMayAnimate } from '@shared/hooks/use-may-animate'
 import { type AvatarSourceInput, resolveAvatarSource } from '@shared/lib/avatar-source'
@@ -102,6 +103,12 @@ export function AnimatedAvatar({
     const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
     /** A clip that 404s or fails to decode must fall back, not leave a hole. */
     const [videoFailed, setVideoFailed] = useState(false)
+    /**
+     * The still, unless it failed to load — then the placeholder disc and glyph rather than the
+     * browser's broken-image icon on a white disc. The rule, and why a failed picture does not fall
+     * back to the initials, is `useAvatarStill`'s; `AvatarStill` is the same thing without a clip.
+     */
+    const { still, imgProps } = useAvatarStill(poster)
 
     const showsVideo = !!videoSrc && mayAnimate && !videoFailed
 
@@ -117,23 +124,31 @@ export function AnimatedAvatar({
     }, [inView, videoEl])
 
     const px = SIZE_PX[size]
-    const type = poster ? 'image' : initials ? 'initials' : 'placeholder'
+    const type = still ? 'image' : !poster && initials ? 'initials' : 'placeholder'
 
     return (
         <Avatar ref={ref} size={size} type={type} className={cn('overflow-hidden', className)}>
-            {poster ? (
+            {still ? (
                 <Image
-                    src={poster}
+                    {...imgProps}
+                    src={still}
                     alt={alt}
                     width={px}
                     height={px}
                     priority={priority}
                     className={avatarImageClass}
                 />
-            ) : initials ? (
+            ) : !poster && initials ? (
                 <AvatarInitials>{initials}</AvatarInitials>
             ) : (
-                <AvatarPlaceholder size={size} className="flex items-center justify-center">
+                <AvatarPlaceholder
+                    size={size}
+                    /* The name the failed still would have carried — a broken avatar is still
+                     *someone's*, and `alt=""` callers stay decorative. */
+                    role={alt ? 'img' : undefined}
+                    aria-label={alt || undefined}
+                    className="flex items-center justify-center"
+                >
                     <Icon name="user-simple-alt" weight="filled" size={24} />
                 </AvatarPlaceholder>
             )}
@@ -144,7 +159,7 @@ export function AnimatedAvatar({
                 <video
                     ref={setVideoEl}
                     src={videoSrc}
-                    poster={poster ?? undefined}
+                    poster={still ?? undefined}
                     muted
                     loop
                     playsInline

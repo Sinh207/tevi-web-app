@@ -13,7 +13,6 @@ import {
     postGate,
     postMenuVisibility,
     replyCost,
-    spaceTierBadge,
 } from './post-access'
 
 /** Built through the schema, so a test can never assert on a shape the parser would not produce. */
@@ -192,50 +191,15 @@ describe('hasReacted', () => {
     })
 })
 
-describe('spaceTierBadge', () => {
-    const image = 'https://static.tevicdn.com/tier.png'
-
-    it('draws the mark from tier 1 up', () => {
-        const p = post({ channel: { id: '1', space_tier: 3, space_tier_image: image } })
-        expect(spaceTierBadge(p.channel)).toBe(image)
-    })
-
-    /**
-     * The bug this prevents: every channel has a `space_tier` and most are `0`, and the backend
-     * still sends an image alongside. Gate on the image alone and every ordinary channel wears a
-     * tier badge it has not earned.
-     */
-    it('draws nothing at tier 0, even though an image is sent', () => {
-        const p = post({ channel: { id: '1', space_tier: 0, space_tier_image: image } })
-        expect(spaceTierBadge(p.channel)).toBe(null)
-    })
-
+/** The badge's gate lives in `@shared/lib/space-tier`; what stays here is the post schema's half. */
+describe('channel.space_tier', () => {
     /**
      * `space_tier` arrives as a JSON **number**. Declared as text it parses to `null`, the gate can
      * never be satisfied, and the badge silently never renders — which is how it was found.
      */
     it('reads the tier as a number rather than dropping it', () => {
-        const p = post({ channel: { id: '1', space_tier: 2, space_tier_image: image } })
+        const p = post({ channel: { id: '1', space_tier: 2, space_tier_image: 'x' } })
         expect(p.channel?.space_tier).toBe(2)
-    })
-
-    /**
-     * The backend's rungs are 0, 1, 2, 5, 10 — not consecutive. So the gate is a comparison against
-     * zero and nothing else: no upper bound, no step assumption, no index into a list.
-     */
-    it('draws every rung above zero, however far apart they are', () => {
-        for (const tier of [1, 2, 5, 10, 47]) {
-            const p = post({ channel: { id: '1', space_tier: tier, space_tier_image: image } })
-            expect(spaceTierBadge(p.channel)).toBe(image)
-        }
-    })
-
-    it('draws nothing when the tier is absent or the image is', () => {
-        expect(
-            spaceTierBadge(post({ channel: { id: '1', space_tier_image: image } }).channel),
-        ).toBe(null)
-        expect(spaceTierBadge(post({ channel: { id: '1', space_tier: 3 } }).channel)).toBe(null)
-        expect(spaceTierBadge(null)).toBe(null)
     })
 })
 

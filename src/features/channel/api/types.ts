@@ -3,6 +3,7 @@ import {
     id,
     nullable,
     nullableId,
+    nullableNumber,
     nullableText,
     nullableTimestamp,
 } from '@shared/lib/api/wire'
@@ -153,6 +154,14 @@ export const channelSchema = z.looseObject({
     is_nsfw: boolish,
     is_suspended: boolish,
     verified_tick_badge: nullable(z.object({ image: nullableText })),
+    /**
+     * The space's tier and the mark the backend serves for it — drawn after the crown on the space
+     * page and in a conversation's header, as legacy's viewer `Name` and `headerChat` do. Read only
+     * through `spaceTierBadge` (`@shared/lib/space-tier`): tier `0` arrives **with** an image and
+     * must draw nothing. `nullableNumber`, not text, for the reason `followedChannelSchema` gives.
+     */
+    space_tier: nullableNumber,
+    space_tier_image: nullableText,
     claimed_badges: z.array(channelBadgeSchema).catch([]),
     /**
      * ⚠ **Only ever populated on `my-channel/`.** `GET channels/{slug}/` does not send this field —
@@ -669,8 +678,8 @@ export type FollowedOrdering = (typeof FOLLOWED_ORDERINGS)[number]
  * Declaring the union of both would leave a dozen fields defaulting to `false` on every row and
  * nothing to say which of them the endpoint actually answers.
  *
- * `looseObject`, so `space_tier` / `space_tier_image` (which legacy draws a badge from and this
- * client does not yet) survive the parse and reach whoever adds that badge.
+ * `looseObject`, so a field this client does not read yet survives the parse and reaches whoever
+ * adds the thing that reads it.
  */
 export const followedChannelSchema = z.looseObject({
     id,
@@ -680,6 +689,16 @@ export const followedChannelSchema = z.looseObject({
     images: channelImagesSchema,
     verified_tick_badge: nullable(z.object({ image: nullableText })),
     is_premium: boolish,
+    /**
+     * The space's tier and the mark the backend serves for it — the row draws it after the Premium
+     * crown, as legacy's `channelItem` does. Read only through `spaceTierBadge`
+     * (`@shared/lib/space-tier`): tier `0` arrives **with** an image and must draw nothing.
+     *
+     * `nullableNumber`, not text: the tier is a JSON number, and declared as text it parses to
+     * `null` and the badge silently never renders — the post schema's bug, found the same way.
+     */
+    space_tier: nullableNumber,
+    space_tier_image: nullableText,
     /**
      * The space is flagged sensitive — the row draws a mark on the avatar's corner.
      *

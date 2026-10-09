@@ -50,6 +50,9 @@ export function LottieAnimation({
     once,
     hideLayers,
     onComplete,
+    initialFrame,
+    onReady,
+    onError,
 }: {
     /** URL of the animation JSON — a path under `public/`, never an import. */
     src: string
@@ -95,8 +98,28 @@ export function LottieAnimation({
     hideLayers?: readonly string[]
     /** A `once` segment finished. */
     onComplete?: () => void
+    /**
+     * The frame the player was mounted **to show** — for a caller that mounts it on demand.
+     *
+     * A player takes a moment to build, and a `frame` that changes in that moment would otherwise
+     * be jumped to rather than played: there is no previous frame yet to play from. With this set,
+     * a player that lands with `animate` on and a different `frame` pending plays from here. The
+     * reaction star is the caller: it draws a still at rest and mounts the player only when the
+     * reader reaches for it, so a quick tap can arrive before the build.
+     */
+    initialFrame?: number
+    /** Called once a `frame` player has drawn its first frame — when a stand-in may go. */
+    onReady?: () => void
+    /** Called if the player or its animation could not load — a stand-in must then stay. */
+    onError?: () => void
 }) {
     const host = useRef<HTMLDivElement>(null)
+    /*
+     * Through refs, because the build effect below must not re-run — and rebuild the player — when
+     * a caller passes a new closure or the frame it mounted for.
+     */
+    const callbacks = useRef({ initialFrame, onReady, onError })
+    callbacks.current = { initialFrame, onReady, onError }
     /**
      * The player, held across renders so a `frame` change can drive it instead of rebuilding it.
      * Recreating on every frame is what would make `animate` impossible: there would be no previous
@@ -129,10 +152,7 @@ export function LottieAnimation({
         if (!node) return
         let cancelled = false
 
-        Promise.all([
-            import('lottie-web/build/player/esm/lottie_light.min.js'),
-            loadAnimationData(src),
-        ])
+        Promise.all([loadPlayer(), loadAnimationData(src)])
             .then(([{ default: lottie }, data]) =>
                 scheduleBuild(() => {
                     /*
@@ -176,8 +196,15 @@ export function LottieAnimation({
                     const applyPending = () => {
                         const pending = pendingRef.current
                         if (!pending) return
-                        player.goToAndStop(pending.frame, true)
+                        const from = callbacks.current.initialFrame
+                        if (pending.animate && from !== undefined && from !== pending.frame) {
+                            player.goToAndStop(from, true)
+                            player.playSegments([from, pending.frame], true)
+                        } else {
+                            player.goToAndStop(pending.frame, true)
+                        }
                         lastFrameRef.current = pending.frame
+                        callbacks.current.onReady?.()
                     }
                     if (player.isLoaded) applyPending()
                     else player.addEventListener('DOMLoaded', applyPending)
@@ -186,6 +213,7 @@ export function LottieAnimation({
             .catch(error => {
                 // Never silent again — see the import-path note above.
                 console.error('[LottieAnimation] failed to load the player or its animation', error)
+                if (!cancelled) callbacks.current.onError?.()
             })
 
         return () => {
@@ -230,6 +258,31 @@ type LottiePlayer = {
     playSegments: (segments: [number, number], forceFlag?: boolean) => void
     addEventListener: (name: string, handler: () => void) => void
 }
+
+function loadPlayer() {
+    return import('lottie-web/build/player/esm/lottie_light.min.js')
+}
+
+/**
+ * Fetch the player and an animation **without building anything**, when the browser is idle — for
+ * a caller that mounts `LottieAnimation` only on interaction, so the first press waits for a
+ * build (milliseconds) rather than for 168 KB of player and the JSON (the network). Both loads are
+ * shared with the component's own, so calling this any number of times costs one of each.
+ */
+export function preloadLottie(src: string): void {
+    if (typeof window === 'undefined' || preloaded.has(src)) return
+    preloaded.add(src)
+    const run = () => {
+        Promise.all([loadPlayer(), loadAnimationData(src)]).catch(() => {
+            // The mount will try again, and report it — `loadAnimationData` forgets a failure.
+            preloaded.delete(src)
+        })
+    }
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 4000 })
+    else setTimeout(run, 1000)
+}
+
+const preloaded = new Set<string>()
 
 /**
  * Each animation's JSON, by URL, for the life of the page — the fetch and the parse are paid once

@@ -3,15 +3,16 @@
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
-import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
+import { VERIFIED_BADGE_CROWN, VERIFIED_BADGE_TIER } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { spaceTierBadge } from '@shared/lib/space-tier'
 import { subTestId } from '@shared/lib/test-id'
 import { Icon } from '@shared/ui/icon'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Post } from '../api/types'
 import type { PostActions } from '../hooks/use-post-actions'
-import { isGated, isPurchased, spaceTierBadge } from '../lib/post-access'
+import { isGated, isPurchased } from '../lib/post-access'
 import { formatPostTimestamp } from '../lib/post-format'
 import { PostMenu } from './post-menu'
 
@@ -23,11 +24,7 @@ import { PostMenu } from './post-menu'
  * reader had paid for. Legacy's is a `Chip size='small'` — 24px tall, pill, a 12px tick and a 10/500
  * label, all on a 10%-green fill.
  *
- * **16 tall here, not legacy's 24**, so it matches the other marks in the header (verified, Premium,
- * tier, the audience glyph — all 16). The tick and the label keep legacy's 12 and 10/500; only the
- * pill's own padding shrank.
- *
- * The palette is the design system's. Legacy hard-codes `#2FC062` on
+ * Geometry is legacy's; the palette is the design system's. Legacy hard-codes `#2FC062` on
  * `rgba(52,199,89,0.10)`; `--text-success` and `--accents-success-bg-active` are the same intent in
  * tokens that have a dark mode, which a raw hex does not — and `CLAUDE.md` bars one outright.
  *
@@ -45,7 +42,7 @@ function PurchasedTag({ testId }: { testId?: string }) {
     return (
         <span
             data-testid={subTestId(testId, 'label')}
-            className="inline-flex h-4 flex-none items-center gap-0.5 rounded-full bg-(--accents-success-bg-active) px-1.5 text-(--text-success)"
+            className="inline-flex h-6 flex-none items-center gap-0.5 rounded-full bg-(--accents-success-bg-active) px-2 text-(--text-success)"
         >
             <Icon name="check-all" size={16} className="size-3 flex-none" />
             {/* 10/500 — the DS's only 10px step, and legacy's size and weight. */}
@@ -115,17 +112,19 @@ export function PostHeader({
                     <span className="type-dense-emphasis max-w-[120px] truncate text-(--text-title) md:max-w-[170px]">
                         {name}
                     </span>
-                    {/*
-                     * Verified and Premium size by the name's text tier (`VERIFIED_BADGE_SIZE`,
-                     * `dense` here). The tier mark and the meta line's marks (audience,
-                     * *Purchased*) are 16 tall.
-                     */}
                     <VerifiedBadge
                         image={channel?.verified_tick_badge?.image ?? null}
                         size="dense"
+                        /* The tick's PNG has 12.5% clear air each side (2.5px at this size); the
+                           2px pull-in evens the visible gaps with the crown and tier marks. */
+                        className="-mx-0.5"
                     />
                     {channel?.is_premium ? (
-                        <PremiumBadge size={VERIFIED_BADGE_CROWN.dense} className="flex-none" />
+                        <PremiumBadge
+                            size={VERIFIED_BADGE_CROWN.dense}
+                            /* Level with the other marks' ink, which centres 0.5px low. */
+                            className="flex-none translate-y-[0.5px]"
+                        />
                     ) : null}
                     {/*
                      * Height-constrained and `w-auto`: the tier marks are not square and legacy
@@ -133,9 +132,13 @@ export function PostHeader({
                      * `showInfoModal={false}` in the post header, so the tier explainer belongs to
                      * the space page, not to every card in a feed.
                      *
-                     * ⚠ The declared box is the **2× resolution** (32), not the drawn 16, and on
+                     * The height is `VERIFIED_BADGE_TIER.dense` — the tick's visible height for this
+                     * name's tier plus the optical allowance its pointed hexagon needs (see the
+                     * constant), so the three marks *read* level — rather than legacy's fixed 14px.
+                     *
+                     * ⚠ The declared box is the **2× resolution**, not the drawn one, and on
                      * purpose: the marks' shapes vary (`tier-2` is 547×480, `tier-5` 195×160), so a
-                     * 16×16 box is matched by CSS in height and broken in width on every wide one,
+                     * square box is matched in height and broken in width on every wide one,
                      * and `next/image` warns on exactly that — one axis overridden, the other not.
                      * With both differing from what is drawn, CSS owns the size outright.
                      */}
@@ -143,9 +146,10 @@ export function PostHeader({
                         <Image
                             src={tierBadge}
                             alt={t('post_space_tier', { tier: channel?.space_tier ?? 0 })}
-                            height={32}
-                            width={32}
-                            className="h-4 w-auto flex-none"
+                            height={VERIFIED_BADGE_TIER.dense * 2}
+                            width={VERIFIED_BADGE_TIER.dense * 2}
+                            style={{ height: VERIFIED_BADGE_TIER.dense }}
+                            className="w-auto flex-none"
                         />
                     ) : null}
                     {channel?.slug ? (

@@ -79,19 +79,20 @@ export function ShareQrPanel({
     }
 
     return (
-        // `gap 16`, `padding 12` and `paddingBottom 8` — legacy's, and centred as it centres.
-        <div className="flex flex-col items-center gap-4 p-3 pb-2" data-testid={testId}>
+        <div className="flex flex-col items-center gap-4 p-4 pt-5" data-testid={testId}>
             {/*
-             * 250px, which is legacy's. The one addition is the white plate under it, in both
-             * themes and on purpose: a camera looks for contrast between dark modules and a light
-             * quiet zone, and inverting a QR for dark mode makes it unreadable on many scanners.
-             * Legacy has no plate because it has no dark mode. One of the few places a literal
-             * white beats a token — the same call `ChannelEventQrDialog` makes, for the same reason.
+             * The white plate stays in both themes, on purpose: a camera looks for contrast between
+             * dark modules and a light quiet zone, and inverting a QR for dark mode makes it
+             * unreadable on many scanners. One of the few places a literal white beats a token —
+             * the same call `ChannelEventQrDialog` makes, for the same reason.
+             *
+             * The hairline and the shadow are for **Light**, where a white plate on a white
+             * surface has no edge at all and the code floats with nothing holding it.
              */}
-            <div className="rounded-(--radius-lg) bg-white p-3">
+            <div className="rounded-(--radius-xl) bg-white p-4 shadow-sm ring-1 ring-black/5">
                 {url ? (
                     /*
-                     * `size-[250px]` in CSS as well as the width/height attributes: the endpoint
+                     * `size-[232px]` in CSS as well as the width/height attributes: the endpoint
                      * answers a **300×300** PNG, and the attributes alone only fix the box while the
                      * intrinsic size is unknown. Pinning it means the panel is the same height
                      * whatever the service returns.
@@ -99,60 +100,52 @@ export function ShareQrPanel({
                     <Image
                         src={qrImageUrl(url)}
                         alt=""
-                        width={250}
-                        height={250}
+                        width={232}
+                        height={232}
                         unoptimized
-                        className="block size-[250px]"
+                        className="block size-[232px]"
                         data-testid={subTestId(testId, 'qr')}
                     />
                 ) : (
                     /*
                      * **`w`/`h` props, not classes.** `Skeleton` writes its height as an inline
-                     * style — 12px by default, the DS bar — and an inline declaration beats any
-                     * class, so `size-[250px]` here drew a **12px** bar: the popup opened 206 tall
-                     * and jumped to 444 the moment the code arrived, re-centring itself on the way.
-                     * Its own docstring warns about exactly this ("reserve the row at its real
-                     * height"); the class form fails silently because the width still works.
+                     * style — 12px by default — and an inline declaration beats any class, so a
+                     * size class here draws a 12px bar and the popup jumps when the code arrives.
                      */
-                    <Skeleton w={250} h={250} className="rounded-(--radius-sm)" />
+                    <Skeleton w={232} h={232} className="rounded-(--radius-sm)" />
                 )}
             </div>
-            {/* 16/400, centred, title ink — legacy's `#131313`. */}
-            <p className="type-body-default text-center text-(--text-title)">
+            <p className="type-caption-label max-w-[280px] text-balance text-center text-(--text-subtitle)">
                 {t('share_qr_hint')}
             </p>
-            <div className="flex w-full items-center gap-2">
-                {/*
-                 * Both controls are legacy's `#131313`, i.e. the DS `primary` — the neutral press,
-                 * not `accent`: neither is the brand action, they are two ways of taking the code
-                 * away with you. 40px in the comps, `medium` (36) here, because a DS size beats a
-                 * number that is between two of them.
-                 *
-                 * `flex-1` and not the Button's own `fullWidth`: that is `w-full`, which in a row
-                 * beside a second control resolves to 100% of the row and pushes the download
-                 * square out past the popup's edge — visible only once both are rendered, which is
-                 * why it survived being read.
-                 */}
+            {/*
+             * Two equal halves — `grid`, not flex: `Button` is `shrink-0`, so two flexed buttons
+             * push the trailing one off the popup in a long locale. Download is the accent because
+             * it is the one thing only this step offers; the link can be copied from the sheet too.
+             * Labels truncate rather than wrap, so the row stays one control tall in nine locales.
+             */}
+            <div className="grid w-full grid-cols-2 gap-2">
                 <Button
-                    variant="primary"
-                    size="medium"
-                    className="min-w-0 flex-1"
+                    variant="secondary"
+                    size="large"
+                    className="min-w-0"
                     onClick={onCopy}
                     data-testid={subTestId(testId, 'copy')}
                 >
-                    <Icon name="link-simple" weight="filled" size={18} aria-hidden />
-                    {t('share_copy_link')}
+                    <Icon name="link-simple" weight="filled" size={20} aria-hidden />
+                    <span className="truncate">{t('share_copy_link')}</span>
                 </Button>
                 <Button
-                    variant="primary"
-                    size="medium"
-                    iconOnly
+                    variant="accent"
+                    size="large"
+                    className="min-w-0"
                     disabled={!url || saving}
-                    aria-label={t('share_qr_download')}
+                    aria-busy={saving || undefined}
                     onClick={download}
                     data-testid={subTestId(testId, 'submit')}
                 >
-                    <Icon name="download-arrow-down" size={18} aria-hidden />
+                    <Icon name="download-arrow-down" size={20} aria-hidden />
+                    <span className="truncate">{t('share_qr_download')}</span>
                 </Button>
             </div>
         </div>

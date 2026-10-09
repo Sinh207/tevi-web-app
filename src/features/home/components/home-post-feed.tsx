@@ -5,6 +5,7 @@ import { type Post, PostCard, PostSlider, usePostSlider } from '@features/post'
 import { postShareContext, ShareDialog } from '@features/share'
 import { useInView } from '@shared/hooks/use-in-view'
 import { useRenderWindow, windowKeyProps } from '@shared/hooks/use-render-window'
+import { useScrollAnchor } from '@shared/hooks/use-scroll-anchor'
 import { RISE, riseDelay } from '@shared/lib/motion'
 import { subTestId } from '@shared/lib/test-id'
 import { cn } from '@shared/lib/utils'
@@ -128,6 +129,14 @@ export function HomePostFeed({
         if (sentinelInView && hasNextPage && !isFetchingNextPage) fetchNextPage()
     }, [sentinelInView, hasNextPage, isFetchingNextPage, fetchNextPage])
 
+    /*
+     * Back where the reader left the feed when a tab press brings them here — *Back* already does,
+     * a push does not; `useScrollAnchor` says why.
+     */
+    const listRef = useRef<HTMLDivElement>(null)
+    const listShown = !isLoading && !isError && !isEmpty
+    useScrollAnchor('home-feed', listRef, listShown)
+
     // The arithmetic half: a page that collapsed into too few cards to scroll leaves the sentinel
     // off screen forever, so nothing would ever ask for the page that would fix it.
     useEffect(() => {
@@ -183,7 +192,7 @@ export function HomePostFeed({
     if (isEmpty) return withEmptyPanel(whatsNew, <HomeEmptyState kind="empty" />)
 
     return (
-        <div data-testid={testId} className={FEED_LIST}>
+        <div ref={listRef} data-testid={testId} className={FEED_LIST}>
             {whatsNew}
             {groups.map((group, index) => {
                 const key = groupKey(group)
@@ -343,8 +352,17 @@ const FeedGroup = memo(function FeedGroup({
              * is this element's own: painted surface here, it showed white, so two posts from
              * one space ran together while the line between two *groups* was there. Legacy's
              * `PostsWrapper` is the same `gap: 1px` with no fill, for the same reason.
+             *
+             * **Except while stood down.** The empty box then has no cards to carry a surface, so
+             * it showed the page colour — near-black in Dark — and a fast flick that outran the
+             * window scrolled in as black slabs. Stood down it has no inner gap to protect, so it
+             * takes the cards' surface: at worst the reader sees a blank card, never a hole.
              */
-            className={cn('flex min-w-0 flex-col gap-px', RISE)}
+            className={cn(
+                'flex min-w-0 flex-col gap-px',
+                height !== null && 'bg-(--background-surface)',
+                RISE,
+            )}
             /*
              * Held open at the height it had, so nothing below it moves. Drawn empty
              * rather than as a skeleton: it is off screen by definition, and an

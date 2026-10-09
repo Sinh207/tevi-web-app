@@ -139,6 +139,54 @@ describe('useRenderWindow', () => {
     })
 
     /**
+     * The black-slab bug. A flick fires the observer far more often than `settleMs`; as a debounce
+     * every burst restarted the timer, so the window held still until the scroll stopped and every
+     * row past the overscan arrived as an empty box.
+     */
+    it('moves the window during a scroll whose bursts never pause', () => {
+        const { out } = mount(KEYS, { minimum: 4, overscan: 1, settleMs: 80 })
+
+        act(() => fire(KEYS.map(key => ({ key, isIntersecting: false, height: 700 }))))
+        settle()
+        expect(out.current?.shouldRender('k10')).toBe(false)
+
+        // One row crosses every 30ms — no gap anywhere near 80ms.
+        for (let index = 0; index <= 10; index++) {
+            act(() => {
+                fire([
+                    { key: `k${index}`, isIntersecting: true, height: 700 },
+                    ...(index > 0
+                        ? [{ key: `k${index - 1}`, isIntersecting: false, height: 700 }]
+                        : []),
+                ])
+                vi.advanceTimersByTime(30)
+            })
+        }
+
+        // Still mid-flick, and the window has already followed it.
+        expect(out.current?.shouldRender('k9')).toBe(true)
+        expect(out.current?.shouldRender('k0')).toBe(false)
+    })
+
+    it('expands the viewport by the root margin', () => {
+        const options: IntersectionObserverInit[] = []
+        vi.stubGlobal(
+            'IntersectionObserver',
+            class extends FakeObserver {
+                constructor(
+                    callback: IntersectionObserverCallback,
+                    init: IntersectionObserverInit,
+                ) {
+                    super(callback)
+                    options.push(init)
+                }
+            },
+        )
+        mount(KEYS)
+        expect(options[0]?.rootMargin).toBe('150% 0px')
+    })
+
+    /**
      * The failure mode legacy needs a `closest('[hidden]')` check for: a list inside a hidden tab
      * reports *nothing* intersecting, and a window computed from an empty set would stand every row
      * down — then jump when the tab came back.

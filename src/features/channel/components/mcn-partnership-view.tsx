@@ -8,15 +8,14 @@ import {
     ActionMenuContent,
     ActionMenuItem,
 } from '@shared/components/action-menu'
+import { AvatarStill } from '@shared/components/avatar-still'
 import { BarIconButton } from '@shared/components/bar-icon-button'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { RISE } from '@shared/lib/motion'
 import { cn } from '@shared/lib/utils'
-import { Avatar, AvatarInitials, avatarImageClass } from '@shared/ui/avatar'
 import { Button } from '@shared/ui/button'
 import { ConfirmDialog } from '@shared/ui/confirm-dialog'
 import { Icon } from '@shared/ui/icon'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useMcnPartnership } from '../hooks/use-mcn-partnership'
@@ -355,35 +354,26 @@ function ManagedByCard({
 
     const row = (
         <div className="flex min-w-0 items-center gap-3 p-3">
-            <Avatar size="large" type={thumb ? 'image' : 'initials'}>
-                {thumb ? (
-                    <Image
-                        src={thumb}
-                        alt=""
-                        width={48}
-                        height={48}
-                        /*
-                         * **`unoptimized`**, for the reason `MiniAppMark` and `ProgramAvatar`
-                         * both state: `next/image` *throws* on a host missing from
-                         * `next.config.ts`'s `remotePatterns` rather than falling back to the
-                         * raw image — one unexpected host takes the whole screen down in dev
-                         * and 400s out of the optimizer in production. This URL comes from the
-                         * **organization** service, which no other screen in this app calls, so
-                         * its host has never been observed here. A 48px logo is not worth
-                         * putting a creator's revenue split behind that bet.
-                         */
-                        unoptimized
-                        className={avatarImageClass}
-                    />
-                ) : (
-                    /* Legacy falls back to `'M'` for a network with no name at all; two letters is
-                       what every other avatar in this app draws, and `Avatar`'s initials type brings
-                       its own ground so the circle is never an empty ring. */
-                    <AvatarInitials>
-                        {(name ?? 'MCN').trim().slice(0, 2).toUpperCase()}
-                    </AvatarInitials>
-                )}
-            </Avatar>
+            <AvatarStill
+                src={thumb}
+                size="large"
+                px={48}
+                /*
+                 * **`unoptimized`**, for the reason `MiniAppMark` and `ProgramAvatar`
+                 * both state: `next/image` *throws* on a host missing from
+                 * `next.config.ts`'s `remotePatterns` rather than falling back to the
+                 * raw image — one unexpected host takes the whole screen down in dev
+                 * and 400s out of the optimizer in production. This URL comes from the
+                 * **organization** service, which no other screen in this app calls, so
+                 * its host has never been observed here. A 48px logo is not worth
+                 * putting a creator's revenue split behind that bet.
+                 */
+                unoptimized
+                /* Legacy falls back to `'M'` for a network with no name at all; two letters is
+                   what every other avatar in this app draws, and `Avatar`'s initials type brings
+                   its own ground so the circle is never an empty ring. */
+                initials={(name ?? 'MCN').trim().slice(0, 2).toUpperCase()}
+            />
             <div className="flex min-w-0 flex-1 flex-col">
                 <p className="type-body-default min-w-0 truncate text-(--text-title)">
                     {name ?? '—'}

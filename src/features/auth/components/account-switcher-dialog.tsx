@@ -1,10 +1,11 @@
 'use client'
 
+import { AvatarStill } from '@shared/components/avatar-still'
 import { DialogCloseButton } from '@shared/components/dialog-close-button'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { type Account, getAccount, MAX_ACCOUNTS } from '@shared/lib/api/token'
 import { cn } from '@shared/lib/utils'
-import { Avatar, avatarImageClass } from '@shared/ui/avatar'
+import { Avatar } from '@shared/ui/avatar'
 import { ConfirmDialog } from '@shared/ui/confirm-dialog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@shared/ui/dialog'
 import { Icon } from '@shared/ui/icon'
@@ -20,7 +21,6 @@ import {
     ListRowTitleRow,
     ListSeparator,
 } from '@shared/ui/list'
-import Image from 'next/image'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { accountAvatarUrl, accountDisplayName, accountEmail } from '../lib/account-profile'
@@ -202,22 +202,7 @@ export function AccountSwitcherDialog() {
                                         )}
                                     >
                                         <ListRowLeading>
-                                            <Avatar
-                                                size="medium"
-                                                type={avatar ? 'image' : 'placeholder'}
-                                            >
-                                                {avatar ? (
-                                                    <Image
-                                                        alt=""
-                                                        src={avatar}
-                                                        width={40}
-                                                        height={40}
-                                                        className={avatarImageClass}
-                                                    />
-                                                ) : (
-                                                    <Icon name="user-simple-alt" size={20} />
-                                                )}
-                                            </Avatar>
+                                            <AvatarStill src={avatar} size="medium" px={40} />
                                         </ListRowLeading>
                                         <ListRowContent>
                                             {i > 0 && <ListRowRule />}

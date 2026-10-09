@@ -50,7 +50,7 @@ export default function VerifiedBadgeHarness() {
 
             <section className="flex flex-col gap-4">
                 <h2 className="type-dense-strong m-0 text-(--text-subtitle)">
-                    Decorative — one tier per name style, crown at ¾
+                    Decorative — one tier per name style, crown sized to read level
                 </h2>
                 {TIERS.map(([tier, type]) => (
                     <div key={tier} className="flex items-center gap-1">

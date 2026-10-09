@@ -4,8 +4,13 @@ import { OpenMiniAppButton } from '@features/mini-app'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
-import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
+import {
+    VERIFIED_BADGE_CROWN,
+    VERIFIED_BADGE_SIZE,
+    VERIFIED_BADGE_TIER,
+} from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { spaceTierBadge } from '@shared/lib/space-tier'
 import { cn } from '@shared/lib/utils'
 import { Icon } from '@shared/ui/icon'
 import {
@@ -17,17 +22,24 @@ import {
     ListUserItemHandle,
     ListUserItemInfo,
     ListUserItemMeta,
-    ListUserItemMute,
     ListUserItemName,
     ListUserItemNameRow,
     ListUserItemPin,
     ListUserItemPreview,
 } from '@shared/ui/list'
+import Image from 'next/image'
 import Link from 'next/link'
 import { type FollowedChannel, isFollowedChannelMuted } from '../api/types'
 import { formatRelativeTime } from '../lib/channel-format'
 import { toChannelPath } from '../lib/channel-slug'
-import { FollowingRowMenu } from './following-row-menu'
+import { FollowingRowActions, FollowingRowMenu } from './following-row-menu'
+
+/**
+ * The 18+ glyph's box: the tick's visible height (¾ of its box) over the glyph's own ~92% fill, so
+ * the two draw the same height of ink. From the tick, not `VERIFIED_BADGE_TIER` — the tier mark is
+ * sized up to make up for its pointed silhouette, and a solid diamond needs no such help.
+ */
+const NSFW_MARK_BOX = Math.round((VERIFIED_BADGE_SIZE.body * 0.75) / 0.92)
 
 /**
  * One followed space.
@@ -104,6 +116,7 @@ export function FollowingChannelRow({
     const name = channel.name || `@${channel.slug}`
     const muted = isFollowedChannelMuted(channel)
     const verifiedImage = channel.verified_tick_badge?.image ?? null
+    const tierBadge = spaceTierBadge(channel)
     const lastActivity = formatRelativeTime(channel.last_activity_at, locale)
 
     return (
@@ -147,7 +160,7 @@ export function FollowingChannelRow({
             <ListUserItem
                 pinned={channel.pin}
                 muted={muted}
-                className="bg-(--background-surface) transition-colors hover:bg-(--background-segment)"
+                className="group/row bg-(--background-surface) transition-colors hover:bg-(--background-segment)"
             >
                 {/* `items-center`, always. The DS slot is `items-start`, drawn for the three-line
                     stack this row no longer has — with two lines the avatar hangs visibly high. */}
@@ -215,55 +228,45 @@ export function FollowingChannelRow({
                             />
                         </ListUserItemPin>
                     )}
-                    {channel.is_nsfw && (
+                    {muted && (
                         /*
-                         * Sensitive space — the mark legacy draws as a hand-rolled pink diamond over
-                         * the avatar. The glyph is the DS's own `nsfw`, the one `SearchChannelRow`
-                         * and `ChannelBio` already use, so nothing is drawn by hand.
-                         *
-                         * ## On the avatar, and on the **bottom** corner
-                         *
-                         * `SearchChannelRow` puts this mark inline after the name, because a search
-                         * row's name has ~300px and a 16px glyph beside it costs nothing. This row's
-                         * name line is already carrying the badge, the handle *and* the mute glyph
-                         * (legacy's own arrangement — see the handle's note), so a fifth thing on
-                         * that line comes straight out of the name. The avatar has the room, which
-                         * is what `FollowingTile` decided for the same reason.
+                         * Muted — on the avatar's **bottom-end** corner, mirroring the pin on the
+                         * top-end one. It used to ride the name line, after the handle, and that
+                         * line now carries name · tick · crown · tier · 18+ · handle: a sixth
+                         * thing there comes straight out of the name. Both pin and mute are this
+                         * reader's own preferences on the follow, so the avatar's two corners are
+                         * where those live, and the name line is left to facts about the space.
                          *
                          * Bottom rather than top because the **pin already owns the top-end
-                         * corner**. Two marks on one corner is not a layout to make conditional on
-                         * `pin`: a mark that moves when an unrelated preference changes is worse
-                         * than one that is always in the same place.
+                         * corner**, and a mark that moves when an unrelated preference changes is
+                         * worse than one that is always in the same place.
                          *
-                         * ## The disc is `ListUserItemPin`'s, in `--accents-nsfw`
+                         * Same 20px disc, 1px cut-out border and 12px glyph as `ListUserItemPin`,
+                         * and `bottom-3` is its `top-3` mirrored, so the two straddle the avatar
+                         * by the same 4px. Reproduced rather than reused: that slot is the DS's
+                         * *pin*, indigo, and a `data-slot="list-user-item-pin"` on a mute mark
+                         * would be a lie in the DOM.
                          *
-                         * Same 20px disc, same 1px cut-out border, same 12px glyph inside it, and
-                         * `bottom-3` is `top-3` mirrored — so the two marks straddle the avatar's
-                         * two end corners by the same 4px and neither is the odd one out. Reproduced
-                         * rather than reused: `ListUserItemPin` is the DS's *pin* slot, indigo and
-                         * pinned to `top-1`, and a `data-slot="list-user-item-pin"` on the sensitive
-                         * mark would be a lie in the DOM that every test and every future reader has
-                         * to see through.
+                         * ## Neutral, and inverted
                          *
-                         * `--accents-nsfw` on the disc with `--white` on the glyph is
-                         * `NsfwGatePanel`'s pairing at 20px instead of 56 — the DS's own hue for
-                         * this one fact, `#f43fca` in Light and `#ff5ed9` in Dark, which is also
-                         * legacy's pink. A grey glyph on the row's own surface (what this was for a
-                         * turn) reads as one more secondary icon; the point of the mark is that it
-                         * is not.
+                         * Muting is a quiet state, so the disc carries no accent: it is
+                         * `--icon-secondary` with the glyph cut out in `--background-surface`.
+                         * That pair is the one already measured for this glyph against this row —
+                         * **6.91:1** in Dark and **4.83:1** in Light — past WCAG 1.4.11's 3:1 for a
+                         * graphic that carries meaning, which `--text-placeholder` (the DS mute
+                         * slot's ink) is not in either theme. Both tokens flip with the theme, so
+                         * the disc reads as grey-on-row in both.
                          *
-                         * `title`, not `aria-hidden`: unlike pinned and muted, this is a fact about
-                         * the *space* rather than about this reader's preferences, so it belongs to
-                         * the link's accessible name and needs no `sr-only` twin outside it.
+                         * Decorative: the word is announced from the `sr-only` block after the
+                         * link, with "pinned".
                          */
-                        <span className="absolute bottom-3 start-[48px] flex size-[20px] items-center justify-center rounded-(--radius-fill) border border-(--background-surface) bg-(--accents-nsfw) text-(--white)">
-                            <Icon
-                                name="nsfw"
-                                weight="filled"
-                                size={16}
-                                title={t('channel_nsfw')}
-                                className="size-3"
-                            />
+                        <span
+                            aria-hidden="true"
+                            className="absolute bottom-3 start-[48px] flex size-[20px] items-center justify-center rounded-(--radius-fill) border border-(--background-surface) bg-(--icon-secondary) text-(--background-surface)"
+                        >
+                            {/* Filled: the outline's line weight disappears at 12px. `size-3` is
+                                the opt-out `Icon` allows — see the pin's glyph above. */}
+                            <Icon name="bell-slash" weight="filled" size={16} className="size-3" />
                         </span>
                     )}
                 </ListUserItemAvatar>
@@ -293,7 +296,15 @@ export function FollowingChannelRow({
                                         present and empty on an ordinary account, so there is
                                         nothing to draw without art. Mirror of
                                         `ChannelVerifiedMark`. */}
-                                    <VerifiedBadge image={verifiedImage} size="body" />
+                                    <VerifiedBadge
+                                        image={verifiedImage}
+                                        size="body"
+                                        /* The tick's PNG carries 12.5% clear air on each side
+                                           (3px here), so at the row's 4px gap it stood ~7px off its
+                                           neighbours while the other marks sit ~5px apart. Pulling
+                                           its box in by 2px evens the *visible* gaps. */
+                                        className="-mx-0.5"
+                                    />
                                     {/*
                                      * Legacy's `BadgePremium`, in its place after the tick. The
                                      * plain badge, not the `href` one: the whole row is already a
@@ -304,18 +315,77 @@ export function FollowingChannelRow({
                                      */}
                                     {channel.is_premium && (
                                         <PremiumBadge
-                                            /* ¾ of the tick: the tick's PNG is 25%
-                                               padding, so this is the pair that draws at one
-                                               visible size — see `VERIFIED_BADGE_CROWN`. */
+                                            /* The size that reads level with the tick
+                                               beside it, not the one that measures level —
+                                               see `VERIFIED_BADGE_CROWN`. */
                                             size={VERIFIED_BADGE_CROWN.body}
                                             label={t('channel_premium')}
-                                            className="flex-none"
+                                            /* Half a pixel down: the other three marks' ink is
+                                               centred 0.5px below the box centre the crown sits
+                                               on, and the crown read as riding high beside them. */
+                                            className="flex-none translate-y-[0.5px]"
+                                        />
+                                    )}
+                                    {/*
+                                     * Legacy's `BadgeSpaceTier`, after the crown, with
+                                     * `showInfoModal={false}` — the explainer belongs to the space
+                                     * page, and this row is already one `<Link>`.
+                                     *
+                                     * Sized by the name's tier like the tick and the crown
+                                     * (`VERIFIED_BADGE_TIER`), not at legacy's fixed 14px, which
+                                     * drew it a third shorter than the tick beside it. The marks
+                                     * are not square (`tier-2` 547×480, `tier-5` 195×160), so the
+                                     * style owns the height, the width follows the art, and the
+                                     * declared box is only the 2× resolution hint.
+                                     */}
+                                    {tierBadge && (
+                                        <Image
+                                            src={tierBadge}
+                                            alt={t('channel_space_tier', {
+                                                tier: channel.space_tier ?? 0,
+                                            })}
+                                            height={VERIFIED_BADGE_TIER.body * 2}
+                                            width={VERIFIED_BADGE_TIER.body * 2}
+                                            style={{ height: VERIFIED_BADGE_TIER.body }}
+                                            className="w-auto flex-none"
+                                        />
+                                    )}
+                                    {channel.is_nsfw && (
+                                        /*
+                                         * Sensitive space — after the tier mark, as
+                                         * `SearchChannelRow` draws it: the DS's own `nsfw` glyph in
+                                         * `--accents-nsfw`, the hue the DS gives this one fact. It
+                                         * was a disc on the avatar's corner; that corner is the
+                                         * mute mark's now, because the avatar's two corners carry
+                                         * the reader's preferences (pin, mute) and this line
+                                         * carries facts about the space.
+                                         *
+                                         * Drawn at the tick's visible height **of ink**, so the
+                                         * marks stand level. The box is larger than that on
+                                         * purpose: the glyph fills ~92% of it (measured 16.5px of
+                                         * ink in an 18px box) — see `NSFW_MARK_BOX`.
+                                         *
+                                         * `title`, not `aria-hidden`: unlike pinned and muted, this
+                                         * is a fact about the *space*, so it belongs to the link's
+                                         * accessible name.
+                                         */
+                                        <Icon
+                                            name="nsfw"
+                                            weight="filled"
+                                            size={16}
+                                            title={t('channel_nsfw')}
+                                            style={{
+                                                width: NSFW_MARK_BOX,
+                                                height: NSFW_MARK_BOX,
+                                            }}
+                                            className="flex-none text-(--accents-nsfw)"
                                         />
                                     )}
                                     {/*
                                      * The handle rides the **name line**, after the badges — which
                                      * is legacy's arrangement for this row (`channelItem` puts
-                                     * name · badges · `@slug` · pin · mute in one `Stack`) and the
+                                     * name · badges · `@slug` · pin · mute in one `Stack`; pin and
+                                     * mute have since moved to the avatar's corners) and the
                                      * reason this row is two lines rather than the DS comp's three.
                                      *
                                      * `w-auto` overrides `ListUserItemHandle`'s `w-full`: that class
@@ -332,44 +402,6 @@ export function FollowingChannelRow({
                                     <ListUserItemHandle className="w-auto">
                                         @{channel.slug}
                                     </ListUserItemHandle>
-                                    {/*
-                                     * Decorative: the words are announced from outside the link —
-                                     * see the `sr-only` block under it.
-                                     *
-                                     * ## `--icon-secondary`, and this one is measured
-                                     *
-                                     * It overrides the DS slot's `--text-placeholder`. Against this
-                                     * row (`--background-surface`) placeholder is **2.29:1 in Dark
-                                     * and 2.56:1 in Light**. WCAG 1.4.11 asks 3:1 of a graphic that
-                                     * carries meaning, and this one does — it is the only visible
-                                     * sign that a space is muted. So it failed in *both* themes, not
-                                     * only the dark one it was spotted in.
-                                     *
-                                     * `--icon-secondary` measures **6.91:1** and **4.83:1** on the
-                                     * same backdrop: still clearly secondary to the name beside it,
-                                     * and past the bar. It is the DS's own role for a secondary
-                                     * icon, and `channel-menu.tsx` reaches for it against the same
-                                     * problem with its own numbers.
-                                     *
-                                     * ⚠ The gap belongs to `ListUserItemMute`, not to this row —
-                                     * any caller of that slot inherits it, and the DM list is next.
-                                     * Fixed here rather than in the port because the port is 1:1
-                                     * with Figma and Figma is what says placeholder.
-                                     */}
-                                    {muted && (
-                                        <ListUserItemMute className="text-(--icon-secondary)">
-                                            {/* Filled, not the outline: at 16px the outline's line
-                                                weight all but disappears next to the name it sits
-                                                beside — the solid one is the same mark at a weight
-                                                that survives the size. */}
-                                            <Icon
-                                                name="bell-slash"
-                                                weight="filled"
-                                                size={16}
-                                                aria-hidden="true"
-                                            />
-                                        </ListUserItemMute>
-                                    )}
                                 </ListUserItemNameRow>
                                 {lastActivity && (
                                     <ListUserItemMeta>
@@ -405,7 +437,16 @@ export function FollowingChannelRow({
                             )}
                         </ListUserItemInfo>
 
-                        <ListUserItemCta className="gap-1 self-center">
+                        <ListUserItemCta className="relative gap-1 self-center">
+                            {/* Desktop with a mouse: the three actions on hover, and no kebab.
+                                Everywhere else: the kebab. See `FollowingRowActions`. */}
+                            <FollowingRowActions
+                                channel={channel}
+                                disabled={busy || pending}
+                                onTogglePin={onTogglePin}
+                                onToggleMute={onToggleMute}
+                                onUnfollow={onUnfollow}
+                            />
                             {/*
                              * **Open**, for a space that leads with its mini app — rendered by
                              * `features/mini-app`, not decided here.

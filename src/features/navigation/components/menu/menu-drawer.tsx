@@ -36,6 +36,7 @@ import {
 } from '@shared/ui/left-bar'
 import { ListSeparator } from '@shared/ui/list'
 import { Skeleton } from '@shared/ui/skeleton'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
@@ -168,6 +169,14 @@ export function MenuDrawer() {
      */
     const { myChannel } = useMyChannel()
     const isMcnMember = Boolean(myChannel?.mcn) && !myChannel?.mcn?.is_owner
+    /*
+     * The Space tier row wears the account's own tier, as legacy's `BtnSpaceTier` does: the badge
+     * in place of the tile and "Tier N" at the trailing edge. Read off the same my-channel body as
+     * the line above, so the row costs no request of its own. Tier 0 is drawn too — unlike a name
+     * badge, this row *is* about the tier, and legacy shows tier 0's art here.
+     */
+    const spaceTier = myChannel?.space_tier ?? null
+    const spaceTierImage = myChannel?.space_tier_image ?? null
     /**
      * Whether the drawer should draw its account-scoped half at all — the balance card and every
      * `authOnly` row.
@@ -417,6 +426,14 @@ export function MenuDrawer() {
                         {t('menu_follow_requests_pending', { count: followRequestCount })}
                     </span>
                 </NotificationBadge>
+            )
+        }
+        if (row.key === 'menu_space_tier') {
+            if (spaceTier === null) return undefined
+            return (
+                <span className="type-dense-default text-(--text-body)">
+                    {t('space_tier_tier', { tier: spaceTier })}
+                </span>
             )
         }
         if (row.valueText !== undefined) {
@@ -690,6 +707,18 @@ export function MenuDrawer() {
                                                 brand={
                                                     row.mark ? (
                                                         <Icon {...row.mark} size={32} />
+                                                    ) : row.key === 'menu_space_tier' &&
+                                                      spaceTierImage ? (
+                                                        /* The tile's 32px box, height-led: the
+                                                           marks are not square. */
+                                                        <Image
+                                                            src={spaceTierImage}
+                                                            alt=""
+                                                            width={64}
+                                                            height={64}
+                                                            style={{ height: 32 }}
+                                                            className="w-auto"
+                                                        />
                                                     ) : undefined
                                                 }
                                                 tile={row.tile}

@@ -4,12 +4,14 @@ import { type Channel, toChannelPath } from '@features/channel'
 import { AnimatedAvatar } from '@shared/components/animated-avatar'
 import { PremiumBadge } from '@shared/components/premium-badge'
 import { VerifiedBadge } from '@shared/components/verified-badge'
-import { VERIFIED_BADGE_CROWN } from '@shared/components/verified-badge-size'
+import { VERIFIED_BADGE_CROWN, VERIFIED_BADGE_TIER } from '@shared/components/verified-badge-size'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { spaceTierBadge } from '@shared/lib/space-tier'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/button'
 import { Icon } from '@shared/ui/icon'
 import { Loader } from '@shared/ui/loader'
+import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { CHAT_ACTION, type ChatAction } from '../api/types'
@@ -58,6 +60,7 @@ export function ChatHeader({
         ? t('message_inactive_user')
         : (channel?.name ?? `@${channel?.slug ?? urlSlug ?? ''}`)
     const slug = active ? (channel?.slug ?? null) : null
+    const tierImage = active ? spaceTierBadge(channel) : null
 
     const activity =
         chatAction === CHAT_ACTION.typing
@@ -95,6 +98,19 @@ export function ChatHeader({
                     )}
                     {active && channel?.is_premium && (
                         <PremiumBadge size={VERIFIED_BADGE_CROWN.body} className="flex-none" />
+                    )}
+                    {/* Legacy's `headerChat` draws the tier after the crown, non-interactive
+                        (`showInfoModal={false}`) — the whole block is a link to the space. Sized
+                        for the `body` name beside it; the 2× box is `PostHeader`'s reasoning. */}
+                    {tierImage && (
+                        <Image
+                            src={tierImage}
+                            alt={t('message_space_tier', { tier: channel?.space_tier ?? 0 })}
+                            width={VERIFIED_BADGE_TIER.body * 2}
+                            height={VERIFIED_BADGE_TIER.body * 2}
+                            style={{ height: VERIFIED_BADGE_TIER.body }}
+                            className="w-auto flex-none"
+                        />
                     )}
                 </span>
                 <span

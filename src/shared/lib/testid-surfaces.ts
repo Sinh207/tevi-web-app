@@ -95,6 +95,7 @@ export const TESTID_SURFACES: Record<string, TestIdSurface> = {
         label: 'Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone',
     },
     search: { kind: 'screen', label: 'Search' },
+    'space-tier': { kind: 'screen', label: 'Space tier' },
     'star-transfer': { kind: 'screen', label: 'Star transfer' },
 
     // ---- Webview-only screens --------------------------------------------------------------

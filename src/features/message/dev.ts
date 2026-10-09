@@ -58,7 +58,12 @@ export function messageFixtures(now: number) {
         },
         {
             id: 'read-mine-seen',
-            recipient: recipient({ name: 'Grace Hopper', channel_slug: 'grace', space_tier: 2 }),
+            recipient: recipient({
+                name: 'Grace Hopper',
+                channel_slug: 'grace',
+                space_tier: 2,
+                space_tier_image: 'https://static.stg.tevicdn.com/space-tier/tier-2.png',
+            }),
             me,
             latest_message: {
                 id: 'm2',
@@ -370,6 +375,9 @@ function devChannel(overrides: Record<string, unknown>): Channel {
 /** The two spaces the thread's links point at: Ada's, and one that *is* a mini app. */
 export const DEV_SPACES = {
     ada: devChannel({
+        // Drawn after the crown in the header cases, as legacy's `headerChat` does.
+        space_tier: 5,
+        space_tier_image: 'https://static.stg.tevicdn.com/space-tier/tier-5.png',
         lives: [
             {
                 code: 'live-7',

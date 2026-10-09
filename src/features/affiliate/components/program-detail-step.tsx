@@ -1,10 +1,9 @@
 'use client'
 
 import { accountAvatarUrl, useAuth } from '@features/auth'
+import { AvatarStill } from '@shared/components/avatar-still'
 import { useTranslation } from '@shared/i18n/use-translation'
-import { Avatar, AvatarPlaceholder, avatarImageClass } from '@shared/ui/avatar'
 import { Icon } from '@shared/ui/icon'
-import Image from 'next/image'
 import type { Program } from '../api/types'
 import { formatAffiliateMoney, formatCommissionRate } from '../lib/format'
 import { ProgramAvatar } from './program-avatar'
@@ -19,17 +18,7 @@ function PromoterAvatar() {
      * opens.
      */
     const src = accountAvatarUrl(currentUser)
-    return (
-        <Avatar size="xl" type={src ? 'image' : 'placeholder'}>
-            {src ? (
-                <Image src={src} alt="" width={64} height={64} className={avatarImageClass} />
-            ) : (
-                <AvatarPlaceholder size="xl" className="flex items-center justify-center">
-                    <Icon name="user-simple-alt" size={24} />
-                </AvatarPlaceholder>
-            )}
-        </Avatar>
-    )
+    return <AvatarStill src={src} size="xl" px={64} />
 }
 
 /** A pill under an avatar: the revenue estimate on one side, the commission rate on the other. */

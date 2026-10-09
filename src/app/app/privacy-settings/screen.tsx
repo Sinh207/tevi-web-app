@@ -9,9 +9,9 @@ import {
     useAuth,
     useUpdateMe,
 } from '@features/auth'
+import { AvatarStill } from '@shared/components/avatar-still'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { cn } from '@shared/lib/utils'
-import { Avatar, AvatarPlaceholder, avatarImageClass } from '@shared/ui/avatar'
 import { Button } from '@shared/ui/button'
 import { Card } from '@shared/ui/card'
 import { ConfirmDialog } from '@shared/ui/confirm-dialog'
@@ -29,7 +29,6 @@ import {
 } from '@shared/ui/list'
 import { Skeleton } from '@shared/ui/skeleton'
 import { Toggle } from '@shared/ui/toggle'
-import Image from 'next/image'
 import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { NSFW_ROWS } from './nsfw-rows'
@@ -303,20 +302,8 @@ function Shell({ children }: { children: ReactNode }) {
  * answer for "no photo" is how two surfaces come to disagree about the same account.
  */
 function AccountAvatar({ src }: { src: string | null }) {
-    if (!src) {
-        return (
-            <Avatar size="large" type="placeholder">
-                <AvatarPlaceholder size="large" className="flex items-center justify-center">
-                    <Icon name="user-simple-alt" weight="filled" size={24} aria-hidden />
-                </AvatarPlaceholder>
-            </Avatar>
-        )
-    }
-    return (
-        <Avatar size="large" type="image" className="overflow-hidden">
-            <Image src={src} alt="" width={48} height={48} className={avatarImageClass} />
-        </Avatar>
-    )
+    // A picture that fails to load gets the same placeholder as no picture — see `AvatarStill`.
+    return <AvatarStill src={src} size="large" px={48} />
 }
 
 const TOAST_ID = 'app-privacy-copy-id'

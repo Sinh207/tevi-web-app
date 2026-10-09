@@ -1,11 +1,10 @@
 'use client'
 
+import { AvatarStill } from '@shared/components/avatar-still'
 import { VerifiedBadge } from '@shared/components/verified-badge'
 import { useTranslation } from '@shared/i18n/use-translation'
 import { DEFAULT_CURRENCY, formatFiatAmount } from '@shared/lib/money'
-import { Avatar, AvatarPlaceholder, avatarImageClass } from '@shared/ui/avatar'
 import { Icon } from '@shared/ui/icon'
-import Image from 'next/image'
 import Link from 'next/link'
 import type { MembershipChannel } from '../../api/types'
 import type { MembershipCharge } from '../../hooks/webview/use-membership-checkout'
@@ -77,26 +76,13 @@ export function OrderCard({
         >
             {/* Who is being paid, and for what. */}
             <div className="flex items-center gap-3 p-4">
-                {avatar ? (
-                    <Avatar size="medium" type="image" className="flex-none overflow-hidden">
-                        <Image
-                            src={avatar}
-                            alt=""
-                            width={40}
-                            height={40}
-                            className={avatarImageClass}
-                        />
-                    </Avatar>
-                ) : (
-                    <Avatar size="medium" type="placeholder" className="flex-none">
-                        <AvatarPlaceholder
-                            size="medium"
-                            className="flex items-center justify-center"
-                        >
-                            <Icon name="user-simple-alt" weight="filled" size={20} aria-hidden />
-                        </AvatarPlaceholder>
-                    </Avatar>
-                )}
+                <AvatarStill
+                    src={avatar}
+                    size="medium"
+                    px={40}
+                    className="flex-none"
+                    glyph={<Icon name="user-simple-alt" weight="filled" size={20} aria-hidden />}
+                />
                 <div className="flex min-w-0 flex-1 flex-col">
                     <span className="type-dense-strong flex min-w-0 items-center gap-1 text-(--text-title)">
                         <span className="min-w-0 truncate">{name}</span>
