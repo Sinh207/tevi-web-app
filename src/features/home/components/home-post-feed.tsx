@@ -185,7 +185,7 @@ export function HomePostFeed({
      * as a mistake, as legacy's `matchUpSm` gate also says.
      */
     const whatsNew = <WhatsNewBar testId="home-composer" className="md:rounded-t-xl" />
-    if (isLoading) return withWhatsNew(whatsNew, <FeedSkeleton className="md:pt-0" />)
+    if (isLoading) return withWhatsNew(whatsNew, <FeedSkeleton fill />)
     if (isError) {
         return withEmptyPanel(whatsNew, <HomeEmptyState kind="error" onRetry={() => refetch()} />)
     }
@@ -219,7 +219,7 @@ export function HomePostFeed({
             {/* Zero-height, so it never adds space to a list that has stopped growing. */}
             {hasNextPage && <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />}
 
-            {isFetchingNextPage && <FeedSkeleton rows={1} className="md:py-0" />}
+            {isFetchingNextPage && <FeedSkeleton rows={1} />}
 
             {/*
              * Rendered only while a post is selected, so a feed nobody shares from mounts nothing.
@@ -286,10 +286,13 @@ function withEmptyPanel(bar: React.ReactNode, state: React.ReactNode) {
     )
 }
 
-/** The bar above the loading skeleton, a hairline apart — the list draws its own. */
+/**
+ * The bar above the loading skeleton, a hairline apart. Stretched (`flex-1`) and with no bottom
+ * inset, so the skeleton below can take the rest of the column down to the screen's edge.
+ */
 function withWhatsNew(bar: React.ReactNode, state: React.ReactNode) {
     return (
-        <div className={cn(FEED_LIST, 'md:pb-0')}>
+        <div className={cn(FEED_LIST, 'flex-1 md:pb-0')}>
             {bar}
             {state}
         </div>
@@ -408,32 +411,126 @@ const FeedGroup = memo(function FeedGroup({
  * The loading shape, and it is the **card's** shape rather than a generic block.
  *
  * A skeleton that does not match what replaces it produces a jump at the moment the content lands,
- * which is the one moment the reader is looking. Avatar, two lines of meta, a paragraph, a 16/9
- * media box, an action row.
+ * which is the one moment the reader is looking. So every row is `PostCard`'s own geometry, part for
+ * part: the 40px avatar beside a 21px name row and an 18px meta row (time · audience glyph), the
+ * kebab at the trailing edge, the caption in 21px lines, the media at 8px radius, and the 36/40px
+ * action row — react and comment leading, send / bookmark / share trailing. The paddings are the
+ * card's (`px-3 md:px-6`, the action row `md:px-4`) so nothing shifts sideways either.
+ *
+ * Rows **vary** — clip, text-only, photo — because a feed does, and three identical slabs read as
+ * a pattern rather than as posts on their way.
+ *
+ * ## `fill` — as many rows as the screen is tall, decided by CSS
+ *
+ * A fixed count is wrong at one end or the other: three cards cover a phone and leave the bottom
+ * half of a 1440p monitor as bare page colour. Counting from `window.innerHeight` would need the
+ * viewport during the server render, which is a hydration mismatch. Instead `fill` draws more rows
+ * than any screen needs and the box takes **the column's remaining height and clips the rest**:
+ * `basis-0 grow min-h-0` makes its height the free space (its content contributes none), the same
+ * stretched chain `withEmptyPanel` centres its state in. The floor keeps one card visible should a
+ * parent ever stop stretching.
  */
-function FeedSkeleton({ rows = 3, className }: { rows?: number; className?: string }) {
+function FeedSkeleton({
+    rows = 3,
+    fill = false,
+    className,
+}: {
+    rows?: number
+    /** Fill the column's remaining height instead of drawing exactly `rows` — see above. */
+    fill?: boolean
+    className?: string
+}) {
     return (
-        <div className={cn('flex flex-col gap-px md:py-6', className)} aria-busy="true">
-            {Array.from({ length: rows }, (_, index) => (
-                <div
-                    // Skeletons have no identity beyond their position, and this list never
-                    // reorders — it is replaced wholesale by the real cards.
+        <div
+            className={cn(
+                'flex flex-col gap-px',
+                fill && 'min-h-[420px] grow basis-0 overflow-hidden',
+                className,
+            )}
+            aria-busy="true"
+        >
+            {Array.from({ length: fill ? FILL_ROWS : rows }, (_, index) => (
+                // Skeletons have no identity beyond their position, and this list never
+                // reorders — it is replaced wholesale by the real cards.
+                <PostCardSkeleton
                     // biome-ignore lint/suspicious/noArrayIndexKey: position is the only identity a placeholder has.
                     key={index}
-                    className="flex flex-col gap-3 bg-(--background-surface) px-3 py-3 md:px-6 md:py-5"
-                >
-                    <div className="flex items-center gap-2">
-                        <Skeleton className="size-10 rounded-full" />
-                        <div className="flex flex-col gap-1">
-                            <Skeleton h={14} className="w-[120px] rounded-(--radius-sm)" />
-                            <Skeleton h={12} className="w-[80px] rounded-(--radius-sm)" />
+                    variant={SKELETON_VARIANTS[index % 3]}
+                    index={index}
+                />
+            ))}
+        </div>
+    )
+}
+
+/** Past the tallest screen at the shortest card — the rest is clipped, never laid out visibly. */
+const FILL_ROWS = 8
+
+type SkeletonVariant = { lines: string[]; media: string | null }
+
+const SKELETON_VARIANTS: readonly SkeletonVariant[] = [
+    { lines: ['92%', '64%'], media: 'aspect-video' },
+    { lines: ['100%', '96%', '40%'], media: null },
+    { lines: ['72%'], media: 'aspect-[4/3]' },
+]
+
+function PostCardSkeleton({ variant, index }: { variant: SkeletonVariant; index: number }) {
+    // The DS staggers siblings by 160ms; per card, so the stack breathes top to bottom.
+    const delay = (index % 4) * 160
+    return (
+        <div className="flex w-full min-w-0 flex-none flex-col gap-2 bg-(--background-surface) py-3 md:py-5">
+            <div className="flex items-center justify-between gap-2 px-3 md:px-6">
+                <div className="flex min-w-0 items-center gap-2">
+                    <Skeleton circle w={40} delay={delay} />
+                    <div className="flex flex-col gap-0.5">
+                        <div className="flex h-[21px] items-center gap-1.5">
+                            <Skeleton w={112} delay={delay} />
+                            <Skeleton w={56} h={10} delay={delay} />
+                        </div>
+                        <div className="flex h-[18px] items-center gap-1.5">
+                            <Skeleton w={48} h={10} delay={delay} />
+                            <Skeleton circle w={12} delay={delay} />
                         </div>
                     </div>
-                    <Skeleton h={14} className="w-full rounded-(--radius-sm)" />
-                    <Skeleton className="aspect-video w-full rounded-[8px]" />
-                    <Skeleton h={32} className="w-[180px] rounded-full" />
                 </div>
-            ))}
+                <Skeleton w={20} h={4} className="me-1.5" delay={delay} />
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-1 px-3 md:px-6">
+                {variant.lines.map((width, line) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: a fixed, never-reordered list.
+                    <div key={line} className="flex h-[21px] items-center">
+                        <Skeleton w={width} delay={delay} />
+                    </div>
+                ))}
+                {variant.media ? (
+                    <Skeleton
+                        h="auto"
+                        className={cn('mt-1 w-full rounded-[8px]', variant.media)}
+                        delay={delay}
+                    />
+                ) : null}
+            </div>
+
+            <div className="flex h-9 items-center justify-between px-3 md:h-10 md:px-4">
+                <div className="flex items-center gap-2">
+                    {[0, 1].map(action => (
+                        <span key={action} className="flex items-center gap-1">
+                            <span className="flex size-8 items-center justify-center">
+                                <Skeleton circle w={22} delay={delay} />
+                            </span>
+                            <Skeleton w={16} h={10} delay={delay} />
+                        </span>
+                    ))}
+                </div>
+                <div className="flex items-center gap-0.5">
+                    {[0, 1, 2].map(action => (
+                        <span key={action} className="flex size-8 items-center justify-center">
+                            <Skeleton circle w={22} delay={delay} />
+                        </span>
+                    ))}
+                </div>
+            </div>
         </div>
     )
 }
