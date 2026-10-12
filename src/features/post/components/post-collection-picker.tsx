@@ -67,31 +67,42 @@ export function PostCollectionPicker({
 
     if (creating) {
         return (
-            <div data-testid={subTestId(testId, 'panel')} className="flex flex-col gap-2">
-                <label htmlFor={`${testId}-name`} className="type-body-strong text-(--text-title)">
-                    {t('post_collection_name_label')}
-                </label>
-                <input
-                    id={`${testId}-name`}
-                    value={name}
-                    // biome-ignore lint/a11y/noAutofocus: the screen is opened by pressing "Create new collection", so the field is the reason the reader is here.
-                    autoFocus
-                    disabled={collections.isCreating}
-                    placeholder={t('post_collection_name_placeholder')}
-                    data-testid={subTestId(testId, 'input')}
-                    onChange={event => setName(event.target.value)}
-                    onKeyDown={event => {
-                        if (event.key !== 'Enter') return
-                        // Enter inside the composer would otherwise publish the post.
-                        event.preventDefault()
-                        void create()
-                    }}
-                    className="type-body-default rounded-(--radius-sm) border border-(--input-border) bg-transparent px-3 py-2 text-(--text-title) placeholder:text-(--text-placeholder)"
-                />
-                <div className="flex justify-end gap-2 pt-2">
+            <div data-testid={subTestId(testId, 'panel')} className="flex flex-col gap-4 pt-1">
+                <div className="flex flex-col gap-2">
+                    <label
+                        htmlFor={`${testId}-name`}
+                        className="type-dense-strong text-(--text-title)"
+                    >
+                        {t('post_collection_name_label')}
+                    </label>
+                    {/*
+                     * The search bar's pill — 48px, 24px radius, the segment fill — so the one
+                     * free-text field in the composer matches the one every reader already knows,
+                     * rather than the square-cornered outline it had. The border is transparent
+                     * until focus, which is the only state the pill needs to draw.
+                     */}
+                    <input
+                        id={`${testId}-name`}
+                        value={name}
+                        // biome-ignore lint/a11y/noAutofocus: the screen is opened by pressing "Create new collection", so the field is the reason the reader is here.
+                        autoFocus
+                        disabled={collections.isCreating}
+                        placeholder={t('post_collection_name_placeholder')}
+                        data-testid={subTestId(testId, 'input')}
+                        onChange={event => setName(event.target.value)}
+                        onKeyDown={event => {
+                            if (event.key !== 'Enter') return
+                            // Enter inside the composer would otherwise publish the post.
+                            event.preventDefault()
+                            void create()
+                        }}
+                        className="type-body-default box-border h-12 w-full rounded-[24px] border border-transparent bg-(--background-segment) px-4 text-(--text-title) caret-(--accents-indigo-active) outline-none transition-colors placeholder:text-(--text-placeholder) focus:border-(--input-border-focus) disabled:cursor-not-allowed disabled:opacity-60"
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                     <Button
                         variant="secondary"
-                        size="medium"
+                        size="large"
                         disabled={collections.isCreating}
                         onClick={() => {
                             setName('')
@@ -103,7 +114,7 @@ export function PostCollectionPicker({
                     </Button>
                     <Button
                         variant="primary"
-                        size="medium"
+                        size="large"
                         disabled={!name.trim() || collections.isCreating}
                         onClick={() => void create()}
                         data-testid={subTestId(testId, 'submit')}
@@ -229,47 +240,38 @@ export function PostCollectionPicker({
             )}
 
             {/*
-             * Legacy's footer button: a brand-coloured pill on the **trailing** edge (its
-             * `DialogActions` aligns right), with a `+` glyph in the same colour.
+             * The DS button, full width — the same `primary` the collections screen's own
+             * *Create new collection* uses (`collection-list.tsx`), so the one action reads the
+             * same in both places. It was a hand-drawn outlined pill on the trailing edge, legacy's
+             * `#3C1490` one, which sat apart from every other button in the app and was easy to
+             * miss beside a column of *Add* pills that looked much like it.
              *
-             * The colour is `--text-brand` rather than legacy's raw `#3C1490`, which sits between
-             * `--primary-600` and `--primary-700` and has no token of its own. `--text-brand` is
-             * what this design system calls that colour, and it moves with the theme where a hex
-             * cannot — `DESIGN_SYSTEM.md` bars the raw value outright. The hover is
-             * `--background-segment` for the same reason: reaching into the Primary ramp for a
-             * `--primary-50` tint would pick a *dark* fill in dark mode, since that ramp inverts.
+             * Hidden at ten, as legacy hides it (`collections.length < 10`), and at a first page
+             * with more behind it — past the limit either way (`COLLECTIONS_MAX`).
              *
-             * Hidden at ten, as legacy hides it (`collections.length < 10`). That condition was
-             * left out while the composer was the only place a collection could be made — hiding
-             * the button then was a dead end, not a limit. The collections screen can make one now,
-             * and it stops at the same number (`COLLECTIONS_MAX`).
-             */}
-            {/*
              * **Sticky**, because legacy puts this in `DialogActions` — a footer outside the
              * scrolling area. Left in the flow it scrolls away with the list, and a creator with a
-             * screen's worth of collections has to scroll past all of them to find the one control
-             * that makes another. Sticky is the same outcome without the picker having to own the
-             * dialog's layout: it needs its own background, or the rows pass underneath it.
-             *
-             * `--background-subtle`, which is what `DialogContent` paints — `--background-surface`
-             * is a shade lighter and the footer read as a separate slab floating over the list.
+             * screen's worth of collections has to scroll past all of them to find it. It needs its
+             * own background, or the rows pass underneath: `--background-subtle`, which is what
+             * `DialogContent` paints.
              *
              * `-bottom-3 pb-3`: sticky stops at the scroller's **padding** edge, so `bottom-0` left
              * the composer's 12px bottom padding open under the bar and the rows scrolled past
              * through it. Pulling the bar down over that padding and filling it closes the gap.
              */}
             {atLimit ? null : (
-                <div className="sticky -bottom-3 flex justify-end border-(--separator-default) border-t bg-(--background-subtle) py-3">
-                    <button
-                        type="button"
+                <div className="sticky -bottom-3 border-(--separator-default) border-t bg-(--background-subtle) py-3">
+                    <Button
+                        variant="primary"
+                        size="large"
+                        fullWidth
                         disabled={disabled}
                         onClick={() => setCreating(true)}
                         data-testid={subTestId(testId, 'trigger')}
-                        className="type-dense-emphasis flex h-10 items-center gap-1 rounded-[40px] border-[1.5px] border-(--text-brand) bg-(--background-surface) px-4 text-(--text-brand) transition-colors hover:bg-(--background-segment) disabled:opacity-40"
                     >
                         <Icon name="plus" size={20} className="flex-none" />
                         {t('post_collection_create_new')}
-                    </button>
+                    </Button>
                 </div>
             )}
         </div>
