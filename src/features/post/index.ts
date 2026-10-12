@@ -64,6 +64,11 @@ export { CollectionCreateButton } from './components/collection-create'
 export { CollectionDetail } from './components/collection-detail'
 export { CollectionList } from './components/collection-list'
 export type { PostMiniAppApp } from './components/post-attachments'
+/**
+ * The one listener for `post:purchased` / `membership:joined` / `payment:succeeded` — re-reads the
+ * affected posts and patches them into every cached list. `app/session-providers.tsx` mounts it.
+ */
+export { PostCacheSync } from './components/post-cache-sync'
 export { PostCard } from './components/post-card'
 /**
  * The post composer, and the one boolean two shells and one renderer share.

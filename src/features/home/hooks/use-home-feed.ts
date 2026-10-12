@@ -19,9 +19,11 @@ import { groupPosts, type PostGroup, reuseGroups, visibleCount } from '../lib/po
  * elsewhere. `CLAUDE.md` bars exactly that: server state is TanStack Query's, and nothing mirrors it.
  *
  * Here the query owns the pages and `groupPosts` is run over them in a `useMemo`. An invalidation
- * therefore fixes the feed on its own — which is what `usePostActions` and `usePostUnlock` already
- * do (`postKeys.all`), so a delete, a pin, an unlock or a block corrects this list without home
- * knowing those actions exist.
+ * therefore fixes the feed on its own. `homeKeys` is not under `postKeys.all`, so the card's actions
+ * reach it two ways: `onChanged` (a delete, a pin, a block — the card refetches the list it is in),
+ * and, for an unlock, `usePostRefresh` re-reading the post's detail and patching it into every
+ * cached list that holds it — so a post bought from Bookmarks is not drawn locked here on the next
+ * visit. Neither needs home to know those actions exist.
  *
  * The fold is `O(n)` over posts and runs when the pages change, not per render.
  *

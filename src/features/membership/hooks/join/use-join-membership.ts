@@ -4,6 +4,7 @@ import { useAuth, useRequireAuth } from '@features/auth'
 import { balanceKeys, useBalance, useRequireStars } from '@features/balance'
 import { usePaymentOptional } from '@features/payment'
 import { useTranslation } from '@shared/i18n/use-translation'
+import { eventBus } from '@shared/lib/event-bus'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
 import { forgetMyMembershipsCache, membershipApi, membershipKeys } from '../../api/subscription-api'
@@ -192,6 +193,13 @@ export function useJoinMembership({
                 queryClient.invalidateQueries({ queryKey: membershipKeys.mine })
             })
             queryClient.invalidateQueries({ queryKey: balanceKeys.all })
+            /*
+             * The posts this membership unlocks are drawn by lists this feature does not own —
+             * Bookmarks, the home feed, a space's threads — and this dialog is mounted on five
+             * surfaces. So the join is announced and `features/post`'s `PostCacheSync` re-reads that
+             * space's cached posts. Star path only; the card path is `payment:succeeded`'s.
+             */
+            eventBus.emit('membership:joined', { channelSlug: slug, accountId: activeId })
             setStep('success')
         },
         /*

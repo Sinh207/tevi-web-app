@@ -10,7 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { INSUFFICIENT_STARS_CODE, postApi, postKeys } from '../api/post-api'
+import { INSUFFICIENT_STARS_CODE, postApi } from '../api/post-api'
 import type { Post } from '../api/types'
 import { postIntent, postUnlockPrice } from '../lib/post-intent'
 
@@ -89,7 +89,7 @@ function topUp(amount: number) {
  */
 export type PostUnlockStep = 'idle' | 'confirm' | 'choose'
 
-export function usePostUnlock(post: Post, { onUnlocked }: { onUnlocked?: () => void } = {}) {
+export function usePostUnlock(post: Post) {
     const { activeId } = useAuth()
     const { t } = useTranslation()
     const router = useRouter()
@@ -116,15 +116,13 @@ export function usePostUnlock(post: Post, { onUnlocked }: { onUnlocked?: () => v
         onSuccess: () => {
             setStep('idle')
             toast.success(t('post_unlock_success'))
-            /*
-             * Two invalidations because two things changed: the reader has less Star, and the post
-             * is no longer locked. The second is what actually reveals the content — `viewer` and
-             * `need_unlock_package` are recomputed by the backend, and no client-side guess about
-             * their new values would be safe to write into a cache.
-             */
             void queryClient.invalidateQueries({ queryKey: balanceKeys.all })
-            void queryClient.invalidateQueries({ queryKey: postKeys.all })
-            onUnlocked?.()
+            /*
+             * The post is no longer locked. Announced rather than refreshed here: the lists that
+             * draw it are not this hook's, and `PostCacheSync` re-reads the post's detail and
+             * patches it into all of them (`event-bus.ts` has the reasoning).
+             */
+            if (post.id) eventBus.emit('post:purchased', { postId: post.id, accountId: activeId })
         },
         onError: error => {
             /*

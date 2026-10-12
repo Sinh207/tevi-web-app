@@ -18,7 +18,6 @@ vi.mock('@shared/lib/api/interceptors/etag', () => ({
     invalidateETagCache,
 }))
 vi.mock('@features/auth', () => ({ useAuth: () => ({ activeId: 'acct-1' }) }))
-vi.mock('@features/post', () => ({ postKeys: { all: ['post'] } }))
 
 function renderRefresh() {
     const queryClient = new QueryClient()
@@ -39,18 +38,19 @@ function renderRefresh() {
 beforeEach(() => vi.clearAllMocks())
 
 describe('useMembershipRefresh', () => {
-    it("re-reads the space, its stats, both thread tabs and the post cache — this account's only", async () => {
+    it("re-reads the space and its stats — this account's only, and no list of posts", async () => {
         const { invalidate, refresh } = renderRefresh()
 
         await act(refresh)
 
+        /*
+         * The threads are left alone on purpose: `PostCacheSync` patches the unlocked posts from
+         * their detail, and a list refetch landing after it could redraw the lock.
+         */
         const keys = invalidate.mock.calls.map(([filters]) => filters?.queryKey)
         expect(keys).toEqual([
             channelKeys.detail('ada', 'acct-1'),
             channelKeys.stats('ada', 'acct-1'),
-            channelKeys.threads('ada', 'posts', 'acct-1'),
-            channelKeys.threads('ada', 'media', 'acct-1'),
-            ['post'],
         ])
     })
 

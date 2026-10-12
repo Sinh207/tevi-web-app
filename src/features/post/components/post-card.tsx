@@ -168,7 +168,7 @@ export function PostCard({
      * `onAuthorBlocked`. `PostMenu`'s prop doc says the rest.
      */
     const actions = usePostActions(post, { onChanged, onAuthorBlocked })
-    const unlock = usePostUnlock(post, { onUnlocked: onChanged })
+    const unlock = usePostUnlock(post)
 
     function onCardClick(event: React.MouseEvent<HTMLElement>) {
         if (!href || !shouldNavigate(event)) return

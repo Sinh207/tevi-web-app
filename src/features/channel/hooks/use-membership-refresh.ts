@@ -1,7 +1,6 @@
 'use client'
 
 import { useAuth } from '@features/auth'
-import { postKeys } from '@features/post'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { channelKeys, forgetChannelViewerCache } from '../api/channel-api'
@@ -17,9 +16,12 @@ import { channelKeys, forgetChannelViewerCache } from '../api/channel-api'
  * page that owns the data re-reads it.
  *
  * - **The space and its stats** — `member_count` moved, and the body is viewer-relative.
- * - **Its threads, both tabs** — for this account only, as `useChannelActions` does after a follow.
- * - **`postKeys.all`** — the pinned row and any post detail cached on the way here (the locked post
- *   the reader came from is the one they will go back to).
+ *
+ * **Not the posts.** Whatever the join unlocked is re-read by `features/post`'s `PostCacheSync`,
+ * which hears `membership:joined` from the join itself — so it also covers the four other surfaces
+ * that sell a membership and never mount this hook. The thread pages are deliberately not refetched
+ * either: a list endpoint can answer with the locked row still, and a refetch landing after the
+ * listener's patch would put the lock back.
  *
  * The validators go first and are awaited: see `forgetChannelViewerCache`.
  */
@@ -31,9 +33,5 @@ export function useMembershipRefresh(slug: string) {
         await forgetChannelViewerCache(slug, activeId)
         queryClient.invalidateQueries({ queryKey: channelKeys.detail(slug, activeId) })
         queryClient.invalidateQueries({ queryKey: channelKeys.stats(slug, activeId) })
-        for (const kind of ['posts', 'media'] as const) {
-            queryClient.invalidateQueries({ queryKey: channelKeys.threads(slug, kind, activeId) })
-        }
-        queryClient.invalidateQueries({ queryKey: postKeys.all })
     }, [queryClient, slug, activeId])
 }

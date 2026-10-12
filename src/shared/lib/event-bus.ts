@@ -94,6 +94,43 @@ export type AppEvents = {
      */
     'payment:succeeded': { purchaseType: string | null }
     /**
+     * **This account just bought one post** with Star — the purchase answered `2xx`.
+     *
+     * ## Why this is on the bus
+     *
+     * The post is drawn by lists this feature does not own and cannot import: the home feed
+     * (`features/home`), a space's threads (`features/channel`), Bookmarks, a collection, the detail
+     * page. One listener — `PostCacheSync`, mounted once by `session-providers.tsx` — re-reads the
+     * post's **detail** and writes it into every cached list that holds it, so the press does not
+     * have to know which screens are open. It is a signal with an id, never data: the listener
+     * fetches the post itself, for the reason `payment:succeeded` carries no figures.
+     *
+     * `accountId` is the account that paid. The listener does nothing if it is no longer the active
+     * one: the cache it would patch is keyed on the other account.
+     *
+     * Emitted by `usePostUnlock`; consumed by `PostCacheSync`.
+     */
+    'post:purchased': { postId: string; accountId: string | null }
+    /**
+     * **This account just became a member of a space**, paid in Star — `subscribe/` answered with
+     * the membership rather than a card hand-off.
+     *
+     * ## Why this is on the bus
+     *
+     * Joining can unlock every members-only post of that space at once, wherever it is drawn — and
+     * the join can happen on five surfaces (the space page, `/[slug]/membership`, three event
+     * screens, the renew dialog), none of which owns those posts. `features/membership` may not
+     * import `features/post`'s internals and the space page is not the only place it is mounted, so
+     * the join announces itself and `PostCacheSync` re-reads that space's cached posts.
+     *
+     * The **card** path does not emit this: its settle can complete after a 3-D Secure redirect, by
+     * which time nothing remembers which space it was for. `PostCacheSync` answers
+     * `payment:succeeded` instead, by re-reading every cached post that a membership could unlock.
+     *
+     * Emitted by `useJoinMembership`; consumed by `PostCacheSync`.
+     */
+    'membership:joined': { channelSlug: string; accountId: string | null }
+    /**
      * A priced action was pressed and the balance could not cover it — open the Star purchase sheet,
      * pre-selected to at least `shortfall`.
      *

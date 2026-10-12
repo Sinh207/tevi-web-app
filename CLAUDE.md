@@ -199,14 +199,18 @@ mounted per top-level route: sibling layouts unmount on a client-side navigation
 1. **TanStack Query** — server-state sync. `invalidateQueries` / optimistic mutations. DEFAULT for
    anything backed by the API. Never mirror server data into Zustand.
 2. **Event bus** (`@shared/lib/event-bus`, mitt, typed `AppEvents`) — imperative UI-only signals.
-   Eight today: five auth (`auth:turnstile-passed`, `auth:signed-in|out`, `auth:session-expired`,
+   Ten today: five auth (`auth:turnstile-passed`, `auth:signed-in|out`, `auth:session-expired`,
    `auth:accounts-synced`), `balance:star-changed` (the **delta**, for a flash — never the balance,
    and never accumulated into one), `payment:succeeded`, and `payment:star-purchase-requested` —
    the one place an event stands in for an import, because `balance` → `payment` would close a
    barrel cycle; its `ack` is how the emitter learns whether anything was listening at all (on a
-   `/app/*` screen, nothing is). NEVER to sync server data. **Every declared event must have an
+   `/app/*` screen, nothing is). Two more, `post:purchased` and `membership:joined`, say "this
+   account just bought X" to **one** listener, `features/post`'s `PostCacheSync`, which re-reads the
+   affected posts' **detail** and patches them into every cached list (Bookmarks, home, threads…):
+   the list endpoints answer with the locked row still, so a list refetch is not the fix. They carry
+   ids, never post data. NEVER to sync server data. **Every declared event must have an
    emitter** — add one when the thing that fires it exists, not in anticipation. Each event's own
-   reason is written at its declaration; read that before adding a ninth.
+   reason is written at its declaration; read that before adding an eleventh.
 3. **Socket** (socket.io) — three rooms, scoped to an **account**, a **device** and a
    **broadcast**. Transport for all three is `shared/lib/socket/` (injected `io`, so it is testable
    without a browser) behind a dynamic import, because a guest must never download 40KB to be told

@@ -7,6 +7,7 @@ import { ShareInMessage } from '@features/message'
 import { MiniAppHost } from '@features/mini-app'
 import { PaymentProvider } from '@features/payment'
 import { PermissionProvider } from '@features/permission'
+import { PostCacheSync } from '@features/post'
 import { RealtimeProvider } from '@features/realtime'
 import { ShareInMessageProvider } from '@features/share'
 import { useTrackInAppRoute } from '@shared/lib/in-app-referrer'
@@ -158,6 +159,11 @@ export function SessionProviders({
                                     player is `z-40` against their `z-50`, so an application is
                                     never drawn on top of the question it just asked. */}
                                     <MiniAppHost />
+                                    {/* Keeps every cached post in step with what the reader just
+                                    bought — a post, or a membership on any of the surfaces that
+                                    sell one. Listens on the bus and renders nothing; see
+                                    `features/post`'s `usePostCacheSync`. */}
+                                    <PostCacheSync />
                                     {/* The red dot on the tab's favicon while anything is unread —
                                     a notification or a message. Inside Realtime because both of its
                                     signals are kept live by socket frames; in the session tree, so a

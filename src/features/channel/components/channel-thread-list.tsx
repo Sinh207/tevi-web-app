@@ -231,7 +231,6 @@ export function ChannelThreadList({
                                 <PostMediaTile
                                     post={thread}
                                     onOpenMedia={target => slider.openAt(index, target)}
-                                    onChanged={() => refetch()}
                                     className="size-full"
                                     testId="channel-media"
                                 />

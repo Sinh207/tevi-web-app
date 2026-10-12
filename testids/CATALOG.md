@@ -301,7 +301,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-mcn-partnership-sign-in` | — | `src/features/channel/components/mcn-partnership-view.tsx:104` |
 | `channel-mcn-partnership-signed-out` | — | `src/features/channel/components/mcn-partnership-view.tsx:94` |
 | `channel-mcn-partnership-space` | — | `src/features/channel/components/mcn-partnership-view.tsx:413` |
-| `channel-media` | — | `src/features/channel/components/channel-thread-list.tsx:236` |
+| `channel-media` | — | `src/features/channel/components/channel-thread-list.tsx:235` |
 | `channel-menu-follow` | — | `src/features/channel/components/channel-viewer-menu.tsx:149` |
 | `channel-message` | — | `src/features/channel/components/channel-viewer-actions.tsx:297` |
 | `channel-my-space-no-channel` | — | `src/features/channel/components/my-space-redirect.tsx:157` |
@@ -314,8 +314,8 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-notify` | — | `src/features/channel/components/channel-viewer-menu.tsx:130` |
 | `channel-owner-edit` | — | `src/features/channel/components/channel-owner-actions.tsx:77` |
 | `channel-owner-share` | — | `src/features/channel/components/channel-owner-actions.tsx:107` |
-| `channel-pinned` | — | `src/features/channel/components/channel-thread-list.tsx:386` |
-| `channel-pinned-title` | — | `src/features/channel/components/channel-thread-list.tsx:371` |
+| `channel-pinned` | — | `src/features/channel/components/channel-thread-list.tsx:385` |
+| `channel-pinned-title` | — | `src/features/channel/components/channel-thread-list.tsx:370` |
 | `channel-premium-badge` | — | `src/features/channel/components/channel-identity.tsx:117` |
 | `channel-profile-about` | — | `src/features/channel/components/edit-profile/edit-profile-view.tsx:505` |
 | `channel-profile-avatar-file` | — | `src/features/channel/components/edit-profile/profile-media-fields.tsx:302` |
@@ -363,7 +363,7 @@ Routes: `/[slug]`, `/[slug]/collections`, `/[slug]/collections/[collectionId]`, 
 | `channel-suspended-guidelines` | — | `src/features/channel/components/channel-state-screens.tsx:117` |
 | `channel-tabs` | — | `src/features/channel/components/channel-tabs.tsx:86` |
 | `channel-tabs-loading` | — | `src/features/channel/components/channel-tabs-skeleton.tsx:35` |
-| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:433` |
+| `channel-thread` | — | `src/features/channel/components/channel-thread-list.tsx:432` |
 | `channel-tier-badge` | — | `src/features/channel/components/channel-identity.tsx:132` |
 | `channel-top-bar` | — | `src/features/channel/components/channel-top-bar.tsx:109` |
 | `channel-top-bar-loading` | — | `src/features/channel/components/channel-top-bar-skeleton.tsx:46` |

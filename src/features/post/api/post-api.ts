@@ -1,5 +1,6 @@
 import { env } from '@shared/config/env'
 import { ApiError } from '@shared/lib/api/errors'
+import { ANON_SCOPE, invalidateETagCache } from '@shared/lib/api/interceptors/etag'
 import { createApiModel } from '@shared/lib/api/model'
 import type { PageCursor } from '@shared/lib/api/page-cursor'
 import type { BookmarkPage } from '../lib/bookmark-page'
@@ -96,6 +97,22 @@ const postPath = (postId: string, suffix = '') =>
  */
 const replyPath = (replyId: string, suffix = '') =>
     `${VERSION}/posts/replies/${encodeURIComponent(replyId)}/${suffix}`
+
+/**
+ * Forget the cached body of one post's detail for one account — **after it was bought, or its
+ * space's membership joined**, and only then.
+ *
+ * The trap `forgetChannelViewerCache` and `forgetMyMembershipsCache` were written for (**B72**): the
+ * re-read would carry the `If-None-Match` this client still holds, the service answers `304`
+ * because *its* validator has not moved, and `apiClient` replays the locked body. `viewer` and
+ * `need_unlock_package` are computed for the bearer, so the reader who has just paid is the one
+ * reader whose copy is now wrong.
+ *
+ * **Await it before the re-read it precedes** (`invalidateETagCache`'s rule, same reason).
+ */
+export function forgetPostDetailCache(postId: string, accountId: string | null) {
+    return invalidateETagCache(accountId ?? ANON_SCOPE, `${api.apiBase}/${postPath(postId)}`)
+}
 
 const POST_SCOPE = ['post'] as const
 

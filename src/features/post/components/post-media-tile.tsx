@@ -57,7 +57,6 @@ import { PostUnlockDialogs } from './post-unlock-dialogs'
 export function PostMediaTile({
     post,
     onOpenMedia,
-    onChanged,
     className,
     testId = 'post-media-tile',
 }: {
@@ -69,15 +68,13 @@ export function PostMediaTile({
      * the same way. Absent, the tile keeps its own lightbox over its own media.
      */
     onOpenMedia?: (target: number | 'video') => void
-    /** The owning list's invalidation, called once an unlock lands. */
-    onChanged?: () => void
     className?: string
     testId?: string
 }) {
     const { t } = useTranslation()
     const router = useRouter()
     const requireAuth = useRequireAuth()
-    const unlock = usePostUnlock(post, { onUnlocked: onChanged })
+    const unlock = usePostUnlock(post)
     /** Which image the lightbox opened on, or `null` when it is closed. `'video'` opens the clip. */
     const [opened, setOpened] = useState<number | 'video' | null>(null)
 
