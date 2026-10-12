@@ -87,7 +87,9 @@ export function ConfirmDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent data-testid={testId}>
-                <DialogHeader>
+                {/* `pb-4`: Figma's `Title and Subtitle` carries 16 of its own below the gap, so the
+                    copy sits 32 above the buttons — the one break in the card's rhythm. */}
+                <DialogHeader className="pb-4">
                     <DialogTitle data-testid={subTestId(testId, 'title')}>{title}</DialogTitle>
                     {description && (
                         <DialogDescription data-testid={subTestId(testId, 'description')}>

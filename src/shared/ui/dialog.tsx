@@ -101,16 +101,19 @@ export function DialogContent({
                     'fixed top-1/2 start-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2',
                     'flex w-[370px] max-w-[calc(100vw-2rem)] flex-col',
                     /*
-                     * The DS card's 24 inset and 20 gap from `sm` up; **16 / 16 below it**, where the
-                     * card already sits 16px off each bezel and a 24 inside it left a 390px phone
-                     * 308px of text. Written through two variables rather than `p-4 sm:p-6`, and
-                     * that is the point: `twMerge` drops a base `p-4` for a call site's `p-0` but
-                     * keeps `sm:p-6` beside it, so every screen-style dialog would grow 24px of
-                     * padding from `sm`. One `p-(--dialog-pad)` is one class to override. A body
-                     * that bleeds through the inset (`-mx-(--dialog-pad)`) reads the same variable.
+                     * The DS card's own inset, at every width: **24 on top, 16 at the sides and the
+                     * bottom, 16 between blocks** — `Title Stack` in all three of Figma's dialog
+                     * types (Alert, Confirm, Input). This used to be 24 all round with a 20 gap from
+                     * `sm` up, which read as a padded box around two buttons; nothing in the comps
+                     * draws that.
+                     *
+                     * Written through variables rather than `pt-6 px-4 pb-4`, and that is the point:
+                     * a call site's `p-0` must clear all three, and one variable per side is one
+                     * class each that `twMerge` resolves against `p-*`. A body that bleeds through
+                     * the inset (`-mx-(--dialog-pad)`) reads the same variable.
                      */
-                    'gap-(--dialog-gap) p-(--dialog-pad) [--dialog-gap:16px] [--dialog-pad:16px]',
-                    'sm:[--dialog-gap:20px] sm:[--dialog-pad:24px]',
+                    'gap-(--dialog-gap) px-(--dialog-pad) pt-(--dialog-pad-top) pb-(--dialog-pad)',
+                    '[--dialog-gap:16px] [--dialog-pad:16px] [--dialog-pad-top:24px]',
                     /*
                      * A height cap to match the width cap, and `auto` so what does not fit can be
                      * reached.
