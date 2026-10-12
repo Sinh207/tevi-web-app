@@ -15171,7 +15171,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/post-composer-dialogs.tsx:173"
+            "source": "src/features/post/components/post-composer-dialog.tsx:557"
         },
         "post-trimmer": {
             "scope": "post",
@@ -15181,7 +15181,7 @@
                 "/[slug]/post/[code]",
                 "/bookmarks"
             ],
-            "source": "src/features/post/components/post-composer-dialog.tsx:429"
+            "source": "src/features/post/components/post-composer-dialog.tsx:423"
         },
         "premium-about": {
             "scope": "premium",
@@ -16470,26 +16470,18 @@
             ],
             "parts": [
                 "affix",
+                "group",
                 "header",
                 "label-data",
+                "list",
                 "panel",
                 "prefix",
                 "reveal",
+                "row",
                 "submit",
                 "suffix",
+                "tab",
                 "trigger"
-            ]
-        },
-        "src/features/post/components/post-composer-dialogs.tsx": {
-            "accepts": [
-                "PostComposerDialogs"
-            ],
-            "parts": [
-                "group",
-                "header",
-                "list",
-                "row",
-                "tab"
             ]
         },
         "src/features/post/components/post-composer-video.tsx": {

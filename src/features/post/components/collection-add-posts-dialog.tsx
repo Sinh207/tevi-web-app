@@ -70,8 +70,8 @@ export function CollectionAddPostsDialog({
             open={open}
             onOpenChange={onOpenChange}
             /*
-             * `overflow-hidden` because the list scrolls itself — `post-composer-dialogs.tsx` has
-             * the account of what two scrollers do to a sticky footer.
+             * `overflow-hidden` because the list scrolls itself — `post-composer-dialog.tsx` says
+             * what two scrollers do to a sticky footer.
              */
             className="flex h-[720px] max-h-[90dvh] w-full max-w-[512px] flex-col gap-0 overflow-hidden p-0"
             data-testid={testId}

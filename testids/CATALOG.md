@@ -1190,8 +1190,8 @@ Routes: `/[slug]/collections`, `/[slug]/collections/[collectionId]`, `/[slug]/po
 | `post-collection-menu` | — | `src/features/post/components/collection-detail.tsx:130` |
 | `post-collections-header` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:31` |
 | `post-collections-message` | — | `src/app/(web)/(main)/(rail)/[slug]/collections/collections-screen.tsx:46` |
-| `post-preview` | — | `src/features/post/components/post-composer-dialogs.tsx:173` |
-| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:429` |
+| `post-preview` | — | `src/features/post/components/post-composer-dialog.tsx:557` |
+| `post-trimmer` | — | `src/features/post/components/post-composer-dialog.tsx:423` |
 
 ## `premium` — Tevi Premium — plans, benefits, billing portal, and gifting Premium to someone
 
@@ -1399,8 +1399,7 @@ name; you need it to know the element exists.
 | `PostCard`, `PostMediaBlock` | `src/features/post/components/post-card.tsx` | `-description` `-footer` `-group` `-item` `-message` `-next` `-overlay` `-panel` `-row` `-slide` |
 | `PostCollectionPicker` | `src/features/post/components/post-collection-picker.tsx` | `-cancel` `-input` `-message` `-option` `-panel` `-retry` `-submit` `-trigger` |
 | `PostComposerBody` | `src/features/post/components/post-composer-body.tsx` | `-error` `-field` `-input` `-list` `-trigger` |
-| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-header` `-label-data` `-panel` `-prefix` `-reveal` `-submit` `-suffix` `-trigger` |
-| `PostComposerDialogs` | `src/features/post/components/post-composer-dialogs.tsx` | `-group` `-header` `-list` `-row` `-tab` |
+| `PostComposerDialog` | `src/features/post/components/post-composer-dialog.tsx` | `-affix` `-group` `-header` `-label-data` `-list` `-panel` `-prefix` `-reveal` `-row` `-submit` `-suffix` `-tab` `-trigger` |
 | `PostComposerVideo` | `src/features/post/components/post-composer-video.tsx` | `-apply` `-clear` `-field` `-item` `-remove` `-reveal` `-slide` `-trigger` |
 | `PostDetailView` | `src/features/post/components/post-detail-view.tsx` | `-group` `-item` `-message` `-panel` `-retry` `-row` |
 | `PostHeader` | `src/features/post/components/post-header.tsx` | `-header` `-label` |
