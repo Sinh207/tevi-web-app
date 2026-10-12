@@ -108,8 +108,8 @@ export function PostReportDialog({
     if (submitted) {
         return (
             <Dialog open={open} onOpenChange={close}>
-                <DialogContent className="w-[420px]" data-testid={testId}>
-                    <DialogHeader>
+                <DialogContent data-testid={testId}>
+                    <DialogHeader className="pb-4">
                         <DialogTitle data-testid={subTestId(testId, 'title')}>
                             {t('post_report_thanks_title')}
                         </DialogTitle>

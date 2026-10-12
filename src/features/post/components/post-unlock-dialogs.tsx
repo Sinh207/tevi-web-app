@@ -8,6 +8,7 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@shared/ui/dialog'
@@ -40,6 +41,13 @@ import type { PostUnlockFlow } from '../hooks/use-post-unlock'
  * fallback string has no `[%s]` placeholder, so `.replace()` finds nothing and the price never
  * appears. Here the absence closes the dialog instead of printing a sentence with a hole in it.
  */
+/**
+ * Tighter than the DS card: **20 on top, 20 from the copy to the buttons**, against the comps' 24
+ * and 32. Figma's 32 makes room under an illustration icon that this dialog does not have — without
+ * one it read as a padded box around two buttons. The sides and the bottom stay the card's 16.
+ */
+const UNLOCK_CARD = '[--dialog-pad-top:20px]'
+
 export function PostUnlockDialogs({
     flow,
     testId = 'post-unlock',
@@ -57,8 +65,8 @@ export function PostUnlockDialogs({
     if (step === 'choose') {
         return (
             <Dialog open onOpenChange={dismiss}>
-                <DialogContent className="w-[420px]" data-testid={testId}>
-                    <DialogHeader>
+                <DialogContent className={UNLOCK_CARD} data-testid={testId}>
+                    <DialogHeader className="pb-1">
                         <DialogTitle data-testid={subTestId(testId, 'title')}>
                             {t('post_unlock_title')}
                         </DialogTitle>
@@ -73,7 +81,7 @@ export function PostUnlockDialogs({
                      * the one that survives past this post. Two side-by-side buttons would make them
                      * look like a choice between equals of the same weight.
                      */}
-                    <div className="flex flex-col gap-2">
+                    <DialogFooter>
                         <Button
                             data-testid={subTestId(testId, 'option')}
                             variant="accent"
@@ -95,7 +103,7 @@ export function PostUnlockDialogs({
                                 <StarMark size={16} />
                             </span>
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         )
@@ -103,8 +111,8 @@ export function PostUnlockDialogs({
 
     return (
         <Dialog open onOpenChange={dismiss}>
-            <DialogContent className="w-[420px]" data-testid={testId}>
-                <DialogHeader>
+            <DialogContent className={UNLOCK_CARD} data-testid={testId}>
+                <DialogHeader className="pb-1">
                     <DialogTitle data-testid={subTestId(testId, 'title')}>
                         {t('post_unlock_title')}
                     </DialogTitle>
@@ -113,16 +121,12 @@ export function PostUnlockDialogs({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex min-w-0 items-center justify-end gap-3">
-                    <Button
-                        data-testid={subTestId(testId, 'cancel')}
-                        variant="secondary"
-                        size="large"
-                        disabled={isPurchasing}
-                        onClick={dismiss}
-                    >
-                        {t('common_cancel')}
-                    </Button>
+                {/*
+                 * Stacked, the purchase first — the DS `Alert` shape. Side by side halves the
+                 * button, and "Purchase access 500 ★" does not fit 165px in most of the nine
+                 * locales.
+                 */}
+                <DialogFooter>
                     <Button
                         data-testid={subTestId(testId, 'confirm')}
                         variant="accent"
@@ -135,7 +139,16 @@ export function PostUnlockDialogs({
                             <StarMark size={16} />
                         </span>
                     </Button>
-                </div>
+                    <Button
+                        data-testid={subTestId(testId, 'cancel')}
+                        variant="secondary"
+                        size="large"
+                        disabled={isPurchasing}
+                        onClick={dismiss}
+                    >
+                        {t('common_cancel')}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     )
